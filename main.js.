@@ -1,14 +1,5 @@
-// Add test token for development (remove this in production)
-localStorage.setItem('userToken', 'logged-in-user');
-
-// Authentication helpers
-function userIsAuthenticated() {
-  return localStorage.getItem('userToken') !== null;
-}
-
-function showLoginPrompt(message = 'Please log in to access the Interactive Globe') {
-  alert(message);
-}
+// REMOVED: All authentication code
+// localStorage.setItem('userToken', 'logged-in-user'); // REMOVED
 
 // Global Three.js variables
 let scene, camera, renderer, controls, globeGroup, transformControls;
@@ -17,13 +8,12 @@ let isPanMode = false;
 let isRotationPaused = false;
 let isCubeMovementPaused = false;
 
-// Cube state variables (fixed - properly declared)
+// Cube state variables
 let europeCube, newThailandCube, canadaCube, ukCube, usaCube, indiaCube, singaporeCube, malaysiaCube;
 const europeSubCubes = [], newThailandSubCubes = [], canadaSubCubes = [], ukSubCubes = [], usaSubCubes = [], indiaSubCubes = [], singaporeSubCubes = [], malaysiaSubCubes = [];
 const explodedPositions = [], newThailandExplodedPositions = [], canadaExplodedPositions = [], ukExplodedPositions = [], usaExplodedPositions = [], indiaExplodedPositions = [], singaporeExplodedPositions = [], malaysiaExplodedPositions = [];
 const explodedSpacing = 0.1;
 
-// Fixed variable declarations - each on separate line
 let isEuropeCubeExploded = false;
 let isNewThailandCubeExploded = false;
 let isCanadaCubeExploded = false;
@@ -52,44 +42,41 @@ const mouse = new THREE.Vector2();
 const mouseDownPos = new THREE.Vector2();
 const clock = new THREE.Clock();
 
-// Data from backend (populated after fetch) - fixed countryConfigs as array
+// Data from backend (populated after fetch)
 let europeContent = [], newThailandContent = [], canadaContent = [], ukContent = [], usaContent = [], indiaContent = [], singaporeContent = [], malaysiaContent = [];
 let allUniversityContent = [];
 let countryPrograms = {};
 let countryConfigs = [];
 
-// Fixed backend fetch - using relative URL
+// SIMPLIFIED: Fetch data without authentication
 async function fetchDataFromBackend() {
   try {
-    // FIXED: Use relative URL since backend and frontend are on same service
-    const response = await fetch('/api/globe-data', {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('userToken')}`
-      }
-    });
+    // NO AUTHENTICATION - direct API call
+    const response = await fetch('/api/globe-data');
     
-    if (!response.ok) throw new Error('Failed to fetch secure data');
+    if (!response.ok) throw new Error('Failed to fetch data');
     
     const data = await response.json();
     
-    europeContent = data.europeContent;
-    newThailandContent = data.newThailandContent;
-    canadaContent = data.canadaContent;
-    ukContent = data.ukContent;
-    usaContent = data.usaContent;
-    indiaContent = data.indiaContent;
-    singaporeContent = data.singaporeContent;
-    malaysiaContent = data.malaysiaContent;
-    countryPrograms = data.countryPrograms;
-    countryConfigs = data.countryConfigs;
+    europeContent = data.europeContent || [];
+    newThailandContent = data.newThailandContent || [];
+    canadaContent = data.canadaContent || [];
+    ukContent = data.ukContent || [];
+    usaContent = data.usaContent || [];
+    indiaContent = data.indiaContent || [];
+    singaporeContent = data.singaporeContent || [];
+    malaysiaContent = data.malaysiaContent || [];
+    countryPrograms = data.countryPrograms || {};
+    countryConfigs = data.countryConfigs || [];
     
     allUniversityContent = [...europeContent, ...newThailandContent, ...canadaContent, ...ukContent, ...usaContent, ...indiaContent, ...singaporeContent, ...malaysiaContent];
     
     console.log('Data fetched successfully:', data);
     
   } catch (error) {
-    console.error('Error fetching secure data:', error);
-    alert('Failed to load secure university data. Please try again.');
+    console.error('Error fetching data:', error);
+    // Fallback - continue without data
+    console.log('Continuing without backend data...');
   }
 }
 
@@ -271,8 +258,8 @@ function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
           material = createTexture(item.programName, item.logo, color);
           userData = item;
         } else {
-          material = createTexture('Unassigned', null, '#333333');
-          userData = { university: "Unassigned" };
+          material = createTexture('University', null, color);
+          userData = { university: "University", programName: "Program" };
         }
         
         const microcube = new THREE.Mesh(
@@ -409,78 +396,15 @@ function drawAllConnections() {
   }).filter(Boolean);
 }
 
-// Show info panel - Fixed with null checks
+// SIMPLIFIED: Show info without authentication
 function showInfoPanel(data) {
-  if (!userIsAuthenticated()) {
-    showLoginPrompt('Please log in to view university details');
-    return;
-  }
-  
   if (!data || data.university === "Unassigned") return;
   
-  const uniData = allUniversityContent.filter(item => item && item.university === data.university);
-  if (uniData.length === 0) return;
-  
-  // Fixed: Add null checks for DOM elements
-  const mainCard = document.getElementById('infoPanelMainCard');
-  const subCards = document.getElementById('infoPanelSubcards');
-  const overlay = document.getElementById('infoPanelOverlay');
-  
-  if (!mainCard || !subCards || !overlay) {
-    console.log('Info panel elements not found - creating simple alert instead');
-    alert(`University: ${uniData[0].university}\nProgram: ${data.programName}\nApply: ${data.applyLink || 'Contact university'}`);
-    return;
-  }
-  
-  const mainErasmusLink = uniData[0].erasmusLink;
-  mainCard.innerHTML = `
-    <div class="main-card-details">
-      <img src="${uniData[0].logo}" alt="${uniData[0].university}">
-      <h3>${uniData[0].university}</h3>
-    </div>
-    <div class="main-card-actions">
-      ${mainErasmusLink ? `<a href="${mainErasmusLink}" target="_blank" class="partner-cta erasmus">Erasmus Info</a>` : ''}
-    </div>
-  `;
-  
-  subCards.innerHTML = '';
-  
-  uniData.forEach(item => {
-    if (!item) return;
-    
-    const infoLinkClass = item.programLink && item.programLink !== '#' ? 'partner-cta' : 'partner-cta disabled';
-    const infoLinkHref = item.programLink && item.programLink !== '#' ? `javascript:window.open('${item.programLink}', '_blank')` : 'javascript:void(0);';
-    const applyLinkClass = item.applyLink && item.applyLink !== '#' ? 'partner-cta apply' : 'partner-cta apply disabled';
-    const applyLinkHref = item.applyLink && item.applyLink !== '#' ? `javascript:window.open('${item.applyLink}', '_blank')` : 'javascript:void(0);';
-    
-    const subcardHTML = `
-      <div class="subcard">
-        <div class="subcard-info">
-          <img src="${item.logo}" alt="">
-          <h4>${item.programName.replace(/\n/g, ' ')}</h4>
-        </div>
-        <div class="subcard-buttons">
-          <a href="${infoLinkHref}" class="${infoLinkClass}">Info</a>
-          <a href="${applyLinkHref}" class="${applyLinkClass}">Apply</a>
-        </div>
-      </div>
-    `;
-    
-    subCards.insertAdjacentHTML('beforeend', subcardHTML);
-  });
-  
-  overlay.style.display = 'flex';
+  // Simple alert instead of complex panel
+  alert(`University: ${data.university || 'University'}\nProgram: ${data.programName || 'Program'}\nClick OK to continue exploring the globe.`);
 }
 
-// Hide info panel - Fixed with null check
-function hideInfoPanel() {
-  const overlay = document.getElementById('infoPanelOverlay');
-  if (overlay) {
-    overlay.style.display = 'none';
-  }
-}
-
-// Mouse interaction handlers
+// Mouse interaction handlers - REMOVED ALL AUTH CHECKS
 function onCanvasMouseDown(event) {
   mouseDownPos.set(event.clientX, event.clientY);
 }
@@ -497,11 +421,6 @@ function closeAllExploded() {
 }
 
 function onCanvasMouseUp(event) {
-  if (!userIsAuthenticated()) {
-    showLoginPrompt('Please log in to interact with the globe');
-    return;
-  }
-  
   if (transformControls.dragging) return;
   
   const deltaX = Math.abs(event.clientX - mouseDownPos.x);
@@ -598,167 +517,50 @@ function onCanvasMouseUp(event) {
   }
 }
 
-// Setup event listeners - Fixed with null checks
+// SIMPLIFIED: Setup event listeners without DOM dependencies
 function setupEventListeners() {
   renderer.domElement.addEventListener('mousedown', onCanvasMouseDown);
   renderer.domElement.addEventListener('mouseup', onCanvasMouseUp);
-  renderer.domElement.addEventListener('mouseup', () => {
-    if (isPanMode) renderer.domElement.style.cursor = 'grab';
-  });
-  
-  const panSpeed = 3;
-  
-  // Fixed: Add null checks for all button elements
-  const btnUp = document.getElementById('btn-up');
-  if (btnUp) {
-    btnUp.addEventListener('click', () => {
-      controls.pan(0, -panSpeed);
-      controls.update();
-    });
-  }
-  
-  const btnDown = document.getElementById('btn-down');
-  if (btnDown) {
-    btnDown.addEventListener('click', () => {
-      controls.pan(0, panSpeed);
-      controls.update();
-    });
-  }
-  
-  const btnLeft = document.getElementById('btn-left');
-  if (btnLeft) {
-    btnLeft.addEventListener('click', () => {
-      controls.pan(panSpeed, 0);
-      controls.update();
-    });
-  }
-  
-  const btnRight = document.getElementById('btn-right');
-  if (btnRight) {
-    btnRight.addEventListener('click', () => {
-      controls.pan(-panSpeed, 0);
-      controls.update();
-    });
-  }
-  
-  const btnZoomIn = document.getElementById('btn-zoom-in');
-  if (btnZoomIn) {
-    btnZoomIn.addEventListener('click', () => {
-      controls.dollyIn(1.2);
-      controls.update();
-    });
-  }
-  
-  const btnZoomOut = document.getElementById('btn-zoom-out');
-  if (btnZoomOut) {
-    btnZoomOut.addEventListener('click', () => {
-      controls.dollyOut(1.2);
-      controls.update();
-    });
-  }
-  
-  const btnRotate = document.getElementById('btn-rotate');
-  if (btnRotate) {
-    btnRotate.addEventListener('click', () => {
-      controls.autoRotate = !controls.autoRotate;
-      btnRotate.style.background = controls.autoRotate ? '#a46bfd' : 'rgba(0,0,0,0.8)';
-    });
-  }
-  
-  const pauseButton = document.getElementById("pauseButton");
-  if (pauseButton) {
-    pauseButton.addEventListener("click", () => {
-      isRotationPaused = !isRotationPaused;
-      controls.autoRotate = !isRotationPaused;
-      pauseButton.textContent = isRotationPaused ? "Resume Rotation" : "Pause Rotation";
-    });
-  }
-  
-  const pauseCubesButton = document.getElementById("pauseCubesButton");
-  if (pauseCubesButton) {
-    pauseCubesButton.addEventListener("click", () => {
-      isCubeMovementPaused = !isCubeMovementPaused;
-      pauseCubesButton.textContent = isCubeMovementPaused ? "Resume Cube Motion" : "Pause Cube Motion";
-    });
-  }
-  
-  const toggleMeshButton = document.getElementById("toggleMeshButton");
-  if (toggleMeshButton) {
-    toggleMeshButton.addEventListener("click", () => {
-      const wireframeMesh = globeGroup.children.find(child => child.material && child.material.wireframe);
-      if (wireframeMesh) {
-        wireframeMesh.visible = !wireframeMesh.visible;
-        toggleMeshButton.textContent = wireframeMesh.visible ? "Hide Globe Mesh" : "Show Globe Mesh";
-      }
-    });
-  }
-  
-  const arcToggleBtn = document.getElementById("arcToggleBtn");
-  if (arcToggleBtn) {
-    arcToggleBtn.addEventListener("click", () => {
-      let visible = false;
-      arcPaths.forEach((p, i) => {
-        if (i === 0) {
-          visible = !p.visible;
-        }
-        p.visible = visible;
-      });
-    });
-  }
-  
-  const toggleNodesButton = document.getElementById('toggleNodesButton');
-  if (toggleNodesButton) {
-    toggleNodesButton.addEventListener('click', () => {
-      const neuralNodes = cubes.filter(cube => cube.userData.isSmallNode);
-      const areVisible = neuralNodes.length > 0 && neuralNodes[0].visible;
-      const newVisibility = !areVisible;
-      
-      neuralNodes.forEach(node => {
-        node.visible = newVisibility;
-      });
-      
-      if (neuralNetworkLines) {
-        neuralNetworkLines.visible = newVisibility;
-      }
-      
-      toggleNodesButton.textContent = newVisibility ? "Hide Neural Nodes" : "Show Neural Nodes";
-    });
-  }
-  
-  const scrollLockButton = document.getElementById('scrollLockBtn');
-  if (scrollLockButton) {
-    function setGlobeInteraction(isInteractive) {
-      if (controls) {
-        controls.enabled = isInteractive;
-      }
-      
-      const scrollInstruction = document.getElementById('scrollLockInstruction');
-      if (isInteractive) {
-        scrollLockButton.textContent = 'Unlock Scroll';
-        scrollLockButton.classList.remove('unlocked');
-        if (scrollInstruction) scrollInstruction.textContent = 'Globe is active.';
-      } else {
-        scrollLockButton.textContent = 'Lock Globe';
-        scrollLockButton.classList.add('unlocked');
-        if (scrollInstruction) scrollInstruction.textContent = 'Page scroll is active.';
-      }
-    }
-    
-    scrollLockButton.addEventListener('click', () => {
-      setGlobeInteraction(!controls.enabled);
-    });
-  }
   
   window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
   });
+  
+  // Add keyboard controls as backup
+  window.addEventListener('keydown', (event) => {
+    switch(event.key) {
+      case ' ': // Spacebar to pause rotation
+        controls.autoRotate = !controls.autoRotate;
+        break;
+      case 'r': // R to reset view
+        camera.position.set(0, 0, 5);
+        controls.target.set(0, 0, 0);
+        controls.update();
+        break;
+    }
+  });
 }
 
 // Create globe and cubes
 function createGlobeAndCubes() {
   createNeuralNetwork();
+  
+  // Default country configs if backend fails
+  const defaultCountryConfigs = [
+    {"name": "India", "lat": 22, "lon": 78, "color": 0xFF9933},
+    {"name": "Europe", "lat": 48.8566, "lon": 2.3522, "color": 0x0000FF},
+    {"name": "UK", "lat": 53, "lon": -0.1276, "color": 0x191970},
+    {"name": "Singapore", "lat": 1.35, "lon": 103.8, "color": 0xff0000},
+    {"name": "Malaysia", "lat": 4, "lon": 102, "color": 0x0000ff},
+    {"name": "Thailand", "lat": 13.7563, "lon": 100.5018, "color": 0xffcc00},
+    {"name": "Canada", "lat": 56.1304, "lon": -106.3468, "color": 0xff0000},
+    {"name": "USA", "lat": 39.8283, "lon": -98.5795, "color": 0x003366}
+  ];
+  
+  // Use backend data or fallback to defaults
+  const configs = countryConfigs.length > 0 ? countryConfigs : defaultCountryConfigs;
   
   for (let i = 0; i < count; i++) {
     const r = maxRadius * Math.random();
@@ -846,6 +648,7 @@ function createGlobeAndCubes() {
     }
   }
   
+  // Create globe texture
   new THREE.TextureLoader().load("https://static.wixstatic.com/media/d77f36_8f868995fda643a0a61562feb20eb733~mv2.jpg", (tex) => {
     const globe = new THREE.Mesh(
       new THREE.SphereGeometry(GLOBE_RADIUS, 64, 64),
@@ -869,8 +672,9 @@ function createGlobeAndCubes() {
   );
   globeGroup.add(wireframeMesh);
   
+  // Create country blocks
   fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', (font) => {
-    countryConfigs.forEach(config => {
+    configs.forEach(config => {
       const size = 0.03;
       const blockGeometry = new THREE.BoxGeometry(size, size, size);
       const blockMaterial = new THREE.MeshStandardMaterial({
@@ -1006,12 +810,16 @@ function animate() {
   renderer.render(scene, camera);
 }
 
-// Initialize application - Fixed authentication flow
+// SIMPLIFIED: Initialize application without authentication blocking
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('Initializing Interactive Globe Widget...');
   
-  // Fetch data first
-  await fetchDataFromBackend();
+  // Try to fetch data, but continue even if it fails
+  try {
+    await fetchDataFromBackend();
+  } catch (error) {
+    console.log('Backend fetch failed, continuing with basic globe...');
+  }
   
   // Initialize Three.js
   initializeThreeJS();
@@ -1027,3 +835,4 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   console.log('Globe Widget initialized successfully!');
 });
+
