@@ -1,6 +1,3 @@
-// REMOVED: All authentication code
-// localStorage.setItem('userToken', 'logged-in-user'); // REMOVED
-
 // Global Three.js variables
 let scene, camera, renderer, controls, globeGroup, transformControls;
 let GLOBE_RADIUS = 1.0;
@@ -117,14 +114,17 @@ function initializeThreeJS() {
   camera.position.z = 5;
 }
 
-// Color calculation function
+// FIXED: Color calculation function
 function getColorByData(data) {
   const baseHue = data.domain * 30 % 360;
   const lightness = 50 + data.engagement * 25;
   const saturation = 70;
   const riskShift = data.risk > 0.5 ? 0 : 120;
   const hue = (baseHue + riskShift) % 360;
-  const color = new THREE.Color(`hsl(${hue}, ${saturation}%, ${lightness}%)`);
+  
+  // FIXED: Use setHSL instead of hsl string to avoid THREE.js warnings
+  const color = new THREE.Color();
+  color.setHSL(hue/360, saturation/100, lightness/100);
   color.multiplyScalar(data.confidence);
   return color;
 }
@@ -404,6 +404,20 @@ function showInfoPanel(data) {
   alert(`University: ${data.university || 'University'}\nProgram: ${data.programName || 'Program'}\nClick OK to continue exploring the globe.`);
 }
 
+// FIXED: Hide info panel function
+function hideInfoPanel() {
+  const overlay = document.getElementById('infoPanelOverlay');
+  if (overlay) {
+    overlay.style.display = 'none';
+  }
+}
+
+// FIXED: Carousel function
+function scrollCarousel(direction) {
+  console.log('Carousel scroll:', direction);
+  // Add carousel logic here if needed
+}
+
 // Mouse interaction handlers - REMOVED ALL AUTH CHECKS
 function onCanvasMouseDown(event) {
   mouseDownPos.set(event.clientX, event.clientY);
@@ -521,6 +535,147 @@ function onCanvasMouseUp(event) {
 function setupEventListeners() {
   renderer.domElement.addEventListener('mousedown', onCanvasMouseDown);
   renderer.domElement.addEventListener('mouseup', onCanvasMouseUp);
+  
+  // FIXED: Add null checks for all button elements
+  const btnUp = document.getElementById('btn-up');
+  if (btnUp) {
+    btnUp.addEventListener('click', () => {
+      controls.pan(0, -3);
+      controls.update();
+    });
+  }
+  
+  const btnDown = document.getElementById('btn-down');
+  if (btnDown) {
+    btnDown.addEventListener('click', () => {
+      controls.pan(0, 3);
+      controls.update();
+    });
+  }
+  
+  const btnLeft = document.getElementById('btn-left');
+  if (btnLeft) {
+    btnLeft.addEventListener('click', () => {
+      controls.pan(3, 0);
+      controls.update();
+    });
+  }
+  
+  const btnRight = document.getElementById('btn-right');
+  if (btnRight) {
+    btnRight.addEventListener('click', () => {
+      controls.pan(-3, 0);
+      controls.update();
+    });
+  }
+  
+  const btnZoomIn = document.getElementById('btn-zoom-in');
+  if (btnZoomIn) {
+    btnZoomIn.addEventListener('click', () => {
+      controls.dollyIn(1.2);
+      controls.update();
+    });
+  }
+  
+  const btnZoomOut = document.getElementById('btn-zoom-out');
+  if (btnZoomOut) {
+    btnZoomOut.addEventListener('click', () => {
+      controls.dollyOut(1.2);
+      controls.update();
+    });
+  }
+  
+  const btnRotate = document.getElementById('btn-rotate');
+  if (btnRotate) {
+    btnRotate.addEventListener('click', () => {
+      controls.autoRotate = !controls.autoRotate;
+      btnRotate.style.background = controls.autoRotate ? '#a46bfd' : 'rgba(0,0,0,0.8)';
+    });
+  }
+  
+  const pauseButton = document.getElementById("pauseButton");
+  if (pauseButton) {
+    pauseButton.addEventListener("click", () => {
+      isRotationPaused = !isRotationPaused;
+      controls.autoRotate = !isRotationPaused;
+      pauseButton.textContent = isRotationPaused ? "Resume Rotation" : "Pause Rotation";
+    });
+  }
+  
+  const pauseCubesButton = document.getElementById("pauseCubesButton");
+  if (pauseCubesButton) {
+    pauseCubesButton.addEventListener("click", () => {
+      isCubeMovementPaused = !isCubeMovementPaused;
+      pauseCubesButton.textContent = isCubeMovementPaused ? "Resume Cube Motion" : "Pause Cube Motion";
+    });
+  }
+  
+  const toggleMeshButton = document.getElementById("toggleMeshButton");
+  if (toggleMeshButton) {
+    toggleMeshButton.addEventListener("click", () => {
+      const wireframeMesh = globeGroup.children.find(child => child.material && child.material.wireframe);
+      if (wireframeMesh) {
+        wireframeMesh.visible = !wireframeMesh.visible;
+        toggleMeshButton.textContent = wireframeMesh.visible ? "Hide Globe Mesh" : "Show Globe Mesh";
+      }
+    });
+  }
+  
+  const arcToggleBtn = document.getElementById("arcToggleBtn");
+  if (arcToggleBtn) {
+    arcToggleBtn.addEventListener("click", () => {
+      let visible = false;
+      arcPaths.forEach((p, i) => {
+        if (i === 0) {
+          visible = !p.visible;
+        }
+        p.visible = visible;
+      });
+    });
+  }
+  
+  const toggleNodesButton = document.getElementById('toggleNodesButton');
+  if (toggleNodesButton) {
+    toggleNodesButton.addEventListener('click', () => {
+      const neuralNodes = cubes.filter(cube => cube.userData.isSmallNode);
+      const areVisible = neuralNodes.length > 0 && neuralNodes[0].visible;
+      const newVisibility = !areVisible;
+      
+      neuralNodes.forEach(node => {
+        node.visible = newVisibility;
+      });
+      
+      if (neuralNetworkLines) {
+        neuralNetworkLines.visible = newVisibility;
+      }
+      
+      toggleNodesButton.textContent = newVisibility ? "Hide Neural Nodes" : "Show Neural Nodes";
+    });
+  }
+  
+  const scrollLockButton = document.getElementById('scrollLockBtn');
+  if (scrollLockButton) {
+    function setGlobeInteraction(isInteractive) {
+      if (controls) {
+        controls.enabled = isInteractive;
+      }
+      
+      const scrollInstruction = document.getElementById('scrollLockInstruction');
+      if (isInteractive) {
+        scrollLockButton.textContent = 'Unlock Scroll';
+        scrollLockButton.classList.remove('unlocked');
+        if (scrollInstruction) scrollInstruction.textContent = 'Globe is active.';
+      } else {
+        scrollLockButton.textContent = 'Lock Globe';
+        scrollLockButton.classList.add('unlocked');
+        if (scrollInstruction) scrollInstruction.textContent = 'Page scroll is active.';
+      }
+    }
+    
+    scrollLockButton.addEventListener('click', () => {
+      setGlobeInteraction(!controls.enabled);
+    });
+  }
   
   window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
@@ -835,4 +990,3 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   console.log('Globe Widget initialized successfully!');
 });
-
