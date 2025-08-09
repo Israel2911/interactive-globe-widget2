@@ -1,6 +1,4 @@
-  <!-- COMPLETE MAIN.JS WITH ALL MISSING FUNCTIONS -->
-  <script>
-// Global Three.js variables
+
 let scene, camera, renderer, controls, globeGroup, transformControls;
 let GLOBE_RADIUS = 1.0;
 let isPanMode = false;
@@ -831,4 +829,4 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   console.log('Globe Widget initialized successfully!');
 });
-  </script>
+
