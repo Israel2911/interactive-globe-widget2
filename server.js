@@ -4,8 +4,8 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 app.use(express.json());
+app.use(express.static('.'));
 
-// Complete university data
 const europeContent = [
   {
     university: "University of Passau",
@@ -584,7 +584,6 @@ const countryConfigs = [
   {"name": "USA", "lat": 39.8283, "lon": -98.5795, "color": 0x003366}
 ];
 
-// Authentication check
 function checkAuth(req, res, next) {
   const token = req.headers['authorization'];
   if (token && token.includes('logged-in-user')) {
@@ -594,7 +593,6 @@ function checkAuth(req, res, next) {
   }
 }
 
-// Secure API endpoint
 app.get('/api/globe-data', checkAuth, (req, res) => {
   res.json({
     europeContent,
@@ -611,7 +609,7 @@ app.get('/api/globe-data', checkAuth, (req, res) => {
 });
 
 app.get('/health', (req, res) => {
-  res.json({ status: 'Secure backend running', timestamp: new Date().toISOString() });
+  res.json({ status: 'Secure Globe Widget backend running', timestamp: new Date().toISOString() });
 });
 
 app.listen(PORT, () => {
