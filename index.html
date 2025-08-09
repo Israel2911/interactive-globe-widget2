@@ -1,76 +1,62 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <meta http-equiv="Content-Style-Type" content="text/css">
-  <title></title>
-  <meta name="Generator" content="Cocoa HTML Writer">
-  <meta name="CocoaVersion" content="2575.7">
-  <style type="text/css">
-    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
-    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
-  </style>
+  <meta charset="UTF-8" />
+  <title>Interactive Globe Widget</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<p class="p1">&lt;!DOCTYPE html&gt;</p>
-<p class="p1">&lt;html lang="en"&gt;</p>
-<p class="p1">&lt;head&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;meta charset="UTF-8" /&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;title&gt;Interactive Globe Widget&lt;/title&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;link rel="stylesheet" href="styles.css"&gt;</p>
-<p class="p1">&lt;/head&gt;</p>
-<p class="p1">&lt;body&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;div class="header-ui-bar"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="carousel-wrapper"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="carousel-arrow left" onclick="scrollCarousel(-1)"&gt;❮&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="carousel-arrow right" onclick="scrollCarousel(1)"&gt;❯&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="carousel-container" id="carouselContainer"&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
-<p class="p2"><span class="Apple-converted-space">  </span></p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;div class="left-controls-stack"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="navigation-controls"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="nav-row"&gt;&lt;div class="nav-btn" id="btn-up"&gt;↑&lt;/div&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="nav-row"&gt;&lt;div class="nav-btn" id="btn-left"&gt;←&lt;/div&gt;&lt;div class="nav-btn" id="btn-right"&gt;→&lt;/div&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="nav-row"&gt;&lt;div class="nav-btn" id="btn-down"&gt;↓&lt;/div&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="nav-row"&gt;&lt;div class="nav-btn" id="btn-zoom-in"&gt;+&lt;/div&gt;&lt;div class="nav-btn" id="btn-zoom-out"&gt;−&lt;/div&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="nav-row"&gt;&lt;div class="nav-btn" id="btn-rotate"&gt;⟲&lt;/div&gt;&lt;div class="nav-btn" id="btn-pan" title="Toggle Pan/Move Mode"&gt;✋&lt;/div&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="scroll-lock-ui"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;div id="scrollLockInstruction"&gt;Globe is active.&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;button id="scrollLockBtn"&gt;Unlock Scroll&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;div class="control-buttons"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;button id="toggleNodesButton"&gt;Hide Neural Nodes&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;button id="pauseButton"&gt;Pause Rotation&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;button id="pauseCubesButton"&gt;Pause Cube Motion&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;button id="toggleMeshButton"&gt;Hide Globe Mesh&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;button id="arcToggleBtn"&gt;Hide Arcs&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;div class="info-panel-overlay" id="infoPanelOverlay" onclick="hideInfoPanel()"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="info-panel" id="infoPanel" onclick="event.stopPropagation()"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;button class="info-panel-close" onclick="hideInfoPanel()"&gt;×&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="main-card" id="infoPanelMainCard"&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="subcard-grid" id="infoPanelSubcards"&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;div class="footer-ui-bar"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;span&gt;© 2025 Interactive Program Globe | Global Education Alliance&lt;/span&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"&gt;&lt;/script&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"&gt;&lt;/script&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/TransformControls.js"&gt;&lt;/script&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/loaders/FontLoader.js"&gt;&lt;/script&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/geometries/TextGeometry.js"&gt;&lt;/script&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"&gt;&lt;/script&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;script src="https://cdnjs.cloudflare.com/ajax/libs/simplex-noise/2.4.0/simplex-noise.min.js"&gt;&lt;/script&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;script src="main.js"&gt;&lt;/script&gt;</p>
-<p class="p1">&lt;/body&gt;</p>
-<p class="p1">&lt;/html&gt;</p>
+  <div class="header-ui-bar">
+    <div class="carousel-wrapper">
+      <div class="carousel-arrow left" onclick="scrollCarousel(-1)">❮</div>
+      <div class="carousel-arrow right" onclick="scrollCarousel(1)">❯</div>
+      <div class="carousel-container" id="carouselContainer"></div>
+    </div>
+  </div>
+  
+  <div class="left-controls-stack">
+    <div class="navigation-controls">
+      <div class="nav-row"><div class="nav-btn" id="btn-up">↑</div></div>
+      <div class="nav-row"><div class="nav-btn" id="btn-left">←</div><div class="nav-btn" id="btn-right">→</div></div>
+      <div class="nav-row"><div class="nav-btn" id="btn-down">↓</div></div>
+      <div class="nav-row"><div class="nav-btn" id="btn-zoom-in">+</div><div class="nav-btn" id="btn-zoom-out">−</div></div>
+      <div class="nav-row"><div class="nav-btn" id="btn-rotate">⟲</div><div class="nav-btn" id="btn-pan" title="Toggle Pan/Move Mode">✋</div></div>
+    </div>
+    <div class="scroll-lock-ui">
+        <div id="scrollLockInstruction">Globe is active.</div>
+        <button id="scrollLockBtn">Unlock Scroll</button>
+    </div>
+  </div>
+
+  <div class="control-buttons">
+    <button id="toggleNodesButton">Hide Neural Nodes</button>
+    <button id="pauseButton">Pause Rotation</button>
+    <button id="pauseCubesButton">Pause Cube Motion</button>
+    <button id="toggleMeshButton">Hide Globe Mesh</button>
+    <button id="arcToggleBtn">Hide Arcs</button>
+  </div>
+
+  <div class="info-panel-overlay" id="infoPanelOverlay" onclick="hideInfoPanel()">
+    <div class="info-panel" id="infoPanel" onclick="event.stopPropagation()">
+      <button class="info-panel-close" onclick="hideInfoPanel()">×</button>
+      <div class="main-card" id="infoPanelMainCard"></div>
+      <div class="subcard-grid" id="infoPanelSubcards"></div>
+    </div>
+  </div>
+  <div class="footer-ui-bar">
+    <span>© 2025 Interactive Program Globe | Global Education Alliance</span>
+  </div>
+
+  <!-- JS Libraries for Globe and Interactions -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/TransformControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/loaders/FontLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/geometries/TextGeometry.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/simplex-noise/2.4.0/simplex-noise.min.js"></script>
+  <!-- Your main JS rendering logic -->
+  <script src="main.js"></script>
 </body>
 </html>
