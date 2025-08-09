@@ -1,4 +1,4 @@
-// Authentication helpers
+
 function userIsAuthenticated() {
   return localStorage.getItem('userToken') !== null;
 }
