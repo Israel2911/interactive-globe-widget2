@@ -1,5 +1,4 @@
 const express = require('express');
-const jwt = require('jsonwebtoken');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
@@ -584,16 +583,10 @@ const countryConfigs = [
   {"name": "USA", "lat": 39.8283, "lon": -98.5795, "color": 0x003366}
 ];
 
-function checkAuth(req, res, next) {
-  const token = req.headers['authorization'];
-  if (token && token.includes('logged-in-user')) {
-    next();
-  } else {
-    res.status(401).json({ error: 'Please log in to access university data and apply links' });
-  }
-}
+// REMOVED: Authentication function completely
 
-app.get('/api/globe-data', checkAuth, (req, res) => {
+// UPDATED: Open API endpoint - no authentication required
+app.get('/api/globe-data', (req, res) => {
   res.json({
     europeContent,
     newThailandContent,
@@ -609,9 +602,9 @@ app.get('/api/globe-data', checkAuth, (req, res) => {
 });
 
 app.get('/health', (req, res) => {
-  res.json({ status: 'Secure Globe Widget backend running', timestamp: new Date().toISOString() });
+  res.json({ status: 'Globe Widget backend running - NO AUTH', timestamp: new Date().toISOString() });
 });
 
 app.listen(PORT, () => {
-  console.log(`Secure Globe Widget backend running on port ${PORT}`);
+  console.log(`Globe Widget backend running on port ${PORT} - Authentication DISABLED for testing`);
 });
