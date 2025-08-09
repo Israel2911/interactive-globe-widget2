@@ -5,60 +5,17 @@ body {
   color: #ececec;
 }
 
-/* Header and Footer */
-.header-ui-bar, .footer-ui-bar {
-  background: #003366;
-  color: #fff;
-  padding: 10px 0;
-  text-align: center;
-  font-weight: 500;
-}
+/* REMOVED: Header and Footer banners completely */
+/* No more .header-ui-bar or .footer-ui-bar */
 
-.footer-ui-bar {
-  position: fixed;
-  width: 100%;
-  bottom: 0;
-  left: 0;
-  font-size: 14px;
-}
-
-/* Carousel Styles */
-.carousel-wrapper {
-  display: flex;
-  align-items: center;
-  background: #22356a;
-  border-radius: 12px;
-  margin: 0 14px;
-  padding: 6px 24px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-}
-
-.carousel-arrow {
-  font-size: 2em;
-  color: #ffa500;
-  cursor: pointer;
-  user-select: none;
-  margin: 0 8px;
-  transition: color .2s;
-}
-
-.carousel-arrow:hover {
-  color: #ff6600;
-}
-
-.carousel-container {
-  flex: 1;
-  display: flex;
-  overflow-x: auto;
-  gap: 16px;
-  padding: 10px 0;
-}
+/* REMOVED: Carousel Styles - no more banners */
+/* No more .carousel-wrapper, .carousel-arrow, .carousel-container */
 
 /* Left Controls Stack */
 .left-controls-stack {
   position: fixed;
   left: 16px;
-  top: 68px;
+  top: 20px; /* Moved up since no header banner */
   z-index: 3;
 }
 
@@ -97,7 +54,7 @@ body {
 /* Control Buttons */
 .control-buttons {
   position: fixed;
-  top: 95px;
+  top: 20px; /* Moved up since no header banner */
   right: 18px;
   display: flex;
   flex-direction: column;
@@ -123,13 +80,13 @@ body {
   color: #222;
 }
 
-/* Globe Canvas */
+/* Globe Canvas - Full screen now */
 #globe-canvas {
   position: absolute;
-  top: 58px;
+  top: 0; /* Full screen since no header */
   left: 0;
   width: 100vw;
-  height: calc(100vh - 120px);
+  height: 100vh; /* Full height since no footer */
   z-index: 2;
 }
 
@@ -155,18 +112,10 @@ body {
   opacity: 0.65;
 }
 
-/* Info Panel Overlay and Cards */
-.info-panel-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(16, 25, 36, 0.78);
-  width: 100vw; height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 99;
-}
+/* REMOVED: Info Panel Overlay completely - this was causing the blue banner! */
+/* No more .info-panel-overlay blocking the globe */
 
+/* SIMPLIFIED: Only keep minimal info panel for fallback */
 .info-panel {
   background: #22356a;
   border-radius: 16px;
@@ -174,7 +123,12 @@ body {
   padding: 34px 38px 22px 38px;
   min-width: 380px;
   max-width: 98vw;
-  position: relative;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 999;
+  display: none; /* Hidden by default */
 }
 
 .info-panel-close {
@@ -276,7 +230,7 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
   opacity: 0.54;
 }
 
-/* Miscellaneous */
+/* Scroll Lock UI */
 .scroll-lock-ui {
   margin-top: 10px;
   padding: 7px 0;
@@ -285,6 +239,7 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
   font-size: 1em;
   text-align: center;
 }
+
 #scrollLockBtn {
   margin: 8px auto 2px auto;
   padding: 5px 18px;
@@ -296,8 +251,8 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
   cursor: pointer;
 }
 
+/* Responsive Design */
 @media (max-width: 700px) {
-  .header-ui-bar, .footer-ui-bar { font-size: 12px; }
   .info-panel { min-width: 90vw; padding: 14px; }
   .left-controls-stack, .control-buttons { position: static; display: block; }
 }
