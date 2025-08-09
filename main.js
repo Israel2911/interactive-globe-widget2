@@ -1,3 +1,5 @@
+  <!-- COMPLETE MAIN.JS WITH ALL MISSING FUNCTIONS -->
+  <script>
 // Global Three.js variables
 let scene, camera, renderer, controls, globeGroup, transformControls;
 let GLOBE_RADIUS = 1.0;
@@ -39,16 +41,15 @@ const mouse = new THREE.Vector2();
 const mouseDownPos = new THREE.Vector2();
 const clock = new THREE.Clock();
 
-// Data from backend (populated after fetch)
+// Data from backend
 let europeContent = [], newThailandContent = [], canadaContent = [], ukContent = [], usaContent = [], indiaContent = [], singaporeContent = [], malaysiaContent = [];
 let allUniversityContent = [];
 let countryPrograms = {};
 let countryConfigs = [];
 
-// SIMPLIFIED: Fetch data without authentication
+// Fetch data from backend
 async function fetchDataFromBackend() {
   try {
-    // NO AUTHENTICATION - direct API call
     const response = await fetch('/api/globe-data');
     
     if (!response.ok) throw new Error('Failed to fetch data');
@@ -68,11 +69,10 @@ async function fetchDataFromBackend() {
     
     allUniversityContent = [...europeContent, ...newThailandContent, ...canadaContent, ...ukContent, ...usaContent, ...indiaContent, ...singaporeContent, ...malaysiaContent];
     
-    console.log('Data fetched successfully:', data);
+    console.log('Data fetched successfully');
     
   } catch (error) {
     console.error('Error fetching data:', error);
-    // Fallback - continue without data
     console.log('Continuing without backend data...');
   }
 }
@@ -83,7 +83,7 @@ function initializeThreeJS() {
   camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setClearColor(0x000000, 0);
+  renderer.setClearColor(0x000011, 1);
   document.body.appendChild(renderer.domElement);
   
   globeGroup = new THREE.Group();
@@ -122,7 +122,7 @@ function getColorByData(data) {
   const riskShift = data.risk > 0.5 ? 0 : 120;
   const hue = (baseHue + riskShift) % 360;
   
-  // FIXED: Use setHSL instead of hsl string to avoid THREE.js warnings
+  // FIXED: Use setHSL instead of hsl string
   const color = new THREE.Color();
   color.setHSL(hue/360, saturation/100, lightness/100);
   color.multiplyScalar(data.confidence);
@@ -173,6 +173,20 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
     emissive: new THREE.Color(bgColor),
     emissiveIntensity: 0.6
   });
+}
+
+// MISSING FUNCTION 1: Hide info panel
+function hideInfoPanel() {
+  const overlay = document.getElementById('infoPanelOverlay');
+  if (overlay) overlay.style.display = 'none';
+  
+  const panel = document.getElementById('infoPanel');
+  if (panel) panel.style.display = 'none';
+}
+
+// MISSING FUNCTION 2: Scroll carousel
+function scrollCarousel(direction) {
+  console.log('Carousel scroll:', direction);
 }
 
 // Create toggle function for cube explosions
@@ -342,41 +356,10 @@ function createConnectionPath(fromGroup, toGroup, color = 0xffff00) {
   const curve = new THREE.QuadraticBezierCurve3(offsetStart, mid, offsetEnd);
   const geometry = new THREE.TubeGeometry(curve, 64, 0.005, 8, false);
   
-  const vertexShader = `
-    varying vec2 vUv;
-    void main() {
-      vUv = uv;
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    }
-  `;
-  
-  const fragmentShader = `
-    varying vec2 vUv;
-    uniform float time;
-    uniform vec3 color;
-    void main() {
-      float stripe1 = step(0.1, fract(vUv.x * 4.0 + time * 0.2)) - step(0.2, fract(vUv.x * 4.0 + time * 0.2));
-      float stripe2 = step(0.1, fract(vUv.x * 4.0 - time * 0.2)) - step(0.2, fract(vUv.x * 4.0 - time * 0.2));
-      float combinedStripes = max(stripe1, stripe2);
-      float glow = (1.0 - abs(vUv.y - 0.5) * 2.0);
-      if (combinedStripes > 0.0) {
-        gl_FragColor = vec4(color, combinedStripes * glow);
-      } else {
-        discard;
-      }
-    }
-  `;
-  
-  const material = new THREE.ShaderMaterial({
-    uniforms: {
-      time: { value: 0 },
-      color: { value: new THREE.Color(color) }
-    },
-    vertexShader,
-    fragmentShader,
+  const material = new THREE.MeshBasicMaterial({
+    color: color,
     transparent: true,
-    depthWrite: false,
-    blending: THREE.AdditiveBlending
+    opacity: 0.8
   });
   
   const path = new THREE.Mesh(geometry, material);
@@ -396,29 +379,13 @@ function drawAllConnections() {
   }).filter(Boolean);
 }
 
-// SIMPLIFIED: Show info without authentication
+// Show info panel
 function showInfoPanel(data) {
   if (!data || data.university === "Unassigned") return;
-  
-  // Simple alert instead of complex panel
-  alert(`University: ${data.university || 'University'}\nProgram: ${data.programName || 'Program'}\nClick OK to continue exploring the globe.`);
+  alert(`University: ${data.university || 'University'}\nProgram: ${data.programName || 'Program'}`);
 }
 
-// FIXED: Hide info panel function
-function hideInfoPanel() {
-  const overlay = document.getElementById('infoPanelOverlay');
-  if (overlay) {
-    overlay.style.display = 'none';
-  }
-}
-
-// FIXED: Carousel function
-function scrollCarousel(direction) {
-  console.log('Carousel scroll:', direction);
-  // Add carousel logic here if needed
-}
-
-// Mouse interaction handlers - REMOVED ALL AUTH CHECKS
+// Mouse interaction handlers
 function onCanvasMouseDown(event) {
   mouseDownPos.set(event.clientX, event.clientY);
 }
@@ -440,8 +407,6 @@ function onCanvasMouseUp(event) {
   const deltaX = Math.abs(event.clientX - mouseDownPos.x);
   const deltaY = Math.abs(event.clientY - mouseDownPos.y);
   if (deltaX > 5 || deltaY > 5) return;
-  
-  if (event.target.closest('.info-panel')) return;
   
   const canvasRect = renderer.domElement.getBoundingClientRect();
   mouse.x = ((event.clientX - canvasRect.left) / canvasRect.width) * 2 - 1;
@@ -465,18 +430,6 @@ function onCanvasMouseUp(event) {
     const toggleFunc = toggleFunctionMap[countryName];
     
     if (correspondingNeuralCube && toggleFunc) {
-      const explosionStateMap = {
-        'Europe': isEuropeCubeExploded,
-        'Thailand': isNewThailandCubeExploded,
-        'Canada': isCanadaCubeExploded,
-        'UK': isUkCubeExploded,
-        'USA': isUsaCubeExploded,
-        'India': isIndiaCubeExploded,
-        'Singapore': isSingaporeCubeExploded,
-        'Malaysia': isMalaysiaCubeExploded
-      };
-      
-      const anyExploded = Object.values(explosionStateMap).some(state => state);
       closeAllExploded();
       
       new TWEEN.Tween(correspondingNeuralCube.scale)
@@ -485,9 +438,7 @@ function onCanvasMouseUp(event) {
         .repeat(1)
         .start();
       
-      setTimeout(() => {
-        toggleFunc();
-      }, anyExploded ? 810 : 400);
+      setTimeout(() => toggleFunc(), 400);
     }
     return;
   }
@@ -504,86 +455,43 @@ function onCanvasMouseUp(event) {
     parent = parent.parent;
   }
   
-  const explosionStateMap = {
-    'Europe': isEuropeCubeExploded,
-    'Thailand': isNewThailandCubeExploded,
-    'Canada': isCanadaCubeExploded,
-    'UK': isUkCubeExploded,
-    'USA': isUsaCubeExploded,
-    'India': isIndiaCubeExploded,
-    'Singapore': isSingaporeCubeExploded,
-    'Malaysia': isMalaysiaCubeExploded
-  };
-  
   if (neuralName) {
-    const isExploded = explosionStateMap[neuralName];
     const toggleFunc = toggleFunctionMap[neuralName];
     
-    if (isExploded && clickedSubCube && clickedSubCube.userData.university !== "Unassigned") {
+    if (clickedSubCube && clickedSubCube.userData.university !== "Unassigned") {
       showInfoPanel(clickedSubCube.userData);
     } else {
-      const anyExploded = Object.values(explosionStateMap).some(state => state);
       closeAllExploded();
-      setTimeout(() => toggleFunc(), anyExploded ? 810 : 0);
+      setTimeout(() => toggleFunc(), 0);
     }
   } else {
     closeAllExploded();
   }
 }
 
-// SIMPLIFIED: Setup event listeners without DOM dependencies
+// Setup event listeners
 function setupEventListeners() {
   renderer.domElement.addEventListener('mousedown', onCanvasMouseDown);
   renderer.domElement.addEventListener('mouseup', onCanvasMouseUp);
   
-  // FIXED: Add null checks for all button elements
+  // Button controls with null checks
   const btnUp = document.getElementById('btn-up');
-  if (btnUp) {
-    btnUp.addEventListener('click', () => {
-      controls.pan(0, -3);
-      controls.update();
-    });
-  }
+  if (btnUp) btnUp.addEventListener('click', () => { controls.pan(0, -3); controls.update(); });
   
   const btnDown = document.getElementById('btn-down');
-  if (btnDown) {
-    btnDown.addEventListener('click', () => {
-      controls.pan(0, 3);
-      controls.update();
-    });
-  }
+  if (btnDown) btnDown.addEventListener('click', () => { controls.pan(0, 3); controls.update(); });
   
   const btnLeft = document.getElementById('btn-left');
-  if (btnLeft) {
-    btnLeft.addEventListener('click', () => {
-      controls.pan(3, 0);
-      controls.update();
-    });
-  }
+  if (btnLeft) btnLeft.addEventListener('click', () => { controls.pan(3, 0); controls.update(); });
   
   const btnRight = document.getElementById('btn-right');
-  if (btnRight) {
-    btnRight.addEventListener('click', () => {
-      controls.pan(-3, 0);
-      controls.update();
-    });
-  }
+  if (btnRight) btnRight.addEventListener('click', () => { controls.pan(-3, 0); controls.update(); });
   
   const btnZoomIn = document.getElementById('btn-zoom-in');
-  if (btnZoomIn) {
-    btnZoomIn.addEventListener('click', () => {
-      controls.dollyIn(1.2);
-      controls.update();
-    });
-  }
+  if (btnZoomIn) btnZoomIn.addEventListener('click', () => { controls.dollyIn(1.2); controls.update(); });
   
   const btnZoomOut = document.getElementById('btn-zoom-out');
-  if (btnZoomOut) {
-    btnZoomOut.addEventListener('click', () => {
-      controls.dollyOut(1.2);
-      controls.update();
-    });
-  }
+  if (btnZoomOut) btnZoomOut.addEventListener('click', () => { controls.dollyOut(1.2); controls.update(); });
   
   const btnRotate = document.getElementById('btn-rotate');
   if (btnRotate) {
@@ -626,9 +534,7 @@ function setupEventListeners() {
     arcToggleBtn.addEventListener("click", () => {
       let visible = false;
       arcPaths.forEach((p, i) => {
-        if (i === 0) {
-          visible = !p.visible;
-        }
+        if (i === 0) visible = !p.visible;
         p.visible = visible;
       });
     });
@@ -641,13 +547,8 @@ function setupEventListeners() {
       const areVisible = neuralNodes.length > 0 && neuralNodes[0].visible;
       const newVisibility = !areVisible;
       
-      neuralNodes.forEach(node => {
-        node.visible = newVisibility;
-      });
-      
-      if (neuralNetworkLines) {
-        neuralNetworkLines.visible = newVisibility;
-      }
+      neuralNodes.forEach(node => { node.visible = newVisibility; });
+      if (neuralNetworkLines) neuralNetworkLines.visible = newVisibility;
       
       toggleNodesButton.textContent = newVisibility ? "Hide Neural Nodes" : "Show Neural Nodes";
     });
@@ -655,25 +556,11 @@ function setupEventListeners() {
   
   const scrollLockButton = document.getElementById('scrollLockBtn');
   if (scrollLockButton) {
-    function setGlobeInteraction(isInteractive) {
-      if (controls) {
-        controls.enabled = isInteractive;
-      }
-      
-      const scrollInstruction = document.getElementById('scrollLockInstruction');
-      if (isInteractive) {
-        scrollLockButton.textContent = 'Unlock Scroll';
-        scrollLockButton.classList.remove('unlocked');
-        if (scrollInstruction) scrollInstruction.textContent = 'Globe is active.';
-      } else {
-        scrollLockButton.textContent = 'Lock Globe';
-        scrollLockButton.classList.add('unlocked');
-        if (scrollInstruction) scrollInstruction.textContent = 'Page scroll is active.';
-      }
-    }
-    
     scrollLockButton.addEventListener('click', () => {
-      setGlobeInteraction(!controls.enabled);
+      if (controls) {
+        controls.enabled = !controls.enabled;
+        scrollLockButton.textContent = controls.enabled ? 'Unlock Scroll' : 'Lock Globe';
+      }
     });
   }
   
@@ -681,20 +568,6 @@ function setupEventListeners() {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
-  });
-  
-  // Add keyboard controls as backup
-  window.addEventListener('keydown', (event) => {
-    switch(event.key) {
-      case ' ': // Spacebar to pause rotation
-        controls.autoRotate = !controls.autoRotate;
-        break;
-      case 'r': // R to reset view
-        camera.position.set(0, 0, 5);
-        controls.target.set(0, 0, 0);
-        controls.update();
-        break;
-    }
   });
 }
 
@@ -887,7 +760,7 @@ function animate() {
   TWEEN.update();
   
   arcPaths.forEach(path => {
-    if (path.material.isShaderMaterial) {
+    if (path.material.uniforms && path.material.uniforms.time) {
       path.material.uniforms.time.value = elapsedTime;
     }
   });
@@ -901,24 +774,12 @@ function animate() {
     item.label.lookAt(camera.position);
   });
   
-  const explosionStateMap = {
-    'Europe': isEuropeCubeExploded,
-    'Thailand': isNewThailandCubeExploded,
-    'Canada': isCanadaCubeExploded,
-    'UK': isUkCubeExploded,
-    'USA': isUsaCubeExploded,
-    'India': isIndiaCubeExploded,
-    'Singapore': isSingaporeCubeExploded,
-    'Malaysia': isMalaysiaCubeExploded
-  };
-  
   const boundaryRadius = 1.0;
   const buffer = 0.02;
   
   if (!isCubeMovementPaused) {
     cubes.forEach((cube, i) => {
-      const isExploded = cube.userData.neuralName && explosionStateMap[cube.userData.neuralName];
-      if (!isExploded) {
+      if (!cube.userData.neuralName) {
         cube.position.add(velocities[i]);
         if (cube.position.length() > boundaryRadius - buffer) {
           cube.position.normalize().multiplyScalar(boundaryRadius - buffer);
@@ -930,30 +791,18 @@ function animate() {
     if (neuralNetworkLines) {
       const vertices = [];
       const maxDist = 0.6;
-      const connectionsPerCube = 4;
       
       for (let i = 0; i < cubes.length; i++) {
         if (!cubes[i].visible || cubes[i].userData.neuralName) continue;
         
-        let neighbors = [];
-        for (let j = 0; j < cubes.length; j++) {
-          if (i === j || !cubes[j].visible || cubes[j].userData.neuralName) continue;
+        for (let j = i + 1; j < cubes.length; j++) {
+          if (!cubes[j].visible || cubes[j].userData.neuralName) continue;
           const dist = cubes[i].position.distanceTo(cubes[j].position);
           if (dist < maxDist) {
-            neighbors.push({
-              dist: dist,
-              cube: cubes[j]
-            });
+            vertices.push(cubes[i].position.x, cubes[i].position.y, cubes[i].position.z);
+            vertices.push(cubes[j].position.x, cubes[j].position.y, cubes[j].position.z);
           }
         }
-        
-        neighbors.sort((a, b) => a.dist - b.dist);
-        const closest = neighbors.slice(0, connectionsPerCube);
-        
-        closest.forEach(n => {
-          vertices.push(cubes[i].position.x, cubes[i].position.y, cubes[i].position.z);
-          vertices.push(n.cube.position.x, n.cube.position.y, n.cube.position.z);
-        });
       }
       
       if (neuralNetworkLines.visible) {
@@ -965,28 +814,21 @@ function animate() {
   renderer.render(scene, camera);
 }
 
-// SIMPLIFIED: Initialize application without authentication blocking
+// Initialize application
 document.addEventListener('DOMContentLoaded', async () => {
-  console.log('Initializing Interactive Globe Widget...');
+  console.log('Starting Globe Widget...');
   
-  // Try to fetch data, but continue even if it fails
   try {
     await fetchDataFromBackend();
   } catch (error) {
-    console.log('Backend fetch failed, continuing with basic globe...');
+    console.log('Backend fetch failed, continuing...');
   }
   
-  // Initialize Three.js
   initializeThreeJS();
-  
-  // Setup event listeners
   setupEventListeners();
-  
-  // Create globe and cubes
   createGlobeAndCubes();
-  
-  // Start animation
   animate();
   
   console.log('Globe Widget initialized successfully!');
 });
+  </script>
