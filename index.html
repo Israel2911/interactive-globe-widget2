@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <!-- REMOVED: Header banner completely -->
+  <!-- Globe will render directly on body -->
   
   <div class="left-controls-stack">
     <div class="navigation-controls">
@@ -15,7 +15,7 @@
       <div class="nav-row"><div class="nav-btn" id="btn-left">←</div><div class="nav-btn" id="btn-right">→</div></div>
       <div class="nav-row"><div class="nav-btn" id="btn-down">↓</div></div>
       <div class="nav-row"><div class="nav-btn" id="btn-zoom-in">+</div><div class="nav-btn" id="btn-zoom-out">−</div></div>
-      <div class="nav-row"><div class="nav-btn" id="btn-rotate">⟲</div><div class="nav-btn" id="btn-pan" title="Toggle Pan/Move Mode">✋</div></div>
+      <div class="nav-row"><div class="nav-btn" id="btn-rotate">⟲</div></div>
     </div>
     <div class="scroll-lock-ui">
         <div id="scrollLockInstruction">Globe is active.</div>
@@ -31,31 +31,22 @@
     <button id="arcToggleBtn">Hide Arcs</button>
   </div>
 
-  <!-- REMOVED: All carousel and header elements that were causing blocking -->
-  
-  <!-- SIMPLIFIED: Hidden info panel without blocking overlay -->
+  <!-- Hidden info panel -->
   <div class="info-panel" id="infoPanel" style="display: none;">
     <button class="info-panel-close" onclick="hideInfoPanel()">×</button>
     <div class="main-card" id="infoPanelMainCard"></div>
     <div class="subcard-grid" id="infoPanelSubcards"></div>
   </div>
 
-  <!-- REMOVED: infoPanelOverlay completely - this was the blocking blue banner -->
-
-  <!-- KEPT: Footer banner as requested -->
+  <!-- KEPT: Footer banner -->
   <div class="footer-ui-bar">
     <span>© 2025 Interactive Program Globe | Global Education Alliance</span>
   </div>
 
-  <!-- JS Libraries for Globe and Interactions -->
+  <!-- JS Libraries -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/TransformControls.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/loaders/FontLoader.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/geometries/TextGeometry.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.usd.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/simplex-noise/2.4.0/simplex-noise.min.js"></script>
-  <!-- Your main JS rendering logic -->
-  <script src="main.js"></script>
-</body>
-</html>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
