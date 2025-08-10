@@ -11,8 +11,46 @@ html, body {
     overflow-y: auto;
     font-family: Arial, sans-serif;
     color: #fff;
-    background: #000;
+    background: radial-gradient(circle at center, #001122 0%, #000000 100%);
     cursor: default;
+}
+
+/* Globe Container */
+#globe-container {
+    position: fixed;
+    left: 0;
+    top: 190px;
+    width: 100vw;
+    height: calc(100vh - 190px - 80px);
+    z-index: 1;
+    display: block;
+    background: transparent;
+}
+
+/* Loading Animation */
+.loading-animation {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #ffa500;
+    font-size: 18px;
+    z-index: 3000;
+}
+
+.spinner {
+    border: 3px solid rgba(255, 165, 0, 0.3);
+    border-radius: 50%;
+    border-top: 3px solid #ffa500;
+    width: 30px;
+    height: 30px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 10px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 .header-ui-bar {
@@ -40,25 +78,14 @@ html, body {
     z-index: 10000;
     box-sizing: border-box;
     padding: 10px;
-    border-top: 2px solid rgba(165, 107, 253, 0.8);
+    border-top: 2px solid rgba(255, 165, 0, 0.8);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 14px;
 }
 
-#threejs-canvas {
-    position: fixed;
-    left: 0;
-    top: 190px;
-    width: 100vw;
-    height: calc(100vh - 190px - 80px);
-    z-index: 1;
-    display: block;
-    background: transparent;
-}
-
-/* --- Carousel Styles --- */
+/* --- Updated Carousel Styles for Server-Side Integration --- */
 .carousel-wrapper {
     margin: 0 auto;
     display: flex;
@@ -70,54 +97,103 @@ html, body {
     height: 170px;
     max-height: 170px;
     width: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 165, 0, 0.3);
 }
 
-.carousel-container {
+/* Filter Buttons */
+.filter-container {
+    position: absolute;
+    top: -50px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+}
+
+.filter-btn {
+    background: #22356a;
+    color: #fff;
+    border: 1px solid #ffa500;
+    border-radius: 4px;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.3s ease;
+}
+
+.filter-btn:hover,
+.filter-btn.active {
+    background: #ffa500;
+    color: #222;
+}
+
+.carousel-container,
+#carouselContainer {
     display: flex;
     flex-wrap: nowrap;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 16px;
     scroll-behavior: smooth;
     scrollbar-width: none;
+    -ms-overflow-style: none;
     width: 100%;
-    height: 170px;
-    padding: 0 60px;
+    height: 150px;
+    padding: 15px 60px;
     box-sizing: border-box;
     overflow-x: auto;
 }
 
-.carousel-card {
+.carousel-container::-webkit-scrollbar,
+#carouselContainer::-webkit-scrollbar {
+    display: none;
+}
+
+/* Updated Program Cards for University Data */
+.carousel-card,
+.program-card {
     display: flex;
     flex-direction: column;
-    background-color: #333;
+    background-color: #22356a;
     border-radius: 16px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    width: 220px;
-    height: 150px;
+    width: 200px;
+    height: 120px;
     flex-shrink: 0;
     text-align: center;
     cursor: pointer;
     text-decoration: none;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
     border: 3px solid transparent;
     overflow: hidden;
+    padding: 8px;
 }
 
-.carousel-card:hover {
-    transform: scale(1.02);
+.carousel-card:hover,
+.program-card:hover {
+    transform: scale(1.05);
+    background: #ffa500;
+    color: #222;
+    border-color: #fff;
 }
 
-.carousel-card.selected {
-    border-color: #a46bfd;
-    box-shadow: 0 0 25px #a46bfd;
+.carousel-card.selected,
+.program-card.selected {
+    border-color: #ffa500;
+    box-shadow: 0 0 25px #ffa500;
 }
 
-.carousel-card img {
-    width: 100%;
-    height: 100px;
-    object-fit: cover;
-    flex-shrink: 0;
+.carousel-card img,
+.program-card img {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    align-self: center;
 }
 
 .carousel-card-content {
@@ -125,53 +201,78 @@ html, body {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding: 4px 8px;
+    padding: 0;
 }
 
-.carousel-card-title {
-    font-size: 14px;
+.carousel-card-title,
+.program-card h4 {
+    font-size: 12px;
     font-weight: bold;
+    color: #ffa500;
+    margin: 0 0 6px 0;
+    line-height: 1.2;
+}
+
+.program-card:hover h4 {
+    color: #222;
+}
+
+.carousel-card-text,
+.program-card .program-name {
+    font-size: 10px;
     color: #fff;
     margin: 0;
-}
-
-.carousel-card-text {
-    font-size: 11px;
-    color: #ddd;
-    margin: 2px 0 0 0;
-    white-space: nowrap;
+    line-height: 1.2;
     overflow: hidden;
     text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
 }
 
-.carousel-arrow {
+.program-card:hover .program-name {
+    color: #222;
+}
+
+/* Carousel Navigation */
+.carousel-arrow,
+.carousel-nav-btn {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    font-size: 28px;
+    font-size: 24px;
     color: #fff;
-    background-color: rgba(0,0,0,0.8);
-    border: 2px solid #a46bfd;
+    background-color: rgba(255, 165, 0, 0.8);
+    border: none;
     border-radius: 50%;
-    width: 44px;
-    height: 44px;
+    width: 40px;
+    height: 40px;
     text-align: center;
-    line-height: 40px;
+    line-height: 36px;
     cursor: pointer;
     z-index: 10010;
     user-select: none;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.carousel-arrow:hover {
-    background-color: #a46bfd;
-    box-shadow: 0 0 15px #a46bfd;
+.carousel-arrow:hover,
+.carousel-nav-btn:hover {
+    background-color: rgba(255, 165, 0, 1);
     transform: translateY(-50%) scale(1.1);
 }
 
-.carousel-arrow.left { left: 8px; }
-.carousel-arrow.right { right: 8px; }
+.carousel-arrow.left,
+#carouselScrollLeft { 
+    left: 10px; 
+}
 
+.carousel-arrow.right,
+#carouselScrollRight { 
+    right: 10px; 
+}
 
 /* --- Control Button Styles --- */
 .left-controls-stack {
@@ -199,7 +300,7 @@ html, body {
 
 .nav-btn {
     background: rgba(0,0,0,0.8);
-    border: 1px solid #a46bfd;
+    border: 1px solid #ffa500;
     color: white;
     width: 40px;
     height: 40px;
@@ -213,8 +314,8 @@ html, body {
 }
 
 .nav-btn:hover {
-    background: #a46bfd;
-    box-shadow: 0 0 10px #a46bfd;
+    background: #ffa500;
+    box-shadow: 0 0 10px #ffa500;
 }
 
 .nav-btn.pan-mode {
@@ -231,7 +332,7 @@ html, body {
 }
 
 #scrollLockBtn {
-    background: #a46bfd;
+    background: #ffa500;
     color: white;
     border: none;
     padding: 10px 15px;
@@ -256,7 +357,8 @@ html, body {
     text-align: left;
 }
 
-.control-buttons {
+.control-buttons,
+.controls {
     position: fixed;
     top: 210px;
     right: 20px;
@@ -266,30 +368,64 @@ html, body {
     gap: 8px;
 }
 
-.control-buttons button {
+.control-buttons button,
+.controls .control-btn {
     padding: 8px 12px;
-    border: none;
+    border: 1px solid #ffa500;
     border-radius: 4px;
     cursor: pointer;
     font-size: 12px;
     z-index: 15001;
+    background: rgba(0,0,0,0.8);
+    color: #ffa500;
+    transition: all 0.3s ease;
 }
 
-#toggleNodesButton { background: #9400D3; box-shadow: 0 0 20px #9400D3; }
-#pauseButton { background: gray; box-shadow: 0 0 20px white; }
-#pauseCubesButton { background: #ff8c00; box-shadow: 0 0 20px #ff8c00; }
-#toggleMeshButton { background: #444; box-shadow: 0 0 20px #0ff; }
-#arcToggleBtn { background: #222; color: #fff; box-shadow: 0 0 20px yellow; }
+.control-buttons button:hover,
+.controls .control-btn:hover {
+    background: rgba(255, 165, 0, 0.2);
+}
 
+#toggleNodesButton { 
+    background: rgba(148, 0, 211, 0.8); 
+    box-shadow: 0 0 20px rgba(148, 0, 211, 0.5);
+    border-color: #9400D3;
+}
 
-/* --- Info Panel Styles --- */
-.info-panel-overlay {
+#pauseButton { 
+    background: rgba(128, 128, 128, 0.8); 
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+    border-color: gray;
+}
+
+#pauseCubesButton { 
+    background: rgba(255, 140, 0, 0.8); 
+    box-shadow: 0 0 20px rgba(255, 140, 0, 0.5);
+    border-color: #ff8c00;
+}
+
+#toggleMeshButton { 
+    background: rgba(68, 68, 68, 0.8); 
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+    border-color: #0ff;
+}
+
+#arcToggleBtn { 
+    background: rgba(34, 34, 34, 0.8); 
+    color: #fff; 
+    box-shadow: 0 0 20px rgba(255, 255, 0, 0.5);
+    border-color: yellow;
+}
+
+/* --- Updated Info Panel Styles for Server-Side --- */
+.info-panel-overlay,
+#infoPanelOverlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.6);
+    background: rgba(0,0,0,0.8);
     backdrop-filter: blur(5px);
     z-index: 100000;
     display: none;
@@ -298,37 +434,184 @@ html, body {
 }
 
 .info-panel {
-    background: #f4f7fb;
-    color: #333;
+    background: linear-gradient(145deg, #1a2040, #2a3060);
+    color: #fff;
     border-radius: 16px;
-    padding: 25px;
+    padding: 30px;
     width: 90%;
-    max-width: 550px;
+    max-width: 600px;
     max-height: 80vh;
     overflow-y: auto;
     text-align: left;
     position: relative;
+    border: 2px solid #ffa500;
 }
 
-.info-panel .main-card { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd; padding-bottom: 15px; }
-.info-panel .main-card-details { display: flex; align-items: center; gap: 15px; }
-.info-panel .main-card img { height: 60px; width: 60px; object-fit: contain; }
-.info-panel .main-card h3 { margin: 0; font-size: 22px; color: #003366; }
-.info-panel .subcard-grid { display: grid; gap: 12px; margin-top: 20px; }
-.info-panel .subcard { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; justify-content: space-between; }
-.info-panel .subcard-info { flex: 1 1 auto; display: flex; align-items: center; gap: 12px; }
-.info-panel .subcard img { height: 40px; width: 40px; object-fit: contain; }
-.info-panel .subcard h4 { font-size: 16px; margin: 0; color: #003366; flex-grow: 1; }
-.info-panel .subcard-buttons { flex-shrink: 0; display: flex; gap: 8px; }
-.partner-cta { padding: 8px 14px; background: #003366; color: #fff; border-radius: 5px; text-decoration: none; font-size: 13px; white-space: nowrap; transition: background-color 0.2s; }
-.partner-cta.apply { background: #007bff; }
-.partner-cta.erasmus { background: #E40046; }
-.partner-cta:hover { background: #0055a4; }
-.partner-cta.apply:hover { background: #0056b3; }
-.partner-cta.erasmus:hover { background: #b80038; }
-.partner-cta.disabled { background: #999; cursor: not-allowed; }
-.info-panel-close { position: absolute; top: 10px; right: 15px; font-size: 28px; color: #aaa; cursor: pointer; background: none; border: none; }
+.info-panel .main-card,
+#infoPanelMainCard { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    border-bottom: 1px solid rgba(255, 165, 0, 0.3); 
+    padding-bottom: 15px; 
+    margin-bottom: 20px;
+}
 
+.info-panel .main-card-details { 
+    display: flex; 
+    align-items: center; 
+    gap: 15px; 
+}
+
+.info-panel .main-card img { 
+    height: 80px; 
+    width: 80px; 
+    object-fit: contain; 
+    border-radius: 8px;
+}
+
+.info-panel .main-card h3 { 
+    margin: 0; 
+    font-size: 24px; 
+    color: #ffa500; 
+}
+
+.info-panel .subcard-grid,
+#infoPanelSubcards { 
+    display: grid; 
+    gap: 15px; 
+    margin-top: 20px; 
+}
+
+.info-panel .subcard { 
+    background: rgba(255, 165, 0, 0.1); 
+    border: 1px solid rgba(255, 165, 0, 0.3); 
+    border-radius: 8px; 
+    padding: 15px; 
+    display: flex; 
+    flex-wrap: wrap; 
+    align-items: center; 
+    gap: 12px; 
+    justify-content: space-between; 
+}
+
+.info-panel .subcard-info { 
+    flex: 1 1 auto; 
+    display: flex; 
+    align-items: center; 
+    gap: 12px; 
+}
+
+.info-panel .subcard img { 
+    height: 50px; 
+    width: 50px; 
+    object-fit: contain; 
+    border-radius: 4px;
+}
+
+.info-panel .subcard h4 { 
+    font-size: 16px; 
+    margin: 0; 
+    color: #fff; 
+    flex-grow: 1; 
+}
+
+.info-panel .subcard-buttons { 
+    flex-shrink: 0; 
+    display: flex; 
+    gap: 8px; 
+}
+
+.partner-cta {
+    padding: 10px 16px;
+    background: #ffa500;
+    color: #222;
+    border: none;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: bold;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-block;
+}
+
+.partner-cta.apply { 
+    background: #007bff; 
+    color: #fff;
+}
+
+.partner-cta.erasmus { 
+    background: #E40046; 
+    color: #fff;
+}
+
+.partner-cta:hover { 
+    background: #ff8c00; 
+    transform: scale(1.05);
+}
+
+.partner-cta.apply:hover { 
+    background: #0056b3; 
+}
+
+.partner-cta.erasmus:hover { 
+    background: #b80038; 
+}
+
+.partner-cta.disabled { 
+    background: #666; 
+    color: #999;
+    cursor: not-allowed; 
+}
+
+.info-panel-close,
+.close-panel { 
+    position: absolute; 
+    top: 15px; 
+    right: 15px; 
+    font-size: 24px; 
+    color: #ffa500; 
+    cursor: pointer; 
+    background: none; 
+    border: none; 
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.close-panel:hover {
+    color: #ff8c00;
+}
+
+/* Login/Logout Test Buttons */
+.login-controls {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    display: flex;
+    gap: 10px;
+}
+
+.login-controls button {
+    background: #22356a;
+    color: #ffa500;
+    border: 1px solid #ffa500;
+    border-radius: 4px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.3s ease;
+}
+
+.login-controls button:hover {
+    background: #ffa500;
+    color: #222;
+}
 
 /*
 ================================================================
@@ -339,22 +622,23 @@ MOBILE OPTIMIZATION STYLES
 @media (max-width: 900px) {
     .header-ui-bar {
         height: auto;
-        min-height: 120px; /* Set a minimum height for portrait */
+        min-height: 120px;
         padding-bottom: 10px;
     }
     
-    #threejs-canvas {
-        top: 130px; /* Adjust based on new header height */
-        height: calc(100vh - 130px - 60px); /* Adjust based on header/footer */
+    #globe-container {
+        top: 130px;
+        height: calc(100vh - 130px - 60px);
     }
     
-    /* Hide the desktop-only navigation controls on mobile */
+    /* Hide desktop-only navigation controls on mobile */
     .left-controls-stack, .scroll-lock-ui {
         display: none !important;
     }
 
-    /* Adjust main control buttons for mobile portrait */
-    .control-buttons {
+    /* Adjust control buttons for mobile */
+    .control-buttons,
+    .controls {
         flex-direction: column;
         width: auto;
         top: 50%;
@@ -363,20 +647,82 @@ MOBILE OPTIMIZATION STYLES
         background-color: transparent;
     }
 
-    .control-buttons button {
-        width: 140px;
-        font-size: 13px;
-        padding: 8px 12px;
+    .control-buttons button,
+    .controls .control-btn {
+        width: 120px;
+        font-size: 11px;
+        padding: 6px 10px;
     }
     
-    /* Scale down the carousel for mobile */
-    .carousel-card {
+    /* Scale down carousel for mobile */
+    .carousel-wrapper {
+        height: 140px;
+    }
+    
+    .carousel-container,
+    #carouselContainer {
+        height: 120px;
+        padding: 10px 40px;
+    }
+    
+    .carousel-card,
+    .program-card {
         width: 140px;
         height: 100px;
+        padding: 6px;
     }
-    .carousel-card-title { font-size: 13px; }
-    .carousel-card-text { font-size: 11px; }
-    .carousel-arrow { width: 28px; height: 28px; font-size: 18px; }
+    
+    .carousel-card img,
+    .program-card img {
+        width: 30px;
+        height: 30px;
+    }
+    
+    .carousel-card-title,
+    .program-card h4 { 
+        font-size: 11px; 
+    }
+    
+    .carousel-card-text,
+    .program-card .program-name { 
+        font-size: 9px; 
+    }
+    
+    .carousel-arrow,
+    .carousel-nav-btn { 
+        width: 32px; 
+        height: 32px; 
+        font-size: 16px; 
+    }
+
+    /* Mobile filter buttons */
+    .filter-container {
+        top: -40px;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+
+    .filter-btn {
+        font-size: 10px;
+        padding: 4px 8px;
+    }
+
+    /* Mobile info panel */
+    .info-panel {
+        margin: 20px;
+        padding: 20px;
+    }
+
+    /* Mobile login controls */
+    .login-controls {
+        top: 10px;
+        right: 10px;
+    }
+
+    .login-controls button {
+        font-size: 10px;
+        padding: 6px 8px;
+    }
 }
 
 /*
@@ -387,32 +733,58 @@ LANDSCAPE-SPECIFIC STYLES
 */
 @media (orientation: landscape) and (max-height: 500px) {
     .header-ui-bar {
-        height: 90px; /* A fixed shorter height for landscape */
+        height: 90px;
         min-height: 90px;
     }
+    
     .footer-ui-bar {
-        height: 40px; /* A fixed shorter height for landscape footer */
+        height: 40px;
         padding: 4px;
         font-size: 9px;
     }
-    .carousel-wrapper, .carousel-container {
-        height: 80px; /* Make carousel container shorter */
+    
+    .carousel-wrapper {
+        height: 80px;
     }
-    .carousel-card {
-        width: 130px;
-        height: 75px;
+    
+    .carousel-container,
+    #carouselContainer {
+        height: 70px;
+        padding: 5px 30px;
     }
-    .carousel-card-title { font-size: 12px; }
-    .carousel-card-text { font-size: 10px; }
+    
+    .carousel-card,
+    .program-card {
+        width: 120px;
+        height: 60px;
+        padding: 4px;
+    }
+    
+    .carousel-card img,
+    .program-card img {
+        width: 24px;
+        height: 24px;
+    }
+    
+    .carousel-card-title,
+    .program-card h4 { 
+        font-size: 10px; 
+    }
+    
+    .carousel-card-text,
+    .program-card .program-name { 
+        font-size: 8px; 
+    }
 
-    /* THE FIX: Eliminate the black band */
-    #threejs-canvas {
-        top: 90px; /* Position canvas right below the header */
-        height: calc(100vh - 90px - 40px); /* Calculate height to fill space perfectly */
+    /* Globe positioning for landscape */
+    #globe-container {
+        top: 90px;
+        height: calc(100vh - 90px - 40px);
     }
 
-    /* Reposition and resize control buttons for landscape */
-    .control-buttons {
+    /* Control buttons for landscape */
+    .control-buttons,
+    .controls {
         flex-direction: row;      
         justify-content: center; 
         align-items: center;
@@ -424,15 +796,37 @@ LANDSCAPE-SPECIFIC STYLES
         width: 95%;               
         transform: translateX(-50%); 
         padding: 5px;
-        background-color: rgba(0,0,0,0.5); 
+        background-color: rgba(0,0,0,0.7); 
         border-radius: 8px;
     }
 
-    .control-buttons button {
+    .control-buttons button,
+    .controls .control-btn {
         width: auto;
         flex-grow: 1; 
-        max-width: 110px;
-        padding: 6px;
-        font-size: 10px;
+        max-width: 100px;
+        padding: 4px 6px;
+        font-size: 9px;
+    }
+
+    /* Filter buttons for landscape */
+    .filter-container {
+        top: -35px;
+    }
+
+    .filter-btn {
+        font-size: 9px;
+        padding: 3px 6px;
+    }
+
+    /* Login controls for landscape */
+    .login-controls {
+        top: 5px;
+        right: 5px;
+    }
+
+    .login-controls button {
+        font-size: 9px;
+        padding: 4px 6px;
     }
 }
