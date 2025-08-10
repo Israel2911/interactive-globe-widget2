@@ -1,4 +1,4 @@
-// main.js
+// main.js - Integrated Version
 
 // 1. Authentication Token
 localStorage.setItem('userToken', 'guest-viewer');
@@ -151,7 +151,240 @@ const carouselData = [
   { category: "Research", img:"https://static.wixstatic.com/media/d77f36_aa9eb498381d4adc897522e38301ae6f~mv2.jpg", title: "Research",         text: "Opportunities & links." }
 ];
 
-// 7. Populate Carousel
+// 7. NEW INTEGRATED FUNCTIONS
+
+// Lat/Lon to 3D conversion
+function latLonToVector3(lat, lon, radius = 1.1) {
+  const phi = (90 - lat) * (Math.PI / 180);
+  const theta = (lon + 180) * (Math.PI / 180);
+  const x = -(radius * Math.sin(phi) * Math.cos(theta));
+  const z = (radius * Math.sin(phi) * Math.sin(theta));
+  const y = (radius * Math.cos(phi));
+  return new THREE.Vector3(x, y, z);
+}
+
+// Create texture for cubes
+function createTexture(text, logoUrl, bgColor = '#003366') {
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 256;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = bgColor;
+  ctx.fillRect(0, 0, 256, 256);
+  ctx.fillStyle = '#FFFFFF';
+  ctx.textAlign = 'center';
+  
+  function drawText() {
+    const lines = text.split('\n');
+    const fontSize = lines.length > 1 ? 28 : 32;
+    ctx.font = `bold ${fontSize}px Arial`;
+    let y = 128 + (lines.length > 1 ? 0 : 10);
+    lines.forEach(line => {
+      ctx.fillText(line, 128, y);
+      y += (fontSize + 6);
+    });
+    texture.needsUpdate = true;
+  }
+  
+  const texture = new THREE.CanvasTexture(canvas);
+  
+  if (logoUrl) {
+    const logoImg = new Image();
+    logoImg.crossOrigin = "Anonymous";
+    logoImg.src = logoUrl;
+    logoImg.onload = () => {
+      ctx.drawImage(logoImg, 16, 16, 64, 64);
+      drawText();
+    };
+    logoImg.onerror = () => {
+      drawText();
+    }
+  } else {
+    drawText();
+  }
+  
+  return new THREE.MeshStandardMaterial({
+    map: texture,
+    emissive: new THREE.Color(bgColor),
+    emissiveIntensity: 0.6
+  });
+}
+
+// Create neural cube
+function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
+  let contentIdx = 0;
+  const cubeObject = new THREE.Group();
+  
+  for (let xi = -1; xi <= 1; xi++) {
+    for (let yi = -1; yi <= 1; yi++) {
+      for (let zi = -1; zi <= 1; zi++) {
+        const item = content[contentIdx];
+        let material, userData;
+        
+        if (item) {
+          material = createTexture(item.programName, item.logo, color);
+          userData = item;
+        } else {
+          material = createTexture('Unassigned', null, '#333333');
+          userData = { university: "Unassigned" };
+        }
+        
+        const microcube = new THREE.Mesh(
+          new THREE.BoxGeometry(0.01, 0.01, 0.01),
+          material
+        );
+        
+        const pos = new THREE.Vector3(
+          xi * (0.01 + 0.002),
+          yi * (0.01 + 0.002),
+          zi * (0.01 + 0.002)
+        );
+        
+        microcube.position.copy(pos);
+        microcube.userData = { 
+          ...userData,
+          isSubCube: true,
+          initialPosition: pos.clone()
+        };
+        
+        if (subCubeArray) subCubeArray.push(microcube);
+        if (explodedPositionArray) {
+          explodedPositionArray.push(new THREE.Vector3(
+            xi * 0.1,
+            yi * 0.1,
+            zi * 0.1
+          ));
+        }
+        
+        cubeObject.add(microcube);
+        contentIdx++;
+      }
+    }
+  }
+  
+  return cubeObject;
+}
+
+// Create globe and cubes - UPDATED VERSION
+function createGlobeAndCubes() {
+  // Create globe texture
+  new THREE.TextureLoader().load("https://static.wixstatic.com/media/d77f36_8f868995fda643a0a61562feb20eb733~mv2.jpg", (tex) => {
+    const globe = new THREE.Mesh(
+      new THREE.SphereGeometry(1.0, 64, 64),
+      new THREE.MeshPhongMaterial({
+        map: tex,
+        transparent: true,
+        opacity: 0.75,
+        emissive: 0x112244,
+        emissiveIntensity: 0.2
+      })
+    );
+    globeGroup.add(globe);
+  });
+  
+  // Create wireframe
+  let wireframeMesh = new THREE.Mesh(
+    new THREE.SphereGeometry(1.05, 64, 64),
+    new THREE.MeshBasicMaterial({
+      color: 0x00ffff,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.12
+    })
+  );
+  globeGroup.add(wireframeMesh);
+  
+  // Create neural cubes
+  const colors = ['#003366', '#A52A2A', '#006400', '#483D8B', '#B22234', '#FF9933', '#EE2536', '#FFD700'];
+  const contents = [europeContent, newThailandContent, canadaContent, ukContent, usaContent, indiaContent, singaporeContent, malaysiaContent];
+  const cubeNames = ['Europe', 'Thailand', 'Canada', 'UK', 'USA', 'India', 'Singapore', 'Malaysia'];
+  
+  for (let i = 0; i < 8; i++) {
+    const cubeObject = createNeuralCube(contents[i], [], [], colors[i]);
+    cubeObject.userData.neuralName = cubeNames[i];
+    
+    const angle = (i / 8) * Math.PI * 2;
+    const radius = 1.8;
+    const x = Math.cos(angle) * radius;
+    const y = (i % 2 === 0 ? 0.3 : -0.3);
+    const z = Math.sin(angle) * radius;
+    
+    cubeObject.position.set(x, y, z);
+    neuronGroup.add(cubeObject);
+    neuralCubeMap[cubeNames[i]] = cubeObject;
+  }
+  
+  // Create country blocks
+  const fontLoader = new THREE.FontLoader();
+  fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', (font) => {
+    countryConfigs.forEach(config => {
+      const size = 0.03;
+      const blockGeometry = new THREE.BoxGeometry(size, size, size);
+      const blockMaterial = new THREE.MeshStandardMaterial({
+        color: config.color,
+        emissive: config.color,
+        emissiveIntensity: 0.6,
+        transparent: true,
+        opacity: 0.95
+      });
+      
+      const blockMesh = new THREE.Mesh(blockGeometry, blockMaterial);
+      blockMesh.userData.countryName = config.name;
+      
+      const position = latLonToVector3(config.lat, config.lon, 1.1);
+      blockMesh.position.copy(position);
+      blockMesh.lookAt(0, 0, 0);
+      
+      globeGroup.add(blockMesh);
+      countryBlocks[config.name] = blockMesh;
+      
+      // Add text labels
+      const lG = new THREE.TextGeometry(config.name, {
+        font: font,
+        size: 0.018,
+        height: 0.0001,
+        curveSegments: 8
+      });
+      lG.center();
+      
+      const lM = new THREE.MeshBasicMaterial({
+        color: 0xffffff
+      });
+      const lMesh = new THREE.Mesh(lG, lM);
+      
+      countryLabels.push({
+        label: lMesh,
+        block: blockMesh,
+        offset: 0.06
+      });
+      
+      globeGroup.add(lMesh);
+    });
+  });
+}
+
+// Draw connections between countries
+function drawAllConnections() {
+  // Create arcs between Thailand and other countries
+  const countryNames = ["India", "Europe", "UK", "Canada", "USA", "Singapore", "Malaysia"];
+  countryNames.forEach(countryName => {
+    const fromBlock = countryBlocks["Thailand"];
+    const toBlock = countryBlocks[countryName];
+    if (fromBlock && toBlock) {
+      // Simple line connection for now
+      const geometry = new THREE.BufferGeometry().setFromPoints([
+        fromBlock.position,
+        toBlock.position
+      ]);
+      const material = new THREE.LineBasicMaterial({ color: 0xffff00, transparent: true, opacity: 0.3 });
+      const line = new THREE.Line(geometry, material);
+      globeGroup.add(line);
+      arcPaths.push(line);
+    }
+  });
+}
+
+// 8. Populate Carousel
 function populateCarousel() {
   const c = document.getElementById('carouselContainer');
   c.innerHTML = '';
@@ -178,7 +411,7 @@ function populateCarousel() {
   if(def) def.classList.add('selected');
 }
 
-// 8. Scroll Carousel
+// 9. Scroll Carousel
 function scrollCarousel(dir) {
   const c = document.getElementById('carouselContainer');
   const card = c.querySelector('.carousel-card');
@@ -187,14 +420,14 @@ function scrollCarousel(dir) {
   c.scrollBy({ left: dir*w, behavior: 'smooth' });
 }
 
-// 9. Filtering Helpers
+// 10. Filtering Helpers
 function hasUndergraduatePrograms(arr) { return arr.some(p=>p&&/bachelor|bba|bsn|undergraduate/.test(p.programName.toLowerCase())); }
 function hasPostgraduatePrograms(arr) { return arr.some(p=>p&&/master|mba|msn|postgraduate|pg/.test(p.programName.toLowerCase())); }
 function hasExchangePrograms(arr)    { return arr.some(p=>p&&/exchange|abroad|mobility/.test(p.programName.toLowerCase())); }
 function hasDiplomaPrograms(arr)     { return arr.some(p=>p&&/diploma/.test(p.programName.toLowerCase())); }
 function hasUpskillPrograms(arr)     { return arr.some(p=>p&&/cyber|data|tech|design|ux/.test(p.programName.toLowerCase())); }
 
-// 10. Client-Side Filtering
+// 11. Client-Side Filtering
 function highlightCountriesByProgram(category) {
   const map = {
     UG: europeContent,
@@ -217,6 +450,7 @@ function highlightCountriesByProgram(category) {
     mat.emissiveIntensity = fn(map[category]) ? 1.2 : 0.6;
   });
 }
+
 function highlightNeuralCubesByProgram(category) {
   const map = {
     UG: europeContent,
@@ -236,12 +470,14 @@ function highlightNeuralCubesByProgram(category) {
   }[category];
   countryConfigs.forEach(cfg => {
     const cube = neuralCubeMap[cfg.name];
-    const scaleTo = fn(map[category]) ? 1.3 : 1.0;
-    new TWEEN.Tween(cube.scale).to({x:scaleTo,y:scaleTo,z:scaleTo},500).start();
+    if (cube) {
+      const scaleTo = fn(map[category]) ? 1.3 : 1.0;
+      new TWEEN.Tween(cube.scale).to({x:scaleTo,y:scaleTo,z:scaleTo},500).start();
+    }
   });
 }
 
-// 11. Initialize & Render
+// 12. Initialize & Render
 document.addEventListener('DOMContentLoaded', () => {
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(75,window.innerWidth/window.innerHeight,0.1,1000);
@@ -274,8 +510,8 @@ document.addEventListener('DOMContentLoaded', () => {
     renderer.setSize(window.innerWidth,window.innerHeight);
   });
 
-  createGlobeAndCubes();  // original
-  drawAllConnections();   // original
+  createGlobeAndCubes();  // Now uses the integrated version
+  drawAllConnections();   // Now uses the integrated version
 
   populateCarousel();
   document.getElementById('carouselScrollLeft').onclick=()=>scrollCarousel(-1);
