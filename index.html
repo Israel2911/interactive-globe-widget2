@@ -1,62 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Interactive Globe Widget</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive University Globe</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TransformControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
-  <div class="header-ui-bar">
+    <!-- Main Globe Container -->
+    <div id="globe-container"></div>
+
+    <!-- Loading Animation -->
+    <div id="loadingAnimation" class="loading-animation">
+        <div class="spinner"></div>
+        <div>Loading Globe...</div>
+    </div>
+
+    <!-- Carousel Wrapper -->
     <div class="carousel-wrapper">
-      <div class="carousel-arrow left" onclick="scrollCarousel(-1)">❮</div>
-      <div class="carousel-arrow right" onclick="scrollCarousel(1)">❯</div>
-      <div class="carousel-container" id="carouselContainer"></div>
+        <!-- Filter Buttons -->
+        <div class="filter-container">
+            <button class="filter-btn active" data-filter="All">All</button>
+            <button class="filter-btn" data-filter="UG">Undergraduate</button>
+            <button class="filter-btn" data-filter="PG">Postgraduate</button>
+            <button class="filter-btn" data-filter="Exchange">Exchange</button>
+        </div>
+        
+        <!-- Navigation Buttons -->
+        <button id="carouselScrollLeft" class="carousel-nav-btn">‹</button>
+        <button id="carouselScrollRight" class="carousel-nav-btn">›</button>
+        
+        <!-- Carousel Container -->
+        <div id="carouselContainer"></div>
     </div>
-  </div>
-  
-  <div class="left-controls-stack">
-    <div class="navigation-controls">
-      <div class="nav-row"><div class="nav-btn" id="btn-up">↑</div></div>
-      <div class="nav-row"><div class="nav-btn" id="btn-left">←</div><div class="nav-btn" id="btn-right">→</div></div>
-      <div class="nav-row"><div class="nav-btn" id="btn-down">↓</div></div>
-      <div class="nav-row"><div class="nav-btn" id="btn-zoom-in">+</div><div class="nav-btn" id="btn-zoom-out">−</div></div>
-      <div class="nav-row"><div class="nav-btn" id="btn-rotate">⟲</div><div class="nav-btn" id="btn-pan" title="Toggle Pan/Move Mode">✋</div></div>
-    </div>
-    <div class="scroll-lock-ui">
-        <div id="scrollLockInstruction">Globe is active.</div>
-        <button id="scrollLockBtn">Unlock Scroll</button>
-    </div>
-  </div>
 
-  <div class="control-buttons">
-    <button id="toggleNodesButton">Hide Neural Nodes</button>
-    <button id="pauseButton">Pause Rotation</button>
-    <button id="pauseCubesButton">Pause Cube Motion</button>
-    <button id="toggleMeshButton">Hide Globe Mesh</button>
-    <button id="arcToggleBtn">Hide Arcs</button>
-  </div>
-
-  <div class="info-panel-overlay" id="infoPanelOverlay" onclick="hideInfoPanel()">
-    <div class="info-panel" id="infoPanel" onclick="event.stopPropagation()">
-      <button class="info-panel-close" onclick="hideInfoPanel()">×</button>
-      <div class="main-card" id="infoPanelMainCard"></div>
-      <div class="subcard-grid" id="infoPanelSubcards"></div>
+    <!-- Control Buttons -->
+    <div class="controls">
+        <button id="pauseButton" class="control-btn">Pause Rotation</button>
+        <button id="pauseCubesButton" class="control-btn">Pause Cubes</button>
+        <button id="toggleMeshButton" class="control-btn">Hide Globe Mesh</button>
+        <button id="toggleNodesButton" class="control-btn">Hide Neural Nodes</button>
+        <button id="arcToggleBtn" class="control-btn">Toggle Connections</button>
+        <button id="scrollLockBtn" class="control-btn">Unlock Scroll</button>
     </div>
-  </div>
-  <div class="footer-ui-bar">
-    <span>© 2025 Interactive Program Globe | Global Education Alliance</span>
-  </div>
 
-  <!-- JS Libraries for Globe and Interactions -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/TransformControls.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/loaders/FontLoader.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/geometries/TextGeometry.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/simplex-noise/2.4.0/simplex-noise.min.js"></script>
-  <!-- Your main JS rendering logic -->
-  <script src="main.js"></script>
+    <!-- Info Panel -->
+    <div id="infoPanelOverlay">
+        <div class="info-panel">
+            <button class="close-panel" onclick="hideInfoPanel()">×</button>
+            <div id="infoPanelMainCard"></div>
+            <div id="infoPanelSubcards"></div>
+        </div>
+    </div>
+
+    <!-- Login/Logout Buttons for Testing -->
+    <div style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
+        <button onclick="simulateLogin()" class="control-btn">Login (Test)</button>
+        <button onclick="logout()" class="control-btn">Logout</button>
+    </div>
+
+    <script src="main.js"></script>
 </body>
 </html>
