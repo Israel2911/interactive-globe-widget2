@@ -35,24 +35,24 @@ const countryConfigs = [
 const europeContent = [
   { university: "University of Passau",                 logo: "https://static.wixstatic.com/shapes/d77f36_467b1d2eed4042eab43fdff25124915b.svg", programName: "Degree-Seeking" },
   { university: "University of Passau",                 logo: "https://static.wixstatic.com/shapes/d77f36_467b1d2eed4042eab43fdff25124915b.svg", programName: "Exchange" },
-  null, null,
+  null,null,
   { university: "ICES",                                 logo: "https://static.wixstatic.com/media/d77f36_c11cec0bd94f4ab7a1b611cecb9e90cb~mv2.png", programName: "Full Degree" },
   { university: "ICES",                                 logo: "https://static.wixstatic.com/media/d77f36_c11cec0bd94f4ab7a1b611cecb9e90cb~mv2.png", programName: "Mobility" },
-  null, null,
+  null,null,
   { university: "Université Catholique de Lille",       logo: "https://static.wixstatic.com/media/d77f36_009f964ce876419f9391e6a604f9257c~mv2.png", programName: "Exchange" },
   { university: "Université Catholique de Lille",       logo: "https://static.wixstatic.com/media/d77f36_009f964ce876419f9391e6a604f9257c~mv2.png", programName: "Summer Program" },
   null, null,
   { university: "IRCOM",                                logo: "https://static.wixstatic.com/media/d77f36_592f23b64ee44211abcb87444198e26a~mv2.jpg", programName: "Master\nHumanitarian" },
   { university: "IRCOM",                                logo: "https://static.wixstatic.com/media/d77f36_592f23b64ee44211abcb87444198e26a~mv2.jpg", programName: "Mobility" },
-  null, null,
+  null,null,
   { university: "KATHO-NRW",                            logo: "https://static.wixstatic.com/shapes/d77f36_b6a110be4758449f8537733a427f2dba.svg", programName: "Int'l Studies" },
   { university: "KATHO-NRW",                            logo: "https://static.wixstatic.com/shapes/d77f36_b6a110be4758449f8537733a427f2dba.svg", programName: "Study Abroad" },
-  null, null,
+  null,null,
   { university: "TSI",                                  logo: "https://static.wixstatic.com/media/d77f36_1992247272bb4d55a3cac5060abec418~mv2.jpeg", programName: "Int'l Students" },
   { university: "TSI",                                  logo: "https://static.wixstatic.com/media/d77f36_1992247272bb4d55a3cac5060abec418~mv2.jpeg", programName: "Innovation" },
-  null, null,
+  null,null,
   { university: "INSEEC",                               logo: "https://static.wixstatic.com/media/d77f36_66d4c88c4ebb4b7da6cacaed57178165~mv2.webp", programName: "Exchanges" },
-  null, null
+  null,null
 ];
 
 const newThailandContent = [
@@ -65,7 +65,7 @@ const newThailandContent = [
   { university: "Siam University",                      logo: "https://static.wixstatic.com/media/d77f36_69fce6d5825e467a88fc02a01b416cf7~mv2.png", programName: "Bachelor of Business Admin. (BBA)" },
   { university: "Siam University",                      logo: "https://static.wixstatic.com/media/d77f36_69fce6d5825e467a88fc02a01b416cf7~mv2.png", programName: "Master of Business Admin. (MBA)" },
   { university: "Siam University",                      logo: "https://static.wixstatic.com/media/d77f36_69fce6d5825e467a88fc02a01b416cf7~mv2.png", programName: "Semester Abroad / Exchange" },
-  null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null
+  null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null
 ];
 
 const canadaContent = [
@@ -80,7 +80,7 @@ const canadaContent = [
   { university: "Wawiwa Tech Training",                 logo: "https://static.wixstatic.com/media/d77f36_0d83ad97a7e54b2db3f0eb089dbcec1f~mv2.webp", programName: "Data Analytics" },
   { university: "Wawiwa Tech Training",                 logo: "https://static.wixstatic.com/media/d77f36_0d83ad97a7e54b2db3f0eb089dbcec1f~mv2.webp", programName: "Full Stack Dev" },
   { university: "Wawiwa Tech Training",                 logo: "https://static.wixstatic.com/media/d77f36_0d83ad97a7e54b2db3f0eb089dbcec1f~mv2.webp", programName: "UX/UI Design" },
-  null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null
+  null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null
 ];
 
 const ukContent = [
@@ -93,7 +93,7 @@ const ukContent = [
   { university: "University of Exeter",                  logo: "https://static.wixstatic.com/shapes/d77f36_ae3db739ffe74de88cd658a3878c5c9c.svg", programName: "Medicine" },
   { university: "University of Exeter",                  logo: "https://static.wixstatic.com/shapes/d77f36_ae3db739ffe74de88cd658a3878c5c9c.svg", programName: "Law" },
   { university: "UK Students Abroad",                    logo: "https://static.wixstatic.com/media/d77f36_0be7efbfceee4b359a597935c2851fd3~mv2.jpg", programName: "Study in SG" },
-  null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null
+  null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null
 ];
 
 const usaContent = [
@@ -105,7 +105,7 @@ const usaContent = [
   { university: "California Baptist University",       logo: "https://static.wixstatic.com/shapes/d77f36_efa51305eeef47e2b02a13e35d17e251.svg", programName: "Int'l Exchange" },
   { university: "LeTourneau University",               logo: "https://static.wixstatic.com/media/d77f36_2f89b58cab8349eabfafae4ee16e68a2~mv2.png", programName: "Aviation" },
   { university: "LeTourneau University",               logo: "https://static.wixstatic.com/media/d77f36_2f89b58cab8349eabfafae4ee16e68a2~mv2.png", programName: "Engineering" },
-  null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null
+  null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null
 ];
 
 const indiaContent = [
@@ -138,17 +138,17 @@ const malaysiaContent = [
   { university: "Limkokwing University",               logo: "https://static.wixstatic.com/media/d77f36_38c855c3d47448009fc7123812183cc0~mv2.png", programName: "Creative\nTech" },
   { university: "Binary University",                   logo: "https://static.wixstatic.com/media/d77f36_38969a51e38148f294cade091aa0cbd8~mv2.png", programName: "MyBIG Grant" },
   { university: "Study in Malaysia Guide",             logo: "https://static.wixstatic.com/media/d77f36_e6a24c71b7a14548beca3dafbb8e797b~mv2.jpg", programName: "Student\nGuide" },
-  null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null
+  null,null,null,null,null,null,null,null,null,null,null,null,null,null
 ];
 
 // 6. Carousel Data
 const carouselData = [
-  { category: "UG", img: "https://static.wixstatic.com/media/d77f36_deddd99f45db4a55953835f5d3926246~mv2.png", title: "Undergraduate", text: "Bachelor-level opportunities." },
-  { category: "PG", img: "https://static.wixstatic.com/media/d77f36_ae2a1e8b47514fb6b0a995be456a9eec~mv2.png", title: "Postgraduate", text: "Master's & advanced programs." },
-  { category: "Diploma", img: "https://static.wixstatic.com/media/d77f36_e8f60f4350304ee79afab3978a44e307~mv2.png", title: "Diploma", text: "Professional & foundation." },
-  { category: "Mobility", img: "https://static.wixstatic.com/media/d77f36_1118d15eee5a45f2a609c762d077857e~mv2.png", title: "Semester Abroad", text: "Exchange & mobility." },
-  { category: "Upskilling", img:"https://static.wixstatic.com/media/d77f36_d8d9655ba23f4849abba7d09ddb12092~mv2.png", title:"Upskilling", text:"Short-term training." },
-  { category: "Research", img:"https://static.wixstatic.com/media/d77f36_aa9eb498381d4adc897522e38301ae6f~mv2.jpg", title:"Research", text:"Opportunities & links." }
+  { category: "UG",       img: "https://static.wixstatic.com/media/d77f36_deddd99f45db4a55953835f5d3926246~mv2.png", title: "Undergraduate",    text: "Bachelor-level opportunities." },
+  { category: "PG",       img: "https://static.wixstatic.com/media/d77f36_ae2a1e8b47514fb6b0a995be456a9eec~mv2.png", title: "Postgraduate",     text: "Master's & advanced programs." },
+  { category: "Diploma",  img: "https://static.wixstatic.com/media/d77f36_e8f60f4350304ee79afab3978a44e307~mv2.png", title: "Diploma",          text: "Professional & foundation." },
+  { category: "Mobility", img: "https://static.wixstatic.com/media/d77f36_1118d15eee5a45f2a609c762d077857e~mv2.png", title: "Semester Abroad",  text: "Exchange & mobility." },
+  { category: "Upskilling",img:"https://static.wixstatic.com/media/d77f36_d8d9655ba23f4849abba7d09ddb12092~mv2.png",title:"Upskilling",      text: "Short-term training." },
+  { category: "Research", img:"https://static.wixstatic.com/media/d77f36_aa9eb498381d4adc897522e38301ae6f~mv2.jpg", title: "Research",         text: "Opportunities & links." }
 ];
 
 // 7. Populate Carousel
@@ -196,76 +196,92 @@ function hasUpskillPrograms(arr)     { return arr.some(p=>p&&/cyber|data|tech|de
 
 // 10. Client-Side Filtering
 function highlightCountriesByProgram(category) {
-  const maps = {
-    UG: europeContent, PG: europeContent, Mobility: europeContent,
-    Diploma: singaporeContent, Upskilling: canadaContent, Research: europeContent
+  const map = {
+    UG: europeContent,
+    PG: europeContent,
+    Mobility: europeContent,
+    Diploma: singaporeContent,
+    Upskilling: canadaContent,
+    Research: europeContent
   };
-  const fn = { UG: hasUndergraduatePrograms, PG: hasPostgraduatePrograms,
-               Mobility: hasExchangePrograms, Diploma: hasDiplomaPrograms,
-               Upskilling: hasUpskillPrograms, Research: ()=>true }[category];
+  const fn = {
+    UG: hasUndergraduatePrograms,
+    PG: hasPostgraduatePrograms,
+    Mobility: hasExchangePrograms,
+    Diploma: hasDiplomaPrograms,
+    Upskilling: hasUpskillPrograms,
+    Research: () => true
+  }[category];
   countryConfigs.forEach(cfg => {
     const mat = countryBlocks[cfg.name].material;
-    mat.emissiveIntensity = fn(maps[category]) ? 1.2 : 0.6;
+    mat.emissiveIntensity = fn(map[category]) ? 1.2 : 0.6;
   });
 }
 function highlightNeuralCubesByProgram(category) {
-  const maps = {
-    UG: europeContent, PG: europeContent, Mobility: europeContent,
-    Diploma: singaporeContent, Upskilling: canadaContent, Research: europeContent
+  const map = {
+    UG: europeContent,
+    PG: europeContent,
+    Mobility: europeContent,
+    Diploma: singaporeContent,
+    Upskilling: canadaContent,
+    Research: europeContent
   };
-  const fn = { UG: hasUndergraduatePrograms, PG: hasPostgraduatePrograms,
-               Mobility: hasExchangePrograms, Diploma: hasDiplomaPrograms,
-               Upskilling: hasUpskillPrograms, Research: ()=>true }[category];
+  const fn = {
+    UG: hasUndergraduatePrograms,
+    PG: hasPostgraduatePrograms,
+    Mobility: hasExchangePrograms,
+    Diploma: hasDiplomaPrograms,
+    Upskilling: hasUpskillPrograms,
+    Research: () => true
+  }[category];
   countryConfigs.forEach(cfg => {
     const cube = neuralCubeMap[cfg.name];
-    const scaleTo = fn(maps[category]) ? 1.3 : 1.0;
-    new TWEEN.Tween(cube.scale).to({ x: scaleTo, y: scaleTo, z: scaleTo }, 500).start();
+    const scaleTo = fn(map[category]) ? 1.3 : 1.0;
+    new TWEEN.Tween(cube.scale).to({x:scaleTo,y:scaleTo,z:scaleTo},500).start();
   });
 }
 
 // 11. Initialize & Render
 document.addEventListener('DOMContentLoaded', () => {
-  // Three.js Setup
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(75,window.innerWidth/window.innerHeight,0.1,1000);
-  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer = new THREE.WebGLRenderer({antialias:true,alpha:true});
   renderer.setSize(window.innerWidth,window.innerHeight);
-  document.body.appendChild(renderer.domElement);
+  const container = document.getElementById('globe-container');
+  if(container) container.appendChild(renderer.domElement);
+  else document.body.appendChild(renderer.domElement);
 
   globeGroup = new THREE.Group();
   scene.add(globeGroup);
   globeGroup.add(neuronGroup);
 
-  controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true; controls.dampingFactor = 0.05;
-  controls.autoRotate = true; controls.autoRotateSpeed = 0.5;
+  controls = new THREE.OrbitControls(camera,renderer.domElement);
+  controls.enableDamping=true;controls.dampingFactor=0.05;
+  controls.autoRotate=true;controls.autoRotateSpeed=0.5;
 
-  transformControls = new THREE.TransformControls(camera, renderer.domElement);
-  transformControls.addEventListener('dragging-changed', e => controls.enabled = !e.value);
+  transformControls=new THREE.TransformControls(camera,renderer.domElement);
+  transformControls.addEventListener('dragging-changed',e=>controls.enabled=!e.value);
   scene.add(transformControls);
 
   scene.add(new THREE.AmbientLight(0x404040,1.2));
-  const dlight=new THREE.DirectionalLight(0xffffff,1.5);
-  dlight.position.set(5,5,5); scene.add(dlight);
+  const dl=new THREE.DirectionalLight(0xffffff,1.5);
+  dl.position.set(5,5,5);scene.add(dl);
 
   camera.position.z=5;
-  window.addEventListener('resize', ()=>{
+  window.addEventListener('resize',()=>{
     camera.aspect=window.innerWidth/window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth,window.innerHeight);
   });
 
-  // Create Globe, Cubes, Country Blocks, Arcs
-  createGlobeAndCubes();  // your original function
-  drawAllConnections();   // your original function
+  createGlobeAndCubes();  // original
+  drawAllConnections();   // original
 
-  // Carousel
   populateCarousel();
-  document.getElementById('carouselScrollLeft').onclick = () => scrollCarousel(-1);
-  document.getElementById('carouselScrollRight').onclick = () => scrollCarousel(1);
+  document.getElementById('carouselScrollLeft').onclick=()=>scrollCarousel(-1);
+  document.getElementById('carouselScrollRight').onclick=()=>scrollCarousel(1);
 
-  // Animation Loop
-  (function animate() {
+  (function animate(){
     requestAnimationFrame(animate);
     controls.update();
     TWEEN.update();
@@ -273,14 +289,14 @@ document.addEventListener('DOMContentLoaded', () => {
   })();
 });
 
-// Login / Logout Simulations
+// Login / Logout
 function simulateLogin(){
   localStorage.setItem('userToken','authenticated-user-token');
-  alert('Logged in! You can now access detailed university information.');
+  alert('Logged in!');
   location.reload();
 }
 function logout(){
   localStorage.setItem('userToken','guest-viewer');
-  alert('Logged out. Detailed features require login.');
+  alert('Logged out!');
   location.reload();
 }
