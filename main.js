@@ -4,7 +4,7 @@ localStorage.setItem('userToken', 'guest-viewer');
 // Authentication helpers
 function userIsAuthenticated() {
   const token = localStorage.getItem('userToken');
-  return token && token !== 'guest-viewer'; // guest-viewer can see but not interact
+  return token && token !== 'guest-viewer';
 }
 
 function showLoginPrompt(message = 'Please log in to interact with universities and programs') {
@@ -44,11 +44,22 @@ const mouse = new THREE.Vector2();
 const mouseDownPos = new THREE.Vector2();
 const clock = new THREE.Clock();
 
-// Data from backend (populated after fetch)
+// Data from backend (with defaults)
 let europeContent = [], newThailandContent = [], canadaContent = [], ukContent = [], usaContent = [], indiaContent = [], singaporeContent = [], malaysiaContent = [];
 let allUniversityContent = [];
 let countryPrograms = {};
-let countryConfigs = [];
+
+// FIXED: Default country configs (so surface cubes always show)
+let countryConfigs = [
+  {"name": "India", "lat": 22, "lon": 78, "color": 0xFF9933},
+  {"name": "Europe", "lat": 48.8566, "lon": 2.3522, "color": 0x0000FF},
+  {"name": "UK", "lat": 53, "lon": -0.1276, "color": 0x191970},
+  {"name": "Singapore", "lat": 1.35, "lon": 103.8, "color": 0xff0000},
+  {"name": "Malaysia", "lat": 4, "lon": 102, "color": 0x0000ff},
+  {"name": "Thailand", "lat": 13.7563, "lon": 100.5018, "color": 0xffcc00},
+  {"name": "Canada", "lat": 56.1304, "lon": -106.3468, "color": 0xff0000},
+  {"name": "USA", "lat": 39.8283, "lon": -98.5795, "color": 0x003366}
+];
 
 // MODIFIED: Fetch data - allow basic globe without auth
 async function fetchDataFromBackend() {
@@ -58,31 +69,115 @@ async function fetchDataFromBackend() {
       headers['Authorization'] = `Bearer ${localStorage.getItem('userToken')}`;
     }
     
-    const response = await fetch('https://interactive-globe-widget2-backend.onrender.com/api/globe-data', { headers });
+    const response = await fetch('/api/globe-data', { headers });
     
     if (!response.ok) {
       console.log('Using basic globe data - login required for full features');
-      return; // Continue with empty data, globe still renders
+      return;
     }
     
     const data = await response.json();
     
-    europeContent = data.europeContent;
-    newThailandContent = data.newThailandContent;
-    canadaContent = data.canadaContent;
-    ukContent = data.ukContent;
-    usaContent = data.usaContent;
-    indiaContent = data.indiaContent;
-    singaporeContent = data.singaporeContent;
-    malaysiaContent = data.malaysiaContent;
-    countryPrograms = data.countryPrograms;
-    countryConfigs = data.countryConfigs;
+    // Update data arrays
+    europeContent = data.europeContent || [];
+    newThailandContent = data.newThailandContent || [];
+    canadaContent = data.canadaContent || [];
+    ukContent = data.ukContent || [];
+    usaContent = data.usaContent || [];
+    indiaContent = data.indiaContent || [];
+    singaporeContent = data.singaporeContent || [];
+    malaysiaContent = data.malaysiaContent || [];
+    countryPrograms = data.countryPrograms || {};
+    
+    // Update country configs if provided
+    if (data.countryConfigs && data.countryConfigs.length > 0) {
+      countryConfigs = data.countryConfigs;
+    }
     
     allUniversityContent = [...europeContent, ...newThailandContent, ...canadaContent, ...ukContent, ...usaContent, ...indiaContent, ...singaporeContent, ...malaysiaContent];
+    
+    // Update carousel after data loads
+    updateCarousel();
+    
+    console.log('Data loaded successfully!');
     
   } catch (error) {
     console.log('Globe running in preview mode - login for full access');
   }
+}
+
+// ADD: Update carousel with country data
+function updateCarousel() {
+  const carouselContainer = document.getElementById('carouselContainer');
+  if (!carouselContainer) return;
+  
+  carouselContainer.innerHTML = '';
+  
+  countryConfigs.forEach(config => {
+    const programs = countryPrograms[config.name] || ['UG', 'PG', 'Exchange'];
+    const countryCard = document.createElement('div');
+    countryCard.style.cssText = `
+      background: #22356a;
+      border-radius: 8px;
+      padding: 12px;
+      min-width: 120px;
+      text-align: center;
+      margin: 0 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    `;
+    
+    countryCard.innerHTML = `
+      <h4 style="color: #ffa500; margin: 0 0 8px 0; font-size: 14px;">${config.name}</h4>
+      <div style="color: #fff; font-size: 11px;">${programs.join(' • ')}</div>
+    `;
+    
+    countryCard.addEventListener('click', () => {
+      const neuralCube = neuralCubeMap[config.name];
+      const toggleFunc = toggleFunctionMap[config.name];
+      
+      if (neuralCube && toggleFunc) {
+        closeAllExploded();
+        
+        // Focus on the country
+        const targetPosition = new THREE.Vector3();
+        neuralCube.getWorldPosition(targetPosition);
+        
+        new TWEEN.Tween(controls.target).to(targetPosition, 1000).easing(TWEEN.Easing.Cubic.InOut).start();
+        new TWEEN.Tween(camera.position).to({
+          x: targetPosition.x + 2,
+          y: targetPosition.y + 1,
+          z: targetPosition.z + 2
+        }, 1000).easing(TWEEN.Easing.Cubic.InOut).start();
+        
+        setTimeout(() => toggleFunc(), 1200);
+      }
+    });
+    
+    countryCard.addEventListener('mouseenter', () => {
+      countryCard.style.background = '#ffa500';
+      countryCard.style.color = '#222';
+    });
+    
+    countryCard.addEventListener('mouseleave', () => {
+      countryCard.style.background = '#22356a';
+      countryCard.style.color = '#fff';
+    });
+    
+    carouselContainer.appendChild(countryCard);
+  });
+}
+
+// ADD: Scroll carousel function
+function scrollCarousel(direction) {
+  const container = document.getElementById('carouselContainer');
+  if (!container) return;
+  
+  const scrollAmount = 200;
+  container.scrollBy({
+    left: direction * scrollAmount,
+    behavior: 'smooth'
+  });
 }
 
 // Initialize Three.js scene
@@ -263,8 +358,8 @@ function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
           material = createTexture(item.programName, item.logo, color);
           userData = item;
         } else {
-          material = createTexture('Unassigned', null, '#333333');
-          userData = { university: "Unassigned" };
+          material = createTexture('University', null, color);
+          userData = { university: "University", programName: "Program" };
         }
         
         const microcube = new THREE.Mesh(
@@ -416,7 +511,7 @@ function showInfoPanel(data) {
   const mainErasmusLink = uniData[0].erasmusLink;
   document.getElementById('infoPanelMainCard').innerHTML = `
     <div class="main-card-details">
-      <img src="${uniData[0].logo}" alt="${uniData.university}">
+      <img src="${uniData.logo}" alt="${uniData.university}">
       <h3>${uniData.university}</h3>
     </div>
     <div class="main-card-actions">
@@ -583,112 +678,147 @@ function onCanvasMouseUp(event) {
 function setupEventListeners() {
   renderer.domElement.addEventListener('mousedown', onCanvasMouseDown);
   renderer.domElement.addEventListener('mouseup', onCanvasMouseUp);
-  renderer.domElement.addEventListener('mouseup', () => {
-    if (isPanMode) renderer.domElement.style.cursor = 'grab';
-  });
   
   const panSpeed = 3;
-  document.getElementById('btn-up').addEventListener('click', () => {
-    controls.pan(0, -panSpeed);
-    controls.update();
-  });
-  
-  document.getElementById('btn-down').addEventListener('click', () => {
-    controls.pan(0, panSpeed);
-    controls.update();
-  });
-  
-  document.getElementById('btn-left').addEventListener('click', () => {
-    controls.pan(panSpeed, 0);
-    controls.update();
-  });
-  
-  document.getElementById('btn-right').addEventListener('click', () => {
-    controls.pan(-panSpeed, 0);
-    controls.update();
-  });
-  
-  document.getElementById('btn-zoom-in').addEventListener('click', () => {
-    controls.dollyIn(1.2);
-    controls.update();
-  });
-  
-  document.getElementById('btn-zoom-out').addEventListener('click', () => {
-    controls.dollyOut(1.2);
-    controls.update();
-  });
-  
-  document.getElementById('btn-rotate').addEventListener('click', () => {
-    controls.autoRotate = !controls.autoRotate;
-    document.getElementById('btn-rotate').style.background = controls.autoRotate ? '#a46bfd' : 'rgba(0,0,0,0.8)';
-  });
-  
-  document.getElementById("pauseButton").addEventListener("click", () => {
-    isRotationPaused = !isRotationPaused;
-    controls.autoRotate = !isRotationPaused;
-    document.getElementById("pauseButton").textContent = isRotationPaused ? "Resume Rotation" : "Pause Rotation";
-  });
-  
-  document.getElementById("pauseCubesButton").addEventListener("click", () => {
-    isCubeMovementPaused = !isCubeMovementPaused;
-    document.getElementById("pauseCubesButton").textContent = isCubeMovementPaused ? "Resume Cube Motion" : "Pause Cube Motion";
-  });
-  
-  document.getElementById("toggleMeshButton").addEventListener("click", () => {
-    const wireframeMesh = globeGroup.children.find(child => child.material && child.material.wireframe);
-    if (wireframeMesh) {
-      wireframeMesh.visible = !wireframeMesh.visible;
-      document.getElementById("toggleMeshButton").textContent = wireframeMesh.visible ? "Hide Globe Mesh" : "Show Globe Mesh";
-    }
-  });
-  
-  document.getElementById("arcToggleBtn").addEventListener("click", () => {
-    let visible = false;
-    arcPaths.forEach((p, i) => {
-      if (i === 0) {
-        visible = !p.visible;
-      }
-      p.visible = visible;
+  const btnUp = document.getElementById('btn-up');
+  if (btnUp) {
+    btnUp.addEventListener('click', () => {
+      controls.pan(0, -panSpeed);
+      controls.update();
     });
-  });
-  
-  document.getElementById('toggleNodesButton').addEventListener('click', () => {
-    const neuralNodes = cubes.filter(cube => cube.userData.isSmallNode);
-    const areVisible = neuralNodes.length > 0 && neuralNodes[0].visible;
-    const newVisibility = !areVisible;
-    
-    neuralNodes.forEach(node => {
-      node.visible = newVisibility;
-    });
-    
-    if (neuralNetworkLines) {
-      neuralNetworkLines.visible = newVisibility;
-    }
-    
-    document.getElementById('toggleNodesButton').textContent = newVisibility ? "Hide Neural Nodes" : "Show Neural Nodes";
-  });
-  
-  const scrollLockButton = document.getElementById('scrollLockBtn');
-  
-  function setGlobeInteraction(isInteractive) {
-    if (controls) {
-      controls.enabled = isInteractive;
-    }
-    
-    if (isInteractive) {
-      scrollLockButton.textContent = 'Unlock Scroll';
-      scrollLockButton.classList.remove('unlocked');
-      document.getElementById('scrollLockInstruction').textContent = 'Globe is active.';
-    } else {
-      scrollLockButton.textContent = 'Lock Globe';
-      scrollLockButton.classList.add('unlocked');
-      document.getElementById('scrollLockInstruction').textContent = 'Page scroll is active.';
-    }
   }
   
-  scrollLockButton.addEventListener('click', () => {
-    setGlobeInteraction(!controls.enabled);
-  });
+  const btnDown = document.getElementById('btn-down');
+  if (btnDown) {
+    btnDown.addEventListener('click', () => {
+      controls.pan(0, panSpeed);
+      controls.update();
+    });
+  }
+  
+  const btnLeft = document.getElementById('btn-left');
+  if (btnLeft) {
+    btnLeft.addEventListener('click', () => {
+      controls.pan(panSpeed, 0);
+      controls.update();
+    });
+  }
+  
+  const btnRight = document.getElementById('btn-right');
+  if (btnRight) {
+    btnRight.addEventListener('click', () => {
+      controls.pan(-panSpeed, 0);
+      controls.update();
+    });
+  }
+  
+  const btnZoomIn = document.getElementById('btn-zoom-in');
+  if (btnZoomIn) {
+    btnZoomIn.addEventListener('click', () => {
+      controls.dollyIn(1.2);
+      controls.update();
+    });
+  }
+  
+  const btnZoomOut = document.getElementById('btn-zoom-out');
+  if (btnZoomOut) {
+    btnZoomOut.addEventListener('click', () => {
+      controls.dollyOut(1.2);
+      controls.update();
+    });
+  }
+  
+  const btnRotate = document.getElementById('btn-rotate');
+  if (btnRotate) {
+    btnRotate.addEventListener('click', () => {
+      controls.autoRotate = !controls.autoRotate;
+      btnRotate.style.background = controls.autoRotate ? '#a46bfd' : 'rgba(0,0,0,0.8)';
+    });
+  }
+  
+  const pauseButton = document.getElementById("pauseButton");
+  if (pauseButton) {
+    pauseButton.addEventListener("click", () => {
+      isRotationPaused = !isRotationPaused;
+      controls.autoRotate = !isRotationPaused;
+      pauseButton.textContent = isRotationPaused ? "Resume Rotation" : "Pause Rotation";
+    });
+  }
+  
+  const pauseCubesButton = document.getElementById("pauseCubesButton");
+  if (pauseCubesButton) {
+    pauseCubesButton.addEventListener("click", () => {
+      isCubeMovementPaused = !isCubeMovementPaused;
+      pauseCubesButton.textContent = isCubeMovementPaused ? "Resume Cube Motion" : "Pause Cube Motion";
+    });
+  }
+  
+  const toggleMeshButton = document.getElementById("toggleMeshButton");
+  if (toggleMeshButton) {
+    toggleMeshButton.addEventListener("click", () => {
+      const wireframeMesh = globeGroup.children.find(child => child.material && child.material.wireframe);
+      if (wireframeMesh) {
+        wireframeMesh.visible = !wireframeMesh.visible;
+        toggleMeshButton.textContent = wireframeMesh.visible ? "Hide Globe Mesh" : "Show Globe Mesh";
+      }
+    });
+  }
+  
+  const arcToggleBtn = document.getElementById("arcToggleBtn");
+  if (arcToggleBtn) {
+    arcToggleBtn.addEventListener("click", () => {
+      let visible = false;
+      arcPaths.forEach((p, i) => {
+        if (i === 0) {
+          visible = !p.visible;
+        }
+        p.visible = visible;
+      });
+    });
+  }
+  
+  const toggleNodesButton = document.getElementById('toggleNodesButton');
+  if (toggleNodesButton) {
+    toggleNodesButton.addEventListener('click', () => {
+      const neuralNodes = cubes.filter(cube => cube.userData.isSmallNode);
+      const areVisible = neuralNodes.length > 0 && neuralNodes[0].visible;
+      const newVisibility = !areVisible;
+      
+      neuralNodes.forEach(node => {
+        node.visible = newVisibility;
+      });
+      
+      if (neuralNetworkLines) {
+        neuralNetworkLines.visible = newVisibility;
+      }
+      
+      toggleNodesButton.textContent = newVisibility ? "Hide Neural Nodes" : "Show Neural Nodes";
+    });
+  }
+  
+  const scrollLockButton = document.getElementById('scrollLockBtn');
+  if (scrollLockButton) {
+    function setGlobeInteraction(isInteractive) {
+      if (controls) {
+        controls.enabled = isInteractive;
+      }
+      
+      const scrollInstruction = document.getElementById('scrollLockInstruction');
+      if (isInteractive) {
+        scrollLockButton.textContent = 'Unlock Scroll';
+        scrollLockButton.classList.remove('unlocked');
+        if (scrollInstruction) scrollInstruction.textContent = 'Globe is active.';
+      } else {
+        scrollLockButton.textContent = 'Lock Globe';
+        scrollLockButton.classList.add('unlocked');
+        if (scrollInstruction) scrollInstruction.textContent = 'Page scroll is active.';
+      }
+    }
+    
+    scrollLockButton.addEventListener('click', () => {
+      setGlobeInteraction(!controls.enabled);
+    });
+  }
   
   window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
@@ -787,6 +917,7 @@ function createGlobeAndCubes() {
     }
   }
   
+  // Create globe texture
   new THREE.TextureLoader().load("https://static.wixstatic.com/media/d77f36_8f868995fda643a0a61562feb20eb733~mv2.jpg", (tex) => {
     const globe = new THREE.Mesh(
       new THREE.SphereGeometry(GLOBE_RADIUS, 64, 64),
@@ -799,6 +930,7 @@ function createGlobeAndCubes() {
     globeGroup.add(globe);
   });
   
+  // Create wireframe
   let wireframeMesh = new THREE.Mesh(
     new THREE.SphereGeometry(GLOBE_RADIUS + 0.05, 64, 64),
     new THREE.MeshBasicMaterial({
@@ -810,6 +942,7 @@ function createGlobeAndCubes() {
   );
   globeGroup.add(wireframeMesh);
   
+  // FIXED: Create country blocks with default configs
   fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', (font) => {
     countryConfigs.forEach(config => {
       const size = 0.03;
@@ -854,6 +987,11 @@ function createGlobeAndCubes() {
     
     drawAllConnections();
   });
+  
+  // Initialize carousel immediately with default data
+  setTimeout(() => {
+    updateCarousel();
+  }, 100);
 }
 
 // Animation loop
@@ -947,7 +1085,7 @@ function animate() {
   renderer.render(scene, camera);
 }
 
-// MODIFIED: Initialize application - ALWAYS show globe
+// Initialize application - ALWAYS show globe
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('Loading Interactive Globe Widget...');
   
@@ -966,21 +1104,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   }, 2000);
 });
 
-// ADD: Login simulation function for testing
+// Login simulation function for testing
 function simulateLogin() {
   localStorage.setItem('userToken', 'authenticated-user-token');
   alert('Logged in! You can now access detailed university information and application links.');
-  location.reload(); // Refresh to load data
+  location.reload();
 }
 
-// ADD: Logout function  
+// Logout function  
 function logout() {
   localStorage.setItem('userToken', 'guest-viewer');
   alert('Logged out. Globe exploration continues, but detailed features require login.');
   location.reload();
-}
-
-// ADD: Scroll carousel function (for compatibility)
-function scrollCarousel(direction) {
-  console.log('Carousel scroll:', direction);
 }
