@@ -49,33 +49,17 @@ let europeContent = [], newThailandContent = [], canadaContent = [], ukContent =
 let allUniversityContent = [];
 let countryPrograms = {};
 
-// FIXED: More accurate country coordinates and better lat/lon conversion
+// RESTORED: Your original precise country coordinates
 let countryConfigs = [
-  {"name": "India", "lat": 20.5937, "lon": 78.9629, "color": 0xFF9933},
-  {"name": "Europe", "lat": 54.5260, "lon": 15.2551, "color": 0x0000FF}, // Central Europe
-  {"name": "UK", "lat": 55.3781, "lon": -3.4360, "color": 0x191970},
-  {"name": "Singapore", "lat": 1.3521, "lon": 103.8198, "color": 0xff0000},
-  {"name": "Malaysia", "lat": 4.2105, "lon": 101.9758, "color": 0x0000ff},
-  {"name": "Thailand", "lat": 15.8700, "lon": 100.9925, "color": 0xffcc00},
+  {"name": "India", "lat": 22, "lon": 78, "color": 0xFF9933},
+  {"name": "Europe", "lat": 48.8566, "lon": 2.3522, "color": 0x0000FF},
+  {"name": "UK", "lat": 53, "lon": -0.1276, "color": 0x191970},
+  {"name": "Singapore", "lat": 1.35, "lon": 103.8, "color": 0xff0000},
+  {"name": "Malaysia", "lat": 4, "lon": 102, "color": 0x0000ff},
+  {"name": "Thailand", "lat": 13.7563, "lon": 100.5018, "color": 0xffcc00},
   {"name": "Canada", "lat": 56.1304, "lon": -106.3468, "color": 0xff0000},
   {"name": "USA", "lat": 39.8283, "lon": -98.5795, "color": 0x003366}
 ];
-
-// FIXED: Improved lat/lon to 3D position conversion for precise mapping
-function latLonToVector3(lat, lon, radius) {
-  // Convert to radians
-  const latRad = lat * (Math.PI / 180);
-  const lonRad = lon * (Math.PI / 180);
-  
-  // Spherical to Cartesian conversion
-  // Note: Three.js uses Y-up coordinate system
-  const x = -radius * Math.cos(latRad) * Math.cos(lonRad);
-  const y = radius * Math.sin(latRad);
-  const z = radius * Math.cos(latRad) * Math.sin(lonRad);
-  
-  return new THREE.Vector3(x, y, z);
-}
-
 
 // MODIFIED: Fetch data - allow basic globe without auth
 async function fetchDataFromBackend() {
@@ -245,7 +229,7 @@ function getColorByData(data) {
   return color;
 }
 
-// Create texture for cubes
+// RESTORED: Your original texture creation with proper logos
 function createTexture(text, logoUrl, bgColor = '#003366') {
   const canvas = document.createElement('canvas');
   canvas.width = 256;
@@ -269,16 +253,17 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
     texture.needsUpdate = true;
   }
   
+  // RESTORED: Your original logo handling
   if (logoUrl) {
     const logoImg = new Image();
     logoImg.crossOrigin = "Anonymous";
     logoImg.src = logoUrl;
     logoImg.onload = () => {
-      ctx.drawImage(logoImg, 16, 16, 64, 64);
-      drawText();
+      ctx.drawImage(logoImg, 16, 16, 64, 64); // Logo in top-left
+      drawText(); // Text below logo
     };
     logoImg.onerror = () => {
-      drawText();
+      drawText(); // Fallback to text only
     }
   } else {
     drawText();
@@ -359,7 +344,7 @@ const toggleFunctionMap = {
   'Malaysia': createToggleFunction('Malaysia')
 };
 
-// Create neural cube structure
+// RESTORED: Your original neural cube creation with proper university data
 function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
   let contentIdx = 0;
   const cubeObject = new THREE.Group();
@@ -371,11 +356,13 @@ function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
         let material, userData;
         
         if (item) {
+          // RESTORED: Your original university data structure
           material = createTexture(item.programName, item.logo, color);
-          userData = item;
+          userData = item; // Full university data with logo, links, etc.
         } else {
-          material = createTexture('University', null, color);
-          userData = { university: "University", programName: "Program" };
+          // RESTORED: Your original fallback for empty slots
+          material = createTexture('Unassigned', null, '#333333');
+          userData = { university: "Unassigned" };
         }
         
         const microcube = new THREE.Mesh(
@@ -429,7 +416,7 @@ function createNeuralNetwork() {
   globeGroup.add(neuralNetworkLines);
 }
 
-// Convert lat/lon to 3D position
+// RESTORED: Your original lat/lon to 3D conversion
 function latLonToVector3(lat, lon, radius) {
   const phi = (90 - lat) * (Math.PI / 180);
   const theta = (lon + 180) * (Math.PI / 180);
@@ -527,7 +514,7 @@ function showInfoPanel(data) {
   const mainErasmusLink = uniData[0].erasmusLink;
   document.getElementById('infoPanelMainCard').innerHTML = `
     <div class="main-card-details">
-      <img src="${uniData.logo}" alt="${uniData.university}">
+      <img src="${uniData[0].logo}" alt="${uniData.university}">
       <h3>${uniData.university}</h3>
     </div>
     <div class="main-card-actions">
@@ -958,7 +945,7 @@ function createGlobeAndCubes() {
   );
   globeGroup.add(wireframeMesh);
   
-  // FIXED: Create country blocks with default configs
+  // FIXED: Create country blocks with your original coordinates
   fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', (font) => {
     countryConfigs.forEach(config => {
       const size = 0.03;
