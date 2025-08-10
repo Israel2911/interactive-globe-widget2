@@ -207,12 +207,18 @@ function initializeThreeJS() {
   });
   scene.add(transformControls);
   
-  const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+  // BRIGHTER LIGHTING
+  const ambientLight = new THREE.AmbientLight(0x404040, 1.2);  // Doubled intensity
   scene.add(ambientLight);
-  
-  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);  // Much brighter
   directionalLight.position.set(5, 5, 5);
   scene.add(directionalLight);
+
+  // ADD EXTRA LIGHT for globe visibility
+  const backLight = new THREE.DirectionalLight(0x336699, 0.5);
+  backLight.position.set(-5, -5, -5);
+  scene.add(backLight);
   
   camera.position.z = 5;
 }
@@ -920,14 +926,16 @@ function createGlobeAndCubes() {
     }
   }
   
-  // Create globe texture
+  // Create globe texture - BRIGHTENED
   new THREE.TextureLoader().load("https://static.wixstatic.com/media/d77f36_8f868995fda643a0a61562feb20eb733~mv2.jpg", (tex) => {
     const globe = new THREE.Mesh(
       new THREE.SphereGeometry(GLOBE_RADIUS, 64, 64),
       new THREE.MeshPhongMaterial({
         map: tex,
         transparent: true,
-        opacity: 0.28
+        opacity: 0.75,  // Much brighter!
+        emissive: 0x112244,  // Add subtle glow
+        emissiveIntensity: 0.2
       })
     );
     globeGroup.add(globe);
@@ -945,8 +953,50 @@ function createGlobeAndCubes() {
   );
   globeGroup.add(wireframeMesh);
   
-  // FIXED: Create country blocks with your original coordinates
+  // FIXED: Create country blocks with your EXACT original coordinates
   fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', (font) => {
+    const countryConfigs = [{
+      name: "India",
+      lat: 22,
+      lon: 78,
+      color: 0xFF9933
+    }, {
+      name: "Europe",
+      lat: 48.8566,
+      lon: 2.3522,
+      color: 0x0000FF
+    }, {
+      name: "UK",
+      lat: 53,
+      lon: -0.1276,
+      color: 0x191970
+    }, {
+      name: "Singapore",
+      lat: 1.35,
+      lon: 103.8,
+      color: 0xff0000
+    }, {
+      name: "Malaysia",
+      lat: 4,
+      lon: 102,
+      color: 0x0000ff
+    }, {
+      name: "Thailand",
+      lat: 13.7563,
+      lon: 100.5018,
+      color: 0xffcc00
+    }, {
+      name: "Canada",
+      lat: 56.1304,
+      lon: -106.3468,
+      color: 0xff0000
+    }, {
+      name: "USA",
+      lat: 39.8283,
+      lon: -98.5795,
+      color: 0x003366
+    }];
+    
     countryConfigs.forEach(config => {
       const size = 0.03;
       const blockGeometry = new THREE.BoxGeometry(size, size, size);
@@ -976,7 +1026,9 @@ function createGlobeAndCubes() {
       });
       lG.center();
       
-      const lM = new THREE.MeshBasicMaterial({ color: 0xffffff });
+      const lM = new THREE.MeshBasicMaterial({
+        color: 0xffffff
+      });
       const lMesh = new THREE.Mesh(lG, lM);
       
       countryLabels.push({
@@ -989,6 +1041,7 @@ function createGlobeAndCubes() {
     });
     
     drawAllConnections();
+    highlightCountriesByProgram("UG");
   });
   
   // Initialize carousel immediately with default data
@@ -1086,6 +1139,23 @@ function animate() {
   }
   
   renderer.render(scene, camera);
+}
+
+// ADD: Missing highlightCountriesByProgram function
+function highlightCountriesByProgram(programType) {
+  console.log('Highlighting countries for program:', programType);
+  
+  // Optional: Add highlighting logic for specific program types
+  Object.keys(countryBlocks).forEach(countryName => {
+    const countryBlock = countryBlocks[countryName];
+    if (countryBlock) {
+      // Example: Highlight countries that offer UG programs
+      if (programType === "UG") {
+        // Add subtle highlight effect
+        countryBlock.material.emissiveIntensity = 0.8;
+      }
+    }
+  });
 }
 
 // Initialize application - ALWAYS show globe
