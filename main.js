@@ -1,10 +1,14 @@
+// Add test token for initial globe rendering
+localStorage.setItem('userToken', 'guest-viewer');
+
 // Authentication helpers
 function userIsAuthenticated() {
-  return localStorage.getItem('userToken') !== null;
+  const token = localStorage.getItem('userToken');
+  return token && token !== 'guest-viewer'; // guest-viewer can see but not interact
 }
 
-function showLoginPrompt(message = 'Please log in to access the Interactive Globe') {
-  alert(message);
+function showLoginPrompt(message = 'Please log in to interact with universities and programs') {
+  alert(message + '\n\nThe globe is free to explore, but login is required for university details and applications.');
 }
 
 // Global Three.js variables
@@ -46,21 +50,20 @@ let allUniversityContent = [];
 let countryPrograms = {};
 let countryConfigs = [];
 
-// Fetch secure data from backend
+// MODIFIED: Fetch data - allow basic globe without auth
 async function fetchDataFromBackend() {
-  if (!userIsAuthenticated()) {
-    showLoginPrompt();
-    return;
-  }
-  
   try {
-    const response = await fetch('https://interactive-globe-widget2-backend.onrender.com/api/globe-data', {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('userToken')}`
-      }
-    });
+    let headers = {};
+    if (userIsAuthenticated()) {
+      headers['Authorization'] = `Bearer ${localStorage.getItem('userToken')}`;
+    }
     
-    if (!response.ok) throw new Error('Failed to fetch secure data');
+    const response = await fetch('https://interactive-globe-widget2-backend.onrender.com/api/globe-data', { headers });
+    
+    if (!response.ok) {
+      console.log('Using basic globe data - login required for full features');
+      return; // Continue with empty data, globe still renders
+    }
     
     const data = await response.json();
     
@@ -78,8 +81,7 @@ async function fetchDataFromBackend() {
     allUniversityContent = [...europeContent, ...newThailandContent, ...canadaContent, ...ukContent, ...usaContent, ...indiaContent, ...singaporeContent, ...malaysiaContent];
     
   } catch (error) {
-    console.error('Error fetching secure data:', error);
-    alert('Failed to load secure university data. Please try again.');
+    console.log('Globe running in preview mode - login for full access');
   }
 }
 
@@ -399,10 +401,10 @@ function drawAllConnections() {
   }).filter(Boolean);
 }
 
-// Show info panel
+// MODIFIED: Show info panel - require auth
 function showInfoPanel(data) {
   if (!userIsAuthenticated()) {
-    showLoginPrompt('Please log in to view university details');
+    showLoginPrompt('Please log in to view detailed university information and application links');
     return;
   }
   
@@ -414,8 +416,8 @@ function showInfoPanel(data) {
   const mainErasmusLink = uniData[0].erasmusLink;
   document.getElementById('infoPanelMainCard').innerHTML = `
     <div class="main-card-details">
-      <img src="${uniData[0].logo}" alt="${uniData[0].university}">
-      <h3>${uniData[0].university}</h3>
+      <img src="${uniData[0].logo}" alt="${uniData.university}">
+      <h3>${uniData.university}</h3>
     </div>
     <div class="main-card-actions">
       ${mainErasmusLink ? `<a href="${mainErasmusLink}" target="_blank" class="partner-cta erasmus">Erasmus Info</a>` : ''}
@@ -472,12 +474,8 @@ function closeAllExploded() {
   if (isMalaysiaCubeExploded) toggleFunctionMap['Malaysia']();
 }
 
+// MODIFIED: Mouse interaction - allow globe interaction, require auth for details
 function onCanvasMouseUp(event) {
-  if (!userIsAuthenticated()) {
-    showLoginPrompt('Please log in to interact with the globe');
-    return;
-  }
-  
   if (transformControls.dragging) return;
   
   const deltaX = Math.abs(event.clientX - mouseDownPos.x);
@@ -522,6 +520,7 @@ function onCanvasMouseUp(event) {
       const anyExploded = Object.values(explosionStateMap).some(state => state);
       closeAllExploded();
       
+      // ALLOW cube animation without auth
       new TWEEN.Tween(correspondingNeuralCube.scale)
         .to({ x: 1.5, y: 1.5, z: 1.5 }, 200)
         .yoyo(true)
@@ -563,8 +562,14 @@ function onCanvasMouseUp(event) {
     const toggleFunc = toggleFunctionMap[neuralName];
     
     if (isExploded && clickedSubCube && clickedSubCube.userData.university !== "Unassigned") {
+      // THIS requires auth - viewing detailed university info
+      if (!userIsAuthenticated()) {
+        showLoginPrompt('Please log in to view detailed university programs and application links');
+        return;
+      }
       showInfoPanel(clickedSubCube.userData);
     } else {
+      // ALLOW basic cube explosion/interaction without auth
       const anyExploded = Object.values(explosionStateMap).some(state => state);
       closeAllExploded();
       setTimeout(() => toggleFunc(), anyExploded ? 810 : 0);
@@ -942,16 +947,40 @@ function animate() {
   renderer.render(scene, camera);
 }
 
-// Initialize application
+// MODIFIED: Initialize application - ALWAYS show globe
 document.addEventListener('DOMContentLoaded', async () => {
-  if (!userIsAuthenticated()) {
-    showLoginPrompt();
-    return;
-  }
+  console.log('Loading Interactive Globe Widget...');
   
-  await fetchDataFromBackend();
+  // ALWAYS initialize and show the globe
   initializeThreeJS();
   setupEventListeners();
   createGlobeAndCubes();
   animate();
+  
+  // Try to fetch data in background (doesn't block globe)
+  await fetchDataFromBackend();
+  
+  // Add subtle hint for users
+  setTimeout(() => {
+    console.log('🌍 Globe loaded! Click countries and cubes to explore. Login required for detailed university information.');
+  }, 2000);
 });
+
+// ADD: Login simulation function for testing
+function simulateLogin() {
+  localStorage.setItem('userToken', 'authenticated-user-token');
+  alert('Logged in! You can now access detailed university information and application links.');
+  location.reload(); // Refresh to load data
+}
+
+// ADD: Logout function  
+function logout() {
+  localStorage.setItem('userToken', 'guest-viewer');
+  alert('Logged out. Globe exploration continues, but detailed features require login.');
+  location.reload();
+}
+
+// ADD: Scroll carousel function (for compatibility)
+function scrollCarousel(direction) {
+  console.log('Carousel scroll:', direction);
+}
