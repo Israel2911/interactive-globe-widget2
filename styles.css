@@ -15,7 +15,7 @@ html, body {
     cursor: default;
 }
 
-/* Globe Container */
+/* Globe Container - ENHANCED for Three.js Integration */
 #globe-container {
     position: fixed;
     left: 0;
@@ -25,6 +25,21 @@ html, body {
     z-index: 1;
     display: block;
     background: transparent;
+    pointer-events: auto;
+    overflow: hidden;
+}
+
+/* Globe Canvas Specific Styling */
+#globe-container canvas {
+    display: block;
+    background: transparent !important;
+    width: 100% !important;
+    height: 100% !important;
+    cursor: grab;
+}
+
+#globe-container canvas:active {
+    cursor: grabbing;
 }
 
 /* Loading Animation */
