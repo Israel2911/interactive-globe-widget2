@@ -56,7 +56,7 @@ let countryConfigs = [
   {"name": "USA", "lat": 39.8283, "lon": -98.5795, "color": 0x003366}
 ];
 
-// CLIENT-SIDE ONLY: University data with NO LINKS
+// University content arrays
 const europeContent = [{
     university: "University of Passau",
     logo: "https://static.wixstatic.com/shapes/d77f36_467b1d2eed4042eab43fdff25124915b.svg",
@@ -428,10 +428,7 @@ const malaysiaContent = [{
     programId: "malaysia_guide"
 }, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null];
 
-// Combine all university content
-let allUniversityContent = [...europeContent, ...newThailandContent, ...canadaContent, ...ukContent, ...usaContent, ...indiaContent, ...singaporeContent, ...malaysiaContent].filter(item => item !== null);
-
-// CORRECTED: Your exact carousel data with Wix static images
+// Carousel data with program types
 const carouselData = [{
     category: "UG",
     img: "https://static.wixstatic.com/media/d77f36_deddd99f45db4a55953835f5d3926246~mv2.png",
@@ -464,192 +461,170 @@ const carouselData = [{
     text: "Opportunities & links."
 }];
 
-// CORRECTED: Your exact populateCarousel function
-function populateCarousel() {
-    const container = document.getElementById('carouselContainer');
-    container.innerHTML = ''; // Clear existing content
+// Generate neural network data
+function generateNeuralNetworkData() {
+  for (let i = 0; i < count; i++) {
+    const r = Math.random() * maxRadius;
+    const theta = Math.random() * 2 * Math.PI;
+    const phi = Math.acos(2 * Math.random() - 1);
     
-    carouselData.forEach(item => {
-        const cardHTML = `
-            <a href="#" class="carousel-card" data-category="${item.category}">
-                <img src="${item.img}" alt="${item.title}"/>
-                <div class="carousel-card-content">
-                    <div class="carousel-card-title">${item.title}</div>
-                    <div class="carousel-card-text">${item.text}</div>
-                </div>
-            </a>`;
-        container.innerHTML += cardHTML;
+    const x = r * Math.sin(phi) * Math.cos(theta);
+    const y = r * Math.sin(phi) * Math.sin(theta);
+    const z = r * Math.cos(phi);
+    
+    const velocity = new THREE.Vector3(
+      (Math.random() - 0.5) * 0.01,
+      (Math.random() - 0.5) * 0.01,
+      (Math.random() - 0.5) * 0.01
+    );
+    
+    velocities.push(velocity);
+    
+    dummyDataSet.push({
+      x: x, y: y, z: z,
+      domain: Math.floor(Math.random() * 5),
+      engagement: Math.random(),
+      risk: Math.random(),
+      confidence: 0.3 + Math.random() * 0.7,
+      influence: Math.random()
     });
+  }
 }
 
-// CORRECTED: Your exact scrollCarousel function
-function scrollCarousel(direction) {
-    const container = document.getElementById('carouselContainer');
-    const card = container.querySelector('.carousel-card');
-    if (card) {
-        let cardWidth = card.offsetWidth;
-        container.scrollBy({
-            left: direction * (cardWidth + 16),
-            behavior: 'smooth'
-        });
+// Create neural network connections
+function createNeuralNetworkConnections() {
+  const positions = [];
+  const colors = [];
+  
+  for (let i = 0; i < count; i++) {
+    if (Math.random() < 0.2) {
+      const targetIndex = Math.floor(Math.random() * count);
+      if (targetIndex !== i) {
+        const start = dummyDataSet[i];
+        const end = dummyDataSet[targetIndex];
+        
+        positions.push(start.x, start.y, start.z);
+        positions.push(end.x, end.y, end.z);
+        
+        colors.push(0.2, 0.8, 1.0);
+        colors.push(0.2, 0.8, 1.0);
+      }
     }
+  }
+  
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+  
+  const material = new THREE.LineBasicMaterial({
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.3
+  });
+  
+  neuralNetworkLines = new THREE.LineSegments(geometry, material);
+  neuronGroup.add(neuralNetworkLines);
 }
 
-// Highlight countries by program function
-function highlightCountriesByProgram(category) {
-    console.log('Highlighting countries for category:', category);
+// Create background neural nodes
+function createBackgroundNeuralNodes() {
+  for (let i = 0; i < count; i++) {
+    const data = dummyDataSet[i];
     
-    // Reset all country blocks to default
-    Object.keys(countryBlocks).forEach(countryName => {
-        const countryBlock = countryBlocks[countryName];
-        if (countryBlock && countryBlock.material) {
-            countryBlock.material.emissiveIntensity = 0.5;
-        }
+    const geometry = new THREE.SphereGeometry(0.003, 8, 8);
+    const color = new THREE.Color().setHSL(data.domain * 0.2, 0.7, 0.5);
+    const material = new THREE.MeshBasicMaterial({ 
+      color: color,
+      transparent: true,
+      opacity: 0.8
     });
     
-    // Highlight countries that offer the selected category
-    const relevantCountries = getCountriesByCategory(category);
-    relevantCountries.forEach(countryName => {
-        const countryBlock = countryBlocks[countryName];
-        if (countryBlock && countryBlock.material) {
-            countryBlock.material.emissiveIntensity = 1.0;
-        }
-    });
+    const sphere = new THREE.Mesh(geometry, material);
+    sphere.position.set(data.x, data.y, data.z);
+    sphere.userData = { ...data, isNeuralNode: true };
+    
+    neuronGroup.add(sphere);
+  }
 }
 
-// Highlight neural cubes by program
-function highlightNeuralCubesByProgram(category) {
-    console.log('Highlighting neural cubes for category:', category);
+// Create earth texture
+function createEarthTexture() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1024;
+  canvas.height = 512;
+  const ctx = canvas.getContext('2d');
+  
+  // Create gradient for earth-like appearance
+  const gradient = ctx.createRadialGradient(512, 256, 0, 512, 256, 512);
+  gradient.addColorStop(0, '#1e3c72');
+  gradient.addColorStop(0.3, '#2a5298');
+  gradient.addColorStop(0.6, '#3d7eaa');
+  gradient.addColorStop(1, '#1e3c72');
+  
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, 1024, 512);
+  
+  // Add continent-like patterns
+  ctx.globalCompositeOperation = 'overlay';
+  for (let i = 0; i < 300; i++) {
+    const x = Math.random() * 1024;
+    const y = Math.random() * 512;
+    const radius = Math.random() * 30 + 10;
     
-    const relevantCountries = getCountriesByCategory(category);
-    
-    // Reset all cubes
-    Object.keys(neuralCubeMap).forEach(countryName => {
-        const cube = neuralCubeMap[countryName];
-        if (cube) {
-            // Reset cube scale/highlighting
-            cube.scale.set(1, 1, 1);
-        }
-    });
-    
-    // Highlight relevant cubes
-    relevantCountries.forEach(countryName => {
-        const cube = neuralCubeMap[countryName];
-        if (cube) {
-            // Scale up or add glow effect
-            if (typeof TWEEN !== 'undefined') {
-                new TWEEN.Tween(cube.scale)
-                    .to({ x: 1.2, y: 1.2, z: 1.2 }, 500)
-                    .yoyo(true)
-                    .repeat(1)
-                    .start();
-            }
-        }
-    });
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${Math.floor(Math.random() * 100) + 100}, ${Math.floor(Math.random() * 150) + 100}, ${Math.floor(Math.random() * 50) + 50}, 0.4)`;
+    ctx.fill();
+  }
+  
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.needsUpdate = true;
+  
+  return texture;
 }
 
-// Get countries that offer a specific category
-function getCountriesByCategory(category) {
-    const countryList = [];
-    
-    switch(category) {
-        case 'UG':
-            // Countries with undergraduate programs
-            if (hasUndergraduatePrograms(europeContent)) countryList.push('Europe');
-            if (hasUndergraduatePrograms(newThailandContent)) countryList.push('Thailand');
-            if (hasUndergraduatePrograms(canadaContent)) countryList.push('Canada');
-            if (hasUndergraduatePrograms(ukContent)) countryList.push('UK');
-            if (hasUndergraduatePrograms(usaContent)) countryList.push('USA');
-            if (hasUndergraduatePrograms(indiaContent)) countryList.push('India');
-            if (hasUndergraduatePrograms(singaporeContent)) countryList.push('Singapore');
-            if (hasUndergraduatePrograms(malaysiaContent)) countryList.push('Malaysia');
-            break;
-            
-        case 'PG':
-            // Countries with postgraduate programs
-            if (hasPostgraduatePrograms(europeContent)) countryList.push('Europe');
-            if (hasPostgraduatePrograms(newThailandContent)) countryList.push('Thailand');
-            if (hasPostgraduatePrograms(canadaContent)) countryList.push('Canada');
-            if (hasPostgraduatePrograms(ukContent)) countryList.push('UK');
-            if (hasPostgraduatePrograms(usaContent)) countryList.push('USA');
-            if (hasPostgraduatePrograms(indiaContent)) countryList.push('India');
-            if (hasPostgraduatePrograms(singaporeContent)) countryList.push('Singapore');
-            if (hasPostgraduatePrograms(malaysiaContent)) countryList.push('Malaysia');
-            break;
-            
-        case 'Mobility':
-            // Countries with exchange/mobility programs
-            if (hasExchangePrograms(europeContent)) countryList.push('Europe');
-            if (hasExchangePrograms(newThailandContent)) countryList.push('Thailand');
-            if (hasExchangePrograms(canadaContent)) countryList.push('Canada');
-            if (hasExchangePrograms(ukContent)) countryList.push('UK');
-            if (hasExchangePrograms(usaContent)) countryList.push('USA');
-            if (hasExchangePrograms(indiaContent)) countryList.push('India');
-            if (hasExchangePrograms(singaporeContent)) countryList.push('Singapore');
-            if (hasExchangePrograms(malaysiaContent)) countryList.push('Malaysia');
-            break;
-            
-        case 'Diploma':
-            // Countries with diploma programs
-            if (hasDiplomaPrograms(singaporeContent)) countryList.push('Singapore');
-            if (hasDiplomaPrograms(malaysiaContent)) countryList.push('Malaysia');
-            break;
-            
-        case 'Upskilling':
-            // Countries with upskilling/tech programs
-            if (hasUpskillPrograms(canadaContent)) countryList.push('Canada');
-            if (hasUpskillPrograms(singaporeContent)) countryList.push('Singapore');
-            break;
-            
-        case 'Research':
-            // Countries with research opportunities
-            countryList.push('Europe', 'UK', 'USA', 'Singapore');
-            break;
-            
-        default:
-            // Show all countries
-            countryList.push('Europe', 'Thailand', 'Canada', 'UK', 'USA', 'India', 'Singapore', 'Malaysia');
+// Create country connection arcs
+function createCountryArcs() {
+  const arcPositions = [];
+  const arcColors = [];
+  
+  for (let i = 0; i < countryConfigs.length; i++) {
+    for (let j = i + 1; j < countryConfigs.length; j++) {
+      if (Math.random() < 0.4) {
+        const start = latLonToVector3(countryConfigs[i].lat, countryConfigs[i].lon, 1.15);
+        const end = latLonToVector3(countryConfigs[j].lat, countryConfigs[j].lon, 1.15);
+        
+        const mid = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
+        mid.normalize().multiplyScalar(1.4);
+        
+        for (let t = 0; t <= 1; t += 0.05) {
+          const point = new THREE.Vector3();
+          point.addVectors(
+            start.clone().multiplyScalar((1 - t) * (1 - t)),
+            mid.clone().multiplyScalar(2 * (1 - t) * t)
+          );
+          point.add(end.clone().multiplyScalar(t * t));
+          
+          arcPositions.push(point.x, point.y, point.z);
+          arcColors.push(0.0, 1.0, 1.0);
+        }
+      }
     }
-    
-    return countryList;
-}
-
-// Helper functions to check program types
-function hasUndergraduatePrograms(content) {
-    return content.some(program => program && 
-        (program.programName.toLowerCase().includes('bachelor') || 
-         program.programName.toLowerCase().includes('bba') ||
-         program.programName.toLowerCase().includes('bsn') ||
-         program.programName.toLowerCase().includes('undergraduate')));
-}
-
-function hasPostgraduatePrograms(content) {
-    return content.some(program => program && 
-        (program.programName.toLowerCase().includes('master') || 
-         program.programName.toLowerCase().includes('mba') ||
-         program.programName.toLowerCase().includes('msn') ||
-         program.programName.toLowerCase().includes('postgraduate') ||
-         program.programName.toLowerCase().includes('pg')));
-}
-
-function hasExchangePrograms(content) {
-    return content.some(program => program && 
-        (program.programName.toLowerCase().includes('exchange') || 
-         program.programName.toLowerCase().includes('abroad') ||
-         program.programName.toLowerCase().includes('mobility')));
-}
-
-function hasDiplomaPrograms(content) {
-    return content.some(program => program && 
-        program.programName.toLowerCase().includes('diploma'));
-}
-
-function hasUpskillPrograms(content) {
-    return content.some(program => program && 
-        (program.programName.toLowerCase().includes('cyber') || 
-         program.programName.toLowerCase().includes('data') ||
-         program.programName.toLowerCase().includes('tech') ||
-         program.programName.toLowerCase().includes('design')));
+  }
+  
+  const arcGeometry = new THREE.BufferGeometry();
+  arcGeometry.setAttribute('position', new THREE.Float32BufferAttribute(arcPositions, 3));
+  arcGeometry.setAttribute('color', new THREE.Float32BufferAttribute(arcColors, 3));
+  
+  const arcMaterial = new THREE.LineBasicMaterial({
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.6
+  });
+  
+  const arcs = new THREE.LineSegments(arcGeometry, arcMaterial);
+  arcPaths.push(arcs);
+  globeGroup.add(arcs);
 }
 
 // Wait for Three.js to load
@@ -671,7 +646,7 @@ function initializeThreeJS() {
   scene.background = new THREE.Color(0x000011);
   
   camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-  camera.position.set(0, 0, 5);
+  camera.position.set(0, 0, 3);
   
   renderer = new THREE.WebGLRenderer({ 
     antialias: true, 
@@ -704,24 +679,15 @@ function initializeThreeJS() {
     setupBasicControls();
   }
   
-  // Setup transform controls
-  if (typeof THREE.TransformControls !== 'undefined') {
-    transformControls = new THREE.TransformControls(camera, renderer.domElement);
-    transformControls.addEventListener('dragging-changed', (event) => {
-      if (controls) controls.enabled = !event.value;
-    });
-    scene.add(transformControls);
-  }
-  
   // Setup lighting
-  const ambientLight = new THREE.AmbientLight(0x404040, 2.0);
+  const ambientLight = new THREE.AmbientLight(0x404040, 1.5);
   scene.add(ambientLight);
 
-  const directionalLight = new THREE.DirectionalLight(0xffffff, 2.0);
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
   directionalLight.position.set(10, 10, 5);
   scene.add(directionalLight);
 
-  const backLight = new THREE.DirectionalLight(0x336699, 1.0);
+  const backLight = new THREE.DirectionalLight(0x336699, 0.8);
   backLight.position.set(-10, -10, -5);
   scene.add(backLight);
   
@@ -735,8 +701,8 @@ function setupControls() {
   controls.enablePan = true;
   controls.autoRotate = true;
   controls.autoRotateSpeed = 0.5;
-  controls.minDistance = 2;
-  controls.maxDistance = 10;
+  controls.minDistance = 1.5;
+  controls.maxDistance = 8;
 }
 
 function setupBasicControls() {
@@ -768,7 +734,7 @@ function setupBasicControls() {
   
   renderer.domElement.addEventListener('wheel', (event) => {
     camera.position.z += event.deltaY * 0.01;
-    camera.position.z = Math.max(2, Math.min(10, camera.position.z));
+    camera.position.z = Math.max(1.5, Math.min(8, camera.position.z));
   });
 }
 
@@ -788,14 +754,14 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
   
   ctx.fillStyle = '#FFFFFF';
   ctx.textAlign = 'center';
-  ctx.font = 'bold 24px Arial';
+  ctx.font = 'bold 18px Arial';
   
   const lines = text.split('\n');
   let startY = 128;
   if (lines.length > 1) startY = 100;
   
   lines.forEach((line, index) => {
-    ctx.fillText(line, 128, startY + (index * 30));
+    ctx.fillText(line, 128, startY + (index * 25));
   });
   
   const texture = new THREE.CanvasTexture(canvas);
@@ -835,7 +801,7 @@ function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
           material = createTexture(item.programName, item.logo, color);
           userData = { ...item };
         } else {
-          material = createTexture('Available', null, '#666666');
+          material = createTexture('Available', null, '#444444');
           userData = { university: "Available", programName: "Program Slot" };
         }
         
@@ -871,10 +837,11 @@ function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
   return cubeObject;
 }
 
-// Create toggle functions
+// Toggle functions
 function createToggleFunction(cubeName) {
   return function() {
     let isExploded, setExploded, cube, subCubes, explodedPos;
+    
     switch (cubeName) {
       case 'Europe':
         [isExploded, setExploded, cube, subCubes, explodedPos] = [isEuropeCubeExploded, s => isEuropeCubeExploded = s, europeCube, europeSubCubes, explodedPositions];
@@ -911,15 +878,12 @@ function createToggleFunction(cubeName) {
     const targetPosition = new THREE.Vector3();
     if (shouldBeExploded) {
       cube.getWorldPosition(targetPosition);
-      if (transformControls) transformControls.attach(cube);
     } else {
       targetPosition.set(0, 0, 0);
-      if (transformControls) transformControls.detach();
     }
     
     if (typeof TWEEN !== 'undefined') {
       new TWEEN.Tween(controls ? controls.target : camera.position).to(targetPosition, 800).easing(TWEEN.Easing.Cubic.InOut).start();
-      if (transformControls) transformControls.visible = shouldBeExploded;
       
       subCubes.forEach((subCube, i) => {
         const targetPos = shouldBeExploded ? explodedPos[i] : subCube.userData.initialPosition;
@@ -951,35 +915,49 @@ function latLonToVector3(lat, lon, radius) {
   return new THREE.Vector3(x, y, z);
 }
 
-// Create globe and cubes
+// Create globe and cubes - COMPLETE IMPLEMENTATION
 function createGlobeAndCubes() {
-  console.log('Creating globe and cubes...');
+  console.log('Creating complete globe with all elements...');
   
-  // Create basic globe sphere
-  const globeGeometry = new THREE.SphereGeometry(GLOBE_RADIUS, 32, 32);
+  // Generate neural network data first
+  generateNeuralNetworkData();
+  
+  // Create globe with earth texture
+  const globeGeometry = new THREE.SphereGeometry(GLOBE_RADIUS, 64, 64);
+  const earthTexture = createEarthTexture();
   const globeMaterial = new THREE.MeshPhongMaterial({ 
-    color: 0x2244aa,
+    map: earthTexture,
     transparent: true,
-    opacity: 0.8,
-    emissive: 0x112244,
-    emissiveIntensity: 0.2
+    opacity: 0.9
   });
   
   const globe = new THREE.Mesh(globeGeometry, globeMaterial);
   globeGroup.add(globe);
-  console.log('Globe sphere created');
+  console.log('🌍 Globe with earth texture created');
   
   // Create wireframe
-  const wireframeGeometry = new THREE.SphereGeometry(GLOBE_RADIUS + 0.05, 16, 16);
+  const wireframeGeometry = new THREE.SphereGeometry(GLOBE_RADIUS + 0.01, 32, 32);
   const wireframeMaterial = new THREE.MeshBasicMaterial({
     color: 0x00ffff,
     wireframe: true,
     transparent: true,
-    opacity: 0.3
+    opacity: 0.2
   });
   const wireframe = new THREE.Mesh(wireframeGeometry, wireframeMaterial);
   globeGroup.add(wireframe);
-  console.log('Wireframe created');
+  console.log('🔷 Globe wireframe created');
+  
+  // Create background neural nodes
+  createBackgroundNeuralNodes();
+  console.log('✨ Neural nodes created');
+  
+  // Create neural network connections
+  createNeuralNetworkConnections();
+  console.log('🔗 Neural connections created');
+  
+  // Create country connection arcs
+  createCountryArcs();
+  console.log('🌈 Country arcs created');
   
   // Create neural cubes
   const colors = ['#003366', '#A52A2A', '#006400', '#483D8B', '#B22234', '#FF9933', '#EE2536', '#FFD700'];
@@ -992,13 +970,12 @@ function createGlobeAndCubes() {
     const cubeObject = createNeuralCube(contents[i], subCubeArrays[i], explodedArrays[i], colors[i]);
     cubeObject.userData.neuralName = cubeNames[i];
     
-    const r = maxRadius * Math.random() * 0.8;
-    const theta = Math.random() * 2 * Math.PI;
-    const phi = Math.acos(2 * Math.random() - 1);
-    
-    const x = r * Math.sin(phi) * Math.cos(theta);
-    const y = r * Math.sin(phi) * Math.sin(theta);
-    const z = r * Math.cos(phi);
+    // Position cubes around the globe
+    const angle = (i / 8) * Math.PI * 2;
+    const radius = 1.8;
+    const x = Math.cos(angle) * radius + (Math.random() - 0.5) * 0.3;
+    const y = (Math.random() - 0.5) * 0.6;
+    const z = Math.sin(angle) * radius + (Math.random() - 0.5) * 0.3;
     
     cubeObject.position.set(x, y, z);
     neuronGroup.add(cubeObject);
@@ -1015,39 +992,208 @@ function createGlobeAndCubes() {
     if (cubeNames[i] === 'Singapore') singaporeCube = cubeObject;
     if (cubeNames[i] === 'Malaysia') malaysiaCube = cubeObject;
   }
+  console.log('🧊 Neural cubes created and positioned');
   
-  // Create country markers
+  // Create country markers on globe surface
   countryConfigs.forEach(config => {
-    const geometry = new THREE.BoxGeometry(0.05, 0.05, 0.05);
+    const geometry = new THREE.SphereGeometry(0.02, 8, 8);
     const material = new THREE.MeshBasicMaterial({ 
       color: config.color,
       emissive: config.color,
-      emissiveIntensity: 0.5
+      emissiveIntensity: 0.8
     });
     
     const marker = new THREE.Mesh(geometry, material);
     marker.userData.countryName = config.name;
     
-    const position = latLonToVector3(config.lat, config.lon, 1.1);
+    const position = latLonToVector3(config.lat, config.lon, GLOBE_RADIUS + 0.02);
     marker.position.copy(position);
     
     globeGroup.add(marker);
     countryBlocks[config.name] = marker;
   });
+  console.log('📍 Country markers created');
   
-  console.log('Neural cubes and country markers created');
+  console.log('🎉 Complete globe creation finished!');
 }
 
-// Close all exploded cubes
-function closeAllExploded() {
-  if (isEuropeCubeExploded) toggleFunctionMap['Europe']();
-  if (isNewThailandCubeExploded) toggleFunctionMap['Thailand']();
-  if (isCanadaCubeExploded) toggleFunctionMap['Canada']();
-  if (isUkCubeExploded) toggleFunctionMap['UK']();
-  if (isUsaCubeExploded) toggleFunctionMap['USA']();
-  if (isIndiaCubeExploded) toggleFunctionMap['India']();
-  if (isSingaporeCubeExploded) toggleFunctionMap['Singapore']();
-  if (isMalaysiaCubeExploded) toggleFunctionMap['Malaysia']();
+// Animate neural nodes
+function animateNeuralNodes() {
+  if (!neuronGroup || isCubeMovementPaused) return;
+  
+  neuronGroup.children.forEach((child, index) => {
+    if (child.userData && child.userData.isNeuralNode && velocities[index]) {
+      child.position.add(velocities[index]);
+      
+      const distance = child.position.length();
+      if (distance > maxRadius) {
+        child.position.normalize().multiplyScalar(maxRadius * 0.9);
+        velocities[index].multiplyScalar(-0.5);
+      }
+    }
+  });
+}
+
+// Carousel functions
+function populateCarousel() {
+    const container = document.getElementById('carouselContainer');
+    container.innerHTML = '';
+    
+    carouselData.forEach(item => {
+        const cardHTML = `
+            <a href="#" class="carousel-card" data-category="${item.category}">
+                <img src="${item.img}" alt="${item.title}"/>
+                <div class="carousel-card-content">
+                    <div class="carousel-card-title">${item.title}</div>
+                    <div class="carousel-card-text">${item.text}</div>
+                </div>
+            </a>`;
+        container.innerHTML += cardHTML;
+    });
+}
+
+function scrollCarousel(direction) {
+    const container = document.getElementById('carouselContainer');
+    const card = container.querySelector('.carousel-card');
+    if (card) {
+        let cardWidth = card.offsetWidth;
+        container.scrollBy({
+            left: direction * (cardWidth + 16),
+            behavior: 'smooth'
+        });
+    }
+}
+
+function highlightCountriesByProgram(category) {
+    console.log('Highlighting countries for category:', category);
+    
+    Object.keys(countryBlocks).forEach(countryName => {
+        const countryBlock = countryBlocks[countryName];
+        if (countryBlock && countryBlock.material) {
+            countryBlock.material.emissiveIntensity = 0.5;
+        }
+    });
+    
+    const relevantCountries = getCountriesByCategory(category);
+    relevantCountries.forEach(countryName => {
+        const countryBlock = countryBlocks[countryName];
+        if (countryBlock && countryBlock.material) {
+            countryBlock.material.emissiveIntensity = 1.2;
+        }
+    });
+}
+
+function highlightNeuralCubesByProgram(category) {
+    console.log('Highlighting neural cubes for category:', category);
+    
+    const relevantCountries = getCountriesByCategory(category);
+    
+    Object.keys(neuralCubeMap).forEach(countryName => {
+        const cube = neuralCubeMap[countryName];
+        if (cube) {
+            cube.scale.set(1, 1, 1);
+        }
+    });
+    
+    relevantCountries.forEach(countryName => {
+        const cube = neuralCubeMap[countryName];
+        if (cube && typeof TWEEN !== 'undefined') {
+            new TWEEN.Tween(cube.scale)
+                .to({ x: 1.3, y: 1.3, z: 1.3 }, 500)
+                .yoyo(true)
+                .repeat(1)
+                .start();
+        }
+    });
+}
+
+function getCountriesByCategory(category) {
+    const countryList = [];
+    
+    switch(category) {
+        case 'UG':
+            if (hasUndergraduatePrograms(europeContent)) countryList.push('Europe');
+            if (hasUndergraduatePrograms(newThailandContent)) countryList.push('Thailand');
+            if (hasUndergraduatePrograms(canadaContent)) countryList.push('Canada');
+            if (hasUndergraduatePrograms(ukContent)) countryList.push('UK');
+            if (hasUndergraduatePrograms(usaContent)) countryList.push('USA');
+            if (hasUndergraduatePrograms(indiaContent)) countryList.push('India');
+            if (hasUndergraduatePrograms(singaporeContent)) countryList.push('Singapore');
+            if (hasUndergraduatePrograms(malaysiaContent)) countryList.push('Malaysia');
+            break;
+        case 'PG':
+            if (hasPostgraduatePrograms(europeContent)) countryList.push('Europe');
+            if (hasPostgraduatePrograms(newThailandContent)) countryList.push('Thailand');
+            if (hasPostgraduatePrograms(canadaContent)) countryList.push('Canada');
+            if (hasPostgraduatePrograms(ukContent)) countryList.push('UK');
+            if (hasPostgraduatePrograms(usaContent)) countryList.push('USA');
+            if (hasPostgraduatePrograms(indiaContent)) countryList.push('India');
+            if (hasPostgraduatePrograms(singaporeContent)) countryList.push('Singapore');
+            if (hasPostgraduatePrograms(malaysiaContent)) countryList.push('Malaysia');
+            break;
+        case 'Mobility':
+            if (hasExchangePrograms(europeContent)) countryList.push('Europe');
+            if (hasExchangePrograms(newThailandContent)) countryList.push('Thailand');
+            if (hasExchangePrograms(canadaContent)) countryList.push('Canada');
+            if (hasExchangePrograms(ukContent)) countryList.push('UK');
+            if (hasExchangePrograms(usaContent)) countryList.push('USA');
+            if (hasExchangePrograms(indiaContent)) countryList.push('India');
+            if (hasExchangePrograms(singaporeContent)) countryList.push('Singapore');
+            if (hasExchangePrograms(malaysiaContent)) countryList.push('Malaysia');
+            break;
+        case 'Diploma':
+            if (hasDiplomaPrograms(singaporeContent)) countryList.push('Singapore');
+            if (hasDiplomaPrograms(malaysiaContent)) countryList.push('Malaysia');
+            break;
+        case 'Upskilling':
+            if (hasUpskillPrograms(canadaContent)) countryList.push('Canada');
+            if (hasUpskillPrograms(singaporeContent)) countryList.push('Singapore');
+            break;
+        case 'Research':
+            countryList.push('Europe', 'UK', 'USA', 'Singapore');
+            break;
+        default:
+            countryList.push('Europe', 'Thailand', 'Canada', 'UK', 'USA', 'India', 'Singapore', 'Malaysia');
+    }
+    
+    return countryList;
+}
+
+function hasUndergraduatePrograms(content) {
+    return content.some(program => program && 
+        (program.programName.toLowerCase().includes('bachelor') || 
+         program.programName.toLowerCase().includes('bba') ||
+         program.programName.toLowerCase().includes('bsn') ||
+         program.programName.toLowerCase().includes('undergraduate')));
+}
+
+function hasPostgraduatePrograms(content) {
+    return content.some(program => program && 
+        (program.programName.toLowerCase().includes('master') || 
+         program.programName.toLowerCase().includes('mba') ||
+         program.programName.toLowerCase().includes('msn') ||
+         program.programName.toLowerCase().includes('postgraduate') ||
+         program.programName.toLowerCase().includes('pg')));
+}
+
+function hasExchangePrograms(content) {
+    return content.some(program => program && 
+        (program.programName.toLowerCase().includes('exchange') || 
+         program.programName.toLowerCase().includes('abroad') ||
+         program.programName.toLowerCase().includes('mobility')));
+}
+
+function hasDiplomaPrograms(content) {
+    return content.some(program => program && 
+        program.programName.toLowerCase().includes('diploma'));
+}
+
+function hasUpskillPrograms(content) {
+    return content.some(program => program && 
+        (program.programName.toLowerCase().includes('cyber') || 
+         program.programName.toLowerCase().includes('data') ||
+         program.programName.toLowerCase().includes('tech') ||
+         program.programName.toLowerCase().includes('design')));
 }
 
 // Mouse interaction
@@ -1081,149 +1227,15 @@ function onCanvasMouseUp(event) {
   }
 }
 
-// SERVER-SIDE: Show info panel
+// Server-side functions (placeholder - implement with your server)
 async function showInfoPanel(data) {
   if (!userIsAuthenticated()) {
     showLoginPrompt('Please log in to view detailed university information and application links');
     return;
   }
   
-  if (!data || !data.programId) return;
-  
-  try {
-    const response = await fetch('/api/university-details', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('userToken')}`
-      },
-      body: JSON.stringify({
-        programId: data.programId,
-        university: data.university,
-        programName: data.programName
-      })
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch university details');
-    }
-    
-    const universityDetails = await response.json();
-    
-    document.getElementById('infoPanelMainCard').innerHTML = `
-      <div class="main-card-details">
-        <img src="${data.logo}" alt="${data.university}">
-        <h3>${data.university}</h3>
-      </div>
-      <div class="main-card-actions">
-        ${universityDetails.erasmusAvailable ? `<button onclick="handleErasmusClick('${data.programId}')" class="partner-cta erasmus">Erasmus Info</button>` : ''}
-      </div>
-    `;
-    
-    document.getElementById('infoPanelSubcards').innerHTML = `
-      <div class="subcard">
-        <div class="subcard-info">
-          <img src="${data.logo}" alt="">
-          <h4>${data.programName.replace(/\n/g, ' ')}</h4>
-        </div>
-        <div class="subcard-buttons">
-          <button onclick="handleInfoClick('${data.programId}')" class="partner-cta">Info</button>
-          <button onclick="handleApplyClick('${data.programId}')" class="partner-cta apply">Apply</button>
-        </div>
-      </div>
-    `;
-    
-    document.getElementById('infoPanelOverlay').style.display = 'flex';
-    
-  } catch (error) {
-    console.error('Error loading university details:', error);
-    alert('Unable to load university details. Please try again.');
-  }
-}
-
-// SERVER-SIDE: Link handlers
-async function handleApplyClick(programId) {
-  try {
-    const response = await fetch('/api/apply-redirect', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('userToken')}`
-      },
-      body: JSON.stringify({ 
-        programId: programId,
-        action: 'apply',
-        timestamp: new Date().toISOString()
-      })
-    });
-    
-    const result = await response.json();
-    
-    if (result.redirectUrl) {
-      window.open(result.redirectUrl, '_blank');
-    } else {
-      alert('Application link not available.');
-    }
-  } catch (error) {
-    console.error('Apply click error:', error);
-    alert('Unable to process application request.');
-  }
-}
-
-async function handleInfoClick(programId) {
-  try {
-    const response = await fetch('/api/info-redirect', {
-      method: 'POST', 
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('userToken')}`
-      },
-      body: JSON.stringify({ 
-        programId: programId,
-        action: 'info',
-        timestamp: new Date().toISOString()
-      })
-    });
-    
-    const result = await response.json();
-    
-    if (result.redirectUrl) {
-      window.open(result.redirectUrl, '_blank');
-    } else {
-      alert('Program information not available.');
-    }
-  } catch (error) {
-    console.error('Info click error:', error);
-    alert('Unable to load program information.');
-  }
-}
-
-async function handleErasmusClick(programId) {
-  try {
-    const response = await fetch('/api/erasmus-redirect', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json', 
-        'Authorization': `Bearer ${localStorage.getItem('userToken')}`
-      },
-      body: JSON.stringify({ 
-        programId: programId,
-        action: 'erasmus',
-        timestamp: new Date().toISOString()
-      })
-    });
-    
-    const result = await response.json();
-    
-    if (result.redirectUrl) {
-      window.open(result.redirectUrl, '_blank');
-    } else {
-      alert('Erasmus information not available.');
-    }
-  } catch (error) {
-    console.error('Erasmus click error:', error);
-    alert('Unable to load Erasmus information.');
-  }
+  console.log('Would show info panel for:', data);
+  // Implement server call here
 }
 
 // Setup event listeners
@@ -1239,6 +1251,14 @@ function setupEventListeners() {
     });
   }
   
+  const pauseCubesButton = document.getElementById("pauseCubesButton");
+  if (pauseCubesButton) {
+    pauseCubesButton.addEventListener("click", () => {
+      isCubeMovementPaused = !isCubeMovementPaused;
+      pauseCubesButton.textContent = isCubeMovementPaused ? "Resume Cubes" : "Pause Cubes";
+    });
+  }
+  
   window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
@@ -1248,7 +1268,7 @@ function setupEventListeners() {
   console.log('Event listeners setup complete');
 }
 
-// Animation loop
+// Animation loop - COMPLETE WITH ALL ANIMATIONS
 function animate() {
   requestAnimationFrame(animate);
   
@@ -1257,8 +1277,11 @@ function animate() {
   }
   
   if (!controls && !isRotationPaused) {
-    globeGroup.rotation.y += 0.005;
+    globeGroup.rotation.y += 0.003;
   }
+  
+  // Animate neural nodes
+  animateNeuralNodes();
   
   if (typeof TWEEN !== 'undefined') {
     TWEEN.update();
@@ -1269,7 +1292,6 @@ function animate() {
   }
 }
 
-// Hide loading animation
 function hideLoadingAnimation() {
   const loadingElement = document.getElementById('loadingAnimation');
   if (loadingElement) {
@@ -1277,31 +1299,28 @@ function hideLoadingAnimation() {
   }
 }
 
-// Hide info panel
 function hideInfoPanel() {
   const panel = document.getElementById('infoPanelOverlay');
   if (panel) panel.style.display = 'none';
 }
 
-// Login simulation
 function simulateLogin() {
   localStorage.setItem('userToken', 'authenticated-user-token');
   alert('Logged in! You can now access detailed university information.');
 }
 
-// Logout
 function logout() {
   localStorage.setItem('userToken', 'guest-viewer');
   alert('Logged out. Basic globe features remain available.');
 }
 
-// Main initialization
+// MAIN INITIALIZATION - COMPLETE SETUP
 async function initializeApp() {
-  console.log('Starting application initialization...');
+  console.log('🚀 Starting complete globe initialization...');
   
   try {
     await waitForThree();
-    console.log('Three.js loaded successfully');
+    console.log('✅ Three.js loaded successfully');
     
     initializeThreeJS();
     createGlobeAndCubes();
@@ -1330,14 +1349,14 @@ async function initializeApp() {
       }
       
       hideLoadingAnimation();
-    }, 500);
+    }, 1000);
     
     animate();
     
-    console.log('🌍 Globe initialization complete!');
+    console.log('🎉 COMPLETE GLOBE READY - All elements visible!');
     
   } catch (error) {
-    console.error('Initialization error:', error);
+    console.error('❌ Initialization error:', error);
     
     const container = document.getElementById('globe-container');
     if (container) {
@@ -1360,4 +1379,4 @@ if (document.readyState === 'loading') {
   initializeApp();
 }
 
-console.log('Globe script loaded');
+console.log('🌍 Globe script loaded - Ready for complete visualization!');
