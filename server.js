@@ -1,11 +1,41 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
+const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
+const cors = require('cors');
+const NodeCache = require('node-cache');
+
 const app = express();
 const PORT = process.env.PORT || 3001;
+const cache = new NodeCache({ stdTTL: 600 }); // 10 min cache
 
-app.use(express.json());
-app.use(express.static('.'));
+// **Security middleware**
+app.use(helmet());
+app.use(cors({
+  origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'],
+  credentials: true
+}));
 
+// **Rate limiting**
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100
+});
+
+app.use('/api/', apiLimiter);
+app.use(express.json({ limit: '10mb' }));
+
+// **Static file serving**
+app.use(express.static('.', {
+  setHeaders: (res, path) => {
+    if (path.endsWith('.js')) {
+      res.setHeader('Content-Type', 'application/javascript');
+    }
+    res.setHeader('Cache-Control', 'no-cache');
+  }
+}));
+
+// **COMPLETE UNIVERSITY DATA ARRAYS**
 const europeContent = [
   {
     university: "University of Passau",
@@ -13,8 +43,7 @@ const europeContent = [
     erasmusLink: "https://www.uni-passau.de/en/incoming-exchange-students",
     programName: "Degree-Seeking",
     programLink: "https://www.uni-passau.de/en/international/coming-to-passau/coming-to-passau-as-degree-seeking-student",
-    applyLink: "https://www.globaleducarealliance.com/6?partner=Passau",
-    researchLink: "https://www.uni-passau.de/en/international/going-abroad/research-and-teaching-sta"
+    applyLink: "https://www.globaleducarealliance.com/6?partner=Passau"
   },
   {
     university: "University of Passau",
@@ -22,8 +51,7 @@ const europeContent = [
     erasmusLink: "https://www.uni-passau.de/en/incoming-exchange-students",
     programName: "Exchange",
     programLink: "https://www.uni-passau.de/en/incoming-exchange-students",
-    applyLink: "https://www.globaleducarealliance.com/6?partner=Passau",
-    researchLink: "https://www.uni-passau.de/en/international/going-abroad/research-and-teaching-sta"
+    applyLink: "https://www.globaleducarealliance.com/6?partner=Passau"
   },
   null, null,
   {
@@ -49,8 +77,7 @@ const europeContent = [
     erasmusLink: "https://www.univ-catholille.fr/en/exchange-programs-academic-calendars",
     programName: "Exchange",
     programLink: "https://www.univ-catholille.fr/en/exchange-programs-academic-calendars",
-    applyLink: "https://www.globaleducarealliance.com/6?partner=Lille",
-    researchLink: "https://www.univ-catholille.fr/en/research-presentation/"
+    applyLink: "https://www.globaleducarealliance.com/6?partner=Lille"
   },
   {
     university: "Université Catholique de Lille",
@@ -58,8 +85,7 @@ const europeContent = [
     erasmusLink: "https://www.univ-catholille.fr/en/exchange-programs-academic-calendars",
     programName: "Summer Program",
     programLink: "https://www.univ-catholille.fr/en/lille-programs/lille-european-summer-program/",
-    applyLink: "https://www.globaleducarealliance.com/6?partner=Lille",
-    researchLink: "https://www.univ-catholille.fr/en/research-presentation/"
+    applyLink: "https://www.globaleducarealliance.com/6?partner=Lille"
   },
   null, null,
   {
@@ -68,8 +94,7 @@ const europeContent = [
     erasmusLink: "https://www.ircom.fr/partir/",
     programName: "Master\nHumanitarian",
     programLink: "https://www.ircom.fr/formations/master-humanitaire/",
-    applyLink: "https://www.globaleducarealliance.com/6?partner=IRCOM",
-    researchLink: "https://www.ircom.fr/laborem/"
+    applyLink: "https://www.globaleducarealliance.com/6?partner=IRCOM"
   },
   {
     university: "IRCOM",
@@ -77,8 +102,7 @@ const europeContent = [
     erasmusLink: "https://www.ircom.fr/partir/",
     programName: "Mobility",
     programLink: "https://www.ircom.fr/partir/",
-    applyLink: "https://www.globaleducarealliance.com/6?partner=IRCOM",
-    researchLink: "https://www.ircom.fr/laborem/"
+    applyLink: "https://www.globaleducarealliance.com/6?partner=IRCOM"
   },
   null, null,
   {
@@ -87,8 +111,7 @@ const europeContent = [
     erasmusLink: "https://katho-nrw.de/en/international/erasmus",
     programName: "Int'l Studies",
     programLink: "https://katho-nrw.de/en/international/international-studies",
-    applyLink: "https://www.globaleducarealliance.com/6?partner=KATHO-NRW",
-    researchLink: "https://katho-nrw.de/en/international/international-research"
+    applyLink: "https://www.globaleducarealliance.com/6?partner=KATHO-NRW"
   },
   {
     university: "KATHO-NRW",
@@ -96,8 +119,7 @@ const europeContent = [
     erasmusLink: "https://katho-nrw.de/en/international/erasmus",
     programName: "Study Abroad",
     programLink: "https://katho-nrw.de/en/international/international-studies/students-at-the-catholic-university-of-applied-sciences-studying-abroad",
-    applyLink: "https://www.globaleducarealliance.com/6?partner=KATHO-NRW",
-    researchLink: "https://www.univ-catholille.fr/en/research-presentation/"
+    applyLink: "https://www.globaleducarealliance.com/6?partner=KATHO-NRW"
   },
   null, null,
   {
@@ -584,17 +606,32 @@ const countryConfigs = [
   {"name": "USA", "lat": 39.8283, "lon": -98.5795, "color": 0x003366}
 ];
 
+const globalContentMap = {
+  'Europe': europeContent,
+  'Thailand': newThailandContent, 
+  'Canada': canadaContent,
+  'UK': ukContent,
+  'USA': usaContent,
+  'India': indiaContent,
+  'Singapore': singaporeContent,
+  'Malaysia': malaysiaContent
+};
+
+// **ENHANCED AUTHENTICATION - ALWAYS RETURN DATA**
 function checkAuth(req, res, next) {
   const token = req.headers['authorization'];
+  
   if (token && token.includes('logged-in-user')) {
-    next();
+    req.authenticated = true;
   } else {
-    res.status(401).json({ error: 'Please log in to access university data and apply links' });
+    req.authenticated = false;
   }
+  next();
 }
 
+// **MAIN GLOBE DATA ENDPOINT**
 app.get('/api/globe-data', checkAuth, (req, res) => {
-  res.json({
+  const responseData = {
     europeContent,
     newThailandContent,
     canadaContent,
@@ -604,14 +641,65 @@ app.get('/api/globe-data', checkAuth, (req, res) => {
     singaporeContent,
     malaysiaContent,
     countryPrograms,
-    countryConfigs
-  });
+    countryConfigs,
+    globalContentMap,
+    isAuthenticated: req.authenticated
+  };
+  
+  res.json(responseData);
+});
+
+// **CAROUSEL DATA ENDPOINT**
+app.get('/api/carousel/data', (req, res) => {
+  const carouselData = [
+    {
+      category: "UG",
+      img: "https://static.wixstatic.com/media/d77f36_deddd99f45db4a55953835f5d3926246~mv2.png",
+      title: "Undergraduate",
+      text: "Bachelor-level opportunities."
+    },
+    {
+      category: "PG", 
+      img: "https://static.wixstatic.com/media/d77f36_ae2a1e8b47514fb6b0a995be456a9eec~mv2.png",
+      title: "Postgraduate",
+      text: "Master's & advanced programs."
+    },
+    {
+      category: "Diploma",
+      img: "https://static.wixstatic.com/media/d77f36_e8f60f4350304ee79afab3978a44e307~mv2.png", 
+      title: "Diploma",
+      text: "Professional & foundation."
+    },
+    {
+      category: "Mobility",
+      img: "https://static.wixstatic.com/media/d77f36_1118d15eee5a45f2a609c762d077857e~mv2.png",
+      title: "Semester Abroad", 
+      text: "Exchange & mobility."
+    },
+    {
+      category: "Upskilling",
+      img: "https://static.wixstatic.com/media/d77f36_d8d9655ba23f4849abba7d09ddb12092~mv2.png",
+      title: "Upskilling",
+      text: "Short-term training."
+    },
+    {
+      category: "Research",
+      img: "https://static.wixstatic.com/media/d77f36_aa9eb498381d4adc897522e38301ae6f~mv2.jpg",
+      title: "Research", 
+      text: "Opportunities & links."
+    }
+  ];
+  
+  res.json(carouselData);
 });
 
 app.get('/health', (req, res) => {
-  res.json({ status: 'Secure Globe Widget backend running', timestamp: new Date().toISOString() });
+  res.json({ 
+    status: 'Globe Widget backend running',
+    timestamp: new Date().toISOString()
+  });
 });
 
 app.listen(PORT, () => {
-  console.log(`Secure Globe Widget backend running on port ${PORT}`);
+  console.log(`🚀 Globe Widget backend running on port ${PORT}`);
 });
