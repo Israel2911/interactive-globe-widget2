@@ -6,7 +6,6 @@ body {
 }
 
 /* Header and Footer */
-/* Header and Footer */
 .header-ui-bar {
   background: transparent; /* REMOVE BLUE BACKGROUND */
   color: #fff;
@@ -24,17 +23,17 @@ body {
   font-size: 14px;
 }
 
-
-/* Updated Carousel Styles - REMOVED BLUE WRAPPER BACKGROUND */
+/* Updated Carousel Styles - BROADER CARDS WITH REDUCED SPACING */
 .carousel-wrapper {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: transparent; /* REMOVED BLUE BACKGROUND */
-  border-radius: 0; /* REMOVED ROUNDED CORNERS */
+  background: transparent;
+  border: none;
+  border-radius: 0;
   margin: 0 14px;
-  padding: 10px 12px; /* Slightly more padding since no background */
-  box-shadow: none; /* REMOVED SHADOW */
+  padding: 8px 6px; /* Reduced padding */
+  box-shadow: none;
 }
 
 .carousel-arrow {
@@ -42,7 +41,7 @@ body {
   color: #ffa500;
   cursor: pointer;
   user-select: none;
-  margin: 0 8px; /* Slightly more margin */
+  margin: 0 8px;
   transition: color .2s;
   min-width: 30px;
   text-align: center;
@@ -58,12 +57,12 @@ body {
   justify-content: center;
   align-items: center;
   overflow-x: auto;
-  gap: 12px;
-  padding: 8px 0;
+  gap: 6px; /* REDUCED GAP from 12px to 6px */
+  padding: 6px 0; /* Reduced padding */
   scroll-behavior: smooth;
 }
 
-/* Wider and Centered Carousel Cards - NOW STANDALONE WITHOUT BLUE WRAPPER */
+/* Much Wider Carousel Cards - Fill More Space */
 .carousel-card {
   display: flex;
   flex-direction: column;
@@ -73,9 +72,9 @@ body {
   border-radius: 8px;
   padding: 0;
   margin: 0 auto;
-  min-width: 140px;
-  max-width: 140px;
-  height: 120px;
+  min-width: 180px; /* INCREASED from 140px to 180px */
+  max-width: 180px; /* INCREASED from 140px to 180px */
+  height: 130px; /* Slightly taller for better proportions */
   text-decoration: none;
   color: #ececec;
   border: 2px solid transparent;
@@ -85,27 +84,27 @@ body {
   overflow: hidden;
   position: relative;
   text-align: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3); /* ADD INDIVIDUAL CARD SHADOWS */
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
 
 .carousel-card:hover {
   background: #253a5a;
   border-color: #ffa500;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255,165,0,0.2); /* GLOW ON HOVER */
+  box-shadow: 0 4px 12px rgba(255,165,0,0.2);
 }
 
 .carousel-card.selected {
   background: #ffa500;
   color: #222;
   border-color: #ff6600;
-  box-shadow: 0 4px 15px rgba(255,165,0,0.4); /* STRONG GLOW WHEN SELECTED */
+  box-shadow: 0 4px 15px rgba(255,165,0,0.4);
 }
 
-/* Full width image with centered positioning */
+/* Adjusted image for wider cards */
 .carousel-card img {
   width: 100%;
-  height: 70%;
+  height: 75%; /* INCREASED from 70% to 75% for better image coverage */
   object-fit: cover;
   object-position: center;
   border-radius: 8px 8px 0 0;
@@ -114,7 +113,7 @@ body {
   display: block;
 }
 
-/* Centered content area */
+/* Adjusted content area for wider cards */
 .carousel-card-content {
   display: flex;
   flex-direction: column;
@@ -122,27 +121,27 @@ body {
   align-items: center;
   text-align: center;
   width: 100%;
-  height: 30%;
-  padding: 6px;
+  height: 25%; /* REDUCED from 30% to 25% */
+  padding: 4px 6px; /* Optimized padding for wider cards */
   margin: 0;
 }
 
 .carousel-card-title {
-  font-size: 0.8em;
+  font-size: 0.85em; /* Slightly larger font for wider cards */
   font-weight: 600;
   margin: 0;
-  line-height: 1.1;
+  line-height: 1.0;
   text-align: center;
   color: inherit;
 }
 
 .carousel-card-text {
-  font-size: 0.65em;
+  font-size: 0.7em; /* Slightly larger font for wider cards */
   opacity: 0.85;
-  line-height: 1.1;
-  margin: 2px 0 0 0;
+  line-height: 1.0;
+  margin: 1px 0 0 0;
   text-align: center;
-  max-height: 2.2em;
+  max-height: 2em;
   overflow: hidden;
   color: inherit;
 }
@@ -408,7 +407,7 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
   cursor: pointer;
 }
 
-/* Mobile Responsiveness */
+/* Mobile Responsiveness - Updated for Wider Cards */
 @media (max-width: 700px) {
   .header-ui-bar, .footer-ui-bar { font-size: 12px; }
   .info-panel { min-width: 90vw; padding: 14px; }
@@ -419,30 +418,30 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
   }
   
   .carousel-container {
-    gap: 8px;
+    gap: 4px; /* Even smaller gap on mobile */
   }
   
   .carousel-card {
-    min-width: 120px;
-    max-width: 120px;
-    height: 100px;
+    min-width: 150px; /* Wider cards on mobile too */
+    max-width: 150px;
+    height: 110px;
   }
   
   .carousel-card img {
-    height: 65%;
+    height: 70%;
   }
   
   .carousel-card-content {
-    height: 35%;
-    padding: 4px;
+    height: 30%;
+    padding: 3px 4px;
   }
   
   .carousel-card-title {
-    font-size: 0.75em;
+    font-size: 0.8em;
   }
   
   .carousel-card-text {
-    font-size: 0.6em;
+    font-size: 0.65em;
   }
   
   .left-controls-stack {
