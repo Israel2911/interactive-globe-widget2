@@ -545,15 +545,15 @@ function scrollCarousel(direction) {
     const container = document.getElementById('carouselContainer');
     if (!container) return;
     
-    const card = container.querySelector('.carousel-card');
-    if (!card) return;
+    const cardWidth = 98; // Fixed card width + gap
+    const scrollAmount = cardWidth * 2; // Scroll 2 cards at a time
     
-    const cardWidth = card.offsetWidth + 16; // Include gap
     container.scrollBy({
-        left: direction * cardWidth,
+        left: direction * scrollAmount,
         behavior: 'smooth'
     });
 }
+
 
 // MODIFIED: Fetch data - allow basic globe without auth
 async function fetchDataFromBackend() {
