@@ -361,6 +361,200 @@ let malaysiaContent = [{
 let allUniversityContent = [...europeContent, ...newThailandContent, ...canadaContent, ...ukContent, ...usaContent, ...indiaContent, ...singaporeContent, ...malaysiaContent];
 let countryPrograms = {};
 
+// **GLOBAL CAROUSEL FILTERING FUNCTIONS**
+const carouselData = [{
+    category: "UG",
+    img: "https://static.wixstatic.com/media/d77f36_deddd99f45db4a55953835f5d3926246~mv2.png",
+    title: "Undergraduate",
+    text: "Bachelor-level opportunities."
+}, {
+    category: "PG", 
+    img: "https://static.wixstatic.com/media/d77f36_ae2a1e8b47514fb6b0a995be456a9eec~mv2.png",
+    title: "Postgraduate",
+    text: "Master's & advanced programs."
+}, {
+    category: "Diploma",
+    img: "https://static.wixstatic.com/media/d77f36_e8f60f4350304ee79afab3978a44e307~mv2.png", 
+    title: "Diploma",
+    text: "Professional & foundation."
+}, {
+    category: "Mobility",
+    img: "https://static.wixstatic.com/media/d77f36_1118d15eee5a45f2a609c762d077857e~mv2.png",
+    title: "Semester Abroad", 
+    text: "Exchange & mobility."
+}, {
+    category: "Upskilling",
+    img: "https://static.wixstatic.com/media/d77f36_d8d9655ba23f4849abba7d09ddb12092~mv2.png",
+    title: "Upskilling",
+    text: "Short-term training."
+}, {
+    category: "Research",
+    img: "https://static.wixstatic.com/media/d77f36_aa9eb498381d4adc897522e38301ae6f~mv2.jpg",
+    title: "Research", 
+    text: "Opportunities & links."
+}];
+
+const globalContentMap = {
+  'Europe': europeContent,
+  'Thailand': newThailandContent, 
+  'Canada': canadaContent,
+  'UK': ukContent,
+  'USA': usaContent,
+  'India': indiaContent,
+  'Singapore': singaporeContent,
+  'Malaysia': malaysiaContent
+};
+
+function getMatchingCountries(category) {
+  const matcherMap = {
+    'ug': content => content.some(p => p && /bachelor|bba|undergraduate|bsn|degree/i.test(p.programName)),
+    'pg': content => content.some(p => p && /master|mba|postgraduate|ms|msn/i.test(p.programName)),
+    'mobility': content => content.some(p => p && /exchange|abroad|mobility|study/i.test(p.programName)),  
+    'diploma': content => content.some(p => p && /diploma/i.test(p.programName)),
+    'upskilling': content => content.some(p => p && /cyber|data|tech|ux|upskill/i.test(p.programName)),
+    'research': content => content.some(p => p && /research|phd|doctor/i.test(p.programName))
+  };
+  
+  const matcher = matcherMap[category.toLowerCase()] || (() => false);
+  return Object.keys(globalContentMap).filter(country => matcher(globalContentMap[country]));
+}
+
+function highlightNeuralCubesByProgram(category) {
+  console.log(`🌍 Global neural cube filtering for: ${category}`);
+  
+  const matchingCountries = getMatchingCountries(category);
+  
+  // Reset all neural cubes first
+  Object.keys(neuralCubeMap).forEach(countryName => {
+    const cube = neuralCubeMap[countryName];
+    if (cube && typeof TWEEN !== 'undefined') {
+      new TWEEN.Tween(cube.scale)
+        .to({ x: 1.0, y: 1.0, z: 1.0 }, 300)
+        .start();
+    }
+  });
+  
+  // Scale up matching neural cubes
+  matchingCountries.forEach(countryName => {
+    const cube = neuralCubeMap[countryName];
+    if (cube && typeof TWEEN !== 'undefined') {
+      new TWEEN.Tween(cube.scale)
+        .to({ x: 1.3, y: 1.3, z: 1.3 }, 500)
+        .start();
+    }
+  });
+  
+  console.log(`✨ Scaled ${matchingCountries.length} neural cubes:`, matchingCountries);
+}
+
+function highlightMatchingSubCubes(category) {
+  console.log(`🎯 Global subcube filtering for: ${category}`);
+  
+  const matcherMap = {
+    'ug': p => p && /bachelor|bba|undergraduate|bsn|degree/i.test(p.programName),
+    'pg': p => p && /master|mba|postgraduate|ms|msn/i.test(p.programName), 
+    'mobility': p => p && /exchange|abroad|mobility|study/i.test(p.programName),
+    'diploma': p => p && /diploma/i.test(p.programName),
+    'upskilling': p => p && /cyber|data|tech|ux|upskill/i.test(p.programName),
+    'research': p => p && /research|phd|doctor/i.test(p.programName)
+  };
+  
+  const matcher = matcherMap[category.toLowerCase()] || (() => false);
+  let totalMatches = 0;
+  
+  // Reset ALL subcubes in ALL countries first
+  Object.values(neuralCubeMap).forEach(cube => {
+    cube.children.forEach(subCube => {
+      if (subCube.userData.isSubCube) {
+        subCube.material.emissiveIntensity = 0.6; // Normal intensity
+        new TWEEN.Tween(subCube.scale).to({ x: 1.0, y: 1.0, z: 1.0 }, 200).start();
+      }
+    });
+  });
+  
+  // Highlight matching subcubes across ALL countries
+  Object.entries(globalContentMap).forEach(([countryName, content]) => {
+    const neuralCube = neuralCubeMap[countryName];
+    if (!neuralCube) return;
+    
+    content.forEach((program, index) => {
+      if (matcher(program)) {
+        const subCube = neuralCube.children[index];
+        if (subCube && subCube.userData.isSubCube) {
+          // Bright highlight for matching programs
+          subCube.material.emissiveIntensity = 2.5;
+          new TWEEN.Tween(subCube.scale)
+            .to({ x: 1.4, y: 1.4, z: 1.4 }, 400)
+            .start();
+          totalMatches++;
+        }
+      }
+    });
+  });
+  
+  console.log(`🎯 Highlighted ${totalMatches} individual program subcubes for ${category}`);
+}
+
+function populateCarousel() {
+    const container = document.getElementById('carouselContainer');
+    if (!container) return;
+    container.innerHTML = '';
+    
+    carouselData.forEach(item => {
+        container.insertAdjacentHTML('beforeend', `
+            <a href="#" class="carousel-card" data-category="${item.category}">
+                <img src="${item.img}" alt="${item.title}"/>
+                <div class="carousel-card-content">
+                    <div class="carousel-card-title">${item.title}</div>
+                    <div class="carousel-card-text">${item.text}</div>
+                </div>
+            </a>`);
+    });
+    
+    // Global filtering click handlers
+    document.querySelectorAll('.carousel-card').forEach(card => {
+        card.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Update visual selection
+            document.querySelectorAll('.carousel-card').forEach(c => c.classList.remove('selected'));
+            this.classList.add('selected');
+            
+            const category = this.dataset.category;
+            console.log(`🌍 Global filtering activated for: ${category}`);
+            
+            // Triple global highlighting
+            highlightCountriesByProgram(category);     // Country surface markers
+            highlightNeuralCubesByProgram(category);   // Neural cubes scaling  
+            highlightMatchingSubCubes(category);       // Individual program subcubes
+        });
+    });
+    
+    // Set default selection to UG
+    const defaultCard = document.querySelector('.carousel-card[data-category="UG"]');
+    if (defaultCard) {
+        defaultCard.classList.add('selected');
+        // Apply default filtering
+        highlightCountriesByProgram('UG');
+        highlightNeuralCubesByProgram('UG');
+        highlightMatchingSubCubes('UG');
+    }
+}
+
+function scrollCarousel(direction) {
+    const container = document.getElementById('carouselContainer');
+    if (!container) return;
+    
+    const card = container.querySelector('.carousel-card');
+    if (!card) return;
+    
+    const cardWidth = card.offsetWidth + 16; // Include gap
+    container.scrollBy({
+        left: direction * cardWidth,
+        behavior: 'smooth'
+    });
+}
+
 // MODIFIED: Fetch data - allow basic globe without auth
 async function fetchDataFromBackend() {
   try {
@@ -413,88 +607,11 @@ async function fetchDataFromBackend() {
     
     allUniversityContent = [...europeContent, ...newThailandContent, ...canadaContent, ...ukContent, ...usaContent, ...indiaContent, ...singaporeContent, ...malaysiaContent];
     
-    // Update carousel after data loads
-    updateCarousel();
-    
     console.log('Data loaded successfully!');
     
   } catch (error) {
     console.log('Globe running in preview mode - login for full access');
   }
-}
-
-// ADD: Update carousel with country data
-function updateCarousel() {
-  const carouselContainer = document.getElementById('carouselContainer');
-  if (!carouselContainer) return;
-  
-  carouselContainer.innerHTML = '';
-  
-  countryConfigs.forEach(config => {
-    const programs = countryPrograms[config.name] || ['UG', 'PG', 'Exchange'];
-    const countryCard = document.createElement('div');
-    countryCard.style.cssText = `
-      background: #22356a;
-      border-radius: 8px;
-      padding: 12px;
-      min-width: 120px;
-      text-align: center;
-      margin: 0 8px;
-      cursor: pointer;
-      transition: background 0.2s;
-    `;
-    
-    countryCard.innerHTML = `
-      <h4 style="color: #ffa500; margin: 0 0 8px 0; font-size: 14px;">${config.name}</h4>
-      <div style="color: #fff; font-size: 11px;">${programs.join(' • ')}</div>
-    `;
-    
-    countryCard.addEventListener('click', () => {
-      const neuralCube = neuralCubeMap[config.name];
-      const toggleFunc = toggleFunctionMap[config.name];
-      
-      if (neuralCube && toggleFunc) {
-        closeAllExploded();
-        
-        // Focus on the country
-        const targetPosition = new THREE.Vector3();
-        neuralCube.getWorldPosition(targetPosition);
-        
-        new TWEEN.Tween(controls.target).to(targetPosition, 1000).easing(TWEEN.Easing.Cubic.InOut).start();
-        new TWEEN.Tween(camera.position).to({
-          x: targetPosition.x + 2,
-          y: targetPosition.y + 1,
-          z: targetPosition.z + 2
-        }, 1000).easing(TWEEN.Easing.Cubic.InOut).start();
-        
-        setTimeout(() => toggleFunc(), 1200);
-      }
-    });
-    
-    countryCard.addEventListener('mouseenter', () => {
-      countryCard.style.background = '#ffa500';
-      countryCard.style.color = '#222';
-    });
-    
-    countryCard.addEventListener('mouseleave', () => {
-      countryCard.style.background = '#22356a';
-      countryCard.style.color = '#fff';
-    });
-    
-    carouselContainer.appendChild(countryCard);
-  });
-}
-
-// ADD: Scroll carousel function
-function scrollCarousel(direction) {
-  const container = document.getElementById('carouselContainer');
-  if (!container) return;
-  
-  const scrollAmount = 200;
-  container.scrollBy({
-    left: direction * scrollAmount,
-    behavior: 'smooth'
-  });
 }
 
 // Initialize Three.js scene
@@ -525,10 +642,10 @@ function initializeThreeJS() {
   scene.add(transformControls);
   
   // BRIGHTER LIGHTING
-  const ambientLight = new THREE.AmbientLight(0x404040, 1.2);  // Doubled intensity
+  const ambientLight = new THREE.AmbientLight(0x404040, 1.2);
   scene.add(ambientLight);
 
-  const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);  // Much brighter
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
   directionalLight.position.set(5, 5, 5);
   scene.add(directionalLight);
 
@@ -1272,48 +1389,6 @@ function createGlobeAndCubes() {
   
   // FIXED: Create country blocks with your EXACT original coordinates
   fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', (font) => {
-    const countryConfigs = [{
-      name: "India",
-      lat: 22,
-      lon: 78,
-      color: 0xFF9933
-    }, {
-      name: "Europe",
-      lat: 48.8566,
-      lon: 2.3522,
-      color: 0x0000FF
-    }, {
-      name: "UK",
-      lat: 53,
-      lon: -0.1276,
-      color: 0x191970
-    }, {
-      name: "Singapore",
-      lat: 1.35,
-      lon: 103.8,
-      color: 0xff0000
-    }, {
-      name: "Malaysia",
-      lat: 4,
-      lon: 102,
-      color: 0x0000ff
-    }, {
-      name: "Thailand",
-      lat: 13.7563,
-      lon: 100.5018,
-      color: 0xffcc00
-    }, {
-      name: "Canada",
-      lat: 56.1304,
-      lon: -106.3468,
-      color: 0xff0000
-    }, {
-      name: "USA",
-      lat: 39.8283,
-      lon: -98.5795,
-      color: 0x003366
-    }];
-    
     countryConfigs.forEach(config => {
       const size = 0.03;
       const blockGeometry = new THREE.BoxGeometry(size, size, size);
@@ -1363,7 +1438,7 @@ function createGlobeAndCubes() {
   
   // Initialize carousel immediately with default data
   setTimeout(() => {
-    updateCarousel();
+    populateCarousel();
   }, 100);
 }
 
@@ -1458,21 +1533,38 @@ function animate() {
   renderer.render(scene, camera);
 }
 
-// ADD: Missing highlightCountriesByProgram function
+// Country highlighting function for carousel
 function highlightCountriesByProgram(programType) {
   console.log('Highlighting countries for program:', programType);
   
-  // Optional: Add highlighting logic for specific program types
+  const matchingCountries = getMatchingCountries(programType);
+  
+  // Reset all country blocks first
   Object.keys(countryBlocks).forEach(countryName => {
     const countryBlock = countryBlocks[countryName];
-    if (countryBlock) {
-      // Example: Highlight countries that offer UG programs
-      if (programType === "UG") {
-        // Add subtle highlight effect
-        countryBlock.material.emissiveIntensity = 0.8;
+    if (countryBlock && countryBlock.material) {
+      countryBlock.material.emissiveIntensity = 0.6; // Normal
+    }
+  });
+  
+  // Highlight matching countries
+  matchingCountries.forEach(countryName => {
+    const countryBlock = countryBlocks[countryName];
+    if (countryBlock && countryBlock.material) {
+      countryBlock.material.emissiveIntensity = 1.5; // Bright highlight
+      
+      // Pulse effect
+      if (typeof TWEEN !== 'undefined') {
+        new TWEEN.Tween(countryBlock.material)
+          .to({ emissiveIntensity: 2.0 }, 300)
+          .yoyo(true)
+          .repeat(2)
+          .start();
       }
     }
   });
+  
+  console.log(`✨ Highlighted ${matchingCountries.length} countries:`, matchingCountries);
 }
 
 // Initialize application - ALWAYS show globe
@@ -1485,12 +1577,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   createGlobeAndCubes();
   animate();
   
+  // Wire up carousel scroll buttons
+  const leftBtn = document.getElementById('carouselScrollLeft');
+  const rightBtn = document.getElementById('carouselScrollRight');
+  if (leftBtn) leftBtn.onclick = () => scrollCarousel(-1);
+  if (rightBtn) rightBtn.onclick = () => scrollCarousel(1);
+  
   // Try to fetch data in background (doesn't block globe)
   await fetchDataFromBackend();
   
   // Add subtle hint for users
   setTimeout(() => {
-    console.log('🌍 Globe loaded! Click countries and cubes to explore. Login required for detailed university information.');
+    console.log('🌍 Globe loaded! Click carousel cards to filter programs globally. Click countries and cubes to explore. Login required for detailed university information.');
   }, 2000);
 });
 
