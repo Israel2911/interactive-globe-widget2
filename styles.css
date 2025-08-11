@@ -6,8 +6,9 @@ body {
 }
 
 /* Header and Footer */
-.header-ui-bar, .footer-ui-bar {
-  background: #003366;
+/* Header and Footer */
+.header-ui-bar {
+  background: transparent; /* REMOVE BLUE BACKGROUND */
   color: #fff;
   padding: 10px 0;
   text-align: center;
@@ -15,12 +16,14 @@ body {
 }
 
 .footer-ui-bar {
+  background: #003366; /* KEEP FOOTER BLUE */
   position: fixed;
   width: 100%;
   bottom: 0;
   left: 0;
   font-size: 14px;
 }
+
 
 /* Updated Carousel Styles - REMOVED BLUE WRAPPER BACKGROUND */
 .carousel-wrapper {
