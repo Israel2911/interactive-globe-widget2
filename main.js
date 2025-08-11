@@ -668,9 +668,6 @@ function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
   let contentIdx = 0;
   const cubeObject = new THREE.Group();
   
-  // **FIXED: Disable frustum culling to prevent disappearing on zoom**
-  cubeObject.frustumCulled = false;
-  
   for (let xi = -1; xi <= 1; xi++) {
     for (let yi = -1; yi <= 1; yi++) {
       for (let zi = -1; zi <= 1; zi++) {
@@ -703,13 +700,6 @@ function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
           initialPosition: pos.clone()
         };
         
-        // **FIXED: Disable frustum culling for individual subcubes to prevent clipping**
-        microcube.frustumCulled = false;
-        
-        // **FIXED: Ensure proper depth testing**
-        microcube.material.depthTest = true;
-        microcube.material.depthWrite = true;
-        
         subCubeArray.push(microcube);
         explodedPositionArray.push(new THREE.Vector3(
           xi * explodedSpacing,
@@ -723,12 +713,8 @@ function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
     }
   }
   
-  // **FIXED: Set proper bounding for the group**
-  cubeObject.matrixAutoUpdate = true;
-  
   return cubeObject;
 }
-
 
 function createNeuralNetwork() {
   const vertices = [];
@@ -1532,4 +1518,3 @@ function logout() {
   alert('Logged out. Globe exploration continues, but detailed features require login.');
   location.reload();
 }
-
