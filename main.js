@@ -664,9 +664,13 @@ const toggleFunctionMap = {
   'Malaysia': createToggleFunction('Malaysia')
 };
 
+// **FIXED createNeuralCube function with zoom clipping fixes but preserving drag interaction**
 function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
   let contentIdx = 0;
   const cubeObject = new THREE.Group();
+  
+  // **FIXED: Disable frustum culling to prevent disappearing on zoom**
+  cubeObject.frustumCulled = false;
   
   for (let xi = -1; xi <= 1; xi++) {
     for (let yi = -1; yi <= 1; yi++) {
@@ -700,6 +704,13 @@ function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
           initialPosition: pos.clone()
         };
         
+        // **FIXED: Disable frustum culling for individual subcubes to prevent clipping**
+        microcube.frustumCulled = false;
+        
+        // **FIXED: Ensure proper depth testing**
+        microcube.material.depthTest = true;
+        microcube.material.depthWrite = true;
+        
         subCubeArray.push(microcube);
         explodedPositionArray.push(new THREE.Vector3(
           xi * explodedSpacing,
@@ -712,6 +723,9 @@ function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
       }
     }
   }
+  
+  // **REMOVED: matrixAutoUpdate = true to preserve drag interaction**
+  // This was causing the drag movement issue
   
   return cubeObject;
 }
@@ -912,76 +926,76 @@ function onCanvasMouseUp(event) {
     const correspondingNeuralCube = neuralCubeMap[countryName];
     const toggleFunc = toggleFunctionMap[countryName];
     
-        if (correspondingNeuralCube && toggleFunc) {
-        const explosionStateMap = {
-          'Europe': isEuropeCubeExploded,
-          'Thailand': isNewThailandCubeExploded,
-          'Canada': isCanadaCubeExploded,
-          'UK': isUkCubeExploded,
-          'USA': isUsaCubeExploded,
-          'India': isIndiaCubeExploded,
-          'Singapore': isSingaporeCubeExploded,
-          'Malaysia': isMalaysiaCubeExploded
-        };
-        
-        const anyExploded = Object.values(explosionStateMap).some(state => state);
-        closeAllExploded();
-        
-        new TWEEN.Tween(correspondingNeuralCube.scale)
-          .to({ x: 1.5, y: 1.5, z: 1.5 }, 200)
-          .yoyo(true)
-          .repeat(1)
-          .start();
-        
-        setTimeout(() => {
-          toggleFunc();
-        }, anyExploded ? 810 : 400);
-      }
-      return;
-    }
-    
-    let parent = clickedObject;
-    let neuralName = null;
-    let clickedSubCube = clickedObject.userData.isSubCube ? clickedObject : null;
-    
-    while (parent) {
-      if (parent.userData.neuralName) {
-        neuralName = parent.userData.neuralName;
-        break;
-      }
-      parent = parent.parent;
-    }
-    
-    const explosionStateMap = {
-      'Europe': isEuropeCubeExploded,
-      'Thailand': isNewThailandCubeExploded,
-      'Canada': isCanadaCubeExploded,
-      'UK': isUkCubeExploded,
-      'USA': isUsaCubeExploded,
-      'India': isIndiaCubeExploded,
-      'Singapore': isSingaporeCubeExploded,
-      'Malaysia': isMalaysiaCubeExploded
-    };
-    
-    if (neuralName) {
-      const isExploded = explosionStateMap[neuralName];
-      const toggleFunc = toggleFunctionMap[neuralName];
+    if (correspondingNeuralCube && toggleFunc) {
+      const explosionStateMap = {
+        'Europe': isEuropeCubeExploded,
+        'Thailand': isNewThailandCubeExploded,
+        'Canada': isCanadaCubeExploded,
+        'UK': isUkCubeExploded,
+        'USA': isUsaCubeExploded,
+        'India': isIndiaCubeExploded,
+        'Singapore': isSingaporeCubeExploded,
+        'Malaysia': isMalaysiaCubeExploded
+      };
       
-      if (isExploded && clickedSubCube && clickedSubCube.userData.university !== "Unassigned") {
-        if (!userIsAuthenticated()) {
-          showLoginPrompt('Please log in to view detailed university programs and application links');
-          return;
-        }
-        showInfoPanel(clickedSubCube.userData);
-      } else {
-        const anyExploded = Object.values(explosionStateMap).some(state => state);
-        closeAllExploded();
-        setTimeout(() => toggleFunc(), anyExploded ? 810 : 0);
-      }
-    } else {
+      const anyExploded = Object.values(explosionStateMap).some(state => state);
       closeAllExploded();
+      
+      new TWEEN.Tween(correspondingNeuralCube.scale)
+        .to({ x: 1.5, y: 1.5, z: 1.5 }, 200)
+        .yoyo(true)
+        .repeat(1)
+        .start();
+      
+      setTimeout(() => {
+        toggleFunc();
+      }, anyExploded ? 810 : 400);
     }
+    return;
   }
+  
+  let parent = clickedObject;
+  let neuralName = null;
+  let clickedSubCube = clickedObject.userData.isSubCube ? clickedObject : null;
+  
+  while (parent) {
+    if (parent.userData.neuralName) {
+      neuralName = parent.userData.neuralName;
+      break;
+    }
+    parent = parent.parent;
+  }
+  
+  const explosionStateMap = {
+    'Europe': isEuropeCubeExploded,
+    'Thailand': isNewThailandCubeExploded,
+    'Canada': isCanadaCubeExploded,
+    'UK': isUkCubeExploded,
+    'USA': isUsaCubeExploded,
+    'India': isIndiaCubeExploded,
+    'Singapore': isSingaporeCubeExploded,
+    'Malaysia': isMalaysiaCubeExploded
+  };
+  
+  if (neuralName) {
+    const isExploded = explosionStateMap[neuralName];
+    const toggleFunc = toggleFunctionMap[neuralName];
+    
+    if (isExploded && clickedSubCube && clickedSubCube.userData.university !== "Unassigned") {
+      if (!userIsAuthenticated()) {
+        showLoginPrompt('Please log in to view detailed university programs and application links');
+        return;
+      }
+      showInfoPanel(clickedSubCube.userData);
+    } else {
+      const anyExploded = Object.values(explosionStateMap).some(state => state);
+      closeAllExploded();
+      setTimeout(() => toggleFunc(), anyExploded ? 810 : 0);
+    }
+  } else {
+    closeAllExploded();
+  }
+}
 
 function onCanvasMouseDownPan(event) {
   mouseDownPos.set(event.clientX, event.clientY);
@@ -1368,7 +1382,7 @@ function animate() {
     item.label.lookAt(camera.position);
   });
   
-  const explosionStateMap = {
+   const explosionStateMap = {
     'Europe': isEuropeCubeExploded,
     'Thailand': isNewThailandCubeExploded,
     'Canada': isCanadaCubeExploded,
@@ -1518,3 +1532,4 @@ function logout() {
   alert('Logged out. Globe exploration continues, but detailed features require login.');
   location.reload();
 }
+
