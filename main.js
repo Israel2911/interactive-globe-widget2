@@ -596,8 +596,10 @@ function moveGlobeRight() {
   }
 }
 
+// **FIXED ZOOM FUNCTIONS**
 function zoomGlobeIn() {
   if (controls) {
+    console.log('Zooming in...');
     controls.dollyIn(1.2);
     controls.update();
   }
@@ -605,40 +607,87 @@ function zoomGlobeIn() {
 
 function zoomGlobeOut() {
   if (controls) {
+    console.log('Zooming out...');
     controls.dollyOut(1.2);
     controls.update();
   }
 }
 
+// **IMPROVED TOGGLE FUNCTIONS WITH MUTUAL EXCLUSIVITY**
 function toggleGlobeRotation() {
   if (controls) {
     controls.autoRotate = !controls.autoRotate;
+    
     const rotateBtn = document.getElementById('btn-rotate');
-    if (rotateBtn) {
-      rotateBtn.style.background = controls.autoRotate ? '#ffa500' : '#223366';
-      rotateBtn.style.color = controls.autoRotate ? '#222' : '#fff';
+    const panBtn = document.getElementById('btn-pan');
+    
+    if (controls.autoRotate) {
+      // Enable rotation - disable pan mode
+      isPanMode = false;
+      controls.enableRotate = true;
+      controls.enablePan = true;
+      
+      // Update rotate button to active
+      if (rotateBtn) {
+        rotateBtn.style.background = '#ffa500';
+        rotateBtn.style.color = '#222';
+      }
+      
+      // Turn off pan button
+      if (panBtn) {
+        panBtn.style.background = '#223366';
+        panBtn.style.color = '#fff';
+        panBtn.title = 'Enter Pan Mode';
+      }
+    } else {
+      // Disable rotation
+      if (rotateBtn) {
+        rotateBtn.style.background = '#223366';
+        rotateBtn.style.color = '#fff';
+      }
     }
   }
 }
 
-// **IMPROVED PAN FUNCTIONALITY - MAC TRACKPAD STYLE**
 function togglePanMode() {
   if (controls) {
     isPanMode = !isPanMode;
+    
     const panBtn = document.getElementById('btn-pan');
-    if (panBtn) {
-      panBtn.style.background = isPanMode ? '#ffa500' : '#223366';
-      panBtn.style.color = isPanMode ? '#222' : '#fff';
-      panBtn.title = isPanMode ? 'Exit Pan Mode (Drag to Move)' : 'Enter Pan Mode';
+    const rotateBtn = document.getElementById('btn-rotate');
+    
+    if (isPanMode) {
+      // Enable pan mode - disable auto rotation
+      controls.autoRotate = false;
+      controls.enableRotate = false; // Disable mouse rotation
+      controls.enablePan = true;
+      
+      // Update pan button to active
+      if (panBtn) {
+        panBtn.style.background = '#ffa500';
+        panBtn.style.color = '#222';
+        panBtn.title = 'Exit Pan Mode (Drag to Move)';
+      }
+      
+      // Turn off rotate button
+      if (rotateBtn) {
+        rotateBtn.style.background = '#223366';
+        rotateBtn.style.color = '#fff';
+      }
+    } else {
+      // Disable pan mode - restore rotation
+      controls.enableRotate = true;
+      controls.enablePan = true;
+      
+      // Update pan button to inactive
+      if (panBtn) {
+        panBtn.style.background = '#223366';
+        panBtn.style.color = '#fff';
+        panBtn.title = 'Enter Pan Mode';
+      }
     }
     
-    // Enable/disable OrbitControls based on pan mode
-    if (controls) {
-      controls.enableRotate = !isPanMode;
-      controls.enablePan = isPanMode;
-    }
-    
-    console.log(isPanMode ? '🖐️ Pan mode enabled - drag to move globe' : '🔄 Orbit mode enabled - drag to rotate globe');
+    console.log(isPanMode ? '🖐️ Pan mode enabled - drag to move globe' : '🔄 Pan mode disabled - normal rotation enabled');
   }
 }
 
@@ -1290,6 +1339,7 @@ function setupEventListeners() {
     btnRight.addEventListener('click', moveGlobeRight);
   }
   
+  // **ENSURE ZOOM BUTTONS ARE CORRECTLY CONNECTED**
   const btnZoomIn = document.getElementById('btn-zoom-in');
   if (btnZoomIn) {
     btnZoomIn.addEventListener('click', zoomGlobeIn);
@@ -1616,8 +1666,7 @@ function animate() {
   const buffer = 0.02;
   
   if (!isCubeMovementPaused) {
-    cubes.forEach((cube, i
-) => {
+    cubes.forEach((cube, i) => {
       const isExploded = cube.userData.neuralName && explosionStateMap[cube.userData.neuralName];
       if (!isExploded) {
         cube.position.add(velocities[i]);
@@ -1780,3 +1829,4 @@ function logout() {
   alert('Logged out. Globe exploration continues, but detailed features require login.');
   location.reload();
 }
+
