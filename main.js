@@ -1,7 +1,5 @@
-// Add test token for initial globe rendering
 localStorage.setItem('userToken', 'guest-viewer');
 
-// Authentication helpers
 function userIsAuthenticated() {
   const token = localStorage.getItem('userToken');
   return token && token !== 'guest-viewer';
@@ -11,44 +9,37 @@ function showLoginPrompt(message = 'Please log in to interact with universities 
   alert(message + '\n\nThe globe is free to explore, but login is required for university details and applications.');
 }
 
-// Global Three.js variables
 let scene, camera, renderer, controls, globeGroup, transformControls;
 let GLOBE_RADIUS = 1.0;
 let isPanMode = false;
 let isRotationPaused = false;
 let isCubeMovementPaused = false;
 
-// Pan Variables
 let isDragging = false;
 let previousMousePosition = { x: 0, y: 0 };
 
-// Cube state variables
 let europeCube, newThailandCube, canadaCube, ukCube, usaCube, indiaCube, singaporeCube, malaysiaCube;
 const europeSubCubes = [], newThailandSubCubes = [], canadaSubCubes = [], ukSubCubes = [], usaSubCubes = [], indiaSubCubes = [], singaporeSubCubes = [], malaysiaSubCubes = [];
 const explodedPositions = [], newThailandExplodedPositions = [], canadaExplodedPositions = [], ukExplodedPositions = [], usaExplodedPositions = [], indiaExplodedPositions = [], singaporeExplodedPositions = [], malaysiaExplodedPositions = [];
 const explodedSpacing = 0.1;
 let isEuropeCubeExploded = false, isNewThailandCubeExploded = false, isCanadaCubeExploded = false, isUkCubeExploded = false, isUsaCubeExploded = false, isIndiaCubeExploded = false, isSingaporeCubeExploded = false, isMalaysiaCubeExploded = false;
 
-// Neural network variables  
 const neuronGroup = new THREE.Group();
 const count = 150, maxRadius = 1.5, vortexCubeSize = 0.01, microGap = 0.002;
 const velocities = [], cubes = [], dummyDataSet = [];
 const neuralCubeMap = {};
 let neuralNetworkLines;
 
-// Country variables
 const countryBlocks = {};
 let arcPaths = [];
 let countryLabels = [];
 const fontLoader = new THREE.FontLoader();
 
-// Interaction variables
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 const mouseDownPos = new THREE.Vector2();
 const clock = new THREE.Clock();
 
-// **CLIENT-SIDE DATA VARIABLES - POPULATED FROM SERVER**
 let countryConfigs = [];
 let europeContent = [];
 let newThailandContent = [];
@@ -62,9 +53,7 @@ let allUniversityContent = [];
 let countryPrograms = {};
 let globalContentMap = {};
 let carouselData = [];
-let dataLoaded = false;
 
-// **SERVER COMMUNICATION FUNCTIONS**
 async function fetchCarouselData() {
   try {
     const response = await fetch('/api/carousel/data');
@@ -117,7 +106,6 @@ async function fetchCarouselData() {
   }
 }
 
-// **ENHANCED DATA FETCHING FROM SERVER**
 async function fetchDataFromBackend() {
   try {
     let headers = {};
@@ -128,37 +116,39 @@ async function fetchDataFromBackend() {
     console.log('🔄 Fetching data from server...');
     const response = await fetch('/api/globe-data', { headers });
     
-    if (!response.ok) {
-      throw new Error('Server response not ok');
+    if (response.ok) {
+      const data = await response.json();
+      console.log('✅ Server data received:', data);
+      
+      europeContent = data.europeContent || [];
+      newThailandContent = data.newThailandContent || [];
+      canadaContent = data.canadaContent || [];
+      ukContent = data.ukContent || [];
+      usaContent = data.usaContent || [];
+      indiaContent = data.indiaContent || [];
+      singaporeContent = data.singaporeContent || [];
+      malaysiaContent = data.malaysiaContent || [];
+      countryPrograms = data.countryPrograms || {};
+      countryConfigs = data.countryConfigs || [];
+      
+      globalContentMap = {
+        'Europe': europeContent,
+        'Thailand': newThailandContent, 
+        'Canada': canadaContent,
+        'UK': ukContent,
+        'USA': usaContent,
+        'India': indiaContent,
+        'Singapore': singaporeContent,
+        'Malaysia': malaysiaContent
+      };
+      
+      allUniversityContent = [...europeContent, ...newThailandContent, ...canadaContent, ...ukContent, ...usaContent, ...indiaContent, ...singaporeContent, ...malaysiaContent];
+      
+      console.log('✅ Data loaded successfully!');
+      return true;
     }
-    
-    const data = await response.json();
-    console.log('✅ Server data received:', data);
-    
-    // **UPDATE CLIENT VARIABLES WITH SERVER DATA**
-    europeContent = data.europeContent || [];
-    newThailandContent = data.newThailandContent || [];
-    canadaContent = data.canadaContent || [];
-    ukContent = data.ukContent || [];
-    usaContent = data.usaContent || [];
-    indiaContent = data.indiaContent || [];
-    singaporeContent = data.singaporeContent || [];
-    malaysiaContent = data.malaysiaContent || [];
-    countryPrograms = data.countryPrograms || {};
-    countryConfigs = data.countryConfigs || [];
-    globalContentMap = data.globalContentMap || {};
-    
-    allUniversityContent = [...europeContent, ...newThailandContent, ...canadaContent, ...ukContent, ...usaContent, ...indiaContent, ...singaporeContent, ...malaysiaContent];
-    
-    dataLoaded = true;
-    console.log('✅ All data loaded successfully!');
-    return true;
-    
   } catch (error) {
     console.error('❌ Error fetching data:', error);
-    console.log('⚠️ Using fallback data');
-    
-    // **FALLBACK DATA**
     countryConfigs = [
       {"name": "India", "lat": 22, "lon": 78, "color": 0xFF9933},
       {"name": "Europe", "lat": 48.8566, "lon": 2.3522, "color": 0x0000FF},
@@ -169,8 +159,6 @@ async function fetchDataFromBackend() {
       {"name": "Canada", "lat": 56.1304, "lon": -106.3468, "color": 0xff0000},
       {"name": "USA", "lat": 39.8283, "lon": -98.5795, "color": 0x003366}
     ];
-    
-    // Initialize empty content arrays for fallback
     europeContent = Array(27).fill(null);
     newThailandContent = Array(27).fill(null);
     canadaContent = Array(27).fill(null);
@@ -179,13 +167,10 @@ async function fetchDataFromBackend() {
     indiaContent = Array(27).fill(null);
     singaporeContent = Array(27).fill(null);
     malaysiaContent = Array(27).fill(null);
-    
-    dataLoaded = true;
-    return false;
   }
+  return false;
 }
 
-// Basic filtering functions
 function getMatchingCountries(category) {
   if (!globalContentMap || Object.keys(globalContentMap).length === 0) {
     return [];
@@ -209,7 +194,6 @@ function highlightCountriesByProgram(programType) {
   
   const matchingCountries = getMatchingCountries(programType);
   
-  // Reset all country blocks first
   Object.keys(countryBlocks).forEach(countryName => {
     const countryBlock = countryBlocks[countryName];
     if (countryBlock && countryBlock.material) {
@@ -217,7 +201,6 @@ function highlightCountriesByProgram(programType) {
     }
   });
   
-  // Highlight matching countries
   matchingCountries.forEach(countryName => {
     const countryBlock = countryBlocks[countryName];
     if (countryBlock && countryBlock.material) {
@@ -241,7 +224,6 @@ function highlightNeuralCubesByProgram(category) {
   
   const matchingCountries = getMatchingCountries(category);
   
-  // Reset all neural cubes first
   Object.keys(neuralCubeMap).forEach(countryName => {
     const cube = neuralCubeMap[countryName];
     if (cube && typeof TWEEN !== 'undefined') {
@@ -251,7 +233,6 @@ function highlightNeuralCubesByProgram(category) {
     }
   });
   
-  // Scale up matching neural cubes
   matchingCountries.forEach(countryName => {
     const cube = neuralCubeMap[countryName];
     if (cube && typeof TWEEN !== 'undefined') {
@@ -279,7 +260,6 @@ function highlightMatchingSubCubes(category) {
   const matcher = matcherMap[category.toLowerCase()] || (() => false);
   let totalMatches = 0;
   
-  // Reset ALL subcubes in ALL countries first
   Object.values(neuralCubeMap).forEach(cube => {
     cube.children.forEach(subCube => {
       if (subCube.userData.isSubCube) {
@@ -289,7 +269,6 @@ function highlightMatchingSubCubes(category) {
     });
   });
   
-  // Highlight matching subcubes across ALL countries
   Object.entries(globalContentMap).forEach(([countryName, content]) => {
     const neuralCube = neuralCubeMap[countryName];
     if (!neuralCube) return;
@@ -333,30 +312,25 @@ async function populateCarousel() {
             </a>`);
     });
     
-    // Global filtering click handlers
     document.querySelectorAll('.carousel-card').forEach(card => {
         card.addEventListener('click', function(e) {
             e.preventDefault();
             
-            // Update visual selection
             document.querySelectorAll('.carousel-card').forEach(c => c.classList.remove('selected'));
             this.classList.add('selected');
             
             const category = this.dataset.category;
             console.log(`🌍 Global filtering activated for: ${category}`);
             
-            // Triple global highlighting
             highlightCountriesByProgram(category);
             highlightNeuralCubesByProgram(category);
             highlightMatchingSubCubes(category);
         });
     });
     
-    // Set default selection to UG
     const defaultCard = document.querySelector('.carousel-card[data-category="UG"]');
     if (defaultCard) {
         defaultCard.classList.add('selected');
-        // Apply default filtering
         setTimeout(() => {
           highlightCountriesByProgram('UG');
           highlightNeuralCubesByProgram('UG');
@@ -381,7 +355,6 @@ function scrollCarousel(direction) {
     });
 }
 
-// **NAVIGATION FUNCTIONS**
 function moveGlobeUp() {
   if (controls) {
     const panSpeed = 0.05;
@@ -418,7 +391,6 @@ function moveGlobeRight() {
   }
 }
 
-// **FIXED ZOOM FUNCTIONS**
 function zoomGlobeIn() {
   if (!controls || !renderer) {
     console.error('Controls or renderer not initialized yet');
@@ -457,7 +429,6 @@ function zoomGlobeOut() {
   renderer.domElement.dispatchEvent(wheelEvent);
 }
 
-// **TOGGLE FUNCTIONS WITH MUTUAL EXCLUSIVITY**
 function toggleGlobeRotation() {
   if (controls) {
     controls.autoRotate = !controls.autoRotate;
@@ -526,7 +497,6 @@ function togglePanMode() {
   }
 }
 
-// Initialize Three.js scene
 function initializeThreeJS() {
   console.log('🔄 Initializing Three.js...');
   
@@ -536,7 +506,6 @@ function initializeThreeJS() {
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setClearColor(0x000000, 0);
   
-  // **FIXED: Append to body if no specific canvas found**
   document.body.appendChild(renderer.domElement);
   
   globeGroup = new THREE.Group();
@@ -557,7 +526,6 @@ function initializeThreeJS() {
   });
   scene.add(transformControls);
   
-  // BRIGHTER LIGHTING
   const ambientLight = new THREE.AmbientLight(0x404040, 1.2);
   scene.add(ambientLight);
 
@@ -574,7 +542,6 @@ function initializeThreeJS() {
   console.log('✅ Three.js initialized successfully');
 }
 
-// Color calculation function
 function getColorByData(data) {
   const baseHue = data.domain * 30 % 360;
   const lightness = 50 + data.engagement * 25;
@@ -631,7 +598,6 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
   });
 }
 
-// Create toggle function for cube explosions
 function createToggleFunction(cubeName) {
   return function() {
     let isExploded, setExploded, cube, subCubes, explodedPos;
@@ -687,7 +653,6 @@ function createToggleFunction(cubeName) {
   }
 }
 
-// Toggle function mapping
 const toggleFunctionMap = {
   'Europe': createToggleFunction('Europe'),
   'Thailand': createToggleFunction('Thailand'),
@@ -947,76 +912,76 @@ function onCanvasMouseUp(event) {
     const correspondingNeuralCube = neuralCubeMap[countryName];
     const toggleFunc = toggleFunctionMap[countryName];
     
-    if (correspondingNeuralCube && toggleFunc) {
-      const explosionStateMap = {
-        'Europe': isEuropeCubeExploded,
-        'Thailand': isNewThailandCubeExploded,
-        'Canada': isCanadaCubeExploded,
-        'UK': isUkCubeExploded,
-        'USA': isUsaCubeExploded,
-        'India': isIndiaCubeExploded,
-        'Singapore': isSingaporeCubeExploded,
-        'Malaysia': isMalaysiaCubeExploded
-      };
-      
-      const anyExploded = Object.values(explosionStateMap).some(state => state);
-      closeAllExploded();
-      
-      new TWEEN.Tween(correspondingNeuralCube.scale)
-        .to({ x: 1.5, y: 1.5, z: 1.5 }, 200)
-        .yoyo(true)
-        .repeat(1)
-        .start();
-      
-      setTimeout(() => {
-        toggleFunc();
-      }, anyExploded ? 810 : 400);
-    }
-    return;
-  }
-  
-  let parent = clickedObject;
-  let neuralName = null;
-  let clickedSubCube = clickedObject.userData.isSubCube ? clickedObject : null;
-  
-  while (parent) {
-    if (parent.userData.neuralName) {
-      neuralName = parent.userData.neuralName;
-      break;
-    }
-    parent = parent.parent;
-  }
-  
-    const explosionStateMap = {
-    'Europe': isEuropeCubeExploded,
-    'Thailand': isNewThailandCubeExploded,
-    'Canada': isCanadaCubeExploded,
-    'UK': isUkCubeExploded,
-    'USA': isUsaCubeExploded,
-    'India': isIndiaCubeExploded,
-    'Singapore': isSingaporeCubeExploded,
-    'Malaysia': isMalaysiaCubeExploded
-  };
-  
-  if (neuralName) {
-    const isExploded = explosionStateMap[neuralName];
-    const toggleFunc = toggleFunctionMap[neuralName];
-    
-    if (isExploded && clickedSubCube && clickedSubCube.userData.university !== "Unassigned") {
-      if (!userIsAuthenticated()) {
-        showLoginPrompt('Please log in to view detailed university programs and application links');
-        return;
+        if (correspondingNeuralCube && toggleFunc) {
+        const explosionStateMap = {
+          'Europe': isEuropeCubeExploded,
+          'Thailand': isNewThailandCubeExploded,
+          'Canada': isCanadaCubeExploded,
+          'UK': isUkCubeExploded,
+          'USA': isUsaCubeExploded,
+          'India': isIndiaCubeExploded,
+          'Singapore': isSingaporeCubeExploded,
+          'Malaysia': isMalaysiaCubeExploded
+        };
+        
+        const anyExploded = Object.values(explosionStateMap).some(state => state);
+        closeAllExploded();
+        
+        new TWEEN.Tween(correspondingNeuralCube.scale)
+          .to({ x: 1.5, y: 1.5, z: 1.5 }, 200)
+          .yoyo(true)
+          .repeat(1)
+          .start();
+        
+        setTimeout(() => {
+          toggleFunc();
+        }, anyExploded ? 810 : 400);
       }
-      showInfoPanel(clickedSubCube.userData);
-    } else {
-      const anyExploded = Object.values(explosionStateMap).some(state => state);
-      closeAllExploded();
-      setTimeout(() => toggleFunc(), anyExploded ? 810 : 0);
+      return;
     }
-  } else {
-    closeAllExploded();
+    
+    let parent = clickedObject;
+    let neuralName = null;
+    let clickedSubCube = clickedObject.userData.isSubCube ? clickedObject : null;
+    
+    while (parent) {
+      if (parent.userData.neuralName) {
+        neuralName = parent.userData.neuralName;
+        break;
+      }
+      parent = parent.parent;
+    }
+    
+    const explosionStateMap = {
+      'Europe': isEuropeCubeExploded,
+      'Thailand': isNewThailandCubeExploded,
+      'Canada': isCanadaCubeExploded,
+      'UK': isUkCubeExploded,
+      'USA': isUsaCubeExploded,
+      'India': isIndiaCubeExploded,
+      'Singapore': isSingaporeCubeExploded,
+      'Malaysia': isMalaysiaCubeExploded
+    };
+    
+    if (neuralName) {
+      const isExploded = explosionStateMap[neuralName];
+      const toggleFunc = toggleFunctionMap[neuralName];
+      
+      if (isExploded && clickedSubCube && clickedSubCube.userData.university !== "Unassigned") {
+        if (!userIsAuthenticated()) {
+          showLoginPrompt('Please log in to view detailed university programs and application links');
+          return;
+        }
+        showInfoPanel(clickedSubCube.userData);
+      } else {
+        const anyExploded = Object.values(explosionStateMap).some(state => state);
+        closeAllExploded();
+        setTimeout(() => toggleFunc(), anyExploded ? 810 : 0);
+      }
+    } else {
+      closeAllExploded();
+    }
   }
-}
 
 function onCanvasMouseDownPan(event) {
   mouseDownPos.set(event.clientX, event.clientY);
@@ -1210,12 +1175,6 @@ function setupEventListeners() {
 async function createGlobeAndCubes() {
   console.log('🔄 Creating globe and cubes...');
   
-  // **WAIT FOR DATA TO BE LOADED**
-  if (!dataLoaded) {
-    console.log('⏳ Waiting for data to load...');
-    await fetchDataFromBackend();
-  }
-  
   createNeuralNetwork();
   
   for (let i = 0; i < count; i++) {
@@ -1304,7 +1263,6 @@ async function createGlobeAndCubes() {
     }
   }
   
-  // Create globe texture
   new THREE.TextureLoader().load("https://static.wixstatic.com/media/d77f36_8f868995fda643a0a61562feb20eb733~mv2.jpg", (tex) => {
     const globe = new THREE.Mesh(
       new THREE.SphereGeometry(GLOBE_RADIUS, 64, 64),
@@ -1319,7 +1277,6 @@ async function createGlobeAndCubes() {
     globeGroup.add(globe);
   });
   
-  // Create wireframe
   let wireframeMesh = new THREE.Mesh(
     new THREE.SphereGeometry(GLOBE_RADIUS + 0.05, 64, 64),
     new THREE.MeshBasicMaterial({
@@ -1331,7 +1288,6 @@ async function createGlobeAndCubes() {
   );
   globeGroup.add(wireframeMesh);
   
-  // Create country blocks with coordinates
   fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', (font) => {
     countryConfigs.forEach(config => {
       const size = 0.03;
@@ -1378,7 +1334,6 @@ async function createGlobeAndCubes() {
     
     drawAllConnections();
     
-    // **WAIT FOR CAROUSEL TO POPULATE BEFORE APPLYING DEFAULT FILTERING**
     setTimeout(() => {
       highlightCountriesByProgram("UG");
     }, 500);
@@ -1477,7 +1432,6 @@ function animate() {
   renderer.render(scene, camera);
 }
 
-// Keyboard controls
 document.addEventListener('keydown', (event) => {
   if (!controls) return;
   
@@ -1519,36 +1473,28 @@ document.addEventListener('keydown', (event) => {
   }
 });
 
-// **FIXED INITIALIZATION SEQUENCE**
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('🚀 Loading Interactive Globe Widget...');
   
   try {
-    // **CRITICAL: Load data FIRST**
     console.log('1️⃣ Fetching server data...');
-    await fetchDataFromBackend();
+    const dataLoaded = await fetchDataFromBackend();
     
-    // **THEN initialize Three.js**
     console.log('2️⃣ Initializing Three.js...');
     initializeThreeJS();
     
-    // **THEN setup event listeners**
     console.log('3️⃣ Setting up event listeners...');
     setupEventListeners();
     
-    // **THEN create globe with loaded data**
     console.log('4️⃣ Creating globe and cubes...');
     await createGlobeAndCubes();
     
-    // **THEN populate carousel**
     console.log('5️⃣ Populating carousel...');
     await populateCarousel();
     
-    // **FINALLY start animation**
     console.log('6️⃣ Starting animation...');
     animate();
     
-    // Wire up carousel scroll buttons
     const leftBtn = document.getElementById('carouselScrollLeft');
     const rightBtn = document.getElementById('carouselScrollRight');
     if (leftBtn) leftBtn.onclick = () => scrollCarousel(-1);
@@ -1561,7 +1507,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 });
 
-// Login simulation functions
 function simulateLogin() {
   localStorage.setItem('userToken', 'authenticated-user-token');
   alert('Logged in! You can now access detailed university information and application links.');
