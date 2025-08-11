@@ -596,22 +596,47 @@ function moveGlobeRight() {
   }
 }
 
-// **FIXED ZOOM FUNCTIONS**
+// **FIXED ZOOM FUNCTIONS - SIMULATE WHEEL EVENTS LIKE TRACKPAD**
 function zoomGlobeIn() {
-  if (controls) {
-    console.log('Zooming in...');
-    controls.dollyIn(1.2);
-    controls.update();
+  if (!controls || !renderer) {
+    console.error('Controls or renderer not initialized yet');
+    return;
   }
+  
+  console.log('Zooming in with + button...');
+  
+  // Create and dispatch wheel event (same as trackpad zoom)
+  const wheelEvent = new WheelEvent('wheel', {
+    deltaY: -120, // Negative deltaY = zoom in
+    bubbles: true,
+    cancelable: true,
+    clientX: renderer.domElement.width / 2,
+    clientY: renderer.domElement.height / 2
+  });
+  
+  renderer.domElement.dispatchEvent(wheelEvent);
 }
 
 function zoomGlobeOut() {
-  if (controls) {
-    console.log('Zooming out...');
-    controls.dollyOut(1.2);
-    controls.update();
+  if (!controls || !renderer) {
+    console.error('Controls or renderer not initialized yet');
+    return;
   }
+  
+  console.log('Zooming out with - button...');
+  
+  // Create and dispatch wheel event (same as trackpad zoom)
+  const wheelEvent = new WheelEvent('wheel', {
+    deltaY: 120, // Positive deltaY = zoom out
+    bubbles: true,
+    cancelable: true,
+    clientX: renderer.domElement.width / 2,
+    clientY: renderer.domElement.height / 2
+  });
+  
+  renderer.domElement.dispatchEvent(wheelEvent);
 }
+
 
 // **IMPROVED TOGGLE FUNCTIONS WITH MUTUAL EXCLUSIVITY**
 function toggleGlobeRotation() {
