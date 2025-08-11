@@ -194,14 +194,28 @@ body {
   border-radius: 7px;
   font-size: 1.25em;
   cursor: pointer;
-  transition: background .15s;
+  transition: all 0.2s ease; /* Enhanced transition for all properties */
   border: none;
   box-shadow: 1px 1px 4px #0003;
+  user-select: none;
 }
 
 .nav-btn:hover {
   background: #ffa500;
   color: #222;
+  transform: translateY(-1px); /* Subtle lift on hover */
+}
+
+/* **ENHANCED NAVIGATION BUTTON STATES** */
+.nav-btn.active {
+  background: #ffa500 !important;
+  color: #222 !important;
+  box-shadow: 0 0 8px rgba(255,165,0,0.6);
+  transform: scale(1.05);
+}
+
+.nav-btn:active {
+  transform: scale(0.95);
 }
 
 /* MOVED CONTROL BUTTONS DOWN */
@@ -225,12 +239,17 @@ body {
   font-weight: 500;
   cursor: pointer;
   box-shadow: 0 1px 3px rgba(0,0,0,0.09);
-  transition: background 0.2s;
+  transition: all 0.2s ease; /* Enhanced transition */
 }
 
 .control-buttons button:hover {
   background: #ffa500;
   color: #222;
+  transform: translateY(-1px);
+}
+
+.control-buttons button:active {
+  transform: translateY(1px) scale(0.98);
 }
 
 /* Globe Canvas */
@@ -451,5 +470,10 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
   .control-buttons {
     bottom: 60px;
     right: 8px;
+  }
+  
+  /* Enhanced mobile button feedback */
+  .nav-btn.active {
+    transform: scale(1.03); /* Slightly less scaling on mobile */
   }
 }
