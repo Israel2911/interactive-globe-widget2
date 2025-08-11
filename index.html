@@ -1,4 +1,4 @@
-
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -7,9 +7,6 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <!-- MISSING GLOBE CONTAINER - ADD THIS -->
-  <div id="globe-container"></div>
-  
   <div class="header-ui-bar">
     <div class="carousel-wrapper">
       <div class="carousel-arrow left" onclick="scrollCarousel(-1)">❮</div>
@@ -47,11 +44,11 @@
       <div class="subcard-grid" id="infoPanelSubcards"></div>
     </div>
   </div>
-  
   <div class="footer-ui-bar">
     <span>© 2025 Interactive Program Globe | Global Education Alliance</span>
   </div>
 
+  <!-- JS Libraries for Globe and Interactions -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/TransformControls.js"></script>
@@ -59,5 +56,7 @@
   <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/geometries/TextGeometry.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/simplex-noise/2.4.0/simplex-noise.min.js"></script>
+  <!-- Your main JS rendering logic -->
   <script src="main.js"></script>
 </body>
+</html>
