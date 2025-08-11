@@ -545,15 +545,89 @@ function scrollCarousel(direction) {
     const container = document.getElementById('carouselContainer');
     if (!container) return;
     
-    const cardWidth = 98; // Fixed card width + gap
-    const scrollAmount = cardWidth * 2; // Scroll 2 cards at a time
+    const card = container.querySelector('.carousel-card');
+    if (!card) return;
     
+    const cardWidth = card.offsetWidth + 16; // Include gap
     container.scrollBy({
-        left: direction * scrollAmount,
+        left: direction * cardWidth,
         behavior: 'smooth'
     });
 }
 
+// **INTEGRATED NAVIGATION FUNCTIONS FOR GLOBE CONTROL**
+function moveGlobeUp() {
+  if (controls) {
+    const panSpeed = 0.05;
+    controls.object.position.y += panSpeed;
+    controls.target.y += panSpeed;
+    controls.update();
+  }
+}
+
+function moveGlobeDown() {
+  if (controls) {
+    const panSpeed = 0.05;
+    controls.object.position.y -= panSpeed;
+    controls.target.y -= panSpeed;
+    controls.update();
+  }
+}
+
+function moveGlobeLeft() {
+  if (controls) {
+    const panSpeed = 0.05;
+    controls.object.position.x -= panSpeed;
+    controls.target.x -= panSpeed;
+    controls.update();
+  }
+}
+
+function moveGlobeRight() {
+  if (controls) {
+    const panSpeed = 0.05;
+    controls.object.position.x += panSpeed;
+    controls.target.x += panSpeed;
+    controls.update();
+  }
+}
+
+function zoomGlobeIn() {
+  if (controls) {
+    controls.dollyIn(1.2);
+    controls.update();
+  }
+}
+
+function zoomGlobeOut() {
+  if (controls) {
+    controls.dollyOut(1.2);
+    controls.update();
+  }
+}
+
+function toggleGlobeRotation() {
+  if (controls) {
+    controls.autoRotate = !controls.autoRotate;
+    const rotateBtn = document.getElementById('btn-rotate');
+    if (rotateBtn) {
+      rotateBtn.style.background = controls.autoRotate ? '#ffa500' : '#223366';
+      rotateBtn.style.color = controls.autoRotate ? '#222' : '#fff';
+    }
+  }
+}
+
+function togglePanMode() {
+  if (controls) {
+    isPanMode = !isPanMode;
+    const panBtn = document.getElementById('btn-pan');
+    if (panBtn) {
+      panBtn.style.background = isPanMode ? '#ffa500' : '#223366';
+      panBtn.style.color = isPanMode ? '#222' : '#fff';
+      panBtn.title = isPanMode ? 'Exit Pan Mode' : 'Enter Pan Mode';
+    }
+  }
+}
 
 // MODIFIED: Fetch data - allow basic globe without auth
 async function fetchDataFromBackend() {
@@ -1117,68 +1191,53 @@ function onCanvasMouseUp(event) {
   }
 }
 
-// Setup event listeners
+// **UPDATED SETUP EVENT LISTENERS WITH NAVIGATION FUNCTIONS**
 function setupEventListeners() {
   renderer.domElement.addEventListener('mousedown', onCanvasMouseDown);
   renderer.domElement.addEventListener('mouseup', onCanvasMouseUp);
   
-  const panSpeed = 3;
+  // **UPDATED NAVIGATION CONTROLS - WORKING GLOBE MOVEMENT**
   const btnUp = document.getElementById('btn-up');
   if (btnUp) {
-    btnUp.addEventListener('click', () => {
-      controls.pan(0, -panSpeed);
-      controls.update();
-    });
+    btnUp.addEventListener('click', moveGlobeUp);
   }
   
   const btnDown = document.getElementById('btn-down');
   if (btnDown) {
-    btnDown.addEventListener('click', () => {
-      controls.pan(0, panSpeed);
-      controls.update();
-    });
+    btnDown.addEventListener('click', moveGlobeDown);
   }
   
   const btnLeft = document.getElementById('btn-left');
   if (btnLeft) {
-    btnLeft.addEventListener('click', () => {
-      controls.pan(panSpeed, 0);
-      controls.update();
-    });
+    btnLeft.addEventListener('click', moveGlobeLeft);
   }
   
   const btnRight = document.getElementById('btn-right');
   if (btnRight) {
-    btnRight.addEventListener('click', () => {
-      controls.pan(-panSpeed, 0);
-      controls.update();
-    });
+    btnRight.addEventListener('click', moveGlobeRight);
   }
   
   const btnZoomIn = document.getElementById('btn-zoom-in');
   if (btnZoomIn) {
-    btnZoomIn.addEventListener('click', () => {
-      controls.dollyIn(1.2);
-      controls.update();
-    });
+    btnZoomIn.addEventListener('click', zoomGlobeIn);
   }
   
   const btnZoomOut = document.getElementById('btn-zoom-out');
   if (btnZoomOut) {
-    btnZoomOut.addEventListener('click', () => {
-      controls.dollyOut(1.2);
-      controls.update();
-    });
+    btnZoomOut.addEventListener('click', zoomGlobeOut);
   }
   
   const btnRotate = document.getElementById('btn-rotate');
   if (btnRotate) {
-    btnRotate.addEventListener('click', () => {
-      controls.autoRotate = !controls.autoRotate;
-      btnRotate.style.background = controls.autoRotate ? '#a46bfd' : 'rgba(0,0,0,0.8)';
-    });
+    btnRotate.addEventListener('click', toggleGlobeRotation);
   }
   
+  const btnPan = document.getElementById('btn-pan');
+  if (btnPan) {
+    btnPan.addEventListener('click', togglePanMode);
+  }
+  
+  // **REST OF YOUR EXISTING EVENT LISTENERS**
   const pauseButton = document.getElementById("pauseButton");
   if (pauseButton) {
     pauseButton.addEventListener("click", () => {
@@ -1367,8 +1426,8 @@ function createGlobeAndCubes() {
       new THREE.MeshPhongMaterial({
         map: tex,
         transparent: true,
-        opacity: 0.75,  // Much brighter!
-        emissive: 0x112244,  // Add subtle glow
+        opacity: 0.75,
+        emissive: 0x112244,
         emissiveIntensity: 0.2
       })
     );
@@ -1518,6 +1577,7 @@ function animate() {
         neighbors.sort((a, b) => a.dist - b.dist);
         const closest = neighbors.slice(0, connectionsPerCube);
         
+        closest
         closest.forEach(n => {
           vertices.push(cubes[i].position.x, cubes[i].position.y, cubes[i].position.z);
           vertices.push(n.cube.position.x, n.cube.position.y, n.cube.position.z);
@@ -1566,6 +1626,48 @@ function highlightCountriesByProgram(programType) {
   
   console.log(`✨ Highlighted ${matchingCountries.length} countries:`, matchingCountries);
 }
+
+// **OPTIONAL: ADD KEYBOARD CONTROLS FOR BETTER USER EXPERIENCE**
+document.addEventListener('keydown', (event) => {
+  if (!controls) return;
+  
+  switch(event.code) {
+    case 'ArrowUp':
+    case 'KeyW':
+      event.preventDefault();
+      moveGlobeUp();
+      break;
+    case 'ArrowDown':  
+    case 'KeyS':
+      event.preventDefault();
+      moveGlobeDown();
+      break;
+    case 'ArrowLeft':
+    case 'KeyA':
+      event.preventDefault();
+      moveGlobeLeft();
+      break;
+    case 'ArrowRight':
+    case 'KeyD':
+      event.preventDefault();
+      moveGlobeRight();
+      break;
+    case 'Equal':
+    case 'NumpadAdd':
+      event.preventDefault();
+      zoomGlobeIn();
+      break;
+    case 'Minus':
+    case 'NumpadSubtract':
+      event.preventDefault();
+      zoomGlobeOut();
+      break;
+    case 'Space':
+      event.preventDefault();
+      toggleGlobeRotation();
+      break;
+  }
+});
 
 // Initialize application - ALWAYS show globe
 document.addEventListener('DOMContentLoaded', async () => {
