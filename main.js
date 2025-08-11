@@ -18,6 +18,10 @@ let isPanMode = false;
 let isRotationPaused = false;
 let isCubeMovementPaused = false;
 
+// **ADDED: Pan Variables for Mac-style dragging**
+let isDragging = false;
+let previousMousePosition = { x: 0, y: 0 };
+
 // Cube state variables
 let europeCube, newThailandCube, canadaCube, ukCube, usaCube, indiaCube, singaporeCube, malaysiaCube;
 const europeSubCubes = [], newThailandSubCubes = [], canadaSubCubes = [], ukSubCubes = [], usaSubCubes = [], indiaSubCubes = [], singaporeSubCubes = [], malaysiaSubCubes = [];
@@ -617,6 +621,7 @@ function toggleGlobeRotation() {
   }
 }
 
+// **IMPROVED PAN FUNCTIONALITY - MAC TRACKPAD STYLE**
 function togglePanMode() {
   if (controls) {
     isPanMode = !isPanMode;
@@ -624,8 +629,16 @@ function togglePanMode() {
     if (panBtn) {
       panBtn.style.background = isPanMode ? '#ffa500' : '#223366';
       panBtn.style.color = isPanMode ? '#222' : '#fff';
-      panBtn.title = isPanMode ? 'Exit Pan Mode' : 'Enter Pan Mode';
+      panBtn.title = isPanMode ? 'Exit Pan Mode (Drag to Move)' : 'Enter Pan Mode';
     }
+    
+    // Enable/disable OrbitControls based on pan mode
+    if (controls) {
+      controls.enableRotate = !isPanMode;
+      controls.enablePan = isPanMode;
+    }
+    
+    console.log(isPanMode ? '🖐️ Pan mode enabled - drag to move globe' : '🔄 Orbit mode enabled - drag to rotate globe');
   }
 }
 
@@ -1191,10 +1204,70 @@ function onCanvasMouseUp(event) {
   }
 }
 
-// **UPDATED SETUP EVENT LISTENERS WITH NAVIGATION FUNCTIONS**
+// **ENHANCED MOUSE INTERACTION FOR PAN MODE**
+function onCanvasMouseDownPan(event) {
+  mouseDownPos.set(event.clientX, event.clientY);
+  
+  if (isPanMode) {
+    isDragging = true;
+    previousMousePosition = {
+      x: event.clientX,
+      y: event.clientY
+    };
+    renderer.domElement.style.cursor = 'grabbing';
+  }
+}
+
+function onCanvasMouseMovePan(event) {
+  if (isPanMode && isDragging) {
+    const deltaMove = {
+      x: event.clientX - previousMousePosition.x,
+      y: event.clientY - previousMousePosition.y
+    };
+    
+    // Convert mouse movement to world space pan
+    const panSpeed = 0.002;
+    const deltaX = deltaMove.x * panSpeed;
+    const deltaY = deltaMove.y * panSpeed;
+    
+    // Apply pan movement to camera and target
+    controls.object.position.x -= deltaX;
+    controls.target.x -= deltaX;
+    controls.object.position.y += deltaY;
+    controls.target.y += deltaY;
+    
+    controls.update();
+    
+    previousMousePosition = {
+      x: event.clientX,
+      y: event.clientY
+    };
+  }
+}
+
+function onCanvasMouseUpPan(event) {
+  if (isPanMode) {
+    isDragging = false;
+    renderer.domElement.style.cursor = isPanMode ? 'grab' : 'default';
+  }
+  
+  // Continue with your existing mouse up logic
+  onCanvasMouseUp(event);
+}
+
+// **UPDATED SETUP EVENT LISTENERS WITH NAVIGATION AND PAN FUNCTIONS**
 function setupEventListeners() {
-  renderer.domElement.addEventListener('mousedown', onCanvasMouseDown);
-  renderer.domElement.addEventListener('mouseup', onCanvasMouseUp);
+  // **UPDATED MOUSE EVENT LISTENERS WITH PAN FUNCTIONALITY**
+  renderer.domElement.addEventListener('mousedown', onCanvasMouseDownPan);
+  renderer.domElement.addEventListener('mousemove', onCanvasMouseMovePan);
+  renderer.domElement.addEventListener('mouseup', onCanvasMouseUpPan);
+  
+  // **ADD CURSOR STYLE CHANGES FOR PAN MODE**
+  renderer.domElement.addEventListener('mouseenter', () => {
+    if (isPanMode) {
+      renderer.domElement.style.cursor = 'grab';
+    }
+  });
   
   // **UPDATED NAVIGATION CONTROLS - WORKING GLOBE MOVEMENT**
   const btnUp = document.getElementById('btn-up');
@@ -1543,7 +1616,8 @@ function animate() {
   const buffer = 0.02;
   
   if (!isCubeMovementPaused) {
-    cubes.forEach((cube, i) => {
+    cubes.forEach((cube, i
+) => {
       const isExploded = cube.userData.neuralName && explosionStateMap[cube.userData.neuralName];
       if (!isExploded) {
         cube.position.add(velocities[i]);
@@ -1577,7 +1651,6 @@ function animate() {
         neighbors.sort((a, b) => a.dist - b.dist);
         const closest = neighbors.slice(0, connectionsPerCube);
         
-        closest
         closest.forEach(n => {
           vertices.push(cubes[i].position.x, cubes[i].position.y, cubes[i].position.z);
           vertices.push(n.cube.position.x, n.cube.position.y, n.cube.position.z);
