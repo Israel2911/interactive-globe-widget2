@@ -1,3 +1,5 @@
+// **SIGNIFICANTLY REDUCED MAIN.JS - DATA MOVED TO SERVER**
+
 // Add test token for initial globe rendering
 localStorage.setItem('userToken', 'guest-viewer');
 
@@ -18,7 +20,7 @@ let isPanMode = false;
 let isRotationPaused = false;
 let isCubeMovementPaused = false;
 
-// **ADDED: Pan Variables for Mac-style dragging**
+// Pan Variables for Mac-style dragging
 let isDragging = false;
 let previousMousePosition = { x: 0, y: 0 };
 
@@ -48,367 +50,148 @@ const mouse = new THREE.Vector2();
 const mouseDownPos = new THREE.Vector2();
 const clock = new THREE.Clock();
 
-// RESTORED: Your original precise country coordinates
-let countryConfigs = [
-  {"name": "India", "lat": 22, "lon": 78, "color": 0xFF9933},
-  {"name": "Europe", "lat": 48.8566, "lon": 2.3522, "color": 0x0000FF},
-  {"name": "UK", "lat": 53, "lon": -0.1276, "color": 0x191970},
-  {"name": "Singapore", "lat": 1.35, "lon": 103.8, "color": 0xff0000},
-  {"name": "Malaysia", "lat": 4, "lon": 102, "color": 0x0000ff},
-  {"name": "Thailand", "lat": 13.7563, "lon": 100.5018, "color": 0xffcc00},
-  {"name": "Canada", "lat": 56.1304, "lon": -106.3468, "color": 0xff0000},
-  {"name": "USA", "lat": 39.8283, "lon": -98.5795, "color": 0x003366}
-];
-
-// INTEGRATED: Your exact original university data with precise names and logos
-let europeContent = [{
-    university: "University of Passau",
-    logo: "https://static.wixstatic.com/shapes/d77f36_467b1d2eed4042eab43fdff25124915b.svg",
-    programName: "Degree-Seeking"
-}, {
-    university: "University of Passau",
-    logo: "https://static.wixstatic.com/shapes/d77f36_467b1d2eed4042eab43fdff25124915b.svg",
-    programName: "Exchange"
-}, null, null, {
-    university: "ICES",
-    logo: "https://static.wixstatic.com/media/d77f36_c11cec0bd94f4ab7a1b611cecb9e90cb~mv2.png",
-    programName: "Full Degree"
-}, {
-    university: "ICES",
-    logo: "https://static.wixstatic.com/media/d77f36_c11cec0bd94f4ab7a1b611cecb9e90cb~mv2.png",
-    programName: "Mobility"
-}, null, null, {
-    university: "Université Catholique de Lille",
-    logo: "https://static.wixstatic.com/media/d77f36_009f964ce876419f9391e6a604f9257c~mv2.png",
-    programName: "Exchange"
-}, {
-    university: "Université Catholique de Lille",
-    logo: "https://static.wixstatic.com/media/d77f36_009f964ce876419f9391e6a604f9257c~mv2.png",
-    programName: "Summer Program"
-}, null, null, {
-    university: "IRCOM",
-    logo: "https://static.wixstatic.com/media/d77f36_592f23b64ee44211abcb87444198e26a~mv2.jpg",
-    programName: "Master\nHumanitarian"
-}, {
-    university: "IRCOM",
-    logo: "https://static.wixstatic.com/media/d77f36_592f23b64ee44211abcb87444198e26a~mv2.jpg",
-    programName: "Mobility"
-}, null, null, {
-    university: "KATHO-NRW",
-    logo: "https://static.wixstatic.com/shapes/d77f36_b6a110be4758449f8537733a427f2dba.svg",
-    programName: "Int'l Studies"
-}, {
-    university: "KATHO-NRW",
-    logo: "https://static.wixstatic.com/shapes/d77f36_b6a110be4758449f8537733a427f2dba.svg",
-    programName: "Study Abroad"
-}, null, null, {
-    university: "TSI",
-    logo: "https://static.wixstatic.com/media/d77f36_1992247272bb4d55a3cac5060abec418~mv2.jpeg",
-    programName: "Int'l Students"
-}, {
-    university: "TSI",
-    logo: "https://static.wixstatic.com/media/d77f36_1992247272bb4d55a3cac5060abec418~mv2.jpeg",
-    programName: "Innovation"
-}, null, null, {
-    university: "INSEEC",
-    logo: "https://static.wixstatic.com/media/d77f36_66d4c88c4ebb4b7da6cacaed57178165~mv2.webp",
-    programName: "Exchanges"
-}, null, null];
-
-let newThailandContent = [{
-    university: "Assumption University",
-    logo: "https://static.wixstatic.com/media/d77f36_7dd03d8eefa54bc8a73c18f0a7f35230~mv2.png",
-    programName: "Undergraduate Business (BBA)"
-}, {
-    university: "Assumption University",
-    logo: "https://static.wixstatic.com/media/d77f36_7dd03d8eefa54bc8a73c18f0a7f35230~mv2.png",
-    programName: "Master of Business Administration (MBA)"
-}, {
-    university: "Assumption University",
-    logo: "https://static.wixstatic.com/media/d77f36_7dd03d8eefa54bc8a73c18f0a7f35230~mv2.png",
-    programName: "Study Abroad / Exchange"
-}, {
-    university: "Bangkok University",
-    logo: "https://static.wixstatic.com/media/d77f36_5d91110e0e094c799bb3647dbcbaa590~mv2.jpg",
-    programName: "Innovative Media Production"
-}, {
-    university: "Bangkok University",
-    logo: "https://static.wixstatic.com/media/d77f36_5d91110e0e094c799bb3647dbcbaa590~mv2.jpg",
-    programName: "Media & Communication"
-}, {
-    university: "Bangkok University",
-    logo: "https://static.wixstatic.com/media/d77f36_5d91110e0e094c799bb3647dbcbaa590~mv2.jpg",
-    programName: "Innovation Management (MBA)"
-}, {
-    university: "Siam University",
-    logo: "https://static.wixstatic.com/media/d77f36_69fce6d5825e467a88fc02a01b416cf7~mv2.png",
-    programName: "Bachelor of Business Admin. (BBA)"
-}, {
-    university: "Siam University",
-    logo: "https://static.wixstatic.com/media/d77f36_69fce6d5825e467a88fc02a01b416cf7~mv2.png",
-    programName: "Master of Business Admin. (MBA)"
-}, {
-    university: "Siam University",
-    logo: "https://static.wixstatic.com/media/d77f36_69fce6d5825e467a88fc02a01b416cf7~mv2.png",
-    programName: "Semester Abroad / Exchange"
-}, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null];
-
-let canadaContent = [{
-    university: "Trinity Western University",
-    logo: "https://static.wixstatic.com/media/d77f36_b14379dfcff54ffcad6ed7b604debd6f~mv2.png",
-    programName: "BSN"
-}, {
-    university: "Trinity Western University",
-    logo: "https://static.wixstatic.com/media/d77f36_b14379dfcff54ffcad6ed7b604debd6f~mv2.png",
-    programName: "MSN"
-}, {
-    university: "Trinity Western University",
-    logo: "https://static.wixstatic.com/media/d77f36_b14379dfcff54ffcad6ed7b604debd6f~mv2.png",
-    programName: "Biotechnology"
-}, {
-    university: "Trinity Western University",
-    logo: "https://static.wixstatic.com/media/d77f36_b14379dfcff54ffcad6ed7b604debd6f~mv2.png",
-    programName: "Computing Science"
-}, {
-    university: "Trinity Western University",
-    logo: "https://static.wixstatic.com/media/d77f36_b14379dfcff54ffcad6ed7b604debd6f~mv2.png",
-    programName: "MA in Leadership"
-}, {
-    university: "Trinity Western University",
-    logo: "https://static.wixstatic.com/media/d77f36_b14379dfcff54ffcad6ed7b604debd6f~mv2.png",
-    programName: "MBA"
-}, {
-    university: "Trinity Western University",
-    logo: "https://static.wixstatic.com/media/d77f36_b14379dfcff54ffcad6ed7b604debd6f~mv2.png",
-    programName: "BBA"
-}, {
-    university: "Wawiwa Tech Training",
-    logo: "https://static.wixstatic.com/media/d77f36_0d83ad97a7e54b2db3f0eb089dbcec1f~mv2.webp",
-    programName: "Cyber Security"
-}, {
-    university: "Wawiwa Tech Training",
-    logo: "https://static.wixstatic.com/media/d77f36_0d83ad97a7e54b2db3f0eb089dbcec1f~mv2.webp",
-    programName: "Data Analytics"
-}, {
-    university: "Wawiwa Tech Training",
-    logo: "https://static.wixstatic.com/media/d77f36_0d83ad97a7e54b2db3f0eb089dbcec1f~mv2.webp",
-    programName: "Full Stack Dev"
-}, {
-    university: "Wawiwa Tech Training",
-    logo: "https://static.wixstatic.com/media/d77f36_0d83ad97a7e54b2db3f0eb089dbcec1f~mv2.webp",
-    programName: "UX/UI Design"
-}, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null];
-
-let ukContent = [{
-    university: "Cardiff University",
-    logo: "https://static.wixstatic.com/media/d77f36_b277c95008c942e6877fff8631e8bc3a~mv2.avif",
-    programName: "Business & Management"
-}, {
-    university: "Cardiff University",
-    logo: "https://static.wixstatic.com/media/d77f36_b277c95008c942e6877fff8631e8bc3a~mv2.avif",
-    programName: "Healthcare & Nursing"
-}, {
-    university: "Cardiff University",
-    logo: "https://static.wixstatic.com/media/d77f36_b277c95008c942e6877fff8631e8bc3a~mv2.avif",
-    programName: "Public Policy"
-}, {
-    university: "Liverpool Hope University",
-    logo: "https://static.wixstatic.com/media/d77f36_a723456d47c74ab5a85d81c4e7030ff7~mv2.jpg",
-    programName: "Education"
-}, {
-    university: "Liverpool Hope University",
-    logo: "https://static.wixstatic.com/media/d77f36_a723456d47c74ab5a85d81c4e7030ff7~mv2.jpg",
-    programName: "Business"
-}, {
-    university: "Nottingham Trent University",
-    logo: "https://static.wixstatic.com/media/d77f36_86cb424c04934227905daf03395fc3b1~mv2.png",
-    programName: "Global\nPartnerships"
-}, {
-    university: "University of Exeter",
-    logo: "https://static.wixstatic.com/shapes/d77f36_ae3db739ffe74de88cd658a3878c5c9c.svg",
-    programName: "Medicine"
-}, {
-    university: "University of Exeter",
-    logo: "https://static.wixstatic.com/shapes/d77f36_ae3db739ffe74de88cd658a3878c5c9c.svg",
-    programName: "Law"
-}, {
-    university: "UK Students Abroad",
-    logo: "https://static.wixstatic.com/media/d77f36_0be7efbfceee4b359a597935c2851fd3~mv2.jpg",
-    programName: "Study in SG"
-}, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null];
-
-let usaContent = [{
-    university: "John Cabot University",
-    logo: "https://static.wixstatic.com/media/d77f36_4711ccd9b626480b929186e41e64ee28~mv2.png",
-    programName: "Degree\nPrograms"
-}, {
-    university: "John Cabot University",
-    logo: "https://static.wixstatic.com/media/d77f36_4711ccd9b626480b929186e41e64ee28~mv2.png",
-    programName: "Study Abroad"
-}, {
-    university: "St. Mary's University",
-    logo: "https://static.wixstatic.com/media/d77f36_8fda624fd9634997a589119b22051ac8~mv2.png",
-    programName: "STEM\nPrograms"
-}, {
-    university: "St. Mary's University",
-    logo: "https://static.wixstatic.com/media/d77f36_8fda624fd9634997a589119b22051ac8~mv2.png",
-    programName: "Int'l Services"
-}, {
-    university: "California Baptist University",
-    logo: "https://static.wixstatic.com/shapes/d77f36_efa51305eeef47e2b02a13e35d17e251.svg",
-    programName: "STEM\nDegrees"
-}, {
-    university: "California Baptist University",
-    logo: "https://static.wixstatic.com/shapes/d77f36_efa51305eeef47e2b02a13e35d17e251.svg",
-    programName: "Int'l Exchange"
-}, {
-    university: "LeTourneau University",
-    logo: "https://static.wixstatic.com/media/d77f36_2f89b58cab8349eabfafae4ee16e68a2~mv2.png",
-    programName: "Aviation"
-}, {
-    university: "LeTourneau University",
-    logo: "https://static.wixstatic.com/media/d77f36_2f89b58cab8349eabfafae4ee16e68a2~mv2.png",
-    programName: "Engineering"
-}, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null];
-
-let indiaContent = [{
-    university: "Asia College of Journalism",
-    logo: "https://static.wixstatic.com/media/d77f36_2cd674a2255f4d3f83d8b00721d6f477~mv2.png",
-    programName: "Journalism"
-}, {
-    university: "Women's Christian College",
-    logo: "https://static.wixstatic.com/media/d77f36_2c637647ae7145749c1a7d3f74ec6f2e~mv2.jpg",
-    programName: "Academic\nPrograms"
-}, {
-    university: "Stella Maris College",
-    logo: "https://static.wixstatic.com/media/d77f36_e7d55cc621e54077b0205581f5323175~mv2.png",
-    programName: "PG Prospectus"
-}, {
-    university: "Stella Maris College",
-    logo: "https://static.wixstatic.com/media/d77f36_e7d55cc621e54077b0205581f5323175~mv2.png",
-    programName: "Exchange"
-}, {
-    university: "Symbiosis International University",
-    logo: "https://static.wixstatic.com/media/d77f36_f89cf22ecc514a78b0dd8b34c656d4d9~mv2.png",
-    programName: "Int'l\nAdmissions"
-}, {
-    university: "Fergusson College",
-    logo: "https://static.wixstatic.com/media/d77f36_60066c9c2c0242d39e0107a2f25eb185~mv2.png",
-    programName: "Nursing"
-}, {
-    university: "Bishop Heber College",
-    logo: "https://static.wixstatic.com/media/d77f36_21e0208f1bc248e5953eff9a0410bad8~mv2.jpeg",
-    programName: "Int'l\nAdmissions"
-}, {
-    university: "St. Stephen's College",
-    logo: "https://static.wixstatic.com/media/d77f36_e4e8e1e417874b01b46adf1aadc894be~mv2.png",
-    programName: "Courses\nOffered"
-}, {
-    university: "Christ University",
-    logo: "https://static.wixstatic.com/media/d77f36_88239521c71f4ad8bcb8e986e7b14ac7~mv2.webp",
-    programName: "Int'l\nAdmissions"
-}, {
-    university: "Christ University",
-    logo: "https://static.wixstatic.com/media/d77f36_88239521c71f4ad8bcb8e986e7b14ac7~mv2.webp",
-    programName: "Study Abroad"
-}, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null];
-
-let singaporeContent = [{
-    university: "NUS",
-    logo: "https://static.wixstatic.com/media/d77f36_80b489ce45dd4d2494ec43dce3d88a7b~mv2.jpg",
-    programName: "Business\nSchool"
-}, {
-    university: "NUS",
-    logo: "https://static.wixstatic.com/media/d77f36_80b489ce45dd4d2494ec43dce3d88a7b~mv2.jpg",
-    programName: "Nursing &\nMedicine"
-}, {
-    university: "NUS",
-    logo: "https://static.wixstatic.com/media/d77f36_80b489ce45dd4d2494ec43dce3d88a7b~mv2.jpg",
-    programName: "Public Policy"
-}, {
-    university: "SIM",
-    logo: "https://static.wixstatic.com/media/d77f36_f2d0805ccb934e8da2019aaf23b16e6f~mv2.avif",
-    programName: "IT &\nCompSci"
-}, {
-    university: "SIM",
-    logo: "https://static.wixstatic.com/media/d77f36_f2d0805ccb934e8da2019aaf23b16e6f~mv2.avif",
-    programName: "Nursing"
-}, {
-    university: "Nanyang Institute of Management",
-    logo: "https://static.wixstatic.com/media/d77f36_e219748ff80a417ea92e264199b7dfe3~mv2.png",
-    programName: "Business"
-}, {
-    university: "Nanyang Institute of Management",
-    logo: "https://static.wixstatic.com/media/d77f36_e219748ff80a417ea92e264199b7dfe3~mv2.png",
-    programName: "Hospitality"
-}, {
-    university: "Nanyang Institute of Management",
-    logo: "https://static.wixstatic.com/media/d77f36_e219748ff80a417ea92e264199b7dfe3~mv2.png",
-    programName: "Digital Media\nDiploma"
-}, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null];
-
-let malaysiaContent = [{
-    university: "Limkokwing University",
-    logo: "https://static.wixstatic.com/media/d77f36_38c855c3d47448009fc7123812183cc0~mv2.png",
-    programName: "Creative\nTech"
-}, {
-    university: "Binary University",
-    logo: "https://static.wixstatic.com/media/d77f36_38969a51e38148f294cade091aa0cbd8~mv2.png",
-    programName: "MyBIG Grant"
-}, {
-    university: "Study in Malaysia Guide",
-    logo: "https://static.wixstatic.com/media/d77f36_e6a24c71b7a14548beca3dafbb8e797b~mv2.jpg",
-    programName: "Student\nGuide"
-}, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null];
-
-// Combine all university content
-let allUniversityContent = [...europeContent, ...newThailandContent, ...canadaContent, ...ukContent, ...usaContent, ...indiaContent, ...singaporeContent, ...malaysiaContent];
+// **CLIENT-SIDE DATA VARIABLES (NOW LOADED FROM SERVER)**
+let countryConfigs = [];
+let europeContent = [];
+let newThailandContent = [];
+let canadaContent = [];
+let ukContent = [];
+let usaContent = [];
+let indiaContent = [];
+let singaporeContent = [];
+let malaysiaContent = [];
+let allUniversityContent = [];
 let countryPrograms = {};
+let globalContentMap = {};
+let carouselData = [];
 
-// **GLOBAL CAROUSEL FILTERING FUNCTIONS**
-const carouselData = [{
-    category: "UG",
-    img: "https://static.wixstatic.com/media/d77f36_deddd99f45db4a55953835f5d3926246~mv2.png",
-    title: "Undergraduate",
-    text: "Bachelor-level opportunities."
-}, {
-    category: "PG", 
-    img: "https://static.wixstatic.com/media/d77f36_ae2a1e8b47514fb6b0a995be456a9eec~mv2.png",
-    title: "Postgraduate",
-    text: "Master's & advanced programs."
-}, {
-    category: "Diploma",
-    img: "https://static.wixstatic.com/media/d77f36_e8f60f4350304ee79afab3978a44e307~mv2.png", 
-    title: "Diploma",
-    text: "Professional & foundation."
-}, {
-    category: "Mobility",
-    img: "https://static.wixstatic.com/media/d77f36_1118d15eee5a45f2a609c762d077857e~mv2.png",
-    title: "Semester Abroad", 
-    text: "Exchange & mobility."
-}, {
-    category: "Upskilling",
-    img: "https://static.wixstatic.com/media/d77f36_d8d9655ba23f4849abba7d09ddb12092~mv2.png",
-    title: "Upskilling",
-    text: "Short-term training."
-}, {
-    category: "Research",
-    img: "https://static.wixstatic.com/media/d77f36_aa9eb498381d4adc897522e38301ae6f~mv2.jpg",
-    title: "Research", 
-    text: "Opportunities & links."
-}];
+// **SERVER COMMUNICATION FUNCTIONS**
+async function fetchCarouselData() {
+  try {
+    const response = await fetch('/api/carousel/data');
+    if (response.ok) {
+      carouselData = await response.json();
+      console.log('📊 Carousel data loaded with statistics:', carouselData);
+    }
+  } catch (error) {
+    console.log('Using fallback carousel data');
+    carouselData = [
+      {
+        category: "UG",
+        img: "https://static.wixstatic.com/media/d77f36_deddd99f45db4a55953835f5d3926246~mv2.png",
+        title: "Undergraduate",
+        text: "Bachelor-level opportunities."
+      },
+      {
+        category: "PG", 
+        img: "https://static.wixstatic.com/media/d77f36_ae2a1e8b47514fb6b0a995be456a9eec~mv2.png",
+        title: "Postgraduate",
+        text: "Master's & advanced programs."
+      },
+      {
+        category: "Diploma",
+        img: "https://static.wixstatic.com/media/d77f36_e8f60f4350304ee79afab3978a44e307~mv2.png", 
+        title: "Diploma",
+        text: "Professional & foundation."
+      },
+      {
+        category: "Mobility",
+        img: "https://static.wixstatic.com/media/d77f36_1118d15eee5a45f2a609c762d077857e~mv2.png",
+        title: "Semester Abroad", 
+        text: "Exchange & mobility."
+      },
+      {
+        category: "Upskilling",
+        img: "https://static.wixstatic.com/media/d77f36_d8d9655ba23f4849abba7d09ddb12092~mv2.png",
+        title: "Upskilling",
+        text: "Short-term training."
+      },
+      {
+        category: "Research",
+        img: "https://static.wixstatic.com/media/d77f36_aa9eb498381d4adc897522e38301ae6f~mv2.jpg",
+        title: "Research", 
+        text: "Opportunities & links."
+      }
+    ];
+  }
+}
 
-const globalContentMap = {
-  'Europe': europeContent,
-  'Thailand': newThailandContent, 
-  'Canada': canadaContent,
-  'UK': ukContent,
-  'USA': usaContent,
-  'India': indiaContent,
-  'Singapore': singaporeContent,
-  'Malaysia': malaysiaContent
-};
+async function fetchFilterData(category) {
+  try {
+    const response = await fetch(`/api/programs/filter/${category}`);
+    if (response.ok) {
+      const data = await response.json();
+      console.log(`🎯 Server-side filtering for ${category}:`, data);
+      return data;
+    }
+  } catch (error) {
+    console.log('Using client-side filtering fallback');
+    return null;
+  }
+}
 
+async function logUserInteraction(action, country = null, program = null) {
+  try {
+    await fetch('/api/analytics/interaction', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action,
+        country,
+        program,
+        timestamp: new Date().toISOString()
+      })
+    });
+  } catch (error) {
+    console.log('Analytics logging failed');
+  }
+}
+
+// **REDUCED CLIENT-SIDE FILTERING (MOVED TO SERVER)**
+async function highlightCountriesByProgram(programType) {
+  console.log('🌍 Requesting server-side filtering for:', programType);
+  
+  // Log user interaction
+  await logUserInteraction('filter_program', null, programType);
+  
+  const filterData = await fetchFilterData(programType);
+  
+  let matchingCountries = [];
+  if (filterData) {
+    matchingCountries = filterData.matchingCountries;
+  } else {
+    // Fallback to basic client-side filtering
+    matchingCountries = getMatchingCountries(programType);
+  }
+  
+  // Reset all country blocks first
+  Object.keys(countryBlocks).forEach(countryName => {
+    const countryBlock = countryBlocks[countryName];
+    if (countryBlock && countryBlock.material) {
+      countryBlock.material.emissiveIntensity = 0.6;
+    }
+  });
+  
+  // Highlight matching countries
+  matchingCountries.forEach(countryName => {
+    const countryBlock = countryBlocks[countryName];
+    if (countryBlock && countryBlock.material) {
+      countryBlock.material.emissiveIntensity = 1.5;
+      
+      if (typeof TWEEN !== 'undefined') {
+        new TWEEN.Tween(countryBlock.material)
+          .to({ emissiveIntensity: 2.0 }, 300)
+          .yoyo(true)
+          .repeat(2)
+          .start();
+      }
+    }
+  });
+  
+  console.log(`✨ Highlighted ${matchingCountries.length} countries:`, matchingCountries);
+}
+
+// Basic fallback filtering (simplified)
 function getMatchingCountries(category) {
   const matcherMap = {
     'ug': content => content.some(p => p && /bachelor|bba|undergraduate|bsn|degree/i.test(p.programName)),
@@ -470,7 +253,7 @@ function highlightMatchingSubCubes(category) {
   Object.values(neuralCubeMap).forEach(cube => {
     cube.children.forEach(subCube => {
       if (subCube.userData.isSubCube) {
-        subCube.material.emissiveIntensity = 0.6; // Normal intensity
+        subCube.material.emissiveIntensity = 0.6;
         new TWEEN.Tween(subCube.scale).to({ x: 1.0, y: 1.0, z: 1.0 }, 200).start();
       }
     });
@@ -485,7 +268,6 @@ function highlightMatchingSubCubes(category) {
       if (matcher(program)) {
         const subCube = neuralCube.children[index];
         if (subCube && subCube.userData.isSubCube) {
-          // Bright highlight for matching programs
           subCube.material.emissiveIntensity = 2.5;
           new TWEEN.Tween(subCube.scale)
             .to({ x: 1.4, y: 1.4, z: 1.4 }, 400)
@@ -499,17 +281,20 @@ function highlightMatchingSubCubes(category) {
   console.log(`🎯 Highlighted ${totalMatches} individual program subcubes for ${category}`);
 }
 
-function populateCarousel() {
+async function populateCarousel() {
+    await fetchCarouselData();
+    
     const container = document.getElementById('carouselContainer');
     if (!container) return;
     container.innerHTML = '';
     
     carouselData.forEach(item => {
+        const programCountText = item.programCount ? ` (${item.programCount})` : '';
         container.insertAdjacentHTML('beforeend', `
             <a href="#" class="carousel-card" data-category="${item.category}">
                 <img src="${item.img}" alt="${item.title}"/>
                 <div class="carousel-card-content">
-                    <div class="carousel-card-title">${item.title}</div>
+                    <div class="carousel-card-title">${item.title}${programCountText}</div>
                     <div class="carousel-card-text">${item.text}</div>
                 </div>
             </a>`);
@@ -517,7 +302,7 @@ function populateCarousel() {
     
     // Global filtering click handlers
     document.querySelectorAll('.carousel-card').forEach(card => {
-        card.addEventListener('click', function(e) {
+        card.addEventListener('click', async function(e) {
             e.preventDefault();
             
             // Update visual selection
@@ -527,10 +312,10 @@ function populateCarousel() {
             const category = this.dataset.category;
             console.log(`🌍 Global filtering activated for: ${category}`);
             
-            // Triple global highlighting
-            highlightCountriesByProgram(category);     // Country surface markers
-            highlightNeuralCubesByProgram(category);   // Neural cubes scaling  
-            highlightMatchingSubCubes(category);       // Individual program subcubes
+            // Triple global highlighting with server-side data
+            await highlightCountriesByProgram(category);
+            highlightNeuralCubesByProgram(category);
+            highlightMatchingSubCubes(category);
         });
     });
     
@@ -539,7 +324,7 @@ function populateCarousel() {
     if (defaultCard) {
         defaultCard.classList.add('selected');
         // Apply default filtering
-        highlightCountriesByProgram('UG');
+        await highlightCountriesByProgram('UG');
         highlightNeuralCubesByProgram('UG');
         highlightMatchingSubCubes('UG');
     }
@@ -552,14 +337,14 @@ function scrollCarousel(direction) {
     const card = container.querySelector('.carousel-card');
     if (!card) return;
     
-    const cardWidth = card.offsetWidth + 16; // Include gap
+    const cardWidth = card.offsetWidth + 16;
     container.scrollBy({
         left: direction * cardWidth,
         behavior: 'smooth'
     });
 }
 
-// **INTEGRATED NAVIGATION FUNCTIONS FOR GLOBE CONTROL**
+// **NAVIGATION FUNCTIONS FOR GLOBE CONTROL**
 function moveGlobeUp() {
   if (controls) {
     const panSpeed = 0.05;
@@ -596,7 +381,7 @@ function moveGlobeRight() {
   }
 }
 
-// **FIXED ZOOM FUNCTIONS - SIMULATE WHEEL EVENTS LIKE TRACKPAD**
+// **FIXED ZOOM FUNCTIONS - SIMULATE WHEEL EVENTS**
 function zoomGlobeIn() {
   if (!controls || !renderer) {
     console.error('Controls or renderer not initialized yet');
@@ -605,9 +390,8 @@ function zoomGlobeIn() {
   
   console.log('Zooming in with + button...');
   
-  // Create and dispatch wheel event (same as trackpad zoom)
   const wheelEvent = new WheelEvent('wheel', {
-    deltaY: -120, // Negative deltaY = zoom in
+    deltaY: -120,
     bubbles: true,
     cancelable: true,
     clientX: renderer.domElement.width / 2,
@@ -625,9 +409,8 @@ function zoomGlobeOut() {
   
   console.log('Zooming out with - button...');
   
-  // Create and dispatch wheel event (same as trackpad zoom)
   const wheelEvent = new WheelEvent('wheel', {
-    deltaY: 120, // Positive deltaY = zoom out
+    deltaY: 120,
     bubbles: true,
     cancelable: true,
     clientX: renderer.domElement.width / 2,
@@ -636,7 +419,6 @@ function zoomGlobeOut() {
   
   renderer.domElement.dispatchEvent(wheelEvent);
 }
-
 
 // **IMPROVED TOGGLE FUNCTIONS WITH MUTUAL EXCLUSIVITY**
 function toggleGlobeRotation() {
@@ -647,25 +429,21 @@ function toggleGlobeRotation() {
     const panBtn = document.getElementById('btn-pan');
     
     if (controls.autoRotate) {
-      // Enable rotation - disable pan mode
       isPanMode = false;
       controls.enableRotate = true;
       controls.enablePan = true;
       
-      // Update rotate button to active
       if (rotateBtn) {
         rotateBtn.style.background = '#ffa500';
         rotateBtn.style.color = '#222';
       }
       
-      // Turn off pan button
       if (panBtn) {
         panBtn.style.background = '#223366';
         panBtn.style.color = '#fff';
         panBtn.title = 'Enter Pan Mode';
       }
     } else {
-      // Disable rotation
       if (rotateBtn) {
         rotateBtn.style.background = '#223366';
         rotateBtn.style.color = '#fff';
@@ -682,29 +460,24 @@ function togglePanMode() {
     const rotateBtn = document.getElementById('btn-rotate');
     
     if (isPanMode) {
-      // Enable pan mode - disable auto rotation
       controls.autoRotate = false;
-      controls.enableRotate = false; // Disable mouse rotation
+      controls.enableRotate = false;
       controls.enablePan = true;
       
-      // Update pan button to active
       if (panBtn) {
         panBtn.style.background = '#ffa500';
         panBtn.style.color = '#222';
         panBtn.title = 'Exit Pan Mode (Drag to Move)';
       }
       
-      // Turn off rotate button
       if (rotateBtn) {
         rotateBtn.style.background = '#223366';
         rotateBtn.style.color = '#fff';
       }
     } else {
-      // Disable pan mode - restore rotation
       controls.enableRotate = true;
       controls.enablePan = true;
       
-      // Update pan button to inactive
       if (panBtn) {
         panBtn.style.background = '#223366';
         panBtn.style.color = '#fff';
@@ -716,7 +489,7 @@ function togglePanMode() {
   }
 }
 
-// MODIFIED: Fetch data - allow basic globe without auth
+// **ENHANCED DATA FETCHING FROM SERVER**
 async function fetchDataFromBackend() {
   try {
     let headers = {};
@@ -733,45 +506,25 @@ async function fetchDataFromBackend() {
     
     const data = await response.json();
     
-    // Update data arrays if server provides them
-    if (data.europeContent && data.europeContent.length > 0) {
-      europeContent = data.europeContent;
-    }
-    if (data.newThailandContent && data.newThailandContent.length > 0) {
-      newThailandContent = data.newThailandContent;
-    }
-    if (data.canadaContent && data.canadaContent.length > 0) {
-      canadaContent = data.canadaContent;
-    }
-    if (data.ukContent && data.ukContent.length > 0) {
-      ukContent = data.ukContent;
-    }
-    if (data.usaContent && data.usaContent.length > 0) {
-      usaContent = data.usaContent;
-    }
-    if (data.indiaContent && data.indiaContent.length > 0) {
-      indiaContent = data.indiaContent;
-    }
-    if (data.singaporeContent && data.singaporeContent.length > 0) {
-      singaporeContent = data.singaporeContent;
-    }
-    if (data.malaysiaContent && data.malaysiaContent.length > 0) {
-      malaysiaContent = data.malaysiaContent;
-    }
-    
-    countryPrograms = data.countryPrograms || {};
-    
-    // Update country configs if provided
-    if (data.countryConfigs && data.countryConfigs.length > 0) {
-      countryConfigs = data.countryConfigs;
-    }
+    // **UPDATE CLIENT VARIABLES WITH SERVER DATA**
+    if (data.europeContent) europeContent = data.europeContent;
+    if (data.newThailandContent) newThailandContent = data.newThailandContent;
+    if (data.canadaContent) canadaContent = data.canadaContent;
+    if (data.ukContent) ukContent = data.ukContent;
+    if (data.usaContent) usaContent = data.usaContent;
+    if (data.indiaContent) indiaContent = data.indiaContent;
+    if (data.singaporeContent) singaporeContent = data.singaporeContent;
+    if (data.malaysiaContent) malaysiaContent = data.malaysiaContent;
+    if (data.countryPrograms) countryPrograms = data.countryPrograms;
+    if (data.countryConfigs) countryConfigs = data.countryConfigs;
+    if (data.globalContentMap) globalContentMap = data.globalContentMap;
     
     allUniversityContent = [...europeContent, ...newThailandContent, ...canadaContent, ...ukContent, ...usaContent, ...indiaContent, ...singaporeContent, ...malaysiaContent];
     
-    console.log('Data loaded successfully!');
+    console.log('✅ Server data loaded successfully!');
     
   } catch (error) {
-    console.log('Globe running in preview mode - login for full access');
+    console.log('⚠️ Globe running in offline mode');
   }
 }
 
@@ -782,7 +535,13 @@ function initializeThreeJS() {
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setClearColor(0x000000, 0);
-  document.body.appendChild(renderer.domElement);
+  
+  const canvas = document.getElementById('globe-canvas');
+  if (canvas) {
+    canvas.appendChild(renderer.domElement);
+  } else {
+    document.body.appendChild(renderer.domElement);
+  }
   
   globeGroup = new THREE.Group();
   scene.add(globeGroup);
@@ -810,13 +569,14 @@ function initializeThreeJS() {
   directionalLight.position.set(5, 5, 5);
   scene.add(directionalLight);
 
-  // ADD EXTRA LIGHT for globe visibility
   const backLight = new THREE.DirectionalLight(0x336699, 0.5);
   backLight.position.set(-5, -5, -5);
   scene.add(backLight);
   
   camera.position.z = 5;
 }
+
+// **ALL OTHER FUNCTIONS STAY THE SAME - JUST VISUAL/RENDERING LOGIC**
 
 // Color calculation function
 function getColorByData(data) {
@@ -830,7 +590,6 @@ function getColorByData(data) {
   return color;
 }
 
-// RESTORED: Your original texture creation with proper logos
 function createTexture(text, logoUrl, bgColor = '#003366') {
   const canvas = document.createElement('canvas');
   canvas.width = 256;
@@ -854,17 +613,16 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
     texture.needsUpdate = true;
   }
   
-  // RESTORED: Your original logo handling
   if (logoUrl) {
     const logoImg = new Image();
     logoImg.crossOrigin = "Anonymous";
     logoImg.src = logoUrl;
     logoImg.onload = () => {
-      ctx.drawImage(logoImg, 16, 16, 64, 64); // Logo in top-left
-      drawText(); // Text below logo
+      ctx.drawImage(logoImg, 16, 16, 64, 64);
+      drawText();
     };
     logoImg.onerror = () => {
-      drawText(); // Fallback to text only
+      drawText();
     }
   } else {
     drawText();
@@ -945,7 +703,6 @@ const toggleFunctionMap = {
   'Malaysia': createToggleFunction('Malaysia')
 };
 
-// RESTORED: Your original neural cube creation with proper university data
 function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
   let contentIdx = 0;
   const cubeObject = new THREE.Group();
@@ -957,11 +714,9 @@ function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
         let material, userData;
         
         if (item) {
-          // RESTORED: Your original university data structure
           material = createTexture(item.programName, item.logo, color);
-          userData = item; // Full university data with logo, links, etc.
+          userData = item;
         } else {
-          // RESTORED: Your original fallback for empty slots
           material = createTexture('Unassigned', null, '#333333');
           userData = { university: "Unassigned" };
         }
@@ -1000,7 +755,6 @@ function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
   return cubeObject;
 }
 
-// Create neural network
 function createNeuralNetwork() {
   const vertices = [];
   const geometry = new THREE.BufferGeometry();
@@ -1017,7 +771,6 @@ function createNeuralNetwork() {
   globeGroup.add(neuralNetworkLines);
 }
 
-// RESTORED: Your original lat/lon to 3D conversion
 function latLonToVector3(lat, lon, radius) {
   const phi = (90 - lat) * (Math.PI / 180);
   const theta = (lon + 180) * (Math.PI / 180);
@@ -1027,7 +780,6 @@ function latLonToVector3(lat, lon, radius) {
   return new THREE.Vector3(x, y, z);
 }
 
-// Create connection path
 function createConnectionPath(fromGroup, toGroup, color = 0xffff00) {
   const start = new THREE.Vector3();
   fromGroup.getWorldPosition(start);
@@ -1038,8 +790,7 @@ function createConnectionPath(fromGroup, toGroup, color = 0xffff00) {
   const arcOffset = 0.05;
   const distance = start.distanceTo(end);
   const arcElevation = distance * 0.4;
-  
-  const offsetStart = start.clone().normalize().multiplyScalar(globeRadius + arcOffset);
+    const offsetStart = start.clone().normalize().multiplyScalar(globeRadius + arcOffset);
   const offsetEnd = end.clone().normalize().multiplyScalar(globeRadius + arcOffset);
   const mid = offsetStart.clone().add(offsetEnd).multiplyScalar(0.5).normalize().multiplyScalar(globeRadius + arcOffset + arcElevation);
   
@@ -1100,7 +851,7 @@ function drawAllConnections() {
   }).filter(Boolean);
 }
 
-// MODIFIED: Show info panel - require auth
+// Show info panel - require auth
 function showInfoPanel(data) {
   if (!userIsAuthenticated()) {
     showLoginPrompt('Please log in to view detailed university information and application links');
@@ -1173,7 +924,7 @@ function closeAllExploded() {
   if (isMalaysiaCubeExploded) toggleFunctionMap['Malaysia']();
 }
 
-// MODIFIED: Mouse interaction - allow globe interaction, require auth for details
+// Mouse interaction - allow globe interaction, require auth for details
 function onCanvasMouseUp(event) {
   if (transformControls.dragging) return;
   
@@ -1740,40 +1491,6 @@ function animate() {
   renderer.render(scene, camera);
 }
 
-// Country highlighting function for carousel
-function highlightCountriesByProgram(programType) {
-  console.log('Highlighting countries for program:', programType);
-  
-  const matchingCountries = getMatchingCountries(programType);
-  
-  // Reset all country blocks first
-  Object.keys(countryBlocks).forEach(countryName => {
-    const countryBlock = countryBlocks[countryName];
-    if (countryBlock && countryBlock.material) {
-      countryBlock.material.emissiveIntensity = 0.6; // Normal
-    }
-  });
-  
-  // Highlight matching countries
-  matchingCountries.forEach(countryName => {
-    const countryBlock = countryBlocks[countryName];
-    if (countryBlock && countryBlock.material) {
-      countryBlock.material.emissiveIntensity = 1.5; // Bright highlight
-      
-      // Pulse effect
-      if (typeof TWEEN !== 'undefined') {
-        new TWEEN.Tween(countryBlock.material)
-          .to({ emissiveIntensity: 2.0 }, 300)
-          .yoyo(true)
-          .repeat(2)
-          .start();
-      }
-    }
-  });
-  
-  console.log(`✨ Highlighted ${matchingCountries.length} countries:`, matchingCountries);
-}
-
 // **OPTIONAL: ADD KEYBOARD CONTROLS FOR BETTER USER EXPERIENCE**
 document.addEventListener('keydown', (event) => {
   if (!controls) return;
@@ -1854,4 +1571,3 @@ function logout() {
   alert('Logged out. Globe exploration continues, but detailed features require login.');
   location.reload();
 }
-
