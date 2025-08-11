@@ -501,8 +501,18 @@ function initializeThreeJS() {
   console.log('🔄 Initializing Three.js...');
   
   scene = new THREE.Scene();
-  camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  
+  // **FIXED: Reduced near plane from 0.1 to 0.01 to prevent close clipping**
+  camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 5000);
+  
+  // **FIXED: Added logarithmic depth buffer for better zoom precision**
+  renderer = new THREE.WebGLRenderer({ 
+    antialias: true, 
+    alpha: true,
+    logarithmicDepthBuffer: true,  // Prevents z-fighting and depth issues
+    precision: 'highp'  // Higher precision for better rendering
+  });
+  
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setClearColor(0x000000, 0);
   
@@ -520,20 +530,25 @@ function initializeThreeJS() {
   controls.autoRotate = true;
   controls.autoRotateSpeed = 0.5;
   
+  // **FIXED: Set proper zoom limits to prevent excessive close-up distortion**
+  controls.minDistance = 0.1;   // Allow very close zoom
+  controls.maxDistance = 15;    // Reasonable max distance
+  
   transformControls = new THREE.TransformControls(camera, renderer.domElement);
   transformControls.addEventListener('dragging-changed', (event) => {
     controls.enabled = !event.value;
   });
   scene.add(transformControls);
   
-  const ambientLight = new THREE.AmbientLight(0x404040, 1.2);
+  // **ENHANCED LIGHTING: Better lighting to reduce visual artifacts**
+  const ambientLight = new THREE.AmbientLight(0x404040, 1.5);  // Increased intensity
   scene.add(ambientLight);
 
-  const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 2.0);  // Increased intensity
   directionalLight.position.set(5, 5, 5);
   scene.add(directionalLight);
 
-  const backLight = new THREE.DirectionalLight(0x336699, 0.5);
+  const backLight = new THREE.DirectionalLight(0x336699, 0.8);  // Increased intensity
   backLight.position.set(-5, -5, -5);
   scene.add(backLight);
   
@@ -541,6 +556,7 @@ function initializeThreeJS() {
   
   console.log('✅ Three.js initialized successfully');
 }
+
 
 function getColorByData(data) {
   const baseHue = data.domain * 30 % 360;
@@ -668,7 +684,7 @@ function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
   let contentIdx = 0;
   const cubeObject = new THREE.Group();
   
-  // **MINIMAL FIX: Only disable frustum culling on the group**
+  // **FIXED: Disable frustum culling to prevent disappearing on zoom**
   cubeObject.frustumCulled = false;
   
   for (let xi = -1; xi <= 1; xi++) {
@@ -690,9 +706,6 @@ function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
           material
         );
         
-        // **MINIMAL FIX: Only disable frustum culling on individual cubes**
-        microcube.frustumCulled = false;
-        
         const pos = new THREE.Vector3(
           xi * (vortexCubeSize + microGap),
           yi * (vortexCubeSize + microGap),
@@ -705,6 +718,16 @@ function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
           isSubCube: true,
           initialPosition: pos.clone()
         };
+        
+        // **FIXED: Disable frustum culling for individual subcubes**
+        microcube.frustumCulled = false;
+        
+        // **FIXED: Better material depth handling**
+        if (microcube.material) {
+          microcube.material.depthTest = true;
+          microcube.material.depthWrite = true;
+          microcube.material.alphaTest = 0.1;  // Prevent z-fighting with transparent areas
+        }
         
         subCubeArray.push(microcube);
         explodedPositionArray.push(new THREE.Vector3(
@@ -721,6 +744,7 @@ function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
   
   return cubeObject;
 }
+
 
 
 function createNeuralNetwork() {
