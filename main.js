@@ -1,5 +1,3 @@
-// main.js
-
 // Add test token for initial globe rendering
 localStorage.setItem('userToken', 'guest-viewer');
 
@@ -363,247 +361,6 @@ let malaysiaContent = [{
 let allUniversityContent = [...europeContent, ...newThailandContent, ...canadaContent, ...ukContent, ...usaContent, ...indiaContent, ...singaporeContent, ...malaysiaContent];
 let countryPrograms = {};
 
-// **CAROUSEL FUNCTIONALITY ADDITION** - Your exact carousel data and functions
-const carouselData = [{
-    category: "UG",
-    img: "https://static.wixstatic.com/media/d77f36_deddd99f45db4a55953835f5d3926246~mv2.png",
-    title: "Undergraduate",
-    text: "Bachelor-level opportunities."
-}, {
-    category: "PG",
-    img: "https://static.wixstatic.com/media/d77f36_ae2a1e8b47514fb6b0a995be456a9eec~mv2.png",
-    title: "Postgraduate",
-    text: "Master's and advanced programs."
-}, {
-    category: "Diploma",
-    img: "https://static.wixstatic.com/media/d77f36_e8f60f4350304ee79afab3978a44e307~mv2.png",
-    title: "Diploma",
-    text: "Professional and foundation."
-}, {
-    category: "Mobility",
-    img: "https://static.wixstatic.com/media/d77f36_1118d15eee5a45f2a609c762d077857e~mv2.png",
-    title: "Semester Abroad",
-    text: "Exchange and mobility."
-}, {
-    category: "Upskilling",
-    img: "https://static.wixstatic.com/media/d77f36_d8d9655ba23f4849abba7d09ddb12092~mv2.png",
-    title: "Upskilling",
-    text: "Short-term training."
-}, {
-    category: "Research",
-    img: "https://static.wixstatic.com/media/d77f36_aa9eb498381d4adc897522e38301ae6f~mv2.jpg",
-    title: "Research",
-    text: "Opportunities & links."
-}];
-
-function populateCarousel() {
-    const container = document.getElementById('carouselContainer');
-    if (!container) return;
-    container.innerHTML = '';
-    
-    carouselData.forEach(item => {
-        const cardHTML = `
-            <a href="#" class="carousel-card" data-category="${item.category}">
-                <img src="${item.img}" alt="${item.title}"/>
-                <div class="carousel-card-content">
-                    <div class="carousel-card-title">${item.title}</div>
-                    <div class="carousel-card-text">${item.text}</div>
-                </div>
-            </a>`;
-        container.innerHTML += cardHTML;
-    });
-    
-    // Setup carousel click handlers
-    document.querySelectorAll('.carousel-card').forEach(card => {
-        card.addEventListener('click', function(e) {
-            e.preventDefault();
-            document.querySelectorAll('.carousel-card').forEach(c => c.classList.remove('selected'));
-            this.classList.add('selected');
-            highlightCountriesByProgram(this.dataset.category);
-            highlightNeuralCubesByProgram(this.dataset.category);
-        });
-    });
-    
-    // Set default selection
-    const defaultCard = document.querySelector('.carousel-card[data-category="UG"]');
-    if (defaultCard) {
-        defaultCard.classList.add('selected');
-    }
-}
-
-function scrollCarousel(direction) {
-    const container = document.getElementById('carouselContainer');
-    const card = container.querySelector('.carousel-card');
-    if (card) {
-        let cardWidth = card.offsetWidth;
-        container.scrollBy({
-            left: direction * (cardWidth + 16),
-            behavior: 'smooth'
-        });
-    }
-}
-
-function highlightNeuralCubesByProgram(category) {
-    console.log('Highlighting neural cubes for category:', category);
-    
-    // Reset all cubes to normal scale
-    Object.keys(neuralCubeMap).forEach(countryName => {
-        const cube = neuralCubeMap[countryName];
-        if (cube && typeof TWEEN !== 'undefined') {
-            new TWEEN.Tween(cube.scale)
-                .to({ x: 1.0, y: 1.0, z: 1.0 }, 300)
-                .start();
-        }
-    });
-    
-    // Get countries that offer this program type
-    const relevantCountries = getCountriesByCategory(category);
-    
-    // Highlight relevant cubes
-    relevantCountries.forEach(countryName => {
-        const cube = neuralCubeMap[countryName];
-        if (cube && typeof TWEEN !== 'undefined') {
-            new TWEEN.Tween(cube.scale)
-                .to({ x: 1.3, y: 1.3, z: 1.3 }, 500)
-                .yoyo(true)
-                .repeat(1)
-                .start();
-        }
-    });
-}
-
-function getCountriesByCategory(category) {
-    const countryList = [];
-    
-    switch(category) {
-        case 'UG':
-            if (hasUndergraduatePrograms(europeContent)) countryList.push('Europe');
-            if (hasUndergraduatePrograms(newThailandContent)) countryList.push('Thailand');
-            if (hasUndergraduatePrograms(canadaContent)) countryList.push('Canada');
-            if (hasUndergraduatePrograms(ukContent)) countryList.push('UK');
-            if (hasUndergraduatePrograms(usaContent)) countryList.push('USA');
-            if (hasUndergraduatePrograms(indiaContent)) countryList.push('India');
-            if (hasUndergraduatePrograms(singaporeContent)) countryList.push('Singapore');
-            if (hasUndergraduatePrograms(malaysiaContent)) countryList.push('Malaysia');
-            break;
-            
-        case 'PG':
-            if (hasPostgraduatePrograms(europeContent)) countryList.push('Europe');
-            if (hasPostgraduatePrograms(newThailandContent)) countryList.push('Thailand');
-            if (hasPostgraduatePrograms(canadaContent)) countryList.push('Canada');
-            if (hasPostgraduatePrograms(ukContent)) countryList.push('UK');
-            if (hasPostgraduatePrograms(usaContent)) countryList.push('USA');
-            if (hasPostgraduatePrograms(indiaContent)) countryList.push('India');
-            if (hasPostgraduatePrograms(singaporeContent)) countryList.push('Singapore');
-            if (hasPostgraduatePrograms(malaysiaContent)) countryList.push('Malaysia');
-            break;
-            
-        case 'Mobility':
-            if (hasExchangePrograms(europeContent)) countryList.push('Europe');
-            if (hasExchangePrograms(newThailandContent)) countryList.push('Thailand');
-            if (hasExchangePrograms(canadaContent)) countryList.push('Canada');
-            if (hasExchangePrograms(ukContent)) countryList.push('UK');
-            if (hasExchangePrograms(usaContent)) countryList.push('USA');
-            if (hasExchangePrograms(indiaContent)) countryList.push('India');
-            if (hasExchangePrograms(singaporeContent)) countryList.push('Singapore');
-            if (hasExchangePrograms(malaysiaContent)) countryList.push('Malaysia');
-            break;
-            
-        case 'Diploma':
-            if (hasDiplomaPrograms(singaporeContent)) countryList.push('Singapore');
-            if (hasDiplomaPrograms(malaysiaContent)) countryList.push('Malaysia');
-            break;
-            
-        case 'Upskilling':
-            if (hasUpskillPrograms(canadaContent)) countryList.push('Canada');
-            if (hasUpskillPrograms(singaporeContent)) countryList.push('Singapore');
-            break;
-            
-        case 'Research':
-            countryList.push('Europe', 'UK', 'USA', 'Singapore');
-            break;
-            
-        default:
-            countryList.push('Europe', 'Thailand', 'Canada', 'UK', 'USA', 'India', 'Singapore', 'Malaysia');
-    }
-    
-    return countryList;
-}
-
-// Helper functions to check program types
-function hasUndergraduatePrograms(content) {
-    return content.some(program => program && 
-        (program.programName.toLowerCase().includes('bachelor') || 
-         program.programName.toLowerCase().includes('bba') ||
-         program.programName.toLowerCase().includes('bsn') ||
-         program.programName.toLowerCase().includes('undergraduate')));
-}
-
-function hasPostgraduatePrograms(content) {
-    return content.some(program => program && 
-        (program.programName.toLowerCase().includes('master') || 
-         program.programName.toLowerCase().includes('mba') ||
-         program.programName.toLowerCase().includes('msn') ||
-         program.programName.toLowerCase().includes('postgraduate') ||
-         program.programName.toLowerCase().includes('pg')));
-}
-
-function hasExchangePrograms(content) {
-    return content.some(program => program && 
-        (program.programName.toLowerCase().includes('exchange') || 
-         program.programName.toLowerCase().includes('abroad') ||
-         program.programName.toLowerCase().includes('mobility')));
-}
-
-function hasDiplomaPrograms(content) {
-    return content.some(program => program && 
-        program.programName.toLowerCase().includes('diploma'));
-}
-
-function hasUpskillPrograms(content) {
-    return content.some(program => program && 
-        (program.programName.toLowerCase().includes('cyber') || 
-         program.programName.toLowerCase().includes('data') ||
-         program.programName.toLowerCase().includes('tech') ||
-         program.programName.toLowerCase().includes('design') ||
-         program.programName.toLowerCase().includes('ux')));
-}
-
-function highlightCountriesByProgram(programType) {
-    console.log('Highlighting countries for program:', programType);
-    
-    // Reset all country blocks to normal intensity
-    Object.keys(countryBlocks).forEach(countryName => {
-        const countryBlock = countryBlocks[countryName];
-        if (countryBlock && countryBlock.material) {
-            countryBlock.material.emissiveIntensity = 0.6;
-        }
-    });
-    
-    // Get countries that offer the selected program type
-    const relevantCountries = getCountriesByCategory(programType);
-    
-    // Highlight relevant countries
-    relevantCountries.forEach(countryName => {
-        const countryBlock = countryBlocks[countryName];
-        if (countryBlock && countryBlock.material) {
-            countryBlock.material.emissiveIntensity = 1.2;
-            
-            // Optional: Add pulsing effect
-            if (typeof TWEEN !== 'undefined') {
-                new TWEEN.Tween(countryBlock.material)
-                    .to({ emissiveIntensity: 1.5 }, 500)
-                    .yoyo(true)
-                    .repeat(1)
-                    .start();
-            }
-        }
-    });
-    
-    console.log(`Highlighted ${relevantCountries.length} countries for ${programType}:`, relevantCountries);
-}
-// **END CAROUSEL FUNCTIONALITY**
-
 // MODIFIED: Fetch data - allow basic globe without auth
 async function fetchDataFromBackend() {
   try {
@@ -728,6 +485,18 @@ function updateCarousel() {
   });
 }
 
+// ADD: Scroll carousel function
+function scrollCarousel(direction) {
+  const container = document.getElementById('carouselContainer');
+  if (!container) return;
+  
+  const scrollAmount = 200;
+  container.scrollBy({
+    left: direction * scrollAmount,
+    behavior: 'smooth'
+  });
+}
+
 // Initialize Three.js scene
 function initializeThreeJS() {
   scene = new THREE.Scene();
@@ -756,10 +525,10 @@ function initializeThreeJS() {
   scene.add(transformControls);
   
   // BRIGHTER LIGHTING
-  const ambientLight = new THREE.AmbientLight(0x404040, 1.2);
+  const ambientLight = new THREE.AmbientLight(0x404040, 1.2);  // Doubled intensity
   scene.add(ambientLight);
 
-  const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);  // Much brighter
   directionalLight.position.set(5, 5, 5);
   scene.add(directionalLight);
 
@@ -1503,6 +1272,48 @@ function createGlobeAndCubes() {
   
   // FIXED: Create country blocks with your EXACT original coordinates
   fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', (font) => {
+    const countryConfigs = [{
+      name: "India",
+      lat: 22,
+      lon: 78,
+      color: 0xFF9933
+    }, {
+      name: "Europe",
+      lat: 48.8566,
+      lon: 2.3522,
+      color: 0x0000FF
+    }, {
+      name: "UK",
+      lat: 53,
+      lon: -0.1276,
+      color: 0x191970
+    }, {
+      name: "Singapore",
+      lat: 1.35,
+      lon: 103.8,
+      color: 0xff0000
+    }, {
+      name: "Malaysia",
+      lat: 4,
+      lon: 102,
+      color: 0x0000ff
+    }, {
+      name: "Thailand",
+      lat: 13.7563,
+      lon: 100.5018,
+      color: 0xffcc00
+    }, {
+      name: "Canada",
+      lat: 56.1304,
+      lon: -106.3468,
+      color: 0xff0000
+    }, {
+      name: "USA",
+      lat: 39.8283,
+      lon: -98.5795,
+      color: 0x003366
+    }];
+    
     countryConfigs.forEach(config => {
       const size = 0.03;
       const blockGeometry = new THREE.BoxGeometry(size, size, size);
@@ -1552,7 +1363,7 @@ function createGlobeAndCubes() {
   
   // Initialize carousel immediately with default data
   setTimeout(() => {
-    populateCarousel();
+    updateCarousel();
   }, 100);
 }
 
@@ -1647,6 +1458,23 @@ function animate() {
   renderer.render(scene, camera);
 }
 
+// ADD: Missing highlightCountriesByProgram function
+function highlightCountriesByProgram(programType) {
+  console.log('Highlighting countries for program:', programType);
+  
+  // Optional: Add highlighting logic for specific program types
+  Object.keys(countryBlocks).forEach(countryName => {
+    const countryBlock = countryBlocks[countryName];
+    if (countryBlock) {
+      // Example: Highlight countries that offer UG programs
+      if (programType === "UG") {
+        // Add subtle highlight effect
+        countryBlock.material.emissiveIntensity = 0.8;
+      }
+    }
+  });
+}
+
 // Initialize application - ALWAYS show globe
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('Loading Interactive Globe Widget...');
@@ -1675,4 +1503,7 @@ function simulateLogin() {
 
 // Logout function  
 function logout() {
-  localStorage.set
+  localStorage.setItem('userToken', 'guest-viewer');
+  alert('Logged out. Globe exploration continues, but detailed features require login.');
+  location.reload();
+}
