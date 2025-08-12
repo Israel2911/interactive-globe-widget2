@@ -516,7 +516,7 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
   cursor: pointer;
 }
 
-/* **MOBILE RESPONSIVE - MINIMAL CONTAINER, REDUCED SIZE** */
+/* **MOBILE RESPONSIVE - IMPROVED LAYOUT** */
 @media (max-width: 768px) {
   .header-ui-bar, .footer-ui-bar { font-size: 12px; }
   .info-panel { min-width: 90vw; padding: 14px; }
@@ -555,27 +555,48 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
     font-size: 0.6em;
   }
   
-  /* **FIXED: MINIMAL CONTAINER - DOESN'T BLOCK GLOBE** */
-  .left-controls-stack {
+  /* **NEW: TOP ROW FOR OTHER CONTROLS (Pause, Toggle, etc.)** */
+  .mobile-top-controls {
     position: fixed;
-    left: 8px;
-    right: 8px;
-    bottom: 35px;
-    width: calc(100% - 16px);
-    flex-direction: row;
-    justify-content: center;
+    left: 4px; /* PUSHED ALL THE WAY LEFT */
+    right: 4px;
+    bottom: 70px; /* ABOVE MAIN CONTROL ROW */
+    width: calc(100% - 8px);
+    display: flex;
+    justify-content: flex-start; /* ALIGN LEFT */
     align-items: center;
     flex-wrap: wrap;
-    gap: 4px; /* MINIMAL GAP */
-    padding: 4px 8px; /* MINIMAL PADDING */
-    background: rgba(37, 47, 57, 0.3); /* MUCH MORE TRANSPARENT */
-    backdrop-filter: blur(5px); /* REDUCED BLUR */
-    border: none; /* REMOVE BORDER */
-    border-radius: 8px; /* SMALLER RADIUS */
-    box-shadow: 0 -1px 8px rgba(0, 0, 0, 0.1); /* MINIMAL SHADOW */
+    gap: 4px;
+    padding: 3px 6px;
+    background: rgba(37, 47, 57, 0.2); /* EVEN MORE TRANSPARENT */
+    backdrop-filter: blur(3px);
+    border-radius: 6px;
+    box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.05);
+    z-index: 9;
+    min-height: 32px;
+  }
+  
+  /* **IMPROVED: MAIN CONTROL ROW - PUSHED TO LEFT** */
+  .left-controls-stack {
+    position: fixed;
+    left: 4px; /* PUSHED ALL THE WAY LEFT */
+    right: 4px;
+    bottom: 35px;
+    width: calc(100% - 8px);
+    flex-direction: row;
+    justify-content: flex-start; /* ALIGN LEFT INSTEAD OF CENTER */
+    align-items: center;
+    flex-wrap: nowrap; /* KEEP SINGLE ROW */
+    gap: 4px;
+    padding: 4px 6px;
+    background: rgba(37, 47, 57, 0.3);
+    backdrop-filter: blur(5px);
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 -1px 8px rgba(0, 0, 0, 0.1);
     z-index: 10;
     overflow: visible;
-    min-height: auto; /* NO MINIMUM HEIGHT */
+    min-height: auto;
   }
   
   .movement-controls,
@@ -588,45 +609,70 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
     order: unset;
     max-width: none;
     display: flex;
-    gap: 3px; /* VERY TIGHT GAP */
-    justify-content: center;
-    flex-wrap: nowrap; /* SINGLE ROW */
+    gap: 3px;
+    justify-content: flex-start; /* ALIGN LEFT */
+    flex-wrap: nowrap;
   }
   
-  /* **MOBILE: Hide right side controls, merge into bottom bar** */
+  /* **MOBILE: Hide right side controls, merge into rows** */
   .control-buttons {
     display: none;
   }
   
-  /* **FIXED: SMALLER NAV BUTTONS** */
+  /* **IMPROVED: SMALLER NAV BUTTONS** */
   .nav-btn {
-    width: 32px; /* REDUCED SIZE */
-    height: 32px; /* REDUCED SIZE */
-    font-size: 0.9em; /* SMALLER FONT */
-    border-radius: 6px; /* SMALLER RADIUS */
+    width: 32px;
+    height: 32px;
+    font-size: 0.9em;
+    border-radius: 6px;
     flex-shrink: 0;
     min-width: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0; /* NO MARGIN */
+    margin: 0;
   }
   
-  /* **INTEGRATED: MUCH SMALLER UNLOCK SCROLL BUTTON** */
+  /* **NEW: OTHER CONTROL BUTTONS FOR TOP ROW** */
+  .mobile-control-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 0.8em;
+    background: #22356a;
+    color: #eee;
+    border: none;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    min-width: 32px;
+  }
+  
+  .mobile-control-btn:hover {
+    background: #ffa500;
+    color: #222;
+  }
+  
+  /* **IMPROVED: RECTANGULAR SCROLL BUTTON WITH TEXT** */
   #scrollLockBtn {
-    width: 24px !important; /* REDUCED from 32px to 24px */
-    height: 24px !important; /* REDUCED from 32px to 24px */
-    padding: 0 !important;
-    margin: 0 !important;
-    font-size: 0.6em !important; /* SMALLER FONT */
-    border-radius: 4px !important; /* SMALLER RADIUS */
-    min-width: 24px;
+    width: 60px !important; /* WIDER RECTANGLE */
+    height: 32px !important; /* SAME HEIGHT AS OTHER BUTTONS */
+    padding: 0 6px !important; /* HORIZONTAL PADDING FOR TEXT */
+    margin: 0 0 0 8px !important; /* LEFT MARGIN TO SEPARATE */
+    font-size: 0.65em !important; /* READABLE FONT SIZE */
+    border-radius: 6px !important;
+    min-width: 60px;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     background: #ffa500 !important;
     color: #222 !important;
-    order: 10; /* PLACE AT END OF ROW */
+    font-weight: 600 !important;
+    white-space: nowrap !important;
+    order: 20; /* PLACE AT END OF ROW */
   }
   
   .scroll-lock-ui {
@@ -650,54 +696,52 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
     transform: scale(1.01) !important;
   }
   
-  /* **MOBILE: Adjust globe canvas - MORE SPACE FOR GLOBE** */
+  /* **MOBILE: Adjust globe canvas for two control rows** */
   #globe-canvas {
-    height: calc(100vh - 120px); /* LESS BLOCKED SPACE */
+    height: calc(100vh - 140px); /* ACCOUNT FOR TWO ROWS */
   }
 }
 
 /* **DESKTOP/TABLET: Keep side layout** */
 @media (min-width: 769px) {
-  /* Keep all desktop styles as they are */
+  .mobile-top-controls {
+    display: none; /* HIDE ON DESKTOP */
+  }
+  
   .left-controls-stack {
     flex-direction: column;
   }
 }
 
-/* **FIXED: Small Mobile Screens - Extra Minimal** */
+/* **FIXED: Small Mobile Screens** */
 @media (max-width: 480px) {
+  .mobile-top-controls,
   .left-controls-stack {
-    left: 4px;
-    right: 4px;
-    width: calc(100% - 8px);
-    padding: 3px 6px; /* EVEN SMALLER PADDING */
-    gap: 2px; /* MINIMAL GAP */
+    left: 2px;
+    right: 2px;
+    width: calc(100% - 4px);
+    padding: 3px 4px;
+    gap: 3px;
   }
   
-  .nav-btn {
+  .nav-btn,
+  .mobile-control-btn {
     width: 28px !important;
     height: 28px !important;
     font-size: 0.8em !important;
     min-width: 28px !important;
   }
   
-  /* **INTEGRATED: EVEN SMALLER SCROLL ICON** */
   #scrollLockBtn {
-    width: 20px !important; /* EVEN SMALLER */
-    height: 20px !important; /* EVEN SMALLER */
-    font-size: 0.5em !important; /* TINY FONT */
-    min-width: 20px !important;
-    border-radius: 3px !important;
-  }
-  
-  .movement-controls,
-  .other-controls,
-  .navigation-controls {
-    gap: 2px;
+    width: 50px !important; /* SMALLER RECTANGLE */
+    height: 28px !important;
+    font-size: 0.6em !important;
+    min-width: 50px !important;
+    margin-left: 6px !important;
   }
 }
 
-/* **LANDSCAPE ORIENTATION on Mobile - MINIMAL** */
+/* **LANDSCAPE ORIENTATION on Mobile** */
 @media (orientation: landscape) and (max-width: 768px) {
   .carousel-card {
     min-width: 130px;
@@ -705,28 +749,29 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
     height: 90px;
   }
   
-  .left-controls-stack {
-    bottom: 25px;
-    padding: 3px 8px;
-    left: 6px;
-    right: 6px;
-    width: calc(100% - 12px);
+  .mobile-top-controls {
+    bottom: 60px;
+    padding: 2px 6px;
   }
   
-  .nav-btn {
+  .left-controls-stack {
+    bottom: 25px;
+    padding: 3px 6px;
+  }
+  
+  .nav-btn,
+  .mobile-control-btn {
     width: 30px !important;
     height: 30px !important;
     font-size: 0.85em !important;
     min-width: 30px !important;
   }
   
-  /* **INTEGRATED: COMPACT SCROLL ICON FOR LANDSCAPE** */
   #scrollLockBtn {
-    width: 22px !important; /* COMPACT SIZE */
-    height: 22px !important; /* COMPACT SIZE */
-    font-size: 0.55em !important;
-    min-width: 22px !important;
-    border-radius: 3px !important;
+    width: 55px !important;
+    height: 30px !important;
+    font-size: 0.6em !important;
+    min-width: 55px !important;
   }
   
   .footer-ui-bar {
@@ -735,6 +780,6 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
   }
   
   #globe-canvas {
-    height: calc(100vh - 105px); /* MAXIMUM GLOBE SPACE */
+    height: calc(100vh - 125px);
   }
 }
