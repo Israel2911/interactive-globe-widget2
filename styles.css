@@ -278,50 +278,39 @@ body {
   #toggleMeshButton::before { content: '🌐'; }
   #pauseCubesButton::before { content: '🧊'; }
 
-/* Concentric 7‑color rainbow bow with enhanced glow on violet and red */
-#arcToggleBtn {
-  position: relative;
-  overflow: hidden; /* clips the circle into a bow */
-}
-
-/* Fixed: True rainbow bow - half circle with RED outer, VIOLET inner */
-#arcToggleBtn {
-  position: relative;
-  overflow: hidden; /* Essential for clipping */
-}
-
+/* Perfect full semicircle rainbow with all 7 colors */
 #arcToggleBtn::before {
     content: '';
-    position: absolute;
-    bottom: 0; /* Changed from top: 100% to bottom: 0 */
-    left: 50%;
-    transform: translateX(-50%);
-    width: 28px;
-    height: 14px; /* Half the width to make a semi-circle */
-    background: linear-gradient(to right, 
-        #ff0000 0%,     /* Red */
-        #ffa500 14.3%,  /* Orange */
-        #ffff00 28.6%,  /* Yellow */
-        #008000 42.9%,  /* Green */
-        #0000ff 57.1%,  /* Blue */
-        #4b0082 71.4%,  /* Indigo */
-        #ee82ee 85.7%,  /* Violet */
-        #ee82ee 100%    /* Violet */
+    display: block;
+    width: 24px;
+    height: 12px;
+    margin: 12px auto 0;
+    border-radius: 24px 24px 0 0; /* Full semicircle shape */
+    background: linear-gradient(90deg, 
+        #ff0000 0%,      /* Red */
+        #ff0000 14.3%,   /* Red */
+        #ffa500 14.3%,   /* Orange */
+        #ffa500 28.6%,   /* Orange */
+        #ffff00 28.6%,   /* Yellow */
+        #ffff00 42.9%,   /* Yellow */
+        #008000 42.9%,   /* Green */
+        #008000 57.1%,   /* Green */
+        #0000ff 57.1%,   /* Blue */
+        #0000ff 71.4%,   /* Blue */
+        #4b0082 71.4%,   /* Indigo */
+        #4b0082 85.7%,   /* Indigo */
+        #ee82ee 85.7%,   /* Violet */
+        #ee82ee 100%     /* Violet */
     );
-    border-radius: 14px 14px 0 0; /* Round only the top to make an arc */
     box-shadow:
-        0 0 15px 2px #ff0000,   /* Red glow */
-        0 0 25px 4px #ff0000,   /* Strong red glow */
-        0 0 10px 1px #ee82ee;   /* Violet glow */
+        0 0 8px 1px #ff0000,   /* Red glow */
+        0 0 8px 1px #ee82ee;   /* Violet glow */
 }
 
 #arcToggleBtn:hover::before {
     box-shadow:
-        0 0 20px 3px #ff0000,   /* Enhanced red glow */
-        0 0 35px 5px #ff0000,   /* Extra red glow */
-        0 0 15px 2px #ee82ee;   /* Enhanced violet glow */
-}
- 0.95;
+        0 0 12px 2px #ff0000,  /* Enhanced red glow */
+        0 0 12px 2px #ee82ee;  /* Enhanced violet glow */
 }
 
 
