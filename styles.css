@@ -516,7 +516,7 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
   cursor: pointer;
 }
 
-/* **INTEGRATED: MOBILE RESPONSIVE - ALL YOUR INSTRUCTIONS IMPLEMENTED** */
+/* **FIXED: MOBILE RESPONSIVE WITH YELLOW SCROLL BUTTON** */
 @media (max-width: 768px) {
   .header-ui-bar, .footer-ui-bar { font-size: 12px; }
   .info-panel { min-width: 90vw; padding: 14px; }
@@ -555,15 +555,15 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
     font-size: 0.6em;
   }
   
-  /* **INTEGRATED: TOP ROW FOR PAUSE, TOGGLE GLOBE MESH, ETC.** */
+  /* **TOP ROW FOR PAUSE, TOGGLE GLOBE MESH, ETC.** */
   .mobile-top-controls {
     position: fixed;
-    left: 4px; /* ALL THE WAY TO THE LEFT */
+    left: 4px;
     right: 4px;
-    bottom: 70px; /* ABOVE MAIN CONTROL ROW */
+    bottom: 70px;
     width: calc(100% - 8px);
     display: flex;
-    justify-content: flex-start; /* ALIGN LEFT */
+    justify-content: flex-start;
     align-items: center;
     flex-wrap: wrap;
     gap: 4px;
@@ -576,17 +576,17 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
     min-height: 32px;
   }
   
-  /* **INTEGRATED: MAIN CONTROL ROW - ALL THE WAY TO LEFT** */
+  /* **MAIN CONTROL ROW - ALL THE WAY TO LEFT** */
   .left-controls-stack {
     position: fixed;
-    left: 4px; /* PUSHED ALL THE WAY TO THE LEFT */
+    left: 4px;
     right: 4px;
     bottom: 35px;
     width: calc(100% - 8px);
     flex-direction: row;
-    justify-content: flex-start; /* ALIGN LEFT */
+    justify-content: flex-start;
     align-items: center;
-    flex-wrap: nowrap; /* CLEAN ON ONE LINE */
+    flex-wrap: nowrap;
     gap: 4px;
     padding: 4px 6px;
     background: rgba(37, 47, 57, 0.3);
@@ -619,7 +619,7 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
     display: none;
   }
   
-  /* **INTEGRATED: SMALLER NAV BUTTONS** */
+  /* **SMALLER NAV BUTTONS** */
   .nav-btn {
     width: 32px;
     height: 32px;
@@ -633,7 +633,7 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
     margin: 0;
   }
   
-  /* **INTEGRATED: PAUSE, TOGGLE GLOBE MESH BUTTONS FOR TOP ROW** */
+  /* **PAUSE, TOGGLE GLOBE MESH BUTTONS FOR TOP ROW** */
   .mobile-control-btn {
     width: 32px;
     height: 32px;
@@ -656,7 +656,7 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
     color: #222;
   }
   
-  /* **INTEGRATED: WIDER YELLOW SCROLL BUTTON AS RECTANGLE** */
+  /* **FIXED: WIDER YELLOW SCROLL BUTTON AS RECTANGLE** */
   #scrollLockBtn {
     width: 90px !important; /* WIDENED MORE SO TEXT IS VISIBLE */
     height: 32px !important; /* RECTANGLE INSTEAD OF SQUARE */
@@ -673,13 +673,19 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
     font-weight: 700 !important;
     white-space: nowrap !important;
     order: 20; /* AT END OF ROW */
-    text-transform: none !important; /* NORMAL CASE FOR READABILITY */
+    text-transform: none !important;
     letter-spacing: 0.3px !important;
   }
   
-  /* **INTEGRATED: REMOVE "GLOBE IS ACTIVE" TEXT** */
+  /* **REMOVE "GLOBE IS ACTIVE" TEXT** */
   .scroll-lock-ui {
-    display: none !important; /* COMPLETELY HIDDEN */
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
   
   .nav-btn.active,
@@ -707,13 +713,13 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
     flex-direction: column;
   }
   
-  /* **INTEGRATED: REMOVE "GLOBE IS ACTIVE" TEXT ON DESKTOP** */
+  /* **REMOVE "GLOBE IS ACTIVE" TEXT ON DESKTOP** */
   .scroll-lock-ui {
     display: none !important;
   }
 }
 
-/* **INTEGRATED: SMALL MOBILE SCREENS** */
+/* **SMALL MOBILE SCREENS** */
 @media (max-width: 480px) {
   .mobile-top-controls,
   .left-controls-stack {
@@ -732,9 +738,9 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
     min-width: 28px !important;
   }
   
-  /* **INTEGRATED: WIDER YELLOW BUTTON ON SMALL SCREENS** */
+  /* **WIDER YELLOW BUTTON ON SMALL SCREENS** */
   #scrollLockBtn {
-    width: 80px !important; /* WIDENED FOR TEXT VISIBILITY */
+    width: 80px !important;
     height: 28px !important;
     font-size: 0.7em !important;
     min-width: 80px !important;
@@ -743,7 +749,7 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
   }
 }
 
-/* **INTEGRATED: LANDSCAPE MOBILE** */
+/* **LANDSCAPE MOBILE** */
 @media (orientation: landscape) and (max-width: 768px) {
   .carousel-card {
     min-width: 130px;
@@ -769,9 +775,9 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
     min-width: 30px !important;
   }
   
-  /* **INTEGRATED: WIDER YELLOW BUTTON IN LANDSCAPE** */
+  /* **WIDER YELLOW BUTTON IN LANDSCAPE** */
   #scrollLockBtn {
-    width: 85px !important; /* WIDENED FOR LANDSCAPE */
+    width: 85px !important;
     height: 30px !important;
     font-size: 0.7em !important;
     min-width: 85px !important;
