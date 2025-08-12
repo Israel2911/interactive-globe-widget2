@@ -279,38 +279,44 @@ body {
   #pauseCubesButton::before { content: '🧊'; }
 
 /* Perfect full semicircle rainbow with all 7 colors */
+/* TRUE curved rainbow bow with concentric arcs */
 #arcToggleBtn::before {
     content: '';
-    display: block;
-    width: 24px;
-    height: 12px;
-    margin: 12px auto 0;
-    border-radius: 24px 24px 0 0; /* Full semicircle shape */
-    background: linear-gradient(90deg, 
-        #ff0000 0%,      /* Red */
-        #ff0000 14.3%,   /* Red */
-        #ffa500 14.3%,   /* Orange */
-        #ffa500 28.6%,   /* Orange */
-        #ffff00 28.6%,   /* Yellow */
-        #ffff00 42.9%,   /* Yellow */
-        #008000 42.9%,   /* Green */
-        #008000 57.1%,   /* Green */
-        #0000ff 57.1%,   /* Blue */
-        #0000ff 71.4%,   /* Blue */
-        #4b0082 71.4%,   /* Indigo */
-        #4b0082 85.7%,   /* Indigo */
-        #ee82ee 85.7%,   /* Violet */
-        #ee82ee 100%     /* Violet */
-    );
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: transparent;
+    border: 2px solid transparent;
+    
+    /* Create concentric arc bands using multiple box-shadows */
     box-shadow:
-        0 0 8px 1px #ff0000,   /* Red glow */
-        0 0 8px 1px #ee82ee;   /* Violet glow */
+        /* The actual curved bands - RED to VIOLET (outer to inner) */
+        0 0 0 0px transparent,
+        0 0 0 2px #ff0000,    /* Red - outermost */
+        0 0 0 4px #ffa500,    /* Orange */
+        0 0 0 6px #ffff00,    /* Yellow */
+        0 0 0 8px #008000,    /* Green */
+        0 0 0 10px #0000ff,   /* Blue */
+        0 0 0 12px #4b0082,   /* Indigo */
+        0 0 0 14px #ee82ee,   /* Violet - innermost */
+        
+        /* Glows for red and violet */
+        0 0 8px 2px #ff0000,   /* Red glow */
+        0 0 8px 14px #ee82ee;  /* Violet glow */
 }
 
-#arcToggleBtn:hover::before {
-    box-shadow:
-        0 0 12px 2px #ff0000,  /* Enhanced red glow */
-        0 0 12px 2px #ee82ee;  /* Enhanced violet glow */
+/* Position it so only the top half shows (creating the bow) */
+#arcToggleBtn {
+    position: relative;
+    overflow: hidden; /* Clips the bottom half to create the bow shape */
+}
+
+#arcToggleBtn::before {
+    top: 80%; /* Position lower so more of the circle extends below the button edge */
 }
 
 
