@@ -252,7 +252,7 @@ body {
     white-space: normal;
     background: #22356a;
     border-radius: 6px;
-    overflow: hidden; /* This is essential for the arc effect */
+    overflow: hidden;
   }
   .control-buttons button:hover {
     background: #ffa500;
@@ -276,28 +276,31 @@ body {
   #toggleMeshButton::before { content: '🌐'; }
   #pauseCubesButton::before { content: '🧊'; }
 
-  /* *** FINAL: Concentric Rainbow Arc Icon *** */
+  /* *** FINAL: Glowing Concentric Rainbow Arc Icon *** */
   #arcToggleBtn::before {
       content: '';
       position: absolute;
-      top: 100%; /* Position at the bottom of the button */
+      top: 100%;
       left: 50%;
-      transform: translate(-50%, -50%); /* Center the element on the bottom edge */
-      
+      transform: translate(-50%, -50%);
       width: 1px;
       height: 1px;
       background: transparent;
       border-radius: 50%;
-      
-      /* Layered box-shadows to create concentric rings */
+      /* VIBGYOR from inside-out, with glows on V, I, and R */
       box-shadow:
-          0 0 0 2px #ff0000,   /* Red */
-          0 0 0 4px #ffa500,   /* Orange */
-          0 0 0 6px #ffff00,   /* Yellow */
+          /* Solid Rings */
+          0 0 0 2px #ee82ee,   /* Violet */
+          0 0 0 4px #4b0082,   /* Indigo */
+          0 0 0 6px #0000ff,   /* Blue */
           0 0 0 8px #008000,   /* Green */
-          0 0 0 10px #0000ff,  /* Blue */
-          0 0 0 12px #4b0082,  /* Indigo */
-          0 0 0 14px #ee82ee;  /* Violet */
+          0 0 0 10px #ffff00,  /* Yellow */
+          0 0 0 12px #ffa500,  /* Orange */
+          0 0 0 14px #ff0000,  /* Red */
+          /* Glows layered underneath */
+          0 0 8px 2px #ee82ee,  /* Violet Glow */
+          0 0 12px 4px #4b0082, /* Indigo Glow */
+          0 0 20px 14px #ff0000; /* Red Glow */
   }
   #arcToggleBtn:hover::before {
       opacity: 0.85;
@@ -351,5 +354,5 @@ body {
   #scrollLockBtn { width: 80px !important; height: 32px !important; font-size: 0.7em !important; }
   .control-buttons button { width: 32px; height: 32px; }
   .control-buttons button::before { font-size: 1rem; }
-  #arcToggleBtn::before { transform: translate(-50%, -50%) scale(0.8); } /* Scale down for smaller screens */
+  #arcToggleBtn::before { transform: translate(-50%, -50%) scale(0.8); }
 }
