@@ -218,6 +218,62 @@ body {
   transform: scale(0.95);
 }
 
+/* **INTEGRATED: Fixed Button State Styling for Pan Mode** */
+.pan-mode {
+    background: #ffa500 !important;
+    color: #222 !important;
+    outline: 2px solid #ffa500 !important;
+    box-shadow: 0 0 10px rgba(255, 165, 0, 0.5) !important;
+    transform: scale(1.05);
+}
+
+.pan-mode:hover {
+    background: #ff8c00 !important;
+    box-shadow: 0 0 15px rgba(255, 165, 0, 0.7) !important;
+}
+
+.pan-mode:focus {
+    background: #ffa500 !important;
+    outline: 2px solid #ffa500 !important;
+}
+
+button[data-active="true"] {
+    background: #ffa500 !important;
+    color: #222 !important;
+    border: 2px solid #ffa500 !important;
+    box-shadow: 0 0 10px rgba(255, 165, 0, 0.5) !important;
+    transform: scale(1.05);
+}
+
+button[data-active="true"]:focus {
+    outline: 2px solid #ffa500 !important;
+    box-shadow: 0 0 10px rgba(255, 165, 0, 0.5) !important;
+}
+
+button[data-active="true"]:hover {
+    background: #ff8c00 !important;
+    border-color: #ff8c00 !important;
+}
+
+/* **Additional styling for better visual feedback** */
+#btn-pan {
+    transition: all 0.3s ease;
+}
+
+#btn-pan.pan-mode {
+    transform: scale(1.05);
+}
+
+/* **Ensure buttons don't lose focus styling** */
+.navigation-button:focus {
+    outline: 2px solid #4CAF50 !important;
+    outline-offset: 2px;
+}
+
+.navigation-button:active {
+    transform: translateY(1px);
+}
+
 /* MOVED CONTROL BUTTONS DOWN */
 .control-buttons {
   position: fixed;
@@ -475,5 +531,14 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
   /* Enhanced mobile button feedback */
   .nav-btn.active {
     transform: scale(1.03); /* Slightly less scaling on mobile */
+  }
+  
+  /* **Mobile pan mode button adjustments** */
+  .pan-mode {
+    transform: scale(1.03) !important; /* Slightly less scaling on mobile */
+  }
+  
+  button[data-active="true"] {
+    transform: scale(1.03) !important;
   }
 }
