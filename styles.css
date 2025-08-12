@@ -252,7 +252,6 @@ body {
     white-space: normal;
     background: #22356a;
     border-radius: 6px;
-    overflow: hidden;
   }
   .control-buttons button:hover {
     background: #ffa500;
@@ -276,26 +275,19 @@ body {
   #toggleMeshButton::before { content: '🌐'; }
   #pauseCubesButton::before { content: '🧊'; }
 
-  /* *** FINAL: True Rainbow Bow Icon *** */
+  /* *** FINAL: 7-Color Rainbow Bow Icon *** */
   #arcToggleBtn::before {
     content: '';
-    position: absolute;
-    top: 10px; /* Adjust vertical position */
-    left: 4px;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    /* Layered gradients to create colored bands */
-    background:
-      radial-gradient(circle at 50% 50%, transparent 45%, #4b0082 45%, #4b0082 55%, transparent 55%),
-      radial-gradient(circle at 50% 50%, transparent 55%, #0000ff 55%, #0000ff 65%, transparent 65%),
-      radial-gradient(circle at 50% 50%, transparent 65%, #008000 65%, #008000 75%, transparent 75%),
-      radial-gradient(circle at 50% 50%, transparent 75%, #ffff00 75%, #ffff00 85%, transparent 85%),
-      radial-gradient(circle at 50% 50%, transparent 85%, #ffa500 85%, #ffa500 95%, transparent 95%),
-      radial-gradient(circle at 50% 50%, transparent 95%, #ff0000 95%);
+    display: block;
+    width: 24px;
+    height: 12px;
+    margin: 8px auto 0;
+    border-top-left-radius: 24px;
+    border-top-right-radius: 24px;
+    background: linear-gradient(to right, #ff0000, #ffa500, #ffff00, #008000, #0000ff, #4b0082, #ee82ee);
   }
   #arcToggleBtn:hover::before {
-    opacity: 0.85;
+    opacity: 0.8;
   }
 
 
@@ -346,5 +338,5 @@ body {
   #scrollLockBtn { width: 80px !important; height: 32px !important; font-size: 0.7em !important; }
   .control-buttons button { width: 32px; height: 32px; }
   .control-buttons button::before { font-size: 1rem; }
-  #arcToggleBtn::before { top: 8px; left: 3px; width: 26px; height: 26px; }
+  #arcToggleBtn::before { width: 20px; height: 10px; border-top-left-radius: 20px; border-top-right-radius: 20px; }
 }
