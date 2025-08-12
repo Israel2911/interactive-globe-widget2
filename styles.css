@@ -284,10 +284,16 @@ body {
   overflow: hidden; /* clips the circle into a bow */
 }
 
+/* Corrected concentric 7‑color rainbow bow - RED OUTER, VIOLET INNER */
+#arcToggleBtn {
+  position: relative;
+  overflow: hidden;
+}
+
 #arcToggleBtn::before {
     content: '';
     position: absolute;
-    top: 100%; /* position at bottom edge of button */
+    top: 100%;
     left: 50%;
     transform: translate(-50%, -50%);
     width: 1px;
@@ -295,25 +301,28 @@ body {
     background: transparent;
     border-radius: 50%;
     box-shadow:
-        /* VIBGYOR concentric rings (inner to outer) */
-        0 0 0 2px #ee82ee,   /* Violet */
-        0 0 0 4px #4b0082,   /* Indigo */
-        0 0 0 6px #0000ff,   /* Blue */
-        0 0 0 8px #008000,   /* Green */
-        0 0 0 10px #ffff00,  /* Yellow */
+        /* CORRECT ORDER: RED (outer) to VIOLET (inner) */
+        0 0 0 14px #ff0000,  /* Red - OUTERMOST/LARGEST */
         0 0 0 12px #ffa500,  /* Orange */
-        0 0 0 14px #ff0000,  /* Red */
+        0 0 0 10px #ffff00,  /* Yellow */
+        0 0 0 8px #008000,   /* Green */
+        0 0 0 6px #0000ff,   /* Blue */
+        0 0 0 4px #4b0082,   /* Indigo */
+        0 0 0 2px #ee82ee,   /* Violet - INNERMOST/SMALLEST */
         
-        /* Enhanced glows - violet and red highlighted */
-        0 0 15px 2px #ee82ee,  /* Strong violet glow */
-        0 0 8px 4px #4b0082,   /* Indigo glow */
-        0 0 25px 14px #ff0000, /* Strong red glow (Blood of Jesus) */
-        0 0 35px 16px #ff0000; /* Extra red outer glow */
+        /* Enhanced glows - RED (outer) and VIOLET (inner) */
+        0 0 25px 14px #ff0000, /* Strong red outer glow */
+        0 0 40px 16px #ff0000, /* Extra red glow */
+        0 0 55px 18px #ff0000, /* Maximum red glow */
+        0 0 20px 2px #ee82ee,  /* Strong violet inner glow */
+        0 0 30px 4px #ee82ee,  /* Extra violet glow */
+        0 0 8px 6px #4b0082;   /* Indigo glow */
 }
 
 #arcToggleBtn:hover::before {
-    opacity: 0.9;
+    opacity: 0.95;
 }
+
 
   /* Bottom Row (Nav + Scroll Lock) */
   .left-controls-stack {
