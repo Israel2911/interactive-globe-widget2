@@ -460,6 +460,7 @@ function toggleGlobeRotation() {
   }
 }
 
+// **FIXED: Updated togglePanMode function with proper mouse button mapping and transform control management**
 function togglePanMode() {
   if (controls) {
     isPanMode = !isPanMode;
@@ -468,9 +469,23 @@ function togglePanMode() {
     const rotateBtn = document.getElementById('btn-rotate');
     
     if (isPanMode) {
+      // **FIXED: Proper pan mode setup**
       controls.autoRotate = false;
       controls.enableRotate = false;
       controls.enablePan = true;
+      
+      // **CRITICAL FIX: Disable transform controls during pan to prevent drawing**
+      if (transformControls) {
+        transformControls.enabled = false;
+        transformControls.visible = false;
+      }
+      
+      // **FIX: Set proper mouse button mapping for pan mode**
+      controls.mouseButtons = {
+        LEFT: THREE.MOUSE.PAN,      // Left mouse button pans in pan mode
+        MIDDLE: THREE.MOUSE.DOLLY,  // Middle button zooms
+        RIGHT: THREE.MOUSE.ROTATE   // Right button rotates
+      };
       
       if (panBtn) {
         panBtn.style.background = '#ffa500';
@@ -483,8 +498,21 @@ function togglePanMode() {
         rotateBtn.style.color = '#fff';
       }
     } else {
+      // **FIXED: Restore normal controls**
       controls.enableRotate = true;
       controls.enablePan = true;
+      
+      // **CRITICAL FIX: Re-enable transform controls**
+      if (transformControls) {
+        transformControls.enabled = true;
+      }
+      
+      // **FIX: Restore default mouse button mapping**
+      controls.mouseButtons = {
+        LEFT: THREE.MOUSE.ROTATE,   // Left mouse button rotates (default)
+        MIDDLE: THREE.MOUSE.DOLLY,  // Middle button zooms
+        RIGHT: THREE.MOUSE.PAN      // Right button pans (default)
+      };
       
       if (panBtn) {
         panBtn.style.background = '#223366';
@@ -493,10 +521,11 @@ function togglePanMode() {
       }
     }
     
-    console.log(isPanMode ? '🖐️ Pan mode enabled - drag to move globe' : '🔄 Pan mode disabled - normal rotation enabled');
+    console.log(isPanMode ? '🖐️ Pan mode enabled - left click drags to move globe' : '🔄 Pan mode disabled - normal rotation enabled');
   }
 }
 
+// **FIXED: Enhanced initializeThreeJS with clipping fixes**
 function initializeThreeJS() {
   console.log('🔄 Initializing Three.js...');
   
@@ -556,7 +585,6 @@ function initializeThreeJS() {
   
   console.log('✅ Three.js initialized successfully');
 }
-
 
 function getColorByData(data) {
   const baseHue = data.domain * 30 % 360;
@@ -680,6 +708,7 @@ const toggleFunctionMap = {
   'Malaysia': createToggleFunction('Malaysia')
 };
 
+// **FIXED: Updated createNeuralCube function with clipping fixes**
 function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
   let contentIdx = 0;
   const cubeObject = new THREE.Group();
@@ -744,8 +773,6 @@ function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
   
   return cubeObject;
 }
-
-
 
 function createNeuralNetwork() {
   const vertices = [];
@@ -943,80 +970,82 @@ function onCanvasMouseUp(event) {
     const correspondingNeuralCube = neuralCubeMap[countryName];
     const toggleFunc = toggleFunctionMap[countryName];
     
-        if (correspondingNeuralCube && toggleFunc) {
-        const explosionStateMap = {
-          'Europe': isEuropeCubeExploded,
-          'Thailand': isNewThailandCubeExploded,
-          'Canada': isCanadaCubeExploded,
-          'UK': isUkCubeExploded,
-          'USA': isUsaCubeExploded,
-          'India': isIndiaCubeExploded,
-          'Singapore': isSingaporeCubeExploded,
-          'Malaysia': isMalaysiaCubeExploded
-        };
-        
-        const anyExploded = Object.values(explosionStateMap).some(state => state);
-        closeAllExploded();
-        
-        new TWEEN.Tween(correspondingNeuralCube.scale)
-          .to({ x: 1.5, y: 1.5, z: 1.5 }, 200)
-          .yoyo(true)
-          .repeat(1)
-          .start();
-        
-        setTimeout(() => {
-          toggleFunc();
-        }, anyExploded ? 810 : 400);
-      }
-      return;
-    }
-    
-    let parent = clickedObject;
-    let neuralName = null;
-    let clickedSubCube = clickedObject.userData.isSubCube ? clickedObject : null;
-    
-    while (parent) {
-      if (parent.userData.neuralName) {
-        neuralName = parent.userData.neuralName;
-        break;
-      }
-      parent = parent.parent;
-    }
-    
-    const explosionStateMap = {
-      'Europe': isEuropeCubeExploded,
-      'Thailand': isNewThailandCubeExploded,
-      'Canada': isCanadaCubeExploded,
-      'UK': isUkCubeExploded,
-      'USA': isUsaCubeExploded,
-      'India': isIndiaCubeExploded,
-      'Singapore': isSingaporeCubeExploded,
-      'Malaysia': isMalaysiaCubeExploded
-    };
-    
-    if (neuralName) {
-      const isExploded = explosionStateMap[neuralName];
-      const toggleFunc = toggleFunctionMap[neuralName];
+    if (correspondingNeuralCube && toggleFunc) {
+      const explosionStateMap = {
+        'Europe': isEuropeCubeExploded,
+        'Thailand': isNewThailandCubeExploded,
+        'Canada': isCanadaCubeExploded,
+        'UK': isUkCubeExploded,
+        'USA': isUsaCubeExploded,
+        'India': isIndiaCubeExploded,
+        'Singapore': isSingaporeCubeExploded,
+        'Malaysia': isMalaysiaCubeExploded
+      };
       
-      if (isExploded && clickedSubCube && clickedSubCube.userData.university !== "Unassigned") {
-        if (!userIsAuthenticated()) {
-          showLoginPrompt('Please log in to view detailed university programs and application links');
-          return;
-        }
-        showInfoPanel(clickedSubCube.userData);
-      } else {
-        const anyExploded = Object.values(explosionStateMap).some(state => state);
-        closeAllExploded();
-        setTimeout(() => toggleFunc(), anyExploded ? 810 : 0);
-      }
-    } else {
+      const anyExploded = Object.values(explosionStateMap).some(state => state);
       closeAllExploded();
+      
+      new TWEEN.Tween(correspondingNeuralCube.scale)
+        .to({ x: 1.5, y: 1.5, z: 1.5 }, 200)
+        .yoyo(true)
+        .repeat(1)
+        .start();
+      
+      setTimeout(() => {
+        toggleFunc();
+      }, anyExploded ? 810 : 400);
     }
+    return;
   }
+  
+  let parent = clickedObject;
+  let neuralName = null;
+  let clickedSubCube = clickedObject.userData.isSubCube ? clickedObject : null;
+  
+  while (parent) {
+    if (parent.userData.neuralName) {
+      neuralName = parent.userData.neuralName;
+      break;
+    }
+    parent = parent.parent;
+  }
+  
+  const explosionStateMap = {
+    'Europe': isEuropeCubeExploded,
+    'Thailand': isNewThailandCubeExploded,
+    'Canada': isCanadaCubeExploded,
+    'UK': isUkCubeExploded,
+    'USA': isUsaCubeExploded,
+    'India': isIndiaCubeExploded,
+    'Singapore': isSingaporeCubeExploded,
+    'Malaysia': isMalaysiaCubeExploded
+  };
+  
+  if (neuralName) {
+    const isExploded = explosionStateMap[neuralName];
+    const toggleFunc = toggleFunctionMap[neuralName];
+    
+    if (isExploded && clickedSubCube && clickedSubCube.userData.university !== "Unassigned") {
+      if (!userIsAuthenticated()) {
+        showLoginPrompt('Please log in to view detailed university programs and application links');
+        return;
+      }
+      showInfoPanel(clickedSubCube.userData);
+    } else {
+      const anyExploded = Object.values(explosionStateMap).some(state => state);
+      closeAllExploded();
+      setTimeout(() => toggleFunc(), anyExploded ? 810 : 0);
+    }
+  } else {
+    closeAllExploded();
+  }
+}
 
+// **FIXED: Updated pan mouse handlers with conflict prevention**
 function onCanvasMouseDownPan(event) {
   mouseDownPos.set(event.clientX, event.clientY);
   
+  // **FIXED: Only handle pan dragging in pan mode**
   if (isPanMode) {
     isDragging = true;
     previousMousePosition = {
@@ -1024,10 +1053,15 @@ function onCanvasMouseDownPan(event) {
       y: event.clientY
     };
     renderer.domElement.style.cursor = 'grabbing';
+    
+    // **CRITICAL FIX: Prevent other event handlers from interfering**
+    event.preventDefault();
+    event.stopPropagation();
   }
 }
 
 function onCanvasMouseMovePan(event) {
+  // **FIXED: Only process in pan mode and when actually dragging**
   if (isPanMode && isDragging) {
     const deltaMove = {
       x: event.clientX - previousMousePosition.x,
@@ -1049,6 +1083,10 @@ function onCanvasMouseMovePan(event) {
       x: event.clientX,
       y: event.clientY
     };
+    
+    // **PREVENT DEFAULT BEHAVIOR**
+    event.preventDefault();
+    event.stopPropagation();
   }
 }
 
@@ -1056,6 +1094,10 @@ function onCanvasMouseUpPan(event) {
   if (isPanMode) {
     isDragging = false;
     renderer.domElement.style.cursor = isPanMode ? 'grab' : 'default';
+    
+    // **PREVENT OTHER HANDLERS FROM FIRING**
+    event.preventDefault();
+    event.stopPropagation();
   }
   
   onCanvasMouseUp(event);
