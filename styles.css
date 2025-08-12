@@ -516,7 +516,7 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
   cursor: pointer;
 }
 
-/* **MOBILE RESPONSIVE - ON MOBILE, CONTROLS MOVE BELOW CAROUSEL** */
+/* **MOBILE RESPONSIVE - MINIMAL CONTAINER, REDUCED SIZE** */
 @media (max-width: 768px) {
   .header-ui-bar, .footer-ui-bar { font-size: 12px; }
   .info-panel { min-width: 90vw; padding: 14px; }
@@ -555,26 +555,27 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
     font-size: 0.6em;
   }
   
-  /* **FIXED: Controls below carousel - NO CUTOFF** */
+  /* **FIXED: MINIMAL CONTAINER - DOESN'T BLOCK GLOBE** */
   .left-controls-stack {
     position: fixed;
-    left: 8px; /* ADD LEFT MARGIN */
-    right: 8px; /* ADD RIGHT MARGIN */
+    left: 8px;
+    right: 8px;
     bottom: 35px;
-    width: calc(100% - 16px); /* ACCOUNT FOR MARGINS */
+    width: calc(100% - 16px);
     flex-direction: row;
-    justify-content: space-evenly; /* EVENLY DISTRIBUTE BUTTONS */
+    justify-content: center;
     align-items: center;
-    flex-wrap: wrap; /* ALLOW WRAPPING IF NEEDED */
-    gap: 8px; /* REDUCED GAP */
-    padding: 10px 12px; /* INCREASED PADDING */
-    background: linear-gradient(135deg, #252f39ea, #1a2332ea);
-    backdrop-filter: blur(10px);
-    border-top: 1px solid rgba(255, 165, 0, 0.2);
-    border-radius: 12px 12px 0 0; /* ROUNDED TOP CORNERS */
-    box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.3);
+    flex-wrap: wrap;
+    gap: 4px; /* MINIMAL GAP */
+    padding: 4px 8px; /* MINIMAL PADDING */
+    background: rgba(37, 47, 57, 0.3); /* MUCH MORE TRANSPARENT */
+    backdrop-filter: blur(5px); /* REDUCED BLUR */
+    border: none; /* REMOVE BORDER */
+    border-radius: 8px; /* SMALLER RADIUS */
+    box-shadow: 0 -1px 8px rgba(0, 0, 0, 0.1); /* MINIMAL SHADOW */
     z-index: 10;
-    overflow: visible; /* ENSURE NOTHING IS CLIPPED */
+    overflow: visible;
+    min-height: auto; /* NO MINIMUM HEIGHT */
   }
   
   .movement-controls,
@@ -587,9 +588,9 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
     order: unset;
     max-width: none;
     display: flex;
-    gap: 6px; /* TIGHTER GAP */
+    gap: 3px; /* VERY TIGHT GAP */
     justify-content: center;
-    flex-wrap: wrap; /* ALLOW BUTTON WRAPPING */
+    flex-wrap: nowrap; /* SINGLE ROW */
   }
   
   /* **MOBILE: Hide right side controls, merge into bottom bar** */
@@ -597,31 +598,61 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
     display: none;
   }
   
-  /* **FIXED: Properly sized nav buttons - NO CUTOFF** */
+  /* **FIXED: SMALLER NAV BUTTONS** */
   .nav-btn {
-    width: 38px; /* SLIGHTLY SMALLER FOR BETTER FIT */
-    height: 38px;
-    font-size: 1em; /* REDUCED FONT SIZE */
-    border-radius: 8px;
-    flex-shrink: 0; /* PREVENT SHRINKING */
-    min-width: 38px; /* ENSURE MINIMUM SIZE */
+    width: 32px; /* REDUCED SIZE */
+    height: 32px; /* REDUCED SIZE */
+    font-size: 0.9em; /* SMALLER FONT */
+    border-radius: 6px; /* SMALLER RADIUS */
+    flex-shrink: 0;
+    min-width: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
+    margin: 0; /* NO MARGIN */
+  }
+  
+  /* **INTEGRATED: MUCH SMALLER UNLOCK SCROLL BUTTON** */
+  #scrollLockBtn {
+    width: 24px !important; /* REDUCED from 32px to 24px */
+    height: 24px !important; /* REDUCED from 32px to 24px */
+    padding: 0 !important;
+    margin: 0 !important;
+    font-size: 0.6em !important; /* SMALLER FONT */
+    border-radius: 4px !important; /* SMALLER RADIUS */
+    min-width: 24px;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: #ffa500 !important;
+    color: #222 !important;
+    order: 10; /* PLACE AT END OF ROW */
+  }
+  
+  .scroll-lock-ui {
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    font-size: 1em !important;
+    text-align: center !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
   
   .nav-btn.active,
   .pan-mode {
-    transform: scale(1.02) !important;
+    transform: scale(1.01) !important;
   }
   
   button[data-active="true"] {
-    transform: scale(1.02) !important;
+    transform: scale(1.01) !important;
   }
   
-  /* **MOBILE: Adjust globe canvas for bottom controls** */
+  /* **MOBILE: Adjust globe canvas - MORE SPACE FOR GLOBE** */
   #globe-canvas {
-    height: calc(100vh - 150px);
+    height: calc(100vh - 120px); /* LESS BLOCKED SPACE */
   }
 }
 
@@ -633,31 +664,40 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
   }
 }
 
-/* **FIXED: Small Mobile Screens - Extra Protection** */
+/* **FIXED: Small Mobile Screens - Extra Minimal** */
 @media (max-width: 480px) {
   .left-controls-stack {
     left: 4px;
     right: 4px;
     width: calc(100% - 8px);
-    padding: 8px 8px;
-    gap: 4px;
+    padding: 3px 6px; /* EVEN SMALLER PADDING */
+    gap: 2px; /* MINIMAL GAP */
   }
   
   .nav-btn {
-    width: 34px;
-    height: 34px;
-    font-size: 0.9em;
-    min-width: 34px;
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 0.8em !important;
+    min-width: 28px !important;
+  }
+  
+  /* **INTEGRATED: EVEN SMALLER SCROLL ICON** */
+  #scrollLockBtn {
+    width: 20px !important; /* EVEN SMALLER */
+    height: 20px !important; /* EVEN SMALLER */
+    font-size: 0.5em !important; /* TINY FONT */
+    min-width: 20px !important;
+    border-radius: 3px !important;
   }
   
   .movement-controls,
   .other-controls,
   .navigation-controls {
-    gap: 4px;
+    gap: 2px;
   }
 }
 
-/* **LANDSCAPE ORIENTATION on Mobile - FIXED** */
+/* **LANDSCAPE ORIENTATION on Mobile - MINIMAL** */
 @media (orientation: landscape) and (max-width: 768px) {
   .carousel-card {
     min-width: 130px;
@@ -666,18 +706,27 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
   }
   
   .left-controls-stack {
-    bottom: 30px;
-    padding: 6px 10px;
+    bottom: 25px;
+    padding: 3px 8px;
     left: 6px;
     right: 6px;
     width: calc(100% - 12px);
   }
   
   .nav-btn {
-    width: 36px;
-    height: 36px;
-    font-size: 1em;
-    min-width: 36px;
+    width: 30px !important;
+    height: 30px !important;
+    font-size: 0.85em !important;
+    min-width: 30px !important;
+  }
+  
+  /* **INTEGRATED: COMPACT SCROLL ICON FOR LANDSCAPE** */
+  #scrollLockBtn {
+    width: 22px !important; /* COMPACT SIZE */
+    height: 22px !important; /* COMPACT SIZE */
+    font-size: 0.55em !important;
+    min-width: 22px !important;
+    border-radius: 3px !important;
   }
   
   .footer-ui-bar {
@@ -686,6 +735,6 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
   }
   
   #globe-canvas {
-    height: calc(100vh - 125px);
+    height: calc(100vh - 105px); /* MAXIMUM GLOBE SPACE */
   }
 }
