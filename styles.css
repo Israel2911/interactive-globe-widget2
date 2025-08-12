@@ -495,9 +495,9 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
   opacity: 0.54;
 }
 
-/* **INTEGRATED: COMPLETELY REMOVE THE GLOBE STATUS TEXT** */
+/* **COMPLETELY REMOVE THE GLOBE STATUS TEXT ON ALL DEVICES** */
 .scroll-lock-ui {
-  display: none !important; /* HIDE COMPLETELY ON ALL DEVICES */
+  display: none !important;
 }
 
 #scrollLockBtn {
@@ -511,7 +511,7 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
   cursor: pointer;
 }
 
-/* **INTEGRATED: MOBILE RESPONSIVE - YELLOW SCROLL BUTTON RECTANGULAR** */
+/* **MOBILE RESPONSIVE - CLEAN SINGLE MEDIA QUERY** */
 @media (max-width: 768px) {
   .header-ui-bar, .footer-ui-bar { font-size: 12px; }
   .info-panel { min-width: 90vw; padding: 14px; }
@@ -651,11 +651,7 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
     color: #222;
   }
   
-/* **FIXED: Keep existing functionality, just make it rectangular on mobile** */
-@media (max-width: 768px) {
-  /* ... your existing mobile styles ... */
-  
-  /* **INTEGRATED: Make the existing scroll button wider and rectangular** */
+  /* **INTEGRATED: YELLOW SCROLL BUTTON - RECTANGULAR** */
   #scrollLockBtn {
     width: 90px !important; /* WIDER RECTANGLE */
     height: 32px !important; /* RECTANGLE NOT SQUARE */
@@ -663,7 +659,7 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
     margin: 0 0 0 8px !important; /* SMALL LEFT MARGIN */
     font-size: 0.75em !important; /* READABLE FONT SIZE */
     border-radius: 6px !important;
-    display: inline-flex !important; /* KEEP INLINE WITH OTHER BUTTONS */
+    display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
     background: #ffa500 !important;
@@ -672,16 +668,6 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
     font-weight: 600 !important;
     white-space: nowrap !important;
   }
-  
-  /* **Keep the scroll-lock-ui container but make it transparent** */
-  .scroll-lock-ui {
-    background: transparent !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    display: inline-block !important; /* KEEP IT INLINE */
-  }
-}
-
   
   .nav-btn.active,
   .pan-mode {
@@ -698,7 +684,7 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
   }
 }
 
-/* **DESKTOP: ALSO REMOVE TEXT ON DESKTOP** */
+/* **DESKTOP: REMOVE TEXT ON DESKTOP** */
 @media (min-width: 769px) {
   .mobile-top-controls {
     display: none;
@@ -707,14 +693,9 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
   .left-controls-stack {
     flex-direction: column;
   }
-  
-  /* **INTEGRATED: REMOVE "GLOBE IS ACTIVE" TEXT ON DESKTOP TOO** */
-  .scroll-lock-ui {
-    display: none !important; /* REMOVE ON DESKTOP TOO */
-  }
 }
 
-/* **INTEGRATED: SMALL MOBILE SCREENS** */
+/* **SMALL MOBILE SCREENS** */
 @media (max-width: 480px) {
   .mobile-top-controls,
   .left-controls-stack {
@@ -733,18 +714,16 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
     min-width: 28px !important;
   }
   
-  /* **INTEGRATED: WIDER YELLOW BUTTON ON SMALL SCREENS** */
   #scrollLockBtn {
     width: 80px !important;
     height: 28px !important;
     font-size: 0.7em !important;
-    min-width: 80px !important;
-    margin-left: 10px !important;
-    padding: 0 8px !important;
+    margin-left: 8px !important;
+    padding: 0 6px !important;
   }
 }
 
-/* **INTEGRATED: LANDSCAPE MOBILE** */
+/* **LANDSCAPE MOBILE** */
 @media (orientation: landscape) and (max-width: 768px) {
   .carousel-card {
     min-width: 130px;
@@ -770,13 +749,11 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
     min-width: 30px !important;
   }
   
-  /* **INTEGRATED: WIDER YELLOW BUTTON IN LANDSCAPE** */
   #scrollLockBtn {
     width: 85px !important;
     height: 30px !important;
     font-size: 0.7em !important;
-    min-width: 85px !important;
-    padding: 0 9px !important;
+    padding: 0 8px !important;
   }
   
   .footer-ui-bar {
