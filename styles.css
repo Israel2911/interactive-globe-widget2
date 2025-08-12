@@ -278,55 +278,48 @@ body {
   #toggleMeshButton::before { content: '🌐'; }
   #pauseCubesButton::before { content: '🧊'; }
 
-/* Perfect horseshoe rainbow bow - RED OUTER (top), VIOLET INNER */
+/* Simplified horseshoe rainbow bow - cleaner approach */
 #arcToggleBtn {
     position: relative;
-    overflow: hidden; /* Essential for creating the bow shape */
+    overflow: hidden;
 }
 
 #arcToggleBtn::before {
     content: '';
     position: absolute;
-    bottom: -2px; /* Position so the bottom half is clipped off */
+    bottom: 0px; /* Sit right on the bottom edge */
     left: 50%;
     transform: translateX(-50%);
-    width: 26px;
-    height: 26px;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
     background: transparent;
     
-    /* Concentric rainbow rings - RED (outermost) to VIOLET (innermost) */
+    /* Simple concentric rings - RED outside, VIOLET inside */
     box-shadow:
-        0 0 0 12px #ff0000,   /* Red - OUTERMOST/TOP (biggest arc) */
-        0 0 0 10px #ffa500,   /* Orange */
-        0 0 0 8px #ffff00,    /* Yellow */
-        0 0 0 6px #008000,    /* Green */
-        0 0 0 4px #0000ff,    /* Blue */
+        0 0 0 10px #ff0000,   /* Red - outermost */
+        0 0 0 8px #ffa500,    /* Orange */
+        0 0 0 6px #ffff00,    /* Yellow */
+        0 0 0 4px #008000,    /* Green */
+        0 0 0 3px #0000ff,    /* Blue */
         0 0 0 2px #4b0082,    /* Indigo */
-        0 0 0 1px #ee82ee,    /* Violet - INNERMOST (smallest arc) */
-        
-        /* Enhanced glows for RED (outer) and VIOLET (inner) */
-        0 0 15px 12px #ff0000,  /* Strong red outer glow */
-        0 0 25px 14px #ff0000,  /* Extra red glow */
-        0 0 10px 1px #ee82ee,   /* Violet inner glow */
-        0 0 20px 3px #ee82ee;   /* Extra violet glow */
+        0 0 0 1px #ee82ee;    /* Violet - innermost */
 }
 
 #arcToggleBtn:hover::before {
     box-shadow:
-        0 0 0 12px #ff0000,
-        0 0 0 10px #ffa500,
-        0 0 0 8px #ffff00,
-        0 0 0 6px #008000,
-        0 0 0 4px #0000ff,
+        0 0 0 10px #ff0000,
+        0 0 0 8px #ffa500,
+        0 0 0 6px #ffff00,
+        0 0 0 4px #008000,
+        0 0 0 3px #0000ff,
         0 0 0 2px #4b0082,
         0 0 0 1px #ee82ee,
-        /* Enhanced hover glows */
-        0 0 20px 12px #ff0000,  /* Stronger red glow */
-        0 0 35px 16px #ff0000,  /* Maximum red glow */
-        0 0 15px 1px #ee82ee,   /* Stronger violet glow */
-        0 0 25px 3px #ee82ee;   /* Maximum violet glow */
+        /* Just simple glows on hover */
+        0 0 12px 2px #ff0000,  /* Red glow */
+        0 0 8px 1px #ee82ee;   /* Violet glow */
 }
+
 
 
   /* Bottom Row (Nav + Scroll Lock) */
