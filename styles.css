@@ -495,14 +495,9 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
   opacity: 0.54;
 }
 
-/* Miscellaneous */
+/* **INTEGRATED: COMPLETELY REMOVE THE GLOBE STATUS TEXT** */
 .scroll-lock-ui {
-  margin-top: 10px;
-  padding: 7px 0;
-  background: #23356af2;
-  border-radius: 5px;
-  font-size: 1em;
-  text-align: center;
+  display: none !important; /* HIDE COMPLETELY ON ALL DEVICES */
 }
 
 #scrollLockBtn {
@@ -516,7 +511,7 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
   cursor: pointer;
 }
 
-/* **FIXED: MOBILE RESPONSIVE WITH YELLOW SCROLL BUTTON** */
+/* **INTEGRATED: MOBILE RESPONSIVE - YELLOW SCROLL BUTTON WITHOUT TEXT** */
 @media (max-width: 768px) {
   .header-ui-bar, .footer-ui-bar { font-size: 12px; }
   .info-panel { min-width: 90vw; padding: 14px; }
@@ -656,36 +651,32 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
     color: #222;
   }
   
-  /* **FIXED: WIDER YELLOW SCROLL BUTTON AS RECTANGLE** */
+  /* **INTEGRATED: YELLOW SCROLL BUTTON - STANDALONE, NO TEXT CONTAINER** */
   #scrollLockBtn {
-    width: 90px !important; /* WIDENED MORE SO TEXT IS VISIBLE */
-    height: 32px !important; /* RECTANGLE INSTEAD OF SQUARE */
-    padding: 0 10px !important; /* HORIZONTAL PADDING FOR TEXT */
-    margin: 0 0 0 12px !important; /* LEFT MARGIN TO SEPARATE */
-    font-size: 0.75em !important; /* READABLE FONT SIZE */
+    width: 90px !important; /* WIDER RECTANGLE */
+    height: 32px !important; /* RECTANGLE NOT SQUARE */
+    padding: 0 10px !important; /* PADDING FOR TEXT INSIDE BUTTON */
+    margin: 0 0 0 12px !important; /* SEPARATE FROM OTHER BUTTONS */
+    font-size: 0.75em !important; /* READABLE FONT */
     border-radius: 6px !important;
     min-width: 90px;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    background: #ffa500 !important;
-    color: #222 !important;
+    background: #ffa500 !important; /* YELLOW BACKGROUND */
+    color: #222 !important; /* BLACK TEXT */
     font-weight: 700 !important;
     white-space: nowrap !important;
     order: 20; /* AT END OF ROW */
+    position: relative; /* FOR STANDALONE POSITIONING */
     text-transform: none !important;
     letter-spacing: 0.3px !important;
+    /* NO CONTAINER - BUTTON STANDS ALONE */
   }
   
-  /* **REMOVE "GLOBE IS ACTIVE" TEXT** */
+  /* **INTEGRATED: ENSURE NO TEXT CONTAINER EXISTS** */
   .scroll-lock-ui {
-    background: transparent !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    border-radius: 0 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
+    display: none !important; /* COMPLETELY HIDDEN */
   }
   
   .nav-btn.active,
@@ -703,7 +694,7 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
   }
 }
 
-/* **DESKTOP: REMOVE OLD SCROLL LOCK TEXT ON DESKTOP TOO** */
+/* **DESKTOP: ALSO REMOVE TEXT ON DESKTOP** */
 @media (min-width: 769px) {
   .mobile-top-controls {
     display: none;
@@ -713,9 +704,9 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
     flex-direction: column;
   }
   
-  /* **REMOVE "GLOBE IS ACTIVE" TEXT ON DESKTOP** */
+  /* **INTEGRATED: REMOVE "GLOBE IS ACTIVE" TEXT ON DESKTOP TOO** */
   .scroll-lock-ui {
-    display: none !important;
+    display: none !important; /* REMOVE ON DESKTOP TOO */
   }
 }
 
