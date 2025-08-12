@@ -252,6 +252,7 @@ body {
     white-space: normal;
     background: #22356a;
     border-radius: 6px;
+    overflow: hidden;
   }
   .control-buttons button:hover {
     background: #ffa500;
@@ -275,19 +276,26 @@ body {
   #toggleMeshButton::before { content: '🌐'; }
   #pauseCubesButton::before { content: '🧊'; }
 
-  /* *** FINAL: 7-Color Rainbow Bow Icon *** */
+  /* *** FINAL: Concentric Arc Rainbow Icon *** */
   #arcToggleBtn::before {
-    content: '';
-    display: block;
-    width: 24px;
-    height: 12px;
-    margin: 8px auto 0;
-    border-top-left-radius: 24px;
-    border-top-right-radius: 24px;
-    background: linear-gradient(to right, #ff0000, #ffa500, #ffff00, #008000, #0000ff, #4b0082, #ee82ee);
+      content: '';
+      position: absolute;
+      top: 8px;
+      left: 6px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      box-shadow:
+          0 0 0 2px #ee82ee, /* Violet */
+          0 0 0 4px #4b0082, /* Indigo */
+          0 0 0 6px #0000ff, /* Blue */
+          0 0 0 8px #008000, /* Green */
+          0 0 0 10px #ffff00, /* Yellow */
+          0 0 0 12px #ffa500, /* Orange */
+          0 0 0 14px #ff0000; /* Red */
   }
   #arcToggleBtn:hover::before {
-    opacity: 0.8;
+      opacity: 0.85;
   }
 
 
@@ -338,5 +346,5 @@ body {
   #scrollLockBtn { width: 80px !important; height: 32px !important; font-size: 0.7em !important; }
   .control-buttons button { width: 32px; height: 32px; }
   .control-buttons button::before { font-size: 1rem; }
-  #arcToggleBtn::before { width: 20px; height: 10px; border-top-left-radius: 20px; border-top-right-radius: 20px; }
+  #arcToggleBtn::before { top: 7px; left: 5px; width: 22px; height: 22px; }
 }
