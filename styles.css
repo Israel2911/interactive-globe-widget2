@@ -247,7 +247,7 @@ body {
   transform: translateY(-1px);
 }
 
-/* ==== FINAL FIX: HIDE ONLY THE TEXT, NOT THE CONTAINER ==== */
+/* Hide "Globe is active" text */
 #scrollLockInstruction {
   display: none !important;
 }
@@ -256,7 +256,7 @@ body {
   align-items: center;
 }
 
-/* ==== FINAL FIX: STYLE THE BUTTON ==== */
+/* Style the button */
 #scrollLockBtn {
   background: #ffa500;
   color: #222;
@@ -294,15 +294,19 @@ body {
   position: relative;
 }
 
-/* ==== MOBILE RESPONSIVE ==== */
+/* MOBILE RESPONSIVE */
 @media (max-width: 768px) {
-  /* Layout adjustments */
   .left-controls-stack {
     left: 4px; right: 4px; bottom: 35px;
     width: calc(100% - 8px);
     flex-direction: row;
     align-items: center;
-    gap: 8px; /* Space between nav controls and scroll button */
+    justify-content: center; /* <<< THIS IS THE FIX */
+    gap: 8px;
+    background: rgba(37, 47, 57, 0.3);
+    backdrop-filter: blur(5px);
+    border-radius: 8px;
+    padding: 4px 6px;
   }
   .navigation-controls {
     padding: 0; margin: 0;
@@ -310,6 +314,10 @@ body {
     box-shadow: none;
     display: flex;
     gap: 4px;
+    order: 1; /* Ensure nav buttons come first */
+  }
+  .scroll-lock-ui {
+    order: 2; /* Ensure scroll button comes after */
   }
   .control-buttons {
     display: none;
@@ -320,7 +328,7 @@ body {
     border-radius: 6px;
   }
 
-  /* ==== FINAL FIX: RECTANGULAR BUTTON ON MOBILE ==== */
+  /* Rectangular button on mobile */
   #scrollLockBtn {
     width: 90px !important;
     height: 32px !important;
