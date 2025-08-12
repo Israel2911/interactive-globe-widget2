@@ -495,7 +495,7 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
   opacity: 0.54;
 }
 
-/* **ISSUE 1 SOLVED: COMPLETELY REMOVE THE GLOBE STATUS TEXT ON ALL DEVICES** */
+/* **FINAL SOLUTION: COMPLETELY REMOVE THE GLOBE STATUS TEXT ON ALL DEVICES** */
 .scroll-lock-ui {
   display: none !important;
 }
@@ -651,7 +651,7 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
     color: #222;
   }
   
-  /* **ISSUE 2 SOLVED: YELLOW SCROLL BUTTON - RECTANGULAR** */
+  /* **FINAL SOLUTION: YELLOW SCROLL BUTTON - RECTANGULAR** */
   #scrollLockBtn {
     width: 90px !important; /* WIDER RECTANGLE */
     height: 32px !important; /* RECTANGLE NOT SQUARE */
@@ -714,7 +714,7 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
     min-width: 28px !important;
   }
   
-  /* **ISSUE 2 SOLVED: SMALLER SCREENS RECTANGULAR BUTTON** */
+  /* **FINAL SOLUTION: SMALLER SCREENS RECTANGULAR BUTTON** */
   #scrollLockBtn {
     width: 80px !important;
     height: 28px !important;
@@ -750,7 +750,7 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
     min-width: 30px !important;
   }
   
-  /* **ISSUE 2 SOLVED: LANDSCAPE RECTANGULAR BUTTON** */
+  /* **FINAL SOLUTION: LANDSCAPE RECTANGULAR BUTTON** */
   #scrollLockBtn {
     width: 85px !important;
     height: 30px !important;
