@@ -284,43 +284,44 @@ body {
   overflow: hidden; /* clips the circle into a bow */
 }
 
-/* Corrected concentric 7‑color rainbow bow - RED OUTER, VIOLET INNER */
+/* Fixed: True rainbow bow - half circle with RED outer, VIOLET inner */
 #arcToggleBtn {
   position: relative;
-  overflow: hidden;
+  overflow: hidden; /* Essential for clipping */
 }
 
 #arcToggleBtn::before {
     content: '';
     position: absolute;
-    top: 100%;
+    bottom: 0; /* Changed from top: 100% to bottom: 0 */
     left: 50%;
-    transform: translate(-50%, -50%);
-    width: 1px;
-    height: 1px;
-    background: transparent;
-    border-radius: 50%;
+    transform: translateX(-50%);
+    width: 28px;
+    height: 14px; /* Half the width to make a semi-circle */
+    background: linear-gradient(to right, 
+        #ff0000 0%,     /* Red */
+        #ffa500 14.3%,  /* Orange */
+        #ffff00 28.6%,  /* Yellow */
+        #008000 42.9%,  /* Green */
+        #0000ff 57.1%,  /* Blue */
+        #4b0082 71.4%,  /* Indigo */
+        #ee82ee 85.7%,  /* Violet */
+        #ee82ee 100%    /* Violet */
+    );
+    border-radius: 14px 14px 0 0; /* Round only the top to make an arc */
     box-shadow:
-        /* CORRECT ORDER: RED (outer) to VIOLET (inner) */
-        0 0 0 14px #ff0000,  /* Red - OUTERMOST/LARGEST */
-        0 0 0 12px #ffa500,  /* Orange */
-        0 0 0 10px #ffff00,  /* Yellow */
-        0 0 0 8px #008000,   /* Green */
-        0 0 0 6px #0000ff,   /* Blue */
-        0 0 0 4px #4b0082,   /* Indigo */
-        0 0 0 2px #ee82ee,   /* Violet - INNERMOST/SMALLEST */
-        
-        /* Enhanced glows - RED (outer) and VIOLET (inner) */
-        0 0 25px 14px #ff0000, /* Strong red outer glow */
-        0 0 40px 16px #ff0000, /* Extra red glow */
-        0 0 55px 18px #ff0000, /* Maximum red glow */
-        0 0 20px 2px #ee82ee,  /* Strong violet inner glow */
-        0 0 30px 4px #ee82ee,  /* Extra violet glow */
-        0 0 8px 6px #4b0082;   /* Indigo glow */
+        0 0 15px 2px #ff0000,   /* Red glow */
+        0 0 25px 4px #ff0000,   /* Strong red glow */
+        0 0 10px 1px #ee82ee;   /* Violet glow */
 }
 
 #arcToggleBtn:hover::before {
-    opacity: 0.95;
+    box-shadow:
+        0 0 20px 3px #ff0000,   /* Enhanced red glow */
+        0 0 35px 5px #ff0000,   /* Extra red glow */
+        0 0 15px 2px #ee82ee;   /* Enhanced violet glow */
+}
+ 0.95;
 }
 
 
