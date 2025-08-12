@@ -54,9 +54,6 @@ let countryPrograms = {};
 let globalContentMap = {};
 let carouselData = [];
 
-// **EXTRACTED: Interaction handling from your original**
-let isInteracting = false, hoverTimeout;
-
 async function fetchCarouselData() {
   try {
     const response = await fetch('/api/carousel/data');
@@ -192,39 +189,39 @@ function getMatchingCountries(category) {
   return Object.keys(globalContentMap).filter(country => matcher(globalContentMap[country]));
 }
 
-// **EXTRACTED: Your original highlighting functions with improved logic**
-function highlightCountriesByProgram(level) {
-  console.log('🌍 Highlighting countries for program:', level);
+function highlightCountriesByProgram(programType) {
+  console.log('🌍 Highlighting countries for program:', programType);
   
-  const matchingCountries = getMatchingCountries(level);
+  const matchingCountries = getMatchingCountries(programType);
   
-  Object.entries(countryBlocks).forEach(([country, group]) => {
-    const isActive = matchingCountries.includes(country);
-    group.material.emissiveIntensity = isActive ? 1.8 : 0.4;
-    group.material.opacity = isActive ? 1.0 : 0.7;
-    group.scale.setScalar(isActive ? 1.2 : 1.0);
-    
-    const labelItem = countryLabels.find(item => item.block === group);
-    if (labelItem) {
-      labelItem.label.material.color.set(isActive ? 0xffff00 : 0xffffff);
+  Object.keys(countryBlocks).forEach(countryName => {
+    const countryBlock = countryBlocks[countryName];
+    if (countryBlock && countryBlock.material) {
+      countryBlock.material.emissiveIntensity = 0.6;
     }
-    
-    if (typeof TWEEN !== 'undefined' && isActive) {
-      new TWEEN.Tween(group.material)
-        .to({ emissiveIntensity: 2.0 }, 300)
-        .yoyo(true)
-        .repeat(2)
-        .start();
+  });
+  
+  matchingCountries.forEach(countryName => {
+    const countryBlock = countryBlocks[countryName];
+    if (countryBlock && countryBlock.material) {
+      countryBlock.material.emissiveIntensity = 1.5;
+      
+      if (typeof TWEEN !== 'undefined') {
+        new TWEEN.Tween(countryBlock.material)
+          .to({ emissiveIntensity: 2.0 }, 300)
+          .yoyo(true)
+          .repeat(2)
+          .start();
+      }
     }
   });
   
   console.log(`✨ Highlighted ${matchingCountries.length} countries:`, matchingCountries);
 }
 
-function highlightNeuralCubesByProgram(selectedCategory) {
-  console.log(`🌍 Global neural cube filtering for: ${selectedCategory}`);
+function highlightNeuralCubesByProgram(category) {
+  console.log(`🌍 Global neural cube filtering for: ${category}`);
   
-  const category = selectedCategory.toLowerCase();
   const matchingCountries = getMatchingCountries(category);
   
   Object.keys(neuralCubeMap).forEach(countryName => {
@@ -245,45 +242,52 @@ function highlightNeuralCubesByProgram(selectedCategory) {
     }
   });
   
-  // **EXTRACTED: Your original subcube filtering logic**
-  cubes.forEach(cube => {
-    if (cube.children && cube.children.length > 10) {
-      cube.children.forEach(subCube => {
-        if (!subCube.userData || !subCube.userData.programName) return;
-        
-        const prog = subCube.userData.programName.toLowerCase();
-        let shouldHighlight = false;
-        
-        if (category === "ug") {
-          shouldHighlight = /ug|undergraduate|degree|bachelor|bsn|bba|business school|academic/i.test(prog);
-        } else if (category === "pg") {
-          shouldHighlight = /pg|postgraduate|master|msc|ma|msn|mba|phd|public policy|journalism|prospectus/i.test(prog);
-        } else if (category === "diploma") {
-          shouldHighlight = /diploma/i.test(prog);
-        } else if (category === "mobility") {
-          shouldHighlight = /exchange|mobility|semester|abroad|short|global/i.test(prog);
-        } else if (category === "upskilling") {
-          shouldHighlight = /upskill|certificat|short|cyber|data|stack|design/i.test(prog);
-        } else if (category === "research") {
-          shouldHighlight = !!subCube.userData.researchLink;
-        } else if (category === "language") {
-          shouldHighlight = /lang/i.test(prog);
-        }
-        
-        if (shouldHighlight) {
-          subCube.material.emissiveIntensity = 1.5;
-          subCube.material.opacity = 1.0;
-          subCube.scale.setScalar(1.3);
-        } else {
-          subCube.material.emissiveIntensity = 0.2;
-          subCube.material.opacity = 0.25;
-          subCube.scale.setScalar(1.0);
-        }
-      });
-    }
+  console.log(`✨ Scaled ${matchingCountries.length} neural cubes:`, matchingCountries);
+}
+
+function highlightMatchingSubCubes(category) {
+  console.log(`🎯 Global subcube filtering for: ${category}`);
+  
+  const matcherMap = {
+    'ug': p => p && /bachelor|bba|undergraduate|bsn|degree/i.test(p.programName),
+    'pg': p => p && /master|mba|postgraduate|ms|msn/i.test(p.programName), 
+    'mobility': p => p && /exchange|abroad|mobility|study/i.test(p.programName),
+    'diploma': p => p && /diploma/i.test(p.programName),
+    'upskilling': p => p && /cyber|data|tech|ux|upskill/i.test(p.programName),
+    'research': p => p && /research|phd|doctor/i.test(p.programName)
+  };
+  
+  const matcher = matcherMap[category.toLowerCase()] || (() => false);
+  let totalMatches = 0;
+  
+  Object.values(neuralCubeMap).forEach(cube => {
+    cube.children.forEach(subCube => {
+      if (subCube.userData.isSubCube) {
+        subCube.material.emissiveIntensity = 0.6;
+        new TWEEN.Tween(subCube.scale).to({ x: 1.0, y: 1.0, z: 1.0 }, 200).start();
+      }
+    });
   });
   
-  console.log(`✨ Scaled ${matchingCountries.length} neural cubes for ${selectedCategory}`);
+  Object.entries(globalContentMap).forEach(([countryName, content]) => {
+    const neuralCube = neuralCubeMap[countryName];
+    if (!neuralCube) return;
+    
+    content.forEach((program, index) => {
+      if (matcher(program)) {
+        const subCube = neuralCube.children[index];
+        if (subCube && subCube.userData.isSubCube) {
+          subCube.material.emissiveIntensity = 2.5;
+          new TWEEN.Tween(subCube.scale)
+            .to({ x: 1.4, y: 1.4, z: 1.4 }, 400)
+            .start();
+          totalMatches++;
+        }
+      }
+    });
+  });
+  
+  console.log(`🎯 Highlighted ${totalMatches} individual program subcubes for ${category}`);
 }
 
 async function populateCarousel() {
@@ -320,6 +324,7 @@ async function populateCarousel() {
             
             highlightCountriesByProgram(category);
             highlightNeuralCubesByProgram(category);
+            highlightMatchingSubCubes(category);
         });
     });
     
@@ -329,6 +334,7 @@ async function populateCarousel() {
         setTimeout(() => {
           highlightCountriesByProgram('UG');
           highlightNeuralCubesByProgram('UG');
+          highlightMatchingSubCubes('UG');
         }, 1000);
     }
     
@@ -349,47 +355,78 @@ function scrollCarousel(direction) {
     });
 }
 
-// **EXTRACTED: Your original perfect pan mode toggle**
-function togglePanMode() {
-    isPanMode = !isPanMode;
-    const panButton = document.getElementById('btn-pan');
-    const canvas = renderer.domElement;
+function moveGlobeUp() {
+  if (controls) {
+    const panSpeed = 0.05;
+    controls.object.position.y += panSpeed;
+    controls.target.y += panSpeed;
+    controls.update();
+  }
+}
 
-    if (isPanMode) {
-        // --- Activate Pan Mode ---
-        controls.mouseButtons.LEFT = THREE.MOUSE.PAN; // Mouse: Left button now pans
-        controls.touches.ONE = THREE.TOUCH.PAN;      // Touch: One finger now pans
+function moveGlobeDown() {
+  if (controls) {
+    const panSpeed = 0.05;
+    controls.object.position.y -= panSpeed;
+    controls.target.y -= panSpeed;
+    controls.update();
+  }
+}
 
-        if (panButton) {
-            panButton.classList.add('pan-mode');
-            panButton.title = 'Switch to Rotate Mode';
-        }
-        canvas.style.cursor = 'grab';
+function moveGlobeLeft() {
+  if (controls) {
+    const panSpeed = 0.05;
+    controls.object.position.x -= panSpeed;
+    controls.target.x -= panSpeed;
+    controls.update();
+  }
+}
 
-        // **CRITICAL FIX: Disable transform controls during pan to prevent drawing**
-        if (transformControls) {
-            transformControls.enabled = false;
-            transformControls.visible = false;
-        }
+function moveGlobeRight() {
+  if (controls) {
+    const panSpeed = 0.05;
+    controls.object.position.x += panSpeed;
+    controls.target.x += panSpeed;
+    controls.update();
+  }
+}
 
-    } else {
-        // --- Deactivate Pan Mode (Return to Rotate) ---
-        controls.mouseButtons.LEFT = THREE.MOUSE.ROTATE; // Mouse: Left button returns to rotate
-        controls.touches.ONE = THREE.TOUCH.ROTATE;      // Touch: One finger returns to rotate
+function zoomGlobeIn() {
+  if (!controls || !renderer) {
+    console.error('Controls or renderer not initialized yet');
+    return;
+  }
+  
+  console.log('Zooming in with + button...');
+  
+  const wheelEvent = new WheelEvent('wheel', {
+    deltaY: -120,
+    bubbles: true,
+    cancelable: true,
+    clientX: renderer.domElement.width / 2,
+    clientY: renderer.domElement.height / 2
+  });
+  
+  renderer.domElement.dispatchEvent(wheelEvent);
+}
 
-        if (panButton) {
-            panButton.classList.remove('pan-mode');
-            panButton.title = 'Switch to Pan/Move Mode';
-        }
-        canvas.style.cursor = 'default';
-
-        // **CRITICAL FIX: Re-enable transform controls**
-        if (transformControls) {
-            transformControls.enabled = true;
-        }
-    }
-    
-    console.log(isPanMode ? '🖐️ Pan mode enabled - left click drags to move globe' : '🔄 Pan mode disabled - normal rotation enabled');
+function zoomGlobeOut() {
+  if (!controls || !renderer) {
+    console.error('Controls or renderer not initialized yet');
+    return;
+  }
+  
+  console.log('Zooming out with - button...');
+  
+  const wheelEvent = new WheelEvent('wheel', {
+    deltaY: 120,
+    bubbles: true,
+    cancelable: true,
+    clientX: renderer.domElement.width / 2,
+    clientY: renderer.domElement.height / 2
+  });
+  
+  renderer.domElement.dispatchEvent(wheelEvent);
 }
 
 function toggleGlobeRotation() {
@@ -397,102 +434,114 @@ function toggleGlobeRotation() {
     controls.autoRotate = !controls.autoRotate;
     
     const rotateBtn = document.getElementById('btn-rotate');
-    if (rotateBtn) {
-      rotateBtn.style.background = controls.autoRotate ? '#a46bfd' : 'rgba(0,0,0,0.8)';
+    const panBtn = document.getElementById('btn-pan');
+    
+    if (controls.autoRotate) {
+      isPanMode = false;
+      controls.enableRotate = true;
+      controls.enablePan = true;
+      
+      if (rotateBtn) {
+        rotateBtn.style.background = '#ffa500';
+        rotateBtn.style.color = '#222';
+      }
+      
+      if (panBtn) {
+        panBtn.style.background = '#223366';
+        panBtn.style.color = '#fff';
+        panBtn.title = 'Enter Pan Mode';
+      }
+    } else {
+      if (rotateBtn) {
+        rotateBtn.style.background = '#223366';
+        rotateBtn.style.color = '#fff';
+      }
     }
   }
 }
 
-// **EXTRACTED: Your original perfect Three.js initialization**
+function togglePanMode() {
+  if (controls) {
+    isPanMode = !isPanMode;
+    
+    const panBtn = document.getElementById('btn-pan');
+    const rotateBtn = document.getElementById('btn-rotate');
+    
+    if (isPanMode) {
+      controls.autoRotate = false;
+      controls.enableRotate = false;
+      controls.enablePan = true;
+      
+      if (panBtn) {
+        panBtn.style.background = '#ffa500';
+        panBtn.style.color = '#222';
+        panBtn.title = 'Exit Pan Mode (Drag to Move)';
+      }
+      
+      if (rotateBtn) {
+        rotateBtn.style.background = '#223366';
+        rotateBtn.style.color = '#fff';
+      }
+    } else {
+      controls.enableRotate = true;
+      controls.enablePan = true;
+      
+      if (panBtn) {
+        panBtn.style.background = '#223366';
+        panBtn.style.color = '#fff';
+        panBtn.title = 'Enter Pan Mode';
+      }
+    }
+    
+    console.log(isPanMode ? '🖐️ Pan mode enabled - drag to move globe' : '🔄 Pan mode disabled - normal rotation enabled');
+  }
+}
+
 function initializeThreeJS() {
   console.log('🔄 Initializing Three.js...');
   
   scene = new THREE.Scene();
-  
-  // **EXTRACTED: Your original camera settings that prevent clipping**
-  camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.001, 1000);
-  camera.position.z = 3.5;
-  
-  // **EXTRACTED: Your original renderer setup**
-  renderer = new THREE.WebGLRenderer({
-    antialias: true,
-    alpha: true
-  });
+  camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(0x000000, 0);
+  
   document.body.appendChild(renderer.domElement);
-  renderer.domElement.id = 'threejs-canvas';
   
   globeGroup = new THREE.Group();
   scene.add(globeGroup);
   globeGroup.add(neuronGroup);
   
-  // **EXTRACTED: Your original perfect OrbitControls setup**
   controls = new THREE.OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
-  controls.dampingFactor = 0.1;  // Your original setting
+  controls.dampingFactor = 0.05;
+  controls.enableZoom = true;
   controls.enablePan = true;
   controls.autoRotate = true;
-  controls.autoRotateSpeed = 0.6;  // Your original setting
-  controls.minDistance = 0.01;     // Your original - prevents clipping!
-  controls.maxDistance = 15.0;     // Your original setting
-
-  // **EXTRACTED: Your original mouse button setup**
-  controls.mouseButtons = {
-    LEFT: THREE.MOUSE.ROTATE,
-    MIDDLE: THREE.MOUSE.DOLLY,
-    RIGHT: THREE.MOUSE.PAN
-  };
-
-  controls.touches = {
-    ONE: THREE.TOUCH.ROTATE,
-    TWO: THREE.TOUCH.DOLLY_PAN
-  };
+  controls.autoRotateSpeed = 0.5;
   
   transformControls = new THREE.TransformControls(camera, renderer.domElement);
-  transformControls.setMode('translate');
-  transformControls.addEventListener('dragging-changed', event => {
-    if (controls) controls.enabled = !event.value;
+  transformControls.addEventListener('dragging-changed', (event) => {
+    controls.enabled = !event.value;
   });
-  transformControls.visible = false;
   scene.add(transformControls);
   
-  // **EXTRACTED: Your original lighting setup**
-  scene.add(new THREE.AmbientLight(0x88ccff, 1.5));
-  const pointLight = new THREE.PointLight(0xffffff, 1.5);
-  pointLight.position.set(5, 5, 5);
-  scene.add(pointLight);
+  const ambientLight = new THREE.AmbientLight(0x404040, 1.2);
+  scene.add(ambientLight);
+
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
+  directionalLight.position.set(5, 5, 5);
+  scene.add(directionalLight);
+
+  const backLight = new THREE.DirectionalLight(0x336699, 0.5);
+  backLight.position.set(-5, -5, -5);
+  scene.add(backLight);
   
-  // **EXTRACTED: Your original interaction handling**
-  renderer.domElement.addEventListener('mousedown', () => {
-    isInteracting = true;
-    clearTimeout(hoverTimeout);
-    if (isPanMode) renderer.domElement.style.cursor = 'grabbing';
-  });
-  
-  renderer.domElement.addEventListener('mouseup', () => {
-    hoverTimeout = setTimeout(() => {
-      isInteracting = false;
-    }, 200);
-    if (isPanMode) renderer.domElement.style.cursor = 'grab';
-  });
+  camera.position.z = 5;
   
   console.log('✅ Three.js initialized successfully');
 }
 
-// **EXTRACTED: Your original canvas resize function**
-function updateCanvasSize() {
-    const headerHeight = document.querySelector('.header-ui-bar')?.offsetHeight || 0;
-    const footerHeight = document.querySelector('.footer-ui-bar')?.offsetHeight || 0;
-    const canvas = renderer.domElement;
-    const newHeight = window.innerHeight - headerHeight - footerHeight;
-    canvas.style.top = `${headerHeight}px`;
-    canvas.style.height = `${newHeight}px`;
-    renderer.setSize(window.innerWidth, newHeight);
-    camera.aspect = window.innerWidth / newHeight;
-    camera.updateProjectionMatrix();
-}
-
-// **EXTRACTED: Your original color generation function**
 function getColorByData(data) {
   const baseHue = data.domain * 30 % 360;
   const lightness = 50 + data.engagement * 25;
@@ -549,60 +598,59 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
   });
 }
 
-// **EXTRACTED: Your original perfect toggle function**
 function createToggleFunction(cubeName) {
-    return function() {
-        let isExploded, setExploded, cube, subCubes, explodedPos;
-        switch (cubeName) {
-            case 'Europe':
-                [isExploded, setExploded, cube, subCubes, explodedPos] = [isEuropeCubeExploded, s => isEuropeCubeExploded = s, europeCube, europeSubCubes, explodedPositions];
-                break;
-            case 'Thailand':
-                [isExploded, setExploded, cube, subCubes, explodedPos] = [isNewThailandCubeExploded, s => isNewThailandCubeExploded = s, newThailandCube, newThailandSubCubes, newThailandExplodedPositions];
-                break;
-            case 'Canada':
-                [isExploded, setExploded, cube, subCubes, explodedPos] = [isCanadaCubeExploded, s => isCanadaCubeExploded = s, canadaCube, canadaSubCubes, canadaExplodedPositions];
-                break;
-            case 'UK':
-                [isExploded, setExploded, cube, subCubes, explodedPos] = [isUkCubeExploded, s => isUkCubeExploded = s, ukCube, ukSubCubes, ukExplodedPositions];
-                break;
-            case 'USA':
-                [isExploded, setExploded, cube, subCubes, explodedPos] = [isUsaCubeExploded, s => isUsaCubeExploded = s, usaCube, usaSubCubes, usaExplodedPositions];
-                break;
-            case 'India':
-                [isExploded, setExploded, cube, subCubes, explodedPos] = [isIndiaCubeExploded, s => isIndiaCubeExploded = s, indiaCube, indiaSubCubes, indiaExplodedPositions];
-                break;
-            case 'Singapore':
-                [isExploded, setExploded, cube, subCubes, explodedPos] = [isSingaporeCubeExploded, s => isSingaporeCubeExploded = s, singaporeCube, singaporeSubCubes, singaporeExplodedPositions];
-                break;
-            case 'Malaysia':
-                [isExploded, setExploded, cube, subCubes, explodedPos] = [isMalaysiaCubeExploded, s => isMalaysiaCubeExploded = s, malaysiaCube, malaysiaSubCubes, malaysiaExplodedPositions];
-                break;
-            default:
-                return;
-        }
-        
-        const shouldBeExploded = !isExploded;
-        setExploded(shouldBeExploded);
-        if (!cube) return;
-        
-        const targetPosition = new THREE.Vector3();
-        if (shouldBeExploded) {
-            cube.getWorldPosition(targetPosition);
-            transformControls.attach(cube);
-        } else {
-            targetPosition.set(0, 0, 0);
-            transformControls.detach();
-        }
-        
-        new TWEEN.Tween(controls.target).to(targetPosition, 800).easing(TWEEN.Easing.Cubic.InOut).start();
-        transformControls.visible = shouldBeExploded;
-        
-        subCubes.forEach((subCube, i) => {
-            const targetPos = shouldBeExploded ? explodedPos[i] : subCube.userData.initialPosition;
-            new TWEEN.Tween(subCube.position).to(targetPos, 800).easing(TWEEN.Easing.Exponential.InOut).start();
-        });
+  return function() {
+    let isExploded, setExploded, cube, subCubes, explodedPos;
+    switch (cubeName) {
+      case 'Europe':
+        [isExploded, setExploded, cube, subCubes, explodedPos] = [isEuropeCubeExploded, s => isEuropeCubeExploded = s, europeCube, europeSubCubes, explodedPositions];
+        break;
+      case 'Thailand':
+        [isExploded, setExploded, cube, subCubes, explodedPos] = [isNewThailandCubeExploded, s => isNewThailandCubeExploded = s, newThailandCube, newThailandSubCubes, newThailandExplodedPositions];
+        break;
+      case 'Canada':
+        [isExploded, setExploded, cube, subCubes, explodedPos] = [isCanadaCubeExploded, s => isCanadaCubeExploded = s, canadaCube, canadaSubCubes, canadaExplodedPositions];
+        break;
+      case 'UK':
+        [isExploded, setExploded, cube, subCubes, explodedPos] = [isUkCubeExploded, s => isUkCubeExploded = s, ukCube, ukSubCubes, ukExplodedPositions];
+        break;
+      case 'USA':
+        [isExploded, setExploded, cube, subCubes, explodedPos] = [isUsaCubeExploded, s => isUsaCubeExploded = s, usaCube, usaSubCubes, usaExplodedPositions];
+        break;
+      case 'India':
+        [isExploded, setExploded, cube, subCubes, explodedPos] = [isIndiaCubeExploded, s => isIndiaCubeExploded = s, indiaCube, indiaSubCubes, indiaExplodedPositions];
+        break;
+      case 'Singapore':
+        [isExploded, setExploded, cube, subCubes, explodedPos] = [isSingaporeCubeExploded, s => isSingaporeCubeExploded = s, singaporeCube, singaporeSubCubes, singaporeExplodedPositions];
+        break;
+      case 'Malaysia':
+        [isExploded, setExploded, cube, subCubes, explodedPos] = [isMalaysiaCubeExploded, s => isMalaysiaCubeExploded = s, malaysiaCube, malaysiaSubCubes, malaysiaExplodedPositions];
+        break;
+      default:
+        return;
     }
+    
+    const shouldBeExploded = !isExploded;
+    setExploded(shouldBeExploded);
+    if (!cube) return;
+    
+    const targetPosition = new THREE.Vector3();
+    if (shouldBeExploded) {
+      cube.getWorldPosition(targetPosition);
+      transformControls.attach(cube);
+    } else {
+      targetPosition.set(0, 0, 0);
+      transformControls.detach();
+    }
+    
+    new TWEEN.Tween(controls.target).to(targetPosition, 800).easing(TWEEN.Easing.Cubic.InOut).start();
+    transformControls.visible = shouldBeExploded;
+    
+    subCubes.forEach((subCube, i) => {
+      const targetPos = shouldBeExploded ? explodedPos[i] : subCube.userData.initialPosition;
+      new TWEEN.Tween(subCube.position).to(targetPos, 800).easing(TWEEN.Easing.Exponential.InOut).start();
+    });
+  }
 }
 
 const toggleFunctionMap = {
@@ -616,71 +664,72 @@ const toggleFunctionMap = {
   'Malaysia': createToggleFunction('Malaysia')
 };
 
-// **EXTRACTED: Your original createNeuralCube - works without clipping!**
 function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
-    let contentIdx = 0;
-    const cubeObject = new THREE.Group();
-    
-    for (let xi = -1; xi <= 1; xi++)
-        for (let yi = -1; yi <= 1; yi++)
-            for (let zi = -1; zi <= 1; zi++) {
-                const item = content[contentIdx];
-                let material, userData;
-                
-                if (item) {
-                    material = createTexture(item.programName, item.logo, color);
-                    userData = item;
-                } else {
-                    material = createTexture('Unassigned', null, '#333333');
-                    userData = { university: "Unassigned" };
-                }
-                
-                const microcube = new THREE.Mesh(
-                    new THREE.BoxGeometry(vortexCubeSize, vortexCubeSize, vortexCubeSize), 
-                    material
-                );
-                
-                const pos = new THREE.Vector3(
-                    xi * (vortexCubeSize + microGap), 
-                    yi * (vortexCubeSize + microGap), 
-                    zi * (vortexCubeSize + microGap)
-                );
-                
-                microcube.position.copy(pos);
-                microcube.userData = { 
-                    ...userData,
-                    isSubCube: true,
-                    initialPosition: pos.clone()
-                };
-                
-                subCubeArray.push(microcube);
-                explodedPositionArray.push(new THREE.Vector3(
-                    xi * explodedSpacing, 
-                    yi * explodedSpacing, 
-                    zi * explodedSpacing
-                ));
-                
-                cubeObject.add(microcube);
-                contentIdx++;
-            }
-    return cubeObject;
+  let contentIdx = 0;
+  const cubeObject = new THREE.Group();
+  
+  for (let xi = -1; xi <= 1; xi++) {
+    for (let yi = -1; yi <= 1; yi++) {
+      for (let zi = -1; zi <= 1; zi++) {
+        const item = content[contentIdx];
+        let material, userData;
+        
+        if (item) {
+          material = createTexture(item.programName, item.logo, color);
+          userData = item;
+        } else {
+          material = createTexture('Unassigned', null, '#333333');
+          userData = { university: "Unassigned" };
+        }
+        
+        const microcube = new THREE.Mesh(
+          new THREE.BoxGeometry(vortexCubeSize, vortexCubeSize, vortexCubeSize),
+          material
+        );
+        
+        const pos = new THREE.Vector3(
+          xi * (vortexCubeSize + microGap),
+          yi * (vortexCubeSize + microGap),
+          zi * (vortexCubeSize + microGap)
+        );
+        
+        microcube.position.copy(pos);
+        microcube.userData = { 
+          ...userData,
+          isSubCube: true,
+          initialPosition: pos.clone()
+        };
+        
+        subCubeArray.push(microcube);
+        explodedPositionArray.push(new THREE.Vector3(
+          xi * explodedSpacing,
+          yi * explodedSpacing,
+          zi * explodedSpacing
+        ));
+        
+        cubeObject.add(microcube);
+        contentIdx++;
+      }
+    }
+  }
+  
+  return cubeObject;
 }
 
-// **EXTRACTED: Your original neural network creation**
 function createNeuralNetwork() {
-    const vertices = [];
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-    
-    const material = new THREE.LineBasicMaterial({
-        color: 0x00BFFF,
-        blending: THREE.AdditiveBlending,
-        transparent: true,
-        opacity: 0.35
-    });
-    
-    neuralNetworkLines = new THREE.LineSegments(geometry, material);
-    globeGroup.add(neuralNetworkLines);
+  const vertices = [];
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+  
+  const material = new THREE.LineBasicMaterial({
+    color: 0x00BFFF,
+    blending: THREE.AdditiveBlending,
+    transparent: true,
+    opacity: 0.35
+  });
+  
+  neuralNetworkLines = new THREE.LineSegments(geometry, material);
+  globeGroup.add(neuralNetworkLines);
 }
 
 function latLonToVector3(lat, lon, radius) {
@@ -692,54 +741,75 @@ function latLonToVector3(lat, lon, radius) {
   return new THREE.Vector3(x, y, z);
 }
 
-// **EXTRACTED: Your original perfect connection path creation**
 function createConnectionPath(fromGroup, toGroup, color = 0xffff00) {
-    const start = new THREE.Vector3();
-    fromGroup.getWorldPosition(start);
-    const end = new THREE.Vector3();
-    toGroup.getWorldPosition(end);
-    
-    const globeRadius = 1.0;
-    const arcOffset = 0.05;
-    const distance = start.distanceTo(end);
-    const arcElevation = distance * 0.4;
-    
-    const offsetStart = start.clone().normalize().multiplyScalar(globeRadius + arcOffset);
-    const offsetEnd = end.clone().normalize().multiplyScalar(globeRadius + arcOffset);
-    const mid = offsetStart.clone().add(offsetEnd).multiplyScalar(0.5).normalize().multiplyScalar(globeRadius + arcOffset + arcElevation);
-    
-    const curve = new THREE.QuadraticBezierCurve3(offsetStart, mid, offsetEnd);
-    const geometry = new THREE.TubeGeometry(curve, 64, 0.005, 8, false);
-    
-    const vertexShader = `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
-    const fragmentShader = `varying vec2 vUv; uniform float time; uniform vec3 color; void main() { float stripe1 = step(0.1, fract(vUv.x * 4.0 + time * 0.2)) - step(0.2, fract(vUv.x * 4.0 + time * 0.2)); float stripe2 = step(0.1, fract(vUv.x * 4.0 - time * 0.2)) - step(0.2, fract(vUv.x * 4.0 - time * 0.2)); float combinedStripes = max(stripe1, stripe2); float glow = (1.0 - abs(vUv.y - 0.5) * 2.0); if (combinedStripes > 0.0) { gl_FragColor = vec4(color, combinedStripes * glow); } else { discard; } }`;
-    
-    const material = new THREE.ShaderMaterial({
-        uniforms: {
-            time: { value: 0 },
-            color: { value: new THREE.Color(color) }
-        },
-        vertexShader,
-        fragmentShader,
-        transparent: true,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending
-    });
-    
-    const path = new THREE.Mesh(geometry, material);
-    path.renderOrder = 1;
-    globeGroup.add(path);
-    return path;
+  const start = new THREE.Vector3();
+  fromGroup.getWorldPosition(start);
+  const end = new THREE.Vector3();
+  toGroup.getWorldPosition(end);
+  
+  const globeRadius = 1.0;
+  const arcOffset = 0.05;
+  const distance = start.distanceTo(end);
+  const arcElevation = distance * 0.4;
+  
+  const offsetStart = start.clone().normalize().multiplyScalar(globeRadius + arcOffset);
+  const offsetEnd = end.clone().normalize().multiplyScalar(globeRadius + arcOffset);
+  const mid = offsetStart.clone().add(offsetEnd).multiplyScalar(0.5).normalize().multiplyScalar(globeRadius + arcOffset + arcElevation);
+  
+  const curve = new THREE.QuadraticBezierCurve3(offsetStart, mid, offsetEnd);
+  const geometry = new THREE.TubeGeometry(curve, 64, 0.005, 8, false);
+  
+  const vertexShader = `
+    varying vec2 vUv;
+    void main() {
+      vUv = uv;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `;
+  
+  const fragmentShader = `
+    varying vec2 vUv;
+    uniform float time;
+    uniform vec3 color;
+    void main() {
+      float stripe1 = step(0.1, fract(vUv.x * 4.0 + time * 0.2)) - step(0.2, fract(vUv.x * 4.0 + time * 0.2));
+      float stripe2 = step(0.1, fract(vUv.x * 4.0 - time * 0.2)) - step(0.2, fract(vUv.x * 4.0 - time * 0.2));
+      float combinedStripes = max(stripe1, stripe2);
+      float glow = (1.0 - abs(vUv.y - 0.5) * 2.0);
+      if (combinedStripes > 0.0) {
+        gl_FragColor = vec4(color, combinedStripes * glow);
+      } else {
+        discard;
+      }
+    }
+  `;
+  
+  const material = new THREE.ShaderMaterial({
+    uniforms: {
+      time: { value: 0 },
+      color: { value: new THREE.Color(color) }
+    },
+    vertexShader,
+    fragmentShader,
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending
+  });
+  
+  const path = new THREE.Mesh(geometry, material);
+  path.renderOrder = 1;
+  globeGroup.add(path);
+  return path;
 }
 
 function drawAllConnections() {
-    const countryNames = ["India", "Europe", "UK", "Canada", "USA", "Singapore", "Malaysia"];
-    const pairs = countryNames.map(country => ["Thailand", country]);
-    arcPaths = pairs.map(([from, to]) => {
-        const fromBlock = countryBlocks[from];
-        const toBlock = countryBlocks[to];
-        if (fromBlock && toBlock) return createConnectionPath(fromBlock, toBlock);
-    }).filter(Boolean);
+  const countryNames = ["India", "Europe", "UK", "Canada", "USA", "Singapore", "Malaysia"];
+  const pairs = countryNames.map(country => ["Thailand", country]);
+  arcPaths = pairs.map(([from, to]) => {
+    const fromBlock = countryBlocks[from];
+    const toBlock = countryBlocks[to];
+    if (fromBlock && toBlock) return createConnectionPath(fromBlock, toBlock);
+  }).filter(Boolean);
 }
 
 function showInfoPanel(data) {
@@ -812,61 +882,62 @@ function closeAllExploded() {
   if (isMalaysiaCubeExploded) toggleFunctionMap['Malaysia']();
 }
 
-// **EXTRACTED: Your original perfect mouse interaction logic**
 function onCanvasMouseUp(event) {
-    if (transformControls.dragging) return;
+  if (transformControls.dragging) return;
+  
+  const deltaX = Math.abs(event.clientX - mouseDownPos.x);
+  const deltaY = Math.abs(event.clientY - mouseDownPos.y);
+  if (deltaX > 5 || deltaY > 5) return;
+  
+  if (event.target.closest('.info-panel')) return;
+  
+  const canvasRect = renderer.domElement.getBoundingClientRect();
+  mouse.x = ((event.clientX - canvasRect.left) / canvasRect.width) * 2 - 1;
+  mouse.y = -((event.clientY - canvasRect.top) / canvasRect.height) * 2 + 1;
+  
+  raycaster.setFromCamera(mouse, camera);
+  
+  const allClickableObjects = [...Object.values(countryBlocks), ...neuronGroup.children];
+  const intersects = raycaster.intersectObjects(allClickableObjects, true);
+  
+  if (intersects.length === 0) {
+    closeAllExploded();
+    return;
+  }
+  
+  const clickedObject = intersects[0].object;
+  
+  if (clickedObject.userData.countryName) {
+    const countryName = clickedObject.userData.countryName;
+    const correspondingNeuralCube = neuralCubeMap[countryName];
+    const toggleFunc = toggleFunctionMap[countryName];
     
-    const deltaX = Math.abs(event.clientX - mouseDownPos.x);
-    const deltaY = Math.abs(event.clientY - mouseDownPos.y);
-    if (deltaX > 5 || deltaY > 5) return;
-    
-    if (event.target.closest('.info-panel')) return;
-    
-    const canvasRect = renderer.domElement.getBoundingClientRect();
-    mouse.x = ((event.clientX - canvasRect.left) / canvasRect.width) * 2 - 1;
-    mouse.y = -((event.clientY - canvasRect.top) / canvasRect.height) * 2 + 1;
-    
-    raycaster.setFromCamera(mouse, camera);
-    
-    const allClickableObjects = [...Object.values(countryBlocks), ...neuronGroup.children];
-    const intersects = raycaster.intersectObjects(allClickableObjects, true);
-    
-    if (intersects.length === 0) {
-        closeAllExploded();
-        return;
-    }
-    
-    const clickedObject = intersects[0].object;
-    
-    if (clickedObject.userData.countryName) {
-        const countryName = clickedObject.userData.countryName;
-        const correspondingNeuralCube = neuralCubeMap[countryName];
-        const toggleFunc = toggleFunctionMap[countryName];
-        
         if (correspondingNeuralCube && toggleFunc) {
-            const explosionStateMap = {
-                'Europe': isEuropeCubeExploded,
-                'Thailand': isNewThailandCubeExploded,
-                'Canada': isCanadaCubeExploded,
-                'UK': isUkCubeExploded,
-                'USA': isUsaCubeExploded,
-                'India': isIndiaCubeExploded,
-                'Singapore': isSingaporeCubeExploded,
-                'Malaysia': isMalaysiaCubeExploded
-            };
-            
-            const anyExploded = Object.values(explosionStateMap).some(state => state);
-            closeAllExploded();
-            
-            new TWEEN.Tween(correspondingNeuralCube.scale)
-                .to({ x: 1.5, y: 1.5, z: 1.5 }, 200)
-                .yoyo(true).repeat(1).start();
-            
-            setTimeout(() => {
-                toggleFunc();
-            }, anyExploded ? 810 : 400);
-        }
-        return;
+        const explosionStateMap = {
+          'Europe': isEuropeCubeExploded,
+          'Thailand': isNewThailandCubeExploded,
+          'Canada': isCanadaCubeExploded,
+          'UK': isUkCubeExploded,
+          'USA': isUsaCubeExploded,
+          'India': isIndiaCubeExploded,
+          'Singapore': isSingaporeCubeExploded,
+          'Malaysia': isMalaysiaCubeExploded
+        };
+        
+        const anyExploded = Object.values(explosionStateMap).some(state => state);
+        closeAllExploded();
+        
+        new TWEEN.Tween(correspondingNeuralCube.scale)
+          .to({ x: 1.5, y: 1.5, z: 1.5 }, 200)
+          .yoyo(true)
+          .repeat(1)
+          .start();
+        
+        setTimeout(() => {
+          toggleFunc();
+        }, anyExploded ? 810 : 400);
+      }
+      return;
     }
     
     let parent = clickedObject;
@@ -874,93 +945,130 @@ function onCanvasMouseUp(event) {
     let clickedSubCube = clickedObject.userData.isSubCube ? clickedObject : null;
     
     while (parent) {
-        if (parent.userData.neuralName) {
-            neuralName = parent.userData.neuralName;
-            break;
-        }
-        parent = parent.parent;
+      if (parent.userData.neuralName) {
+        neuralName = parent.userData.neuralName;
+        break;
+      }
+      parent = parent.parent;
     }
     
     const explosionStateMap = {
-        'Europe': isEuropeCubeExploded,
-        'Thailand': isNewThailandCubeExploded,
-        'Canada': isCanadaCubeExploded,
-        'UK': isUkCubeExploded,
-        'USA': isUsaCubeExploded,
-        'India': isIndiaCubeExploded,
-        'Singapore': isSingaporeCubeExploded,
-        'Malaysia': isMalaysiaCubeExploded
+      'Europe': isEuropeCubeExploded,
+      'Thailand': isNewThailandCubeExploded,
+      'Canada': isCanadaCubeExploded,
+      'UK': isUkCubeExploded,
+      'USA': isUsaCubeExploded,
+      'India': isIndiaCubeExploded,
+      'Singapore': isSingaporeCubeExploded,
+      'Malaysia': isMalaysiaCubeExploded
     };
     
     if (neuralName) {
-        const isExploded = explosionStateMap[neuralName];
-        const toggleFunc = toggleFunctionMap[neuralName];
-        
-        if (isExploded && clickedSubCube && clickedSubCube.userData.university !== "Unassigned") {
-            showInfoPanel(clickedSubCube.userData);
-        } else {
-            const anyExploded = Object.values(explosionStateMap).some(state => state);
-            closeAllExploded();
-            setTimeout(() => toggleFunc(), anyExploded ? 810 : 0);
+      const isExploded = explosionStateMap[neuralName];
+      const toggleFunc = toggleFunctionMap[neuralName];
+      
+      if (isExploded && clickedSubCube && clickedSubCube.userData.university !== "Unassigned") {
+        if (!userIsAuthenticated()) {
+          showLoginPrompt('Please log in to view detailed university programs and application links');
+          return;
         }
-    } else {
+        showInfoPanel(clickedSubCube.userData);
+      } else {
+        const anyExploded = Object.values(explosionStateMap).some(state => state);
         closeAllExploded();
+        setTimeout(() => toggleFunc(), anyExploded ? 810 : 0);
+      }
+    } else {
+      closeAllExploded();
     }
+  }
+
+function onCanvasMouseDownPan(event) {
+  mouseDownPos.set(event.clientX, event.clientY);
+  
+  if (isPanMode) {
+    isDragging = true;
+    previousMousePosition = {
+      x: event.clientX,
+      y: event.clientY
+    };
+    renderer.domElement.style.cursor = 'grabbing';
+  }
+}
+
+function onCanvasMouseMovePan(event) {
+  if (isPanMode && isDragging) {
+    const deltaMove = {
+      x: event.clientX - previousMousePosition.x,
+      y: event.clientY - previousMousePosition.y
+    };
+    
+    const panSpeed = 0.002;
+    const deltaX = deltaMove.x * panSpeed;
+    const deltaY = deltaMove.y * panSpeed;
+    
+    controls.object.position.x -= deltaX;
+    controls.target.x -= deltaX;
+    controls.object.position.y += deltaY;
+    controls.target.y += deltaY;
+    
+    controls.update();
+    
+    previousMousePosition = {
+      x: event.clientX,
+      y: event.clientY
+    };
+  }
+}
+
+function onCanvasMouseUpPan(event) {
+  if (isPanMode) {
+    isDragging = false;
+    renderer.domElement.style.cursor = isPanMode ? 'grab' : 'default';
+  }
+  
+  onCanvasMouseUp(event);
 }
 
 function setupEventListeners() {
-  renderer.domElement.addEventListener('mousedown', onCanvasMouseDown);
-  renderer.domElement.addEventListener('mouseup', onCanvasMouseUp);
+  renderer.domElement.addEventListener('mousedown', onCanvasMouseDownPan);
+  renderer.domElement.addEventListener('mousemove', onCanvasMouseMovePan);
+  renderer.domElement.addEventListener('mouseup', onCanvasMouseUpPan);
   
-  // **EXTRACTED: Your original perfect navigation controls**
-  const panSpeed = 3;
-
+  renderer.domElement.addEventListener('mouseenter', () => {
+    if (isPanMode) {
+      renderer.domElement.style.cursor = 'grab';
+    }
+  });
+  
   const btnUp = document.getElementById('btn-up');
   if (btnUp) {
-    btnUp.addEventListener('click', () => {
-      controls.pan(0, -panSpeed);
-      controls.update();
-    });
+    btnUp.addEventListener('click', moveGlobeUp);
   }
   
   const btnDown = document.getElementById('btn-down');
   if (btnDown) {
-    btnDown.addEventListener('click', () => {
-      controls.pan(0, panSpeed);
-      controls.update();
-    });
+    btnDown.addEventListener('click', moveGlobeDown);
   }
   
   const btnLeft = document.getElementById('btn-left');
   if (btnLeft) {
-    btnLeft.addEventListener('click', () => {
-      controls.pan(panSpeed, 0);
-      controls.update();
-    });
+    btnLeft.addEventListener('click', moveGlobeLeft);
   }
   
   const btnRight = document.getElementById('btn-right');
   if (btnRight) {
-    btnRight.addEventListener('click', () => {
-      controls.pan(-panSpeed, 0);
-      controls.update();
-    });
+    btnRight.addEventListener('click', moveGlobeRight);
   }
   
   const btnZoomIn = document.getElementById('btn-zoom-in');
   if (btnZoomIn) {
-    btnZoomIn.addEventListener('click', () => {
-      controls.dollyIn(1.2);
-      controls.update();
-    });
+    btnZoomIn.addEventListener('click', zoomGlobeIn);
   }
   
   const btnZoomOut = document.getElementById('btn-zoom-out');
   if (btnZoomOut) {
-    btnZoomOut.addEventListener('click', () => {
-      controls.dollyOut(1.2);
-      controls.update();
-    });
+    btnZoomOut.addEventListener('click', zoomGlobeOut);
   }
   
   const btnRotate = document.getElementById('btn-rotate');
@@ -1058,7 +1166,9 @@ function setupEventListeners() {
   }
   
   window.addEventListener('resize', () => {
-    updateCanvasSize();
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
   });
 }
 
@@ -1153,20 +1263,20 @@ async function createGlobeAndCubes() {
     }
   }
   
-  // **EXTRACTED: Your original perfect globe with transparency**
   new THREE.TextureLoader().load("https://static.wixstatic.com/media/d77f36_8f868995fda643a0a61562feb20eb733~mv2.jpg", (tex) => {
     const globe = new THREE.Mesh(
       new THREE.SphereGeometry(GLOBE_RADIUS, 64, 64),
       new THREE.MeshPhongMaterial({
         map: tex,
         transparent: true,
-        opacity: 0.28  // Your original perfect transparency level
+        opacity: 0.75,
+        emissive: 0x112244,
+        emissiveIntensity: 0.2
       })
     );
     globeGroup.add(globe);
   });
   
-  // **EXTRACTED: Your original wireframe mesh**
   let wireframeMesh = new THREE.Mesh(
     new THREE.SphereGeometry(GLOBE_RADIUS + 0.05, 64, 64),
     new THREE.MeshBasicMaterial({
@@ -1232,7 +1342,6 @@ async function createGlobeAndCubes() {
   console.log('✅ Globe and cubes created successfully');
 }
 
-// **EXTRACTED: Your original perfect animation loop**
 function animate() {
   requestAnimationFrame(animate);
   
@@ -1330,38 +1439,32 @@ document.addEventListener('keydown', (event) => {
     case 'ArrowUp':
     case 'KeyW':
       event.preventDefault();
-      controls.pan(0, -3);
-      controls.update();
+      moveGlobeUp();
       break;
     case 'ArrowDown':  
     case 'KeyS':
       event.preventDefault();
-      controls.pan(0, 3);
-      controls.update();
+      moveGlobeDown();
       break;
     case 'ArrowLeft':
     case 'KeyA':
       event.preventDefault();
-      controls.pan(3, 0);
-      controls.update();
+      moveGlobeLeft();
       break;
     case 'ArrowRight':
     case 'KeyD':
       event.preventDefault();
-      controls.pan(-3, 0);
-      controls.update();
+      moveGlobeRight();
       break;
     case 'Equal':
     case 'NumpadAdd':
       event.preventDefault();
-      controls.dollyIn(1.2);
-      controls.update();
+      zoomGlobeIn();
       break;
     case 'Minus':
     case 'NumpadSubtract':
       event.preventDefault();
-      controls.dollyOut(1.2);
-      controls.update();
+      zoomGlobeOut();
       break;
     case 'Space':
       event.preventDefault();
@@ -1396,9 +1499,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const rightBtn = document.getElementById('carouselScrollRight');
     if (leftBtn) leftBtn.onclick = () => scrollCarousel(-1);
     if (rightBtn) rightBtn.onclick = () => scrollCarousel(1);
-    
-    // **EXTRACTED: Your original initialization calls**
-    updateCanvasSize();
     
     console.log('✅ Globe Widget loaded successfully!');
     
