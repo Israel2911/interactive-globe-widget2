@@ -495,46 +495,28 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
   opacity: 0.54;
 }
 
-/* **REMOVED: Old scroll-lock-ui styling - No longer needed** */
+/* Miscellaneous */
+.scroll-lock-ui {
+  margin-top: 10px;
+  padding: 7px 0;
+  background: #23356af2;
+  border-radius: 5px;
+  font-size: 1em;
+  text-align: center;
+}
 
-/* **NEW: Globe Status Popup** */
-.globe-status-popup {
-  position: fixed;
-  bottom: 80px; /* ABOVE CONTROLS */
-  left: 50%;
-  transform: translateX(-50%);
-  background: #22356a;
-  color: #fff;
-  padding: 8px 16px;
+#scrollLockBtn {
+  margin: 8px auto 2px auto;
+  padding: 5px 18px;
+  background: #ffa500;
+  color: #222;
   border-radius: 8px;
-  font-size: 0.9em;
-  font-weight: 500;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-  border: 2px solid #ffa500;
-  z-index: 15;
-  opacity: 0;
-  transform: translateX(-50%) translateY(10px);
-  transition: all 0.3s ease;
-  pointer-events: none;
-  white-space: nowrap;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
 }
 
-.globe-status-popup.show {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-
-.globe-status-popup::after {
-  content: '';
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  margin-left: -5px;
-  border: 5px solid transparent;
-  border-top-color: #ffa500;
-}
-
-/* **MOBILE RESPONSIVE - IMPROVED LAYOUT** */
+/* **INTEGRATED: MOBILE RESPONSIVE - ALL YOUR INSTRUCTIONS IMPLEMENTED** */
 @media (max-width: 768px) {
   .header-ui-bar, .footer-ui-bar { font-size: 12px; }
   .info-panel { min-width: 90vw; padding: 14px; }
@@ -573,10 +555,10 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
     font-size: 0.6em;
   }
   
-  /* **NEW: TOP ROW FOR OTHER CONTROLS (Pause, Toggle, etc.)** */
+  /* **INTEGRATED: TOP ROW FOR PAUSE, TOGGLE GLOBE MESH, ETC.** */
   .mobile-top-controls {
     position: fixed;
-    left: 4px; /* PUSHED ALL THE WAY LEFT */
+    left: 4px; /* ALL THE WAY TO THE LEFT */
     right: 4px;
     bottom: 70px; /* ABOVE MAIN CONTROL ROW */
     width: calc(100% - 8px);
@@ -586,7 +568,7 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
     flex-wrap: wrap;
     gap: 4px;
     padding: 3px 6px;
-    background: rgba(37, 47, 57, 0.2); /* EVEN MORE TRANSPARENT */
+    background: rgba(37, 47, 57, 0.2);
     backdrop-filter: blur(3px);
     border-radius: 6px;
     box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.05);
@@ -594,17 +576,17 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
     min-height: 32px;
   }
   
-  /* **IMPROVED: MAIN CONTROL ROW - PUSHED TO LEFT** */
+  /* **INTEGRATED: MAIN CONTROL ROW - ALL THE WAY TO LEFT** */
   .left-controls-stack {
     position: fixed;
-    left: 4px; /* PUSHED ALL THE WAY LEFT */
+    left: 4px; /* PUSHED ALL THE WAY TO THE LEFT */
     right: 4px;
     bottom: 35px;
     width: calc(100% - 8px);
     flex-direction: row;
-    justify-content: flex-start; /* ALIGN LEFT INSTEAD OF CENTER */
+    justify-content: flex-start; /* ALIGN LEFT */
     align-items: center;
-    flex-wrap: nowrap; /* KEEP SINGLE ROW */
+    flex-wrap: nowrap; /* CLEAN ON ONE LINE */
     gap: 4px;
     padding: 4px 6px;
     background: rgba(37, 47, 57, 0.3);
@@ -628,16 +610,16 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
     max-width: none;
     display: flex;
     gap: 3px;
-    justify-content: flex-start; /* ALIGN LEFT */
+    justify-content: flex-start;
     flex-wrap: nowrap;
   }
   
-  /* **MOBILE: Hide right side controls, merge into rows** */
+  /* **MOBILE: Hide right side controls** */
   .control-buttons {
     display: none;
   }
   
-  /* **IMPROVED: SMALLER NAV BUTTONS** */
+  /* **INTEGRATED: SMALLER NAV BUTTONS** */
   .nav-btn {
     width: 32px;
     height: 32px;
@@ -651,7 +633,7 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
     margin: 0;
   }
   
-  /* **NEW: OTHER CONTROL BUTTONS FOR TOP ROW** */
+  /* **INTEGRATED: PAUSE, TOGGLE GLOBE MESH BUTTONS FOR TOP ROW** */
   .mobile-control-btn {
     width: 32px;
     height: 32px;
@@ -674,30 +656,30 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
     color: #222;
   }
   
-  /* **IMPROVED: WIDER RECTANGULAR SCROLL BUTTON WITH BETTER TEXT** */
+  /* **INTEGRATED: WIDER YELLOW SCROLL BUTTON AS RECTANGLE** */
   #scrollLockBtn {
-    width: 80px !important; /* WIDER FOR BETTER TEXT VISIBILITY */
-    height: 32px !important; /* SAME HEIGHT AS OTHER BUTTONS */
-    padding: 0 8px !important; /* MORE HORIZONTAL PADDING */
-    margin: 0 0 0 10px !important; /* MORE LEFT MARGIN TO SEPARATE */
-    font-size: 0.7em !important; /* BETTER READABLE FONT SIZE */
+    width: 90px !important; /* WIDENED MORE SO TEXT IS VISIBLE */
+    height: 32px !important; /* RECTANGLE INSTEAD OF SQUARE */
+    padding: 0 10px !important; /* HORIZONTAL PADDING FOR TEXT */
+    margin: 0 0 0 12px !important; /* LEFT MARGIN TO SEPARATE */
+    font-size: 0.75em !important; /* READABLE FONT SIZE */
     border-radius: 6px !important;
-    min-width: 80px;
+    min-width: 90px;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     background: #ffa500 !important;
     color: #222 !important;
-    font-weight: 700 !important; /* BOLDER TEXT */
+    font-weight: 700 !important;
     white-space: nowrap !important;
-    order: 20; /* PLACE AT END OF ROW */
-    text-transform: uppercase !important; /* UPPERCASE FOR CLARITY */
-    letter-spacing: 0.5px !important; /* BETTER LETTER SPACING */
+    order: 20; /* AT END OF ROW */
+    text-transform: none !important; /* NORMAL CASE FOR READABILITY */
+    letter-spacing: 0.3px !important;
   }
   
-  /* **REMOVED: Old scroll-lock-ui styling** */
+  /* **INTEGRATED: REMOVE "GLOBE IS ACTIVE" TEXT** */
   .scroll-lock-ui {
-    display: none !important; /* HIDE OLD TEXT */
+    display: none !important; /* COMPLETELY HIDDEN */
   }
   
   .nav-btn.active,
@@ -711,34 +693,27 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
   
   /* **MOBILE: Adjust globe canvas for two control rows** */
   #globe-canvas {
-    height: calc(100vh - 140px); /* ACCOUNT FOR TWO ROWS */
-  }
-  
-  /* **MOBILE: Adjust popup position** */
-  .globe-status-popup {
-    bottom: 120px; /* ABOVE MOBILE CONTROLS */
-    font-size: 0.8em;
-    padding: 6px 12px;
+    height: calc(100vh - 140px);
   }
 }
 
-/* **DESKTOP/TABLET: Keep side layout** */
+/* **DESKTOP: REMOVE OLD SCROLL LOCK TEXT ON DESKTOP TOO** */
 @media (min-width: 769px) {
   .mobile-top-controls {
-    display: none; /* HIDE ON DESKTOP */
+    display: none;
   }
   
   .left-controls-stack {
     flex-direction: column;
   }
   
-  /* **DESKTOP: Remove old scroll lock text** */
+  /* **INTEGRATED: REMOVE "GLOBE IS ACTIVE" TEXT ON DESKTOP** */
   .scroll-lock-ui {
     display: none !important;
   }
 }
 
-/* **FIXED: Small Mobile Screens** */
+/* **INTEGRATED: SMALL MOBILE SCREENS** */
 @media (max-width: 480px) {
   .mobile-top-controls,
   .left-controls-stack {
@@ -757,17 +732,18 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
     min-width: 28px !important;
   }
   
+  /* **INTEGRATED: WIDER YELLOW BUTTON ON SMALL SCREENS** */
   #scrollLockBtn {
-    width: 70px !important; /* SLIGHTLY SMALLER BUT STILL READABLE */
+    width: 80px !important; /* WIDENED FOR TEXT VISIBILITY */
     height: 28px !important;
-    font-size: 0.65em !important;
-    min-width: 70px !important;
-    margin-left: 8px !important;
-    padding: 0 6px !important;
+    font-size: 0.7em !important;
+    min-width: 80px !important;
+    margin-left: 10px !important;
+    padding: 0 8px !important;
   }
 }
 
-/* **LANDSCAPE ORIENTATION on Mobile** */
+/* **INTEGRATED: LANDSCAPE MOBILE** */
 @media (orientation: landscape) and (max-width: 768px) {
   .carousel-card {
     min-width: 130px;
@@ -793,12 +769,13 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
     min-width: 30px !important;
   }
   
+  /* **INTEGRATED: WIDER YELLOW BUTTON IN LANDSCAPE** */
   #scrollLockBtn {
-    width: 75px !important; /* LANDSCAPE OPTIMIZED SIZE */
+    width: 85px !important; /* WIDENED FOR LANDSCAPE */
     height: 30px !important;
-    font-size: 0.65em !important;
-    min-width: 75px !important;
-    padding: 0 7px !important;
+    font-size: 0.7em !important;
+    min-width: 85px !important;
+    padding: 0 9px !important;
   }
   
   .footer-ui-bar {
@@ -808,9 +785,5 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
   
   #globe-canvas {
     height: calc(100vh - 125px);
-  }
-  
-  .globe-status-popup {
-    bottom: 100px;
   }
 }
