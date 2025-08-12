@@ -45,11 +45,11 @@ body {
   /* Reposition and restyle the desktop controls for mobile */
   .control-buttons {
     display: flex;
-    flex-direction: row; /* Make it a horizontal row */
+    flex-direction: row;
     justify-content: center;
     gap: 6px;
     position: fixed;
-    bottom: 85px; /* Position it above the main nav controls */
+    bottom: 85px;
     left: 50%;
     transform: translateX(-50%);
     background: rgba(37, 47, 57, 0.3);
@@ -57,7 +57,7 @@ body {
     padding: 6px 10px;
     border-radius: 8px;
     z-index: 10;
-    max-height: none; /* Override desktop height limit */
+    max-height: none;
   }
   .control-buttons button {
     width: 36px; height: 36px;
@@ -65,24 +65,41 @@ body {
     font-size: 0; /* Hide original button text */
     position: relative;
     white-space: normal;
+    background: #22356a;
+    border-radius: 6px;
   }
-  .control-buttons button:hover { background: #ffa500; color: #222; }
+  .control-buttons button:hover { background: #ffa500; }
 
   /* Add Icons using ::before pseudo-elements */
   .control-buttons button::before {
-    font-size: 1.2rem; /* Icon size */
+    font-size: 1.2rem;
     color: #eee;
     font-family: 'Segoe UI', Arial, sans-serif;
+    display: block;
+    line-height: 36px;
   }
   .control-buttons button:hover::before {
     color: #222;
   }
 
   #pauseButton::before { content: '⏸'; }
-  #toggleNodesButton::before { content: '👁️'; }
+  #toggleNodesButton::before { content: '⚛️'; } /* <<< UPDATED ICON */
   #toggleMeshButton::before { content: '🌐'; }
-  #arcToggleBtn::before { content: '🌈'; }
   #pauseCubesButton::before { content: '🧊'; }
+
+  /* Custom Rainbow Icon */
+  #arcToggleBtn::before {
+    content: '';
+    display: block;
+    width: 20px;
+    height: 20px;
+    margin: 8px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet);
+  }
+  #arcToggleBtn:hover::before {
+    opacity: 0.8;
+  }
 
   /* Bottom Row (Nav + Scroll Lock) */
   .left-controls-stack {
@@ -116,5 +133,6 @@ body {
   .nav-btn { width: 32px !important; height: 32px !important; }
   #scrollLockBtn { width: 80px !important; height: 32px !important; font-size: 0.7em !important; }
   .control-buttons button { width: 32px; height: 32px; }
-  .control-buttons button::before { font-size: 1rem; }
+  .control-buttons button::before { font-size: 1rem; line-height: 32px; }
+  #arcToggleBtn::before { width: 18px; height: 18px; margin: 7px; }
 }
