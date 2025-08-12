@@ -5,51 +5,274 @@ body {
   color: #ececec;
 }
 
-/* Header, Footer, and Carousel Styles */
-.header-ui-bar { background: transparent; color: #fff; padding: 10px 0; text-align: center; font-weight: 500; }
-.footer-ui-bar { background: #003366; position: fixed; width: 100%; bottom: 0; left: 0; font-size: 14px; text-align: center; padding: 8px 0; z-index: 5; }
-.carousel-wrapper { display: flex; align-items: center; justify-content: center; margin: 0 auto; max-width: 1200px; padding: 0 10px; box-sizing: border-box; }
-.carousel-container { flex: 1; display: flex; justify-content: center; align-items: center; overflow-x: auto; gap: 8px; padding: 8px 12px; scroll-behavior: smooth; }
-.carousel-arrow { font-size: 1.5em; color: #ffa500; cursor: pointer; user-select: none; margin: 0 8px; }
-.carousel-card { display: flex; flex-direction: column; align-items: center; justify-content: center; background: #192039; border-radius: 8px; min-width: 160px; height: 120px; text-decoration: none; color: #ececec; border: 2px solid transparent; transition: all 0.2s; cursor: pointer; flex-shrink: 0; }
-.carousel-card:hover { background: #253a5a; border-color: #ffa500; transform: translateY(-2px); }
-.carousel-card.selected { background: #ffa500; color: #222; }
-.carousel-card img { width: 100%; height: 70%; object-fit: cover; border-radius: 8px 8px 0 0; }
-.carousel-card-content { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; width: 100%; height: 30%; padding: 4px 6px; }
-.carousel-card-title { font-size: 0.8em; font-weight: 600; }
-.carousel-card-text { font-size: 0.65em; opacity: 0.85; }
+/* Header and Footer */
+.header-ui-bar {
+  background: transparent;
+  color: #fff;
+  padding: 10px 0;
+  text-align: center;
+  font-weight: 500;
+}
+.footer-ui-bar {
+  background: #003366;
+  position: fixed;
+  width: 100%;
+  bottom: 0;
+  left: 0;
+  font-size: 14px;
+  text-align: center;
+  padding: 8px 0;
+  z-index: 5;
+}
+
+/* Carousel Styles */
+.carousel-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  max-width: 1200px;
+  padding: 0 10px;
+  box-sizing: border-box;
+}
+.carousel-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow-x: auto;
+  gap: 8px;
+  padding: 8px 12px;
+  scroll-behavior: smooth;
+}
+.carousel-arrow {
+  font-size: 1.5em;
+  color: #ffa500;
+  cursor: pointer;
+  user-select: none;
+  margin: 0 8px;
+}
+.carousel-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #192039;
+  border-radius: 8px;
+  min-width: 160px;
+  height: 120px;
+  text-decoration: none;
+  color: #ececec;
+  border: 2px solid transparent;
+  transition: all 0.2s;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.carousel-card:hover {
+  background: #253a5a;
+  border-color: #ffa500;
+  transform: translateY(-2px);
+}
+.carousel-card.selected {
+  background: #ffa500;
+  color: #222;
+}
+.carousel-card img {
+  width: 100%;
+  height: 70%;
+  object-fit: cover;
+  border-radius: 8px 8px 0 0;
+}
+.carousel-card-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+  height: 30%;
+  padding: 4px 6px;
+}
+.carousel-card-title {
+  font-size: 0.8em;
+  font-weight: 600;
+}
+.carousel-card-text {
+  font-size: 0.65em;
+  opacity: 0.85;
+}
 
 /* Desktop Controls */
-.left-controls-stack { position: fixed; left: 16px; bottom: 50px; z-index: 10; display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
-.navigation-controls { background: #252f39ea; border-radius: 12px; padding: 14px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.12); }
-.nav-row { display: flex; gap: 8px; margin: 4px 0; }
-.nav-btn { width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; background: #223366; color: #fff; border-radius: 7px; font-size: 1.25em; cursor: pointer; border: none; }
-.nav-btn:hover { background: #ffa500; color: #222; }
-.nav-btn.active { background: #ffa500 !important; color: #222 !important; }
-.control-buttons { position: fixed; bottom: 50px; right: 18px; display: flex; flex-direction: column; gap: 6px; z-index: 10; }
-.control-buttons button { background: #22356a; color: #eee; border: none; border-radius: 7px; padding: 4px 10px; font-size: 0.85em; cursor: pointer; white-space: nowrap; }
-.control-buttons button:hover { background: #ffa500; color: #222; }
+.left-controls-stack {
+  position: fixed;
+  left: 16px;
+  bottom: 50px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+.navigation-controls {
+  background: #252f39ea;
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.12);
+}
+.nav-row {
+  display: flex;
+  gap: 8px;
+  margin: 4px 0;
+}
+.nav-btn {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #223366;
+  color: #fff;
+  border-radius: 7px;
+  font-size: 1.25em;
+  cursor: pointer;
+  border: none;
+}
+.nav-btn:hover {
+  background: #ffa500;
+  color: #222;
+}
+.nav-btn.active, button[data-active="true"] {
+  background: #ffa500 !important;
+  color: #222 !important;
+  box-shadow: 0 0 8px rgba(255,165,0,0.6);
+  transform: scale(1.05);
+}
+.control-buttons {
+  position: fixed;
+  bottom: 50px;
+  right: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 10;
+}
+.control-buttons button {
+  background: #22356a;
+  color: #eee;
+  border: none;
+  border-radius: 7px;
+  padding: 4px 10px;
+  font-size: 0.85em;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.control-buttons button:hover {
+  background: #ffa500;
+  color: #222;
+}
 
 /* Hide "Globe is active" text and style button */
-#scrollLockInstruction { display: none !important; }
-.scroll-lock-ui { display: flex; align-items: center; }
-#scrollLockBtn { background: #ffa500; color: #222; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; padding: 5px 18px; margin: 0; }
+#scrollLockInstruction {
+  display: none !important;
+}
+.scroll-lock-ui {
+  display: flex;
+  align-items: center;
+}
+#scrollLockBtn {
+  background: #ffa500;
+  color: #222;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 5px 18px;
+  margin: 0;
+}
 
-/* Globe & Info Panel */
-#globe-canvas { position: absolute; top: 58px; left: 0; width: 100vw; height: calc(100vh - 120px); z-index: 2; }
-.info-panel-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(16, 25, 36, 0.78); display: none; align-items: center; justify-content: center; z-index: 99; }
-.info-panel { background: #22356a; border-radius: 16px; padding: 34px 38px 22px 38px; min-width: 380px; position: relative; }
+/* Globe, Info Panel, and other styles */
+#globe-canvas {
+  position: absolute;
+  top: 58px;
+  left: 0;
+  width: 100vw;
+  height: calc(100vh - 120px);
+  z-index: 2;
+}
+.info-panel-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(16, 25, 36, 0.78);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 99;
+}
+.info-panel {
+  background: #22356a;
+  border-radius: 16px;
+  padding: 34px 38px 22px 38px;
+  min-width: 380px;
+  position: relative;
+}
+.apply-cube {
+  box-shadow: 0 0 24px 6px #ffa500;
+  border: 3px solid #ffa500;
+}
+.placeholder-cube {
+  background: linear-gradient(120deg, #2a2a2a 64%, #444444 100%);
+  border: 2px solid #444;
+}
 
 /* === MOBILE RESPONSIVE (< 768px) === */
 @media (max-width: 768px) {
-  /* Reposition and restyle the desktop controls for mobile */
+  /* Carousel mobile scaling */
+  .carousel-container {
+    padding: 4px 8px; /* Reduce padding */
+    gap: 6px; /* Smaller gaps between cards */
+  }
+  
+  .carousel-card {
+    min-width: 140px; /* Slightly smaller than desktop 160px */
+    max-width: 140px;
+    height: 100px; /* Reduced from 120px */
+    padding: 0;
+  }
+  
+  .carousel-card img {
+    height: 65%; /* Adjust image proportion */
+  }
+  
+  .carousel-card-content {
+    height: 35%;
+    padding: 2px 4px; /* Tighter padding */
+  }
+  
+  .carousel-card-title {
+    font-size: 0.7em; /* Smaller text */
+    line-height: 1.1;
+  }
+  
+  .carousel-card-text {
+    font-size: 0.6em; /* Smaller subtext */
+    line-height: 1.0;
+  }
+  
+  /* Carousel arrows scaling */
+  .carousel-arrow {
+    font-size: 1.2em; /* Smaller arrows */
+    margin: 0 4px; /* Less margin */
+  }
+
+  /* Top Row of Icon Controls */
   .control-buttons {
     display: flex;
-    flex-direction: row; /* Make it a horizontal row */
+    flex-direction: row;
     justify-content: center;
     gap: 6px;
     position: fixed;
-    bottom: 85px; /* Position it above the main nav controls */
+    bottom: 85px;
     left: 50%;
     transform: translateX(-50%);
     background: rgba(37, 47, 57, 0.3);
@@ -57,32 +280,88 @@ body {
     padding: 6px 10px;
     border-radius: 8px;
     z-index: 10;
-    max-height: none; /* Override desktop height limit */
+    max-height: none;
   }
   .control-buttons button {
     width: 36px; height: 36px;
     padding: 0;
-    font-size: 0; /* Hide original button text */
+    font-size: 0;
     position: relative;
     white-space: normal;
+    background: #22356a;
+    border-radius: 6px;
+    overflow: hidden; /* required for arc clipping */
   }
-  .control-buttons button:hover { background: #ffa500; color: #222; }
+  .control-buttons button:hover {
+    background: #ffa500;
+  }
 
-  /* Add Icons using ::before pseudo-elements */
+  /* Mobile icon glyphs */
   .control-buttons button::before {
-    font-size: 1.2rem; /* Icon size */
+    font-size: 1.2rem;
     color: #eee;
     font-family: 'Segoe UI', Arial, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
   }
   .control-buttons button:hover::before {
     color: #222;
   }
-
   #pauseButton::before { content: '⏸'; }
-  #toggleNodesButton::before { content: '👁️'; }
+  #toggleNodesButton::before { content: '⚛️'; }
   #toggleMeshButton::before { content: '🌐'; }
-  #arcToggleBtn::before { content: '🌈'; }
   #pauseCubesButton::before { content: '🧊'; }
+
+  /* Perfect horseshoe rainbow bow - RED ON TOP (outermost) */
+  #arcToggleBtn {
+    position: relative;
+    overflow: hidden; /* Essential for clipping into bow shape */
+  }
+
+  #arcToggleBtn::before {
+    content: '';
+    position: absolute;
+    top: 100%; /* Bottom edge position for bow shape */
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: transparent;
+    border: 2px solid transparent;
+    
+    /* REVERSED: RED (top/outermost) to VIOLET (innermost) */
+    box-shadow:
+        0 0 0 0px transparent,
+        0 0 0 14px #ff0000,   /* Red - TOP/OUTERMOST (biggest arc) */
+        0 0 0 12px #ffa500,   /* Orange */
+        0 0 0 10px #ffff00,   /* Yellow */
+        0 0 0 8px #008000,    /* Green */
+        0 0 0 6px #0000ff,    /* Blue */
+        0 0 0 4px #4b0082,    /* Indigo */
+        0 0 0 2px #ee82ee,    /* Violet - INNERMOST (smallest arc) */
+        
+        /* Enhanced glows for red (outer) and violet (inner) */
+        0 0 12px 14px #ff0000,  /* Red glow on outermost band */
+        0 0 15px 2px #ee82ee;   /* Violet glow on innermost band */
+  }
+
+  #arcToggleBtn:hover::before {
+    box-shadow:
+        0 0 0 0px transparent,
+        0 0 0 14px #ff0000,   /* Red - outermost */
+        0 0 0 12px #ffa500,   /* Orange */
+        0 0 0 10px #ffff00,   /* Yellow */
+        0 0 0 8px #008000,    /* Green */
+        0 0 0 6px #0000ff,    /* Blue */
+        0 0 0 4px #4b0082,    /* Indigo */
+        0 0 0 2px #ee82ee,    /* Violet - innermost */
+        /* Maximum glows on hover */
+        0 0 20px 14px #ff0000,  /* Maximum red glow */
+        0 0 25px 2px #ee82ee;   /* Maximum violet glow */
+  }
 
   /* Bottom Row (Nav + Scroll Lock) */
   .left-controls-stack {
@@ -97,9 +376,22 @@ body {
     border-radius: 8px;
     padding: 6px;
   }
-  .navigation-controls { padding: 0; margin: 0; background: transparent; box-shadow: none; display: flex; gap: 4px; order: 1; }
-  .scroll-lock-ui { order: 2; }
-  .nav-btn { width: 34px; height: 34px; font-size: 1.1em; border-radius: 6px; }
+  .navigation-controls {
+    padding: 0; margin: 0;
+    background: transparent;
+    box-shadow: none;
+    display: flex;
+    gap: 4px;
+    order: 1;
+  }
+  .scroll-lock-ui {
+    order: 2;
+  }
+  .nav-btn {
+    width: 34px; height: 34px;
+    font-size: 1.1em;
+    border-radius: 6px;
+  }
 
   /* Rectangular scroll button */
   #scrollLockBtn {
@@ -108,13 +400,35 @@ body {
     border-radius: 6px !important; display: inline-flex !important;
     align-items: center !important; justify-content: center !important;
   }
-
-  #globe-canvas { height: calc(100vh - 175px); }
+  #globe-canvas {
+    height: calc(100vh - 175px);
+  }
 }
 
 @media (max-width: 480px) {
+  /* Even smaller carousel cards for phones */
+  .carousel-card {
+    min-width: 120px; /* Further reduced */
+    max-width: 120px;
+    height: 90px;
+  }
+  
+  .carousel-card-title {
+    font-size: 0.65em;
+  }
+  
+  .carousel-card-text {
+    font-size: 0.55em;
+  }
+  
+  .carousel-arrow {
+    font-size: 1em;
+  }
+
+  /* Controls scaling */
   .nav-btn { width: 32px !important; height: 32px !important; }
   #scrollLockBtn { width: 80px !important; height: 32px !important; font-size: 0.7em !important; }
   .control-buttons button { width: 32px; height: 32px; }
   .control-buttons button::before { font-size: 1rem; }
+  #arcToggleBtn::before { transform: translate(-50%, -50%) scale(0.8); }
 }
