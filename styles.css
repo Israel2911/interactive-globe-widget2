@@ -1,3 +1,5 @@
+
+
 body {
   margin: 0;
   font-family: 'Segoe UI', Arial, sans-serif;
@@ -252,13 +254,13 @@ body {
     white-space: normal;
     background: #22356a;
     border-radius: 6px;
-    overflow: hidden;
+    overflow: hidden; /* required for arc clipping */
   }
   .control-buttons button:hover {
     background: #ffa500;
   }
 
-  /* Add Icons using ::before pseudo-elements */
+  /* Mobile icon glyphs */
   .control-buttons button::before {
     font-size: 1.2rem;
     color: #eee;
@@ -276,20 +278,23 @@ body {
   #toggleMeshButton::before { content: '🌐'; }
   #pauseCubesButton::before { content: '🧊'; }
 
-  /* *** FINAL: Glowing Concentric Rainbow Arc Icon *** */
+  /* Concentric 7‑color rainbow bow with glow on V, I, and stronger outer Red */
+  #arcToggleBtn {
+    position: relative; /* ensure ::before is positioned correctly */
+    overflow: hidden;   /* clip circle into a bow */
+  }
   #arcToggleBtn::before {
       content: '';
       position: absolute;
-      top: 100%;
+      top: 100%;                 /* sit on bottom edge of button */
       left: 50%;
       transform: translate(-50%, -50%);
       width: 1px;
       height: 1px;
       background: transparent;
       border-radius: 50%;
-      /* VIBGYOR from inside-out, with glows on V, I, and R */
       box-shadow:
-          /* Solid Rings */
+          /* V I B G Y O R (inner → outer) */
           0 0 0 2px #ee82ee,   /* Violet */
           0 0 0 4px #4b0082,   /* Indigo */
           0 0 0 6px #0000ff,   /* Blue */
@@ -297,15 +302,14 @@ body {
           0 0 0 10px #ffff00,  /* Yellow */
           0 0 0 12px #ffa500,  /* Orange */
           0 0 0 14px #ff0000,  /* Red */
-          /* Glows layered underneath */
-          0 0 8px 2px #ee82ee,  /* Violet Glow */
-          0 0 12px 4px #4b0082, /* Indigo Glow */
-          0 0 20px 14px #ff0000; /* Red Glow */
+          /* Glows */
+          0 0 8px 2px #ee82ee,   /* Violet glow */
+          0 0 12px 4px #4b0082,  /* Indigo glow */
+          0 0 20px 14px #ff0000; /* Red glow */
   }
   #arcToggleBtn:hover::before {
       opacity: 0.85;
   }
-
 
   /* Bottom Row (Nav + Scroll Lock) */
   .left-controls-stack {
@@ -356,3 +360,4 @@ body {
   .control-buttons button::before { font-size: 1rem; }
   #arcToggleBtn::before { transform: translate(-50%, -50%) scale(0.8); }
 }
+
