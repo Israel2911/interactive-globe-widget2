@@ -247,12 +247,11 @@ body {
   .control-buttons button {
     width: 36px; height: 36px;
     padding: 0;
-    font-size: 0; /* Hide original button text */
+    font-size: 0;
     position: relative;
     white-space: normal;
     background: #22356a;
     border-radius: 6px;
-    overflow: hidden; /* Important for the bow icon */
   }
   .control-buttons button:hover {
     background: #ffa500;
@@ -276,22 +275,16 @@ body {
   #toggleMeshButton::before { content: '🌐'; }
   #pauseCubesButton::before { content: '🧊'; }
 
-  /* *** FINAL: True Rainbow Bow Icon *** */
+  /* *** FINAL: Rainbow Bow Icon *** */
   #arcToggleBtn::before {
-    content: "";
-    position: absolute;
-    left: 50%;
-    top: 6px; /* Position the ring to show the top arc */
-    width: 30px;
-    height: 30px;
-    transform: translateX(-50%);
-    border-radius: 50%;
-    padding: 4px; /* Controls the thickness of the rainbow */
-    background: conic-gradient(from 180deg, red, orange, yellow, green, blue, indigo, violet, red);
-    /* This masks the center to create a ring */
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
+    content: '';
+    display: block;
+    width: 24px;
+    height: 12px;
+    margin: 8px auto 0;
+    border-top-left-radius: 24px;
+    border-top-right-radius: 24px;
+    background: linear-gradient(to right, #ff0000, #ffa500, #ffff00, #008000, #0000ff, #4b0082, #ee82ee);
   }
   #arcToggleBtn:hover::before {
     opacity: 0.8;
@@ -344,5 +337,5 @@ body {
   #scrollLockBtn { width: 80px !important; height: 32px !important; font-size: 0.7em !important; }
   .control-buttons button { width: 32px; height: 32px; }
   .control-buttons button::before { font-size: 1rem; }
-  #arcToggleBtn::before { top: 5px; width: 26px; height: 26px; }
+  #arcToggleBtn::before { width: 20px; height: 10px; border-top-left-radius: 20px; border-top-right-radius: 20px; }
 }
