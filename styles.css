@@ -252,6 +252,7 @@ body {
     white-space: normal;
     background: #22356a;
     border-radius: 6px;
+    overflow: hidden; /* Important for the bow icon */
   }
   .control-buttons button:hover {
     background: #ffa500;
@@ -275,32 +276,26 @@ body {
   #toggleMeshButton::before { content: '🌐'; }
   #pauseCubesButton::before { content: '🧊'; }
 
-  /* *** NEW: Rainbow Bow Icon *** */
-  #arcToggleBtn {
-      overflow: hidden; /* Hide the parts of the gradient outside the bow */
-  }
+  /* *** FINAL: True Rainbow Bow Icon *** */
   #arcToggleBtn::before {
-      content: '';
-      box-sizing: border-box;
-      display: block;
-      width: 24px; /* Slightly wider for the bow shape */
-      height: 12px; /* Half the width to make a semi-circle */
-      border-top-left-radius: 12px; /* Create the arc */
-      border-top-right-radius: 12px;
-      border: 4px solid transparent; /* The thickness of the rainbow bands */
-      background:
-          linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet) border-box;
-      -webkit-mask:
-          linear-gradient(#fff 0 0) padding-box,
-          linear-gradient(#fff 0 0);
-      -webkit-mask-composite: destination-out;
-      mask-composite: exclude;
-      margin: auto;
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 6px; /* Position the ring to show the top arc */
+    width: 30px;
+    height: 30px;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    padding: 4px; /* Controls the thickness of the rainbow */
+    background: conic-gradient(from 180deg, red, orange, yellow, green, blue, indigo, violet, red);
+    /* This masks the center to create a ring */
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
   }
   #arcToggleBtn:hover::before {
-      opacity: 0.8;
+    opacity: 0.8;
   }
-
 
   /* Bottom Row (Nav + Scroll Lock) */
   .left-controls-stack {
@@ -349,5 +344,5 @@ body {
   #scrollLockBtn { width: 80px !important; height: 32px !important; font-size: 0.7em !important; }
   .control-buttons button { width: 32px; height: 32px; }
   .control-buttons button::before { font-size: 1rem; }
-  #arcToggleBtn::before { width: 20px; height: 10px; border-radius: 10px; border-width: 3px; }
+  #arcToggleBtn::before { top: 5px; width: 26px; height: 26px; }
 }
