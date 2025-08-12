@@ -5,44 +5,229 @@ body {
   color: #ececec;
 }
 
-/* Header, Footer, and Carousel Styles */
-.header-ui-bar { background: transparent; color: #fff; padding: 10px 0; text-align: center; font-weight: 500; }
-.footer-ui-bar { background: #003366; position: fixed; width: 100%; bottom: 0; left: 0; font-size: 14px; text-align: center; padding: 8px 0; z-index: 5; }
-.carousel-wrapper { display: flex; align-items: center; justify-content: center; margin: 0 auto; max-width: 1200px; padding: 0 10px; box-sizing: border-box; }
-.carousel-container { flex: 1; display: flex; justify-content: center; align-items: center; overflow-x: auto; gap: 8px; padding: 8px 12px; scroll-behavior: smooth; }
-.carousel-arrow { font-size: 1.5em; color: #ffa500; cursor: pointer; user-select: none; margin: 0 8px; }
-.carousel-card { display: flex; flex-direction: column; align-items: center; justify-content: center; background: #192039; border-radius: 8px; min-width: 160px; height: 120px; text-decoration: none; color: #ececec; border: 2px solid transparent; transition: all 0.2s; cursor: pointer; flex-shrink: 0; }
-.carousel-card:hover { background: #253a5a; border-color: #ffa500; transform: translateY(-2px); }
-.carousel-card.selected { background: #ffa500; color: #222; }
-.carousel-card img { width: 100%; height: 70%; object-fit: cover; border-radius: 8px 8px 0 0; }
-.carousel-card-content { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; width: 100%; height: 30%; padding: 4px 6px; }
-.carousel-card-title { font-size: 0.8em; font-weight: 600; }
-.carousel-card-text { font-size: 0.65em; opacity: 0.85; }
+/* Header and Footer */
+.header-ui-bar {
+  background: transparent;
+  color: #fff;
+  padding: 10px 0;
+  text-align: center;
+  font-weight: 500;
+}
+.footer-ui-bar {
+  background: #003366;
+  position: fixed;
+  width: 100%;
+  bottom: 0;
+  left: 0;
+  font-size: 14px;
+  text-align: center;
+  padding: 8px 0;
+  z-index: 5;
+}
+
+/* Carousel Styles */
+.carousel-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  max-width: 1200px;
+  padding: 0 10px;
+  box-sizing: border-box;
+}
+.carousel-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow-x: auto;
+  gap: 8px;
+  padding: 8px 12px;
+  scroll-behavior: smooth;
+}
+.carousel-arrow {
+  font-size: 1.5em;
+  color: #ffa500;
+  cursor: pointer;
+  user-select: none;
+  margin: 0 8px;
+}
+.carousel-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #192039;
+  border-radius: 8px;
+  min-width: 160px;
+  height: 120px;
+  text-decoration: none;
+  color: #ececec;
+  border: 2px solid transparent;
+  transition: all 0.2s;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.carousel-card:hover {
+  background: #253a5a;
+  border-color: #ffa500;
+  transform: translateY(-2px);
+}
+.carousel-card.selected {
+  background: #ffa500;
+  color: #222;
+}
+.carousel-card img {
+  width: 100%;
+  height: 70%;
+  object-fit: cover;
+  border-radius: 8px 8px 0 0;
+}
+.carousel-card-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+  height: 30%;
+  padding: 4px 6px;
+}
+.carousel-card-title {
+  font-size: 0.8em;
+  font-weight: 600;
+}
+.carousel-card-text {
+  font-size: 0.65em;
+  opacity: 0.85;
+}
 
 /* Desktop Controls */
-.left-controls-stack { position: fixed; left: 16px; bottom: 50px; z-index: 10; display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
-.navigation-controls { background: #252f39ea; border-radius: 12px; padding: 14px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.12); }
-.nav-row { display: flex; gap: 8px; margin: 4px 0; }
-.nav-btn { width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; background: #223366; color: #fff; border-radius: 7px; font-size: 1.25em; cursor: pointer; border: none; }
-.nav-btn:hover { background: #ffa500; color: #222; }
-.nav-btn.active { background: #ffa500 !important; color: #222 !important; }
-.control-buttons { position: fixed; bottom: 50px; right: 18px; display: flex; flex-direction: column; gap: 6px; z-index: 10; }
-.control-buttons button { background: #22356a; color: #eee; border: none; border-radius: 7px; padding: 4px 10px; font-size: 0.85em; cursor: pointer; white-space: nowrap; }
-.control-buttons button:hover { background: #ffa500; color: #222; }
+.left-controls-stack {
+  position: fixed;
+  left: 16px;
+  bottom: 50px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+.navigation-controls {
+  background: #252f39ea;
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.12);
+}
+.nav-row {
+  display: flex;
+  gap: 8px;
+  margin: 4px 0;
+}
+.nav-btn {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #223366;
+  color: #fff;
+  border-radius: 7px;
+  font-size: 1.25em;
+  cursor: pointer;
+  border: none;
+}
+.nav-btn:hover {
+  background: #ffa500;
+  color: #222;
+}
+.nav-btn.active, button[data-active="true"] {
+  background: #ffa500 !important;
+  color: #222 !important;
+  box-shadow: 0 0 8px rgba(255,165,0,0.6);
+  transform: scale(1.05);
+}
+.control-buttons {
+  position: fixed;
+  bottom: 50px;
+  right: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 10;
+}
+.control-buttons button {
+  background: #22356a;
+  color: #eee;
+  border: none;
+  border-radius: 7px;
+  padding: 4px 10px;
+  font-size: 0.85em;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.control-buttons button:hover {
+  background: #ffa500;
+  color: #222;
+}
 
 /* Hide "Globe is active" text and style button */
-#scrollLockInstruction { display: none !important; }
-.scroll-lock-ui { display: flex; align-items: center; }
-#scrollLockBtn { background: #ffa500; color: #222; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; padding: 5px 18px; margin: 0; }
+#scrollLockInstruction {
+  display: none !important;
+}
+.scroll-lock-ui {
+  display: flex;
+  align-items: center;
+}
+#scrollLockBtn {
+  background: #ffa500;
+  color: #222;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 5px 18px;
+  margin: 0;
+}
 
-/* Globe & Info Panel */
-#globe-canvas { position: absolute; top: 58px; left: 0; width: 100vw; height: calc(100vh - 120px); z-index: 2; }
-.info-panel-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(16, 25, 36, 0.78); display: none; align-items: center; justify-content: center; z-index: 99; }
-.info-panel { background: #22356a; border-radius: 16px; padding: 34px 38px 22px 38px; min-width: 380px; position: relative; }
+/* Globe, Info Panel, and other styles */
+#globe-canvas {
+  position: absolute;
+  top: 58px;
+  left: 0;
+  width: 100vw;
+  height: calc(100vh - 120px);
+  z-index: 2;
+}
+.info-panel-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(16, 25, 36, 0.78);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 99;
+}
+.info-panel {
+  background: #22356a;
+  border-radius: 16px;
+  padding: 34px 38px 22px 38px;
+  min-width: 380px;
+  position: relative;
+}
+.apply-cube {
+  box-shadow: 0 0 24px 6px #ffa500;
+  border: 3px solid #ffa500;
+}
+.placeholder-cube {
+  background: linear-gradient(120deg, #2a2a2a 64%, #444444 100%);
+  border: 2px solid #444;
+}
 
 /* === MOBILE RESPONSIVE (< 768px) === */
 @media (max-width: 768px) {
-  /* Reposition and restyle the desktop controls for mobile */
+  /* Top Row of Icon Controls */
   .control-buttons {
     display: flex;
     flex-direction: row;
@@ -68,7 +253,9 @@ body {
     background: #22356a;
     border-radius: 6px;
   }
-  .control-buttons button:hover { background: #ffa500; }
+  .control-buttons button:hover {
+    background: #ffa500;
+  }
 
   /* Add Icons using ::before pseudo-elements */
   .control-buttons button::before {
@@ -81,13 +268,10 @@ body {
   .control-buttons button:hover::before {
     color: #222;
   }
-
   #pauseButton::before { content: '⏸'; }
-  #toggleNodesButton::before { content: '⚛️'; } /* <<< UPDATED ICON */
+  #toggleNodesButton::before { content: '⚛️'; }
   #toggleMeshButton::before { content: '🌐'; }
   #pauseCubesButton::before { content: '🧊'; }
-
-  /* Custom Rainbow Icon */
   #arcToggleBtn::before {
     content: '';
     display: block;
@@ -114,9 +298,22 @@ body {
     border-radius: 8px;
     padding: 6px;
   }
-  .navigation-controls { padding: 0; margin: 0; background: transparent; box-shadow: none; display: flex; gap: 4px; order: 1; }
-  .scroll-lock-ui { order: 2; }
-  .nav-btn { width: 34px; height: 34px; font-size: 1.1em; border-radius: 6px; }
+  .navigation-controls {
+    padding: 0; margin: 0;
+    background: transparent;
+    box-shadow: none;
+    display: flex;
+    gap: 4px;
+    order: 1;
+  }
+  .scroll-lock-ui {
+    order: 2;
+  }
+  .nav-btn {
+    width: 34px; height: 34px;
+    font-size: 1.1em;
+    border-radius: 6px;
+  }
 
   /* Rectangular scroll button */
   #scrollLockBtn {
@@ -125,8 +322,9 @@ body {
     border-radius: 6px !important; display: inline-flex !important;
     align-items: center !important; justify-content: center !important;
   }
-
-  #globe-canvas { height: calc(100vh - 175px); }
+  #globe-canvas {
+    height: calc(100vh - 175px);
+  }
 }
 
 @media (max-width: 480px) {
