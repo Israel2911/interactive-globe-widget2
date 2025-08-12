@@ -14,6 +14,7 @@ body {
   font-weight: 500;
 }
 
+/* **UPDATED: Centered Footer** */
 .footer-ui-bar {
   background: #003366; /* KEEP FOOTER BLUE */
   position: fixed;
@@ -21,9 +22,11 @@ body {
   bottom: 0;
   left: 0;
   font-size: 14px;
+  text-align: center; /* CENTER THE FOOTER TEXT */
+  padding: 8px 0; /* Add some padding for better spacing */
 }
 
-/* Updated Carousel Styles - BROADER CARDS WITH REDUCED SPACING */
+/* **UPDATED: Centered Carousel Styles** */
 .carousel-wrapper {
   display: flex;
   align-items: center;
@@ -31,9 +34,10 @@ body {
   background: transparent;
   border: none;
   border-radius: 0;
-  margin: 0 14px;
-  padding: 8px 6px; /* Reduced padding */
+  margin: 0 auto; /* CENTER THE WRAPPER */
+  padding: 8px 6px;
   box-shadow: none;
+  max-width: 1200px; /* LIMIT MAX WIDTH FOR BETTER CENTERING */
 }
 
 .carousel-arrow {
@@ -51,18 +55,20 @@ body {
   color: #ff6600;
 }
 
+/* **UPDATED: Better Centered Carousel Container** */
 .carousel-container {
   flex: 1;
   display: flex;
-  justify-content: center;
+  justify-content: center; /* CENTER THE CARDS */
   align-items: center;
   overflow-x: auto;
-  gap: 6px; /* REDUCED GAP from 12px to 6px */
-  padding: 6px 0; /* Reduced padding */
+  gap: 8px; /* SLIGHTLY INCREASED GAP FOR BETTER SPACING */
+  padding: 8px 12px; /* INCREASED PADDING FOR CENTERING */
   scroll-behavior: smooth;
+  max-width: 100%;
 }
 
-/* Much Wider Carousel Cards - Fill More Space */
+/* **UPDATED: Optimized Carousel Cards for Landscape** */
 .carousel-card {
   display: flex;
   flex-direction: column;
@@ -71,10 +77,10 @@ body {
   background: #192039;
   border-radius: 8px;
   padding: 0;
-  margin: 0 auto;
-  min-width: 180px; /* INCREASED from 140px to 180px */
-  max-width: 180px; /* INCREASED from 140px to 180px */
-  height: 130px; /* Slightly taller for better proportions */
+  margin: 0;
+  min-width: 160px; /* OPTIMIZED FOR LANDSCAPE */
+  max-width: 160px;
+  height: 120px; /* SLIGHTLY REDUCED HEIGHT FOR LANDSCAPE */
   text-decoration: none;
   color: #ececec;
   border: 2px solid transparent;
@@ -101,10 +107,10 @@ body {
   box-shadow: 0 4px 15px rgba(255,165,0,0.4);
 }
 
-/* Adjusted image for wider cards */
+/* Adjusted image for landscape cards */
 .carousel-card img {
   width: 100%;
-  height: 75%; /* INCREASED from 70% to 75% for better image coverage */
+  height: 70%; /* ADJUSTED FOR LANDSCAPE */
   object-fit: cover;
   object-position: center;
   border-radius: 8px 8px 0 0;
@@ -113,7 +119,7 @@ body {
   display: block;
 }
 
-/* Adjusted content area for wider cards */
+/* Adjusted content area for landscape cards */
 .carousel-card-content {
   display: flex;
   flex-direction: column;
@@ -121,13 +127,13 @@ body {
   align-items: center;
   text-align: center;
   width: 100%;
-  height: 25%; /* REDUCED from 30% to 25% */
-  padding: 4px 6px; /* Optimized padding for wider cards */
+  height: 30%; /* ADJUSTED FOR LANDSCAPE */
+  padding: 4px 6px;
   margin: 0;
 }
 
 .carousel-card-title {
-  font-size: 0.85em; /* Slightly larger font for wider cards */
+  font-size: 0.8em; /* ADJUSTED FOR LANDSCAPE */
   font-weight: 600;
   margin: 0;
   line-height: 1.0;
@@ -136,7 +142,7 @@ body {
 }
 
 .carousel-card-text {
-  font-size: 0.7em; /* Slightly larger font for wider cards */
+  font-size: 0.65em; /* ADJUSTED FOR LANDSCAPE */
   opacity: 0.85;
   line-height: 1.0;
   margin: 1px 0 0 0;
@@ -161,17 +167,41 @@ body {
   border-radius: 2px;
 }
 
-/* MOVED LEFT CONTROLS TO BOTTOM */
+/* **UPDATED: Reorganized Control Layout - Movement Icons at Bottom** */
 .left-controls-stack {
   position: fixed;
   left: 16px;
-  bottom: 80px;
+  bottom: 50px; /* MOVED UP TO BE ABOVE FOOTER */
   z-index: 3;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  align-items: flex-start;
 }
 
+/* **NEW: Movement Controls Row (Above Footer)** */
+.movement-controls {
+  background: #252f39ea;
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.12);
+  margin-bottom: 8px;
+}
+
+/* **NEW: Other Controls Row (Above Movement Controls)** */
+.other-controls {
+  background: #252f39ea;
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.12);
+  margin-bottom: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-width: 200px;
+}
+
+/* **LEGACY: Keep navigation-controls for backward compatibility** */
 .navigation-controls {
   background: #252f39ea;
   border-radius: 12px;
@@ -194,7 +224,7 @@ body {
   border-radius: 7px;
   font-size: 1.25em;
   cursor: pointer;
-  transition: all 0.2s ease; /* Enhanced transition for all properties */
+  transition: all 0.2s ease;
   border: none;
   box-shadow: 1px 1px 4px #0003;
   user-select: none;
@@ -203,7 +233,7 @@ body {
 .nav-btn:hover {
   background: #ffa500;
   color: #222;
-  transform: translateY(-1px); /* Subtle lift on hover */
+  transform: translateY(-1px);
 }
 
 /* **ENHANCED NAVIGATION BUTTON STATES** */
@@ -218,7 +248,7 @@ body {
   transform: scale(0.95);
 }
 
-/* **INTEGRATED: Fixed Button State Styling for Pan Mode** */
+/* **Pan Mode Button Styling** */
 .pan-mode {
     background: #ffa500 !important;
     color: #222 !important;
@@ -255,7 +285,6 @@ button[data-active="true"]:hover {
     border-color: #ff8c00 !important;
 }
 
-/* **Additional styling for better visual feedback** */
 #btn-pan {
     transition: all 0.3s ease;
 }
@@ -264,7 +293,6 @@ button[data-active="true"]:hover {
     transform: scale(1.05);
 }
 
-/* **Ensure buttons don't lose focus styling** */
 .navigation-button:focus {
     outline: 2px solid #4CAF50 !important;
     outline-offset: 2px;
@@ -274,14 +302,16 @@ button[data-active="true"]:hover {
     transform: translateY(1px);
 }
 
-/* MOVED CONTROL BUTTONS DOWN */
+/* **UPDATED: Right Side Control Buttons (Above Footer)** */
 .control-buttons {
   position: fixed;
-  bottom: 60px;
+  bottom: 50px; /* MOVED UP TO BE ABOVE FOOTER */
   right: 18px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px; /* REDUCED GAP FOR TIGHTER LAYOUT */
+  max-height: 200px; /* LIMIT HEIGHT */
+  overflow-y: auto; /* ALLOW SCROLLING IF NEEDED */
 }
 
 .control-buttons button {
@@ -289,13 +319,14 @@ button[data-active="true"]:hover {
   color: #eee;
   border: none;
   border-radius: 7px;
-  padding: 6px 14px;
-  margin: 2px 0;
-  font-size: 0.9em;
+  padding: 4px 10px; /* REDUCED PADDING FOR TIGHTER LAYOUT */
+  margin: 1px 0; /* REDUCED MARGIN */
+  font-size: 0.85em; /* SLIGHTLY SMALLER FONT */
   font-weight: 500;
   cursor: pointer;
   box-shadow: 0 1px 3px rgba(0,0,0,0.09);
-  transition: all 0.2s ease; /* Enhanced transition */
+  transition: all 0.2s ease;
+  white-space: nowrap; /* PREVENT TEXT WRAPPING */
 }
 
 .control-buttons button:hover {
@@ -482,7 +513,7 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
   cursor: pointer;
 }
 
-/* Mobile Responsiveness - Updated for Wider Cards */
+/* **UPDATED: Mobile Responsiveness for New Layout** */
 @media (max-width: 700px) {
   .header-ui-bar, .footer-ui-bar { font-size: 12px; }
   .info-panel { min-width: 90vw; padding: 14px; }
@@ -493,52 +524,91 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
   }
   
   .carousel-container {
-    gap: 4px; /* Even smaller gap on mobile */
+    gap: 6px;
+    padding: 6px 8px;
   }
   
   .carousel-card {
-    min-width: 150px; /* Wider cards on mobile too */
-    max-width: 150px;
-    height: 110px;
+    min-width: 140px;
+    max-width: 140px;
+    height: 100px;
   }
   
   .carousel-card img {
-    height: 70%;
+    height: 65%;
   }
   
   .carousel-card-content {
-    height: 30%;
+    height: 35%;
     padding: 3px 4px;
   }
   
   .carousel-card-title {
-    font-size: 0.8em;
+    font-size: 0.75em;
   }
   
   .carousel-card-text {
-    font-size: 0.65em;
+    font-size: 0.6em;
   }
   
+  /* **UPDATED: Mobile Control Layout** */
   .left-controls-stack {
-    bottom: 80px;
+    bottom: 45px;
+    left: 8px;
   }
   
   .control-buttons {
-    bottom: 60px;
+    bottom: 45px;
     right: 8px;
+  }
+  
+  .other-controls {
+    max-width: 150px;
+  }
+  
+  .control-buttons button {
+    font-size: 0.8em;
+    padding: 3px 8px;
+  }
+  
+  .nav-btn {
+    width: 30px;
+    height: 30px;
+    font-size: 1.1em;
   }
   
   /* Enhanced mobile button feedback */
   .nav-btn.active {
-    transform: scale(1.03); /* Slightly less scaling on mobile */
+    transform: scale(1.02);
   }
   
-  /* **Mobile pan mode button adjustments** */
   .pan-mode {
-    transform: scale(1.03) !important; /* Slightly less scaling on mobile */
+    transform: scale(1.02) !important;
   }
   
   button[data-active="true"] {
-    transform: scale(1.03) !important;
+    transform: scale(1.02) !important;
+  }
+}
+
+/* **NEW: Landscape Orientation Specific Styles** */
+@media (orientation: landscape) and (max-height: 600px) {
+  .carousel-card {
+    min-width: 150px;
+    max-width: 150px;
+    height: 100px;
+  }
+  
+  .left-controls-stack {
+    bottom: 40px;
+  }
+  
+  .control-buttons {
+    bottom: 40px;
+  }
+  
+  .footer-ui-bar {
+    font-size: 12px;
+    padding: 4px 0;
   }
 }
