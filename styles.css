@@ -252,7 +252,7 @@ body {
     white-space: normal;
     background: #22356a;
     border-radius: 6px;
-    overflow: hidden;
+    overflow: hidden; /* This is essential for the arc effect */
   }
   .control-buttons button:hover {
     background: #ffa500;
@@ -276,23 +276,28 @@ body {
   #toggleMeshButton::before { content: '🌐'; }
   #pauseCubesButton::before { content: '🧊'; }
 
-  /* *** FINAL: Concentric Arc Rainbow Icon *** */
+  /* *** FINAL: Concentric Rainbow Arc Icon *** */
   #arcToggleBtn::before {
       content: '';
       position: absolute;
-      top: 8px;
-      left: 6px;
-      width: 24px;
-      height: 24px;
+      top: 100%; /* Position at the bottom of the button */
+      left: 50%;
+      transform: translate(-50%, -50%); /* Center the element on the bottom edge */
+      
+      width: 1px;
+      height: 1px;
+      background: transparent;
       border-radius: 50%;
+      
+      /* Layered box-shadows to create concentric rings */
       box-shadow:
-          0 0 0 2px #ee82ee, /* Violet */
-          0 0 0 4px #4b0082, /* Indigo */
-          0 0 0 6px #0000ff, /* Blue */
-          0 0 0 8px #008000, /* Green */
-          0 0 0 10px #ffff00, /* Yellow */
-          0 0 0 12px #ffa500, /* Orange */
-          0 0 0 14px #ff0000; /* Red */
+          0 0 0 2px #ff0000,   /* Red */
+          0 0 0 4px #ffa500,   /* Orange */
+          0 0 0 6px #ffff00,   /* Yellow */
+          0 0 0 8px #008000,   /* Green */
+          0 0 0 10px #0000ff,  /* Blue */
+          0 0 0 12px #4b0082,  /* Indigo */
+          0 0 0 14px #ee82ee;  /* Violet */
   }
   #arcToggleBtn:hover::before {
       opacity: 0.85;
@@ -346,5 +351,5 @@ body {
   #scrollLockBtn { width: 80px !important; height: 32px !important; font-size: 0.7em !important; }
   .control-buttons button { width: 32px; height: 32px; }
   .control-buttons button::before { font-size: 1rem; }
-  #arcToggleBtn::before { top: 7px; left: 5px; width: 22px; height: 22px; }
+  #arcToggleBtn::before { transform: translate(-50%, -50%) scale(0.8); } /* Scale down for smaller screens */
 }
