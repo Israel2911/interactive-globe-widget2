@@ -7,765 +7,97 @@ body {
 
 /* Header and Footer */
 .header-ui-bar {
-  background: transparent; /* REMOVE BLUE BACKGROUND */
+  background: transparent;
   color: #fff;
   padding: 10px 0;
   text-align: center;
   font-weight: 500;
 }
 
-/* **UPDATED: Centered Footer** */
 .footer-ui-bar {
-  background: #003366; /* KEEP FOOTER BLUE */
+  background: #003366;
   position: fixed;
   width: 100%;
   bottom: 0;
   left: 0;
   font-size: 14px;
-  text-align: center; /* CENTER THE FOOTER TEXT */
-  padding: 8px 0; /* Add some padding for better spacing */
+  text-align: center;
+  padding: 8px 0;
 }
 
-/* **UPDATED: Centered Carousel Styles** */
-.carousel-wrapper {
-  display: flex;
+/* Carousel / Arrows / Cards — keep your existing styles */
+.carousel-wrapper { display: flex; align-items: center; justify-content: center; background: transparent; margin: 0 auto; padding: 8px 6px; max-width: 1200px; }
+.carousel-arrow { font-size: 1.5em; color: #ffa500; cursor: pointer; min-width: 30px; text-align: center; }
+.carousel-arrow:hover { color: #ff6600; }
+.carousel-container { flex: 1; display: flex; justify-content: center; align-items: center; overflow-x: auto; gap: 8px; padding: 8px 12px; scroll-behavior: smooth; }
+.carousel-card { display: flex; flex-direction: column; align-items: center; justify-content: center; background: #192039; border-radius: 8px; min-width: 160px; max-width: 160px; height: 120px; text-decoration: none; color: #ececec; }
+.carousel-card:hover { background: #253a5a; border-color: #ffa500; transform: translateY(-2px); }
+.carousel-card.selected { background: #ffa500; color: #222; border-color: #ff6600; }
+.carousel-card img { width: 100%; height: 70%; object-fit: cover; border-radius: 8px 8px 0 0; }
+.carousel-card-content { height: 30%; padding: 4px 6px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+.carousel-card-title { font-size: 0.8em; font-weight: 600; margin: 0; }
+.carousel-card-text { font-size: 0.65em; opacity: 0.85; margin: 1px 0 0 0; }
+
+/* Left Side Controls */
+.left-controls-stack { position: fixed; left: 16px; bottom: 50px; z-index: 3; display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.navigation-controls { background: #252f39ea; border-radius: 12px; padding: 14px; margin-bottom: 12px; }
+.nav-row { display: flex; gap: 8px; margin: 4px 0; }
+.nav-btn { width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; background: #223366; color: #fff; border-radius: 7px; font-size: 1.25em; cursor: pointer; }
+.nav-btn:hover { background: #ffa500; color: #222; }
+
+/* === HIDE TEXT CONTAINER BUT KEEP BUTTON === */
+.scroll-lock-ui {
+  display: flex !important;
   align-items: center;
   justify-content: center;
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  margin: 0 auto; /* CENTER THE WRAPPER */
-  padding: 8px 6px;
-  box-shadow: none;
-  max-width: 1200px; /* LIMIT MAX WIDTH FOR BETTER CENTERING */
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  gap: 6px;
+}
+#scrollLockInstruction {
+  display: none !important;  /* hide "Globe is active" */
 }
 
-.carousel-arrow {
-  font-size: 1.5em;
-  color: #ffa500;
-  cursor: pointer;
-  user-select: none;
-  margin: 0 8px;
-  transition: color .2s;
-  min-width: 30px;
-  text-align: center;
-}
-
-.carousel-arrow:hover {
-  color: #ff6600;
-}
-
-/* **UPDATED: Better Centered Carousel Container** */
-.carousel-container {
-  flex: 1;
-  display: flex;
-  justify-content: center; /* CENTER THE CARDS */
-  align-items: center;
-  overflow-x: auto;
-  gap: 8px; /* SLIGHTLY INCREASED GAP FOR BETTER SPACING */
-  padding: 8px 12px; /* INCREASED PADDING FOR CENTERING */
-  scroll-behavior: smooth;
-  max-width: 100%;
-}
-
-/* **UPDATED: Optimized Carousel Cards for Landscape** */
-.carousel-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: #192039;
-  border-radius: 8px;
-  padding: 0;
-  margin: 0;
-  min-width: 160px; /* OPTIMIZED FOR LANDSCAPE */
-  max-width: 160px;
-  height: 120px; /* SLIGHTLY REDUCED HEIGHT FOR LANDSCAPE */
-  text-decoration: none;
-  color: #ececec;
-  border: 2px solid transparent;
-  transition: all 0.2s;
-  cursor: pointer;
-  flex-shrink: 0;
-  overflow: hidden;
-  position: relative;
-  text-align: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-}
-
-.carousel-card:hover {
-  background: #253a5a;
-  border-color: #ffa500;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255,165,0,0.2);
-}
-
-.carousel-card.selected {
+/* Button Default */
+#scrollLockBtn {
   background: #ffa500;
   color: #222;
-  border-color: #ff6600;
-  box-shadow: 0 4px 15px rgba(255,165,0,0.4);
-}
-
-/* Adjusted image for landscape cards */
-.carousel-card img {
-  width: 100%;
-  height: 70%; /* ADJUSTED FOR LANDSCAPE */
-  object-fit: cover;
-  object-position: center;
-  border-radius: 8px 8px 0 0;
-  margin: 0;
-  padding: 0;
-  display: block;
-}
-
-/* Adjusted content area for landscape cards */
-.carousel-card-content {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  width: 100%;
-  height: 30%; /* ADJUSTED FOR LANDSCAPE */
-  padding: 4px 6px;
-  margin: 0;
-}
-
-.carousel-card-title {
-  font-size: 0.8em; /* ADJUSTED FOR LANDSCAPE */
+  border: none;
+  border-radius: 6px;
+  padding: 0 8px;
+  height: 32px;
+  font-size: 0.75em;
   font-weight: 600;
-  margin: 0;
-  line-height: 1.0;
-  text-align: center;
-  color: inherit;
-}
-
-.carousel-card-text {
-  font-size: 0.65em; /* ADJUSTED FOR LANDSCAPE */
-  opacity: 0.85;
-  line-height: 1.0;
-  margin: 1px 0 0 0;
-  text-align: center;
-  max-height: 2em;
-  overflow: hidden;
-  color: inherit;
-}
-
-/* Hide scrollbar but keep functionality */
-.carousel-container::-webkit-scrollbar {
-  height: 4px;
-}
-
-.carousel-container::-webkit-scrollbar-track {
-  background: rgba(255,255,255,0.1);
-  border-radius: 2px;
-}
-
-.carousel-container::-webkit-scrollbar-thumb {
-  background: #ffa500;
-  border-radius: 2px;
-}
-
-/* **IMPROVED: Left Side Controls - Better Organization** */
-.left-controls-stack {
-  position: fixed;
-  left: 16px;
-  bottom: 50px; /* MOVED UP TO BE ABOVE FOOTER */
-  z-index: 3;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  align-items: flex-start;
-}
-
-/* **IMPROVED: Movement Controls Group (Arrows, Pan, Zoom)** */
-.movement-controls {
-  background: #252f39ea;
-  border-radius: 12px;
-  padding: 12px;
-  box-shadow: 0 1px 4px rgba(0,0,0,.12);
-  margin-bottom: 8px;
-  order: 2; /* APPEARS AT BOTTOM */
-}
-
-/* **IMPROVED: Other Controls Group (Pause, Toggle, etc.)** */
-.other-controls {
-  background: #252f39ea;
-  border-radius: 12px;
-  padding: 12px;
-  box-shadow: 0 1px 4px rgba(0,0,0,.12);
-  margin-bottom: 8px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  max-width: 200px;
-  order: 1; /* APPEARS AT TOP */
-}
-
-/* **LEGACY: Keep navigation-controls for backward compatibility** */
-.navigation-controls {
-  background: #252f39ea;
-  border-radius: 12px;
-  padding: 14px;
-  margin-bottom: 12px;
-  box-shadow: 0 1px 4px rgba(0,0,0,.12);
-  order: 2; /* MOVEMENT CONTROLS */
-}
-
-.nav-row {
-  display: flex;
-  gap: 8px;
-  margin: 4px 0;
-}
-
-.nav-btn {
-  width: 34px; height: 34px;
-  display: flex; align-items: center; justify-content: center;
-  background: #223366;
-  color: #fff;
-  border-radius: 7px;
-  font-size: 1.25em;
   cursor: pointer;
-  transition: all 0.2s ease;
-  border: none;
-  box-shadow: 1px 1px 4px #0003;
-  user-select: none;
+  white-space: nowrap;
 }
 
-.nav-btn:hover {
-  background: #ffa500;
-  color: #222;
-  transform: translateY(-1px);
-}
-
-/* **ENHANCED NAVIGATION BUTTON STATES** */
-.nav-btn.active {
-  background: #ffa500 !important;
-  color: #222 !important;
-  box-shadow: 0 0 8px rgba(255,165,0,0.6);
-  transform: scale(1.05);
-}
-
-.nav-btn:active {
-  transform: scale(0.95);
-}
-
-/* **Pan Mode Button Styling** */
-.pan-mode {
-    background: #ffa500 !important;
-    color: #222 !important;
-    outline: 2px solid #ffa500 !important;
-    box-shadow: 0 0 10px rgba(255, 165, 0, 0.5) !important;
-    transform: scale(1.05);
-}
-
-.pan-mode:hover {
-    background: #ff8c00 !important;
-    box-shadow: 0 0 15px rgba(255, 165, 0, 0.7) !important;
-}
-
-.pan-mode:focus {
-    background: #ffa500 !important;
-    outline: 2px solid #ffa500 !important;
-}
-
-button[data-active="true"] {
-    background: #ffa500 !important;
-    color: #222 !important;
-    border: 2px solid #ffa500 !important;
-    box-shadow: 0 0 10px rgba(255, 165, 0, 0.5) !important;
-    transform: scale(1.05);
-}
-
-button[data-active="true"]:focus {
-    outline: 2px solid #ffa500 !important;
-    box-shadow: 0 0 10px rgba(255, 165, 0, 0.5) !important;
-}
-
-button[data-active="true"]:hover {
-    background: #ff8c00 !important;
-    border-color: #ff8c00 !important;
-}
-
-#btn-pan {
-    transition: all 0.3s ease;
-}
-
-#btn-pan.pan-mode {
-    transform: scale(1.05);
-}
-
-.navigation-button:focus {
-    outline: 2px solid #4CAF50 !important;
-    outline-offset: 2px;
-}
-
-.navigation-button:active {
-    transform: translateY(1px);
-}
-
-/* **IMPROVED: Right Side Control Buttons - Better Organization** */
-.control-buttons {
-  position: fixed;
-  bottom: 50px; /* MOVED UP TO BE ABOVE FOOTER */
-  right: 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px; /* REDUCED GAP FOR TIGHTER LAYOUT */
-  max-height: 200px; /* LIMIT HEIGHT */
-  overflow-y: auto; /* ALLOW SCROLLING IF NEEDED */
-}
-
-.control-buttons button {
-  background: #22356a;
-  color: #eee;
-  border: none;
-  border-radius: 7px;
-  padding: 4px 10px; /* REDUCED PADDING FOR TIGHTER LAYOUT */
-  margin: 1px 0; /* REDUCED MARGIN */
-  font-size: 0.85em; /* SLIGHTLY SMALLER FONT */
-  font-weight: 500;
-  cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.09);
-  transition: all 0.2s ease;
-  white-space: nowrap; /* PREVENT TEXT WRAPPING */
-}
-
-.control-buttons button:hover {
-  background: #ffa500;
-  color: #222;
-  transform: translateY(-1px);
-}
-
-.control-buttons button:active {
-  transform: translateY(1px) scale(0.98);
-}
+/* Right Side Control Buttons */
+.control-buttons { position: fixed; bottom: 50px; right: 18px; display: flex; flex-direction: column; gap: 6px; }
 
 /* Globe Canvas */
-#globe-canvas {
-  position: absolute;
-  top: 58px;
-  left: 0;
-  width: 100vw;
-  height: calc(100vh - 120px);
-  z-index: 2;
-}
+#globe-canvas { position: absolute; top: 58px; left: 0; width: 100vw; height: calc(100vh - 120px); z-index: 2; }
 
-/* Apply Now Cube Highlight */
-.apply-cube {
-  box-shadow: 0 0 24px 6px #ffa500;
-  border: 3px solid #ffa500;
-  background: linear-gradient(120deg, #ffa500 63%, #ff6600 100%);
-  border-radius: 12px;
-  transition: box-shadow 0.2s, border 0.2s;
-}
-
-.apply-cube:hover {
-  box-shadow: 0 0 38px 18px #ff6600;
-  border-color: #ff6600;
-}
-
-/* Grey Placeholder Cube */
-.placeholder-cube {
-  background: linear-gradient(120deg, #2a2a2a 64%, #444444 100%);
-  border: 2px solid #444;
-  border-radius: 12px;
-  opacity: 0.65;
-}
-
-/* Info Panel Overlay and Cards */
-.info-panel-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(16, 25, 36, 0.78);
-  width: 100vw; height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 99;
-}
-
-.info-panel {
-  background: #22356a;
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.28);
-  padding: 34px 38px 22px 38px;
-  min-width: 380px;
-  max-width: 98vw;
-  position: relative;
-}
-
-.info-panel-close {
-  position: absolute;
-  top: 11px; right: 18px;
-  font-size: 2em;
-  background: transparent;
-  color: #ffa500;
-  border: none;
-  cursor: pointer;
-}
-
-/* Main Card and Subcards */
-.main-card img {
-  width: 68px; height: 68px;
-  border-radius: 12px;
-  box-shadow: 0 1px 6px #0003;
-  margin-bottom: 12px;
-}
-
-.main-card h3 {
-  color: #fff;
-  font-weight: 700;
-  font-size: 1.15em;
-  margin: 2px 0 8px 0;
-}
-
-.main-card-details {
-  text-align: center;
-}
-
-.main-card-actions, .subcard-buttons {
-  margin: 13px 0 2px 0;
-}
-
-/* Subcard Grid */
-.subcard-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  margin-top: 18px;
-}
-
-.subcard {
-  background: #192039;
-  padding: 16px 12px;
-  border-radius: 9px;
-  min-width: 138px;
-  text-align: center;
-  box-shadow: 0 2px 12px #0003;
-}
-
-.subcard-info img {
-  width: 36px; height: 36px;
-  border-radius: 7px;
-  margin-bottom: 5px;
-  box-shadow: 0 1px 5px #2222;
-}
-
-.subcard-info h4 {
-  font-size: 1em;
-  color: #ffa500;
-  font-weight: 600;
-  margin: 1px 0 7px 0;
-}
-
-.subcard-buttons a.partner-cta,
-.main-card-actions a.partner-cta {
-  display: inline-block;
-  margin: 5px 4px;
-  padding: 0.6em 1.5em;
-  font-weight: bold;
-  font-size: 1em;
-  border-radius: 7px;
-  border: none;
-  text-decoration: none;
-  background: linear-gradient(90deg, #ffa500 0%, #ff6600 100%);
-  color: #fff;
-  box-shadow: 0 2px 10px rgba(255,165,0,.15);
-  transition: background 0.18s, box-shadow 0.18s;
-}
-
-a.partner-cta.apply {
-  background: linear-gradient(90deg, #ffa500 0%, #ff6600 100%);
-  box-shadow: 0 2px 10px rgba(255,165,0,.26);
-}
-
-a.partner-cta.apply:hover {
-  background: linear-gradient(90deg, #ff6600 0%, #ffa500 100%);
-  color: #222;
-  box-shadow: 0 6px 22px #ffa50055;
-}
-
-a.partner-cta.disabled, a.partner-cta.apply.disabled {
-  background: #888;
-  color: #ccc;
-  pointer-events: none;
-  box-shadow: none;
-  opacity: 0.54;
-}
-
-/* **INTEGRATED SOLUTION: Hide container, keep button working** */
-.scroll-lock-ui {
-  display: none !important;
-}
-
-#scrollLockBtn {
-  margin: 8px auto 2px auto;
-  padding: 5px 18px;
-  background: #ffa500;
-  color: #222;
-  border-radius: 8px;
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-}
-
-/* **MOBILE RESPONSIVE - BOTH ISSUES ADDRESSED** */
+/* === RESPONSIVE BUTTON SIZES === */
 @media (max-width: 768px) {
-  .header-ui-bar, .footer-ui-bar { font-size: 12px; }
-  .info-panel { min-width: 90vw; padding: 14px; }
-  
-  /* **MOBILE: Carousel adjustments** */
-  .carousel-wrapper {
-    margin: 0 8px;
-    padding: 4px 8px;
-  }
-  
-  .carousel-container {
-    gap: 6px;
-    padding: 6px 8px;
-  }
-  
-  .carousel-card {
-    min-width: 140px;
-    max-width: 140px;
-    height: 100px;
-  }
-  
-  .carousel-card img {
-    height: 65%;
-  }
-  
-  .carousel-card-content {
-    height: 35%;
-    padding: 3px 4px;
-  }
-  
-  .carousel-card-title {
-    font-size: 0.75em;
-  }
-  
-  .carousel-card-text {
-    font-size: 0.6em;
-  }
-  
-  /* **TOP ROW FOR PAUSE, TOGGLE GLOBE MESH, ETC.** */
-  .mobile-top-controls {
-    position: fixed;
-    left: 4px;
-    right: 4px;
-    bottom: 70px;
-    width: calc(100% - 8px);
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 4px;
-    padding: 3px 6px;
-    background: rgba(37, 47, 57, 0.2);
-    backdrop-filter: blur(3px);
-    border-radius: 6px;
-    box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.05);
-    z-index: 9;
-    min-height: 32px;
-  }
-  
-  /* **MAIN CONTROL ROW - ALL THE WAY TO LEFT** */
-  .left-controls-stack {
-    position: fixed;
-    left: 4px;
-    right: 4px;
-    bottom: 35px;
-    width: calc(100% - 8px);
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
-    flex-wrap: nowrap;
-    gap: 4px;
-    padding: 4px 6px;
-    background: rgba(37, 47, 57, 0.3);
-    backdrop-filter: blur(5px);
-    border: none;
-    border-radius: 8px;
-    box-shadow: 0 -1px 8px rgba(0, 0, 0, 0.1);
-    z-index: 10;
-    overflow: visible;
-    min-height: auto;
-  }
-  
-  .movement-controls,
-  .other-controls,
-  .navigation-controls {
-    background: transparent;
-    padding: 0;
-    margin: 0;
-    box-shadow: none;
-    order: unset;
-    max-width: none;
-    display: flex;
-    gap: 3px;
-    justify-content: flex-start;
-    flex-wrap: nowrap;
-  }
-  
-  /* **MOBILE: Hide right side controls** */
-  .control-buttons {
-    display: none;
-  }
-  
-  /* **SMALLER NAV BUTTONS** */
-  .nav-btn {
-    width: 32px;
-    height: 32px;
-    font-size: 0.9em;
-    border-radius: 6px;
-    flex-shrink: 0;
-    min-width: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0;
-  }
-  
-  /* **PAUSE, TOGGLE GLOBE MESH BUTTONS FOR TOP ROW** */
-  .mobile-control-btn {
-    width: 32px;
-    height: 32px;
-    font-size: 0.8em;
-    background: #22356a;
-    color: #eee;
-    border: none;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    flex-shrink: 0;
-    min-width: 32px;
-  }
-  
-  .mobile-control-btn:hover {
-    background: #ffa500;
-    color: #222;
-  }
-  
-  /* **INTEGRATED: Force yellow button to show and be rectangular on mobile** */
   #scrollLockBtn {
-    display: inline-flex !important;
-    position: fixed !important;
-    bottom: 40px !important;
-    right: 120px !important;
     width: 90px !important;
     height: 32px !important;
-    background: #ffa500 !important;
-    color: #222 !important;
     font-size: 0.75em !important;
-    border-radius: 6px !important;
-    align-items: center !important;
-    justify-content: center !important;
-    z-index: 10 !important;
-    padding: 0 8px !important;
-    margin: 0 !important;
-    border: none !important;
-    font-weight: 600 !important;
-    white-space: nowrap !important;
-  }
-  
-  .nav-btn.active,
-  .pan-mode {
-    transform: scale(1.01) !important;
-  }
-  
-  button[data-active="true"] {
-    transform: scale(1.01) !important;
-  }
-  
-  /* **MOBILE: Adjust globe canvas for two control rows** */
-  #globe-canvas {
-    height: calc(100vh - 140px);
   }
 }
-
-/* **DESKTOP: REMOVE TEXT ON DESKTOP** */
-@media (min-width: 769px) {
-  .mobile-top-controls {
-    display: none;
-  }
-  
-  .left-controls-stack {
-    flex-direction: column;
-  }
-}
-
-/* **SMALL MOBILE SCREENS** */
 @media (max-width: 480px) {
-  .mobile-top-controls,
-  .left-controls-stack {
-    left: 2px;
-    right: 2px;
-    width: calc(100% - 4px);
-    padding: 3px 4px;
-    gap: 3px;
-  }
-  
-  .nav-btn,
-  .mobile-control-btn {
-    width: 28px !important;
-    height: 28px !important;
-    font-size: 0.8em !important;
-    min-width: 28px !important;
-  }
-  
-  /* **INTEGRATED: Smaller screens rectangular button** */
   #scrollLockBtn {
     width: 80px !important;
     height: 28px !important;
-    right: 100px !important;
     font-size: 0.7em !important;
   }
 }
-
-/* **LANDSCAPE MOBILE** */
 @media (orientation: landscape) and (max-width: 768px) {
-  .carousel-card {
-    min-width: 130px;
-    max-width: 130px;
-    height: 90px;
-  }
-  
-  .mobile-top-controls {
-    bottom: 60px;
-    padding: 2px 6px;
-  }
-  
-  .left-controls-stack {
-    bottom: 25px;
-    padding: 3px 6px;
-  }
-  
-  .nav-btn,
-  .mobile-control-btn {
-    width: 30px !important;
-    height: 30px !important;
-    font-size: 0.85em !important;
-    min-width: 30px !important;
-  }
-  
-  /* **INTEGRATED: Landscape rectangular button** */
   #scrollLockBtn {
     width: 85px !important;
     height: 30px !important;
     font-size: 0.7em !important;
-  }
-  
-  .footer-ui-bar {
-    font-size: 11px;
-    padding: 4px 0;
-  }
-  
-  #globe-canvas {
-    height: calc(100vh - 125px);
   }
 }
