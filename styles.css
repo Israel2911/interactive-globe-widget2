@@ -495,7 +495,7 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
   opacity: 0.54;
 }
 
-/* **FINAL SOLUTION: COMPLETELY REMOVE THE GLOBE STATUS TEXT ON ALL DEVICES** */
+/* **INTEGRATED SOLUTION: Hide container, keep button working** */
 .scroll-lock-ui {
   display: none !important;
 }
@@ -651,19 +651,23 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
     color: #222;
   }
   
-  /* **FINAL SOLUTION: YELLOW SCROLL BUTTON - RECTANGULAR** */
+  /* **INTEGRATED: Force yellow button to show and be rectangular on mobile** */
   #scrollLockBtn {
-    width: 90px !important; /* WIDER RECTANGLE */
-    height: 32px !important; /* RECTANGLE NOT SQUARE */
-    padding: 0 8px !important; /* PADDING FOR TEXT */
-    margin: 0 0 0 8px !important; /* SMALL LEFT MARGIN */
-    font-size: 0.75em !important; /* READABLE FONT SIZE */
-    border-radius: 6px !important;
     display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
+    position: fixed !important;
+    bottom: 40px !important;
+    right: 120px !important;
+    width: 90px !important;
+    height: 32px !important;
     background: #ffa500 !important;
     color: #222 !important;
+    font-size: 0.75em !important;
+    border-radius: 6px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 10 !important;
+    padding: 0 8px !important;
+    margin: 0 !important;
     border: none !important;
     font-weight: 600 !important;
     white-space: nowrap !important;
@@ -714,13 +718,12 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
     min-width: 28px !important;
   }
   
-  /* **FINAL SOLUTION: SMALLER SCREENS RECTANGULAR BUTTON** */
+  /* **INTEGRATED: Smaller screens rectangular button** */
   #scrollLockBtn {
     width: 80px !important;
     height: 28px !important;
+    right: 100px !important;
     font-size: 0.7em !important;
-    margin-left: 8px !important;
-    padding: 0 6px !important;
   }
 }
 
@@ -750,12 +753,11 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
     min-width: 30px !important;
   }
   
-  /* **FINAL SOLUTION: LANDSCAPE RECTANGULAR BUTTON** */
+  /* **INTEGRATED: Landscape rectangular button** */
   #scrollLockBtn {
     width: 85px !important;
     height: 30px !important;
     font-size: 0.7em !important;
-    padding: 0 8px !important;
   }
   
   .footer-ui-bar {
