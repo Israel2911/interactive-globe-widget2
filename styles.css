@@ -5,360 +5,116 @@ body {
   color: #ececec;
 }
 
-/* Header and Footer */
-.header-ui-bar {
-  background: transparent;
-  color: #fff;
-  padding: 10px 0;
-  text-align: center;
-  font-weight: 500;
-}
+/* Header, Footer, and Carousel Styles */
+.header-ui-bar { background: transparent; color: #fff; padding: 10px 0; text-align: center; font-weight: 500; }
+.footer-ui-bar { background: #003366; position: fixed; width: 100%; bottom: 0; left: 0; font-size: 14px; text-align: center; padding: 8px 0; z-index: 5; }
+.carousel-wrapper { display: flex; align-items: center; justify-content: center; margin: 0 auto; max-width: 1200px; padding: 0 10px; box-sizing: border-box; }
+.carousel-container { flex: 1; display: flex; justify-content: center; align-items: center; overflow-x: auto; gap: 8px; padding: 8px 12px; scroll-behavior: smooth; }
+.carousel-arrow { font-size: 1.5em; color: #ffa500; cursor: pointer; user-select: none; margin: 0 8px; }
+.carousel-card { display: flex; flex-direction: column; align-items: center; justify-content: center; background: #192039; border-radius: 8px; min-width: 160px; height: 120px; text-decoration: none; color: #ececec; border: 2px solid transparent; transition: all 0.2s; cursor: pointer; flex-shrink: 0; }
+.carousel-card:hover { background: #253a5a; border-color: #ffa500; transform: translateY(-2px); }
+.carousel-card.selected { background: #ffa500; color: #222; }
+.carousel-card img { width: 100%; height: 70%; object-fit: cover; border-radius: 8px 8px 0 0; }
+.carousel-card-content { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; width: 100%; height: 30%; padding: 4px 6px; }
+.carousel-card-title { font-size: 0.8em; font-weight: 600; }
+.carousel-card-text { font-size: 0.65em; opacity: 0.85; }
 
-.footer-ui-bar {
-  background: #003366;
-  position: fixed;
-  width: 100%;
-  bottom: 0;
-  left: 0;
-  font-size: 14px;
-  text-align: center;
-  padding: 8px 0;
-}
+/* Desktop Controls */
+.left-controls-stack { position: fixed; left: 16px; bottom: 50px; z-index: 10; display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.navigation-controls { background: #252f39ea; border-radius: 12px; padding: 14px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.12); }
+.nav-row { display: flex; gap: 8px; margin: 4px 0; }
+.nav-btn { width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; background: #223366; color: #fff; border-radius: 7px; font-size: 1.25em; cursor: pointer; border: none; }
+.nav-btn:hover { background: #ffa500; color: #222; }
+.nav-btn.active { background: #ffa500 !important; color: #222 !important; }
+.control-buttons { position: fixed; bottom: 50px; right: 18px; display: flex; flex-direction: column; gap: 6px; z-index: 10; }
+.control-buttons button { background: #22356a; color: #eee; border: none; border-radius: 7px; padding: 4px 10px; font-size: 0.85em; cursor: pointer; white-space: nowrap; }
+.control-buttons button:hover { background: #ffa500; color: #222; }
 
-/* Carousel Styles */
-.carousel-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  margin: 0 auto;
-  padding: 8px 6px;
-  box-shadow: none;
-  max-width: 1200px;
-}
+/* Hide "Globe is active" text and style button */
+#scrollLockInstruction { display: none !important; }
+.scroll-lock-ui { display: flex; align-items: center; }
+#scrollLockBtn { background: #ffa500; color: #222; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; padding: 5px 18px; margin: 0; }
 
-.carousel-arrow {
-  font-size: 1.5em;
-  color: #ffa500;
-  cursor: pointer;
-  user-select: none;
-  margin: 0 8px;
-  transition: color .2s;
-  min-width: 30px;
-  text-align: center;
-}
+/* Globe & Info Panel */
+#globe-canvas { position: absolute; top: 58px; left: 0; width: 100vw; height: calc(100vh - 120px); z-index: 2; }
+.info-panel-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(16, 25, 36, 0.78); display: none; align-items: center; justify-content: center; z-index: 99; }
+.info-panel { background: #22356a; border-radius: 16px; padding: 34px 38px 22px 38px; min-width: 380px; position: relative; }
 
-.carousel-arrow:hover {
-  color: #ff6600;
-}
-
-.carousel-container {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow-x: auto;
-  gap: 8px;
-  padding: 8px 12px;
-  scroll-behavior: smooth;
-  max-width: 100%;
-}
-
-.carousel-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: #192039;
-  border-radius: 8px;
-  padding: 0;
-  margin: 0;
-  min-width: 160px;
-  max-width: 160px;
-  height: 120px;
-  text-decoration: none;
-  color: #ececec;
-  border: 2px solid transparent;
-  transition: all 0.2s;
-  cursor: pointer;
-  flex-shrink: 0;
-  overflow: hidden;
-  position: relative;
-  text-align: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-}
-
-.carousel-card:hover {
-  background: #253a5a;
-  border-color: #ffa500;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255,165,0,0.2);
-}
-
-.carousel-card.selected {
-  background: #ffa500;
-  color: #222;
-  border-color: #ff6600;
-  box-shadow: 0 4px 15px rgba(255,165,0,0.4);
-}
-
-.carousel-card img {
-  width: 100%;
-  height: 70%;
-  object-fit: cover;
-  object-position: center;
-  border-radius: 8px 8px 0 0;
-  margin: 0;
-  padding: 0;
-  display: block;
-}
-
-.carousel-card-content {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  width: 100%;
-  height: 30%;
-  padding: 4px 6px;
-  margin: 0;
-}
-
-.carousel-card-title {
-  font-size: 0.8em;
-  font-weight: 600;
-  margin: 0;
-  line-height: 1.0;
-  text-align: center;
-  color: inherit;
-}
-
-.carousel-card-text {
-  font-size: 0.65em;
-  opacity: 0.85;
-  line-height: 1.0;
-  margin: 1px 0 0 0;
-  text-align: center;
-  max-height: 2em;
-  overflow: hidden;
-  color: inherit;
-}
-
-.carousel-container::-webkit-scrollbar {
-  height: 4px;
-}
-
-.carousel-container::-webkit-scrollbar-track {
-  background: rgba(255,255,255,0.1);
-  border-radius: 2px;
-}
-
-.carousel-container::-webkit-scrollbar-thumb {
-  background: #ffa500;
-  border-radius: 2px;
-}
-
-/* Controls */
-.left-controls-stack {
-  position: fixed;
-  left: 16px;
-  bottom: 50px;
-  z-index: 3;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  align-items: flex-start;
-}
-
-.navigation-controls {
-  background: #252f39ea;
-  border-radius: 12px;
-  padding: 14px;
-  margin-bottom: 12px;
-  box-shadow: 0 1px 4px rgba(0,0,0,.12);
-  order: 2;
-}
-
-.nav-row {
-  display: flex;
-  gap: 8px;
-  margin: 4px 0;
-}
-
-.nav-btn {
-  width: 34px; height: 34px;
-  display: flex; align-items: center; justify-content: center;
-  background: #223366;
-  color: #fff;
-  border-radius: 7px;
-  font-size: 1.25em;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border: none;
-  box-shadow: 1px 1px 4px #0003;
-  user-select: none;
-}
-
-.nav-btn:hover {
-  background: #ffa500;
-  color: #222;
-  transform: translateY(-1px);
-}
-
-.nav-btn.active {
-  background: #ffa500 !important;
-  color: #222 !important;
-  box-shadow: 0 0 8px rgba(255,165,0,0.6);
-  transform: scale(1.05);
-}
-
-.control-buttons {
-  position: fixed;
-  bottom: 50px;
-  right: 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  max-height: 200px;
-  overflow-y: auto;
-}
-
-.control-buttons button {
-  background: #22356a;
-  color: #eee;
-  border: none;
-  border-radius: 7px;
-  padding: 4px 10px;
-  margin: 1px 0;
-  font-size: 0.85em;
-  font-weight: 500;
-  cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.09);
-  transition: all 0.2s ease;
-  white-space: nowrap;
-}
-
-.control-buttons button:hover {
-  background: #ffa500;
-  color: #222;
-  transform: translateY(-1px);
-}
-
-/* Hide "Globe is active" text */
-#scrollLockInstruction {
-  display: none !important;
-}
-.scroll-lock-ui {
-  display: flex;
-  align-items: center;
-}
-
-/* Style the button */
-#scrollLockBtn {
-  background: #ffa500;
-  color: #222;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  padding: 5px 18px;
-  margin: 0;
-}
-
-/* Globe Canvas and Info Panel Styles */
-#globe-canvas {
-  position: absolute;
-  top: 58px;
-  left: 0;
-  width: 100vw;
-  height: calc(100vh - 120px);
-  z-index: 2;
-}
-.info-panel-overlay {
-  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(16, 25, 36, 0.78);
-  width: 100vw; height: 100vh;
-  display: flex; align-items: center; justify-content: center;
-  z-index: 99;
-}
-.info-panel {
-  background: #22356a;
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.28);
-  padding: 34px 38px 22px 38px;
-  min-width: 380px;
-  max-width: 98vw;
-  position: relative;
-}
-
-/* MOBILE RESPONSIVE */
+/* === MOBILE RESPONSIVE (< 768px) === */
 @media (max-width: 768px) {
+  /* Reposition and restyle the desktop controls for mobile */
+  .control-buttons {
+    display: flex;
+    flex-direction: row; /* Make it a horizontal row */
+    justify-content: center;
+    gap: 6px;
+    position: fixed;
+    bottom: 85px; /* Position it above the main nav controls */
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(37, 47, 57, 0.3);
+    backdrop-filter: blur(5px);
+    padding: 6px 10px;
+    border-radius: 8px;
+    z-index: 10;
+    max-height: none; /* Override desktop height limit */
+  }
+  .control-buttons button {
+    width: 36px; height: 36px;
+    padding: 0;
+    font-size: 0; /* Hide original button text */
+    position: relative;
+    white-space: normal;
+  }
+  .control-buttons button:hover { background: #ffa500; color: #222; }
+
+  /* Add Icons using ::before pseudo-elements */
+  .control-buttons button::before {
+    font-size: 1.2rem; /* Icon size */
+    color: #eee;
+    font-family: 'Segoe UI', Arial, sans-serif;
+  }
+  .control-buttons button:hover::before {
+    color: #222;
+  }
+
+  #pauseButton::before { content: '⏸'; }
+  #toggleNodesButton::before { content: '👁️'; }
+  #toggleMeshButton::before { content: '🌐'; }
+  #arcToggleBtn::before { content: '🌈'; }
+  #pauseCubesButton::before { content: '🧊'; }
+
+  /* Bottom Row (Nav + Scroll Lock) */
   .left-controls-stack {
-    left: 4px; right: 4px; bottom: 35px;
+    left: 4px; right: 4px; bottom: 40px;
     width: calc(100% - 8px);
     flex-direction: row;
     align-items: center;
-    justify-content: center; /* <<< THIS IS THE FIX */
+    justify-content: center;
     gap: 8px;
     background: rgba(37, 47, 57, 0.3);
     backdrop-filter: blur(5px);
     border-radius: 8px;
-    padding: 4px 6px;
+    padding: 6px;
   }
-  .navigation-controls {
-    padding: 0; margin: 0;
-    background: transparent;
-    box-shadow: none;
-    display: flex;
-    gap: 4px;
-    order: 1; /* Ensure nav buttons come first */
-  }
-  .scroll-lock-ui {
-    order: 2; /* Ensure scroll button comes after */
-  }
-  .control-buttons {
-    display: none;
-  }
-  .nav-btn {
-    width: 32px; height: 32px;
-    font-size: 0.9em;
-    border-radius: 6px;
+  .navigation-controls { padding: 0; margin: 0; background: transparent; box-shadow: none; display: flex; gap: 4px; order: 1; }
+  .scroll-lock-ui { order: 2; }
+  .nav-btn { width: 34px; height: 34px; font-size: 1.1em; border-radius: 6px; }
+
+  /* Rectangular scroll button */
+  #scrollLockBtn {
+    width: 90px !important; height: 34px !important;
+    padding: 0 8px !important; font-size: 0.75em !important;
+    border-radius: 6px !important; display: inline-flex !important;
+    align-items: center !important; justify-content: center !important;
   }
 
-  /* Rectangular button on mobile */
-  #scrollLockBtn {
-    width: 90px !important;
-    height: 32px !important;
-    padding: 0 8px !important;
-    font-size: 0.75em !important;
-    border-radius: 6px !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-  }
+  #globe-canvas { height: calc(100vh - 175px); }
 }
 
-/* Smaller mobile */
 @media (max-width: 480px) {
-  .nav-btn {
-    width: 28px !important; height: 28px !important;
-    font-size: 0.8em !important;
-  }
-  #scrollLockBtn {
-    width: 80px !important;
-    height: 28px !important;
-    font-size: 0.7em !important;
-  }
-}
-
-/* Landscape mobile */
-@media (orientation: landscape) and (max-width: 768px) {
-  #scrollLockBtn {
-    width: 85px !important;
-    height: 30px !important;
-    font-size: 0.7em !important;
-  }
+  .nav-btn { width: 32px !important; height: 32px !important; }
+  #scrollLockBtn { width: 80px !important; height: 32px !important; font-size: 0.7em !important; }
+  .control-buttons button { width: 32px; height: 32px; }
+  .control-buttons button::before { font-size: 1rem; }
 }
