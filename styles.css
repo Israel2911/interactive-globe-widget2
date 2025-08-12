@@ -279,7 +279,7 @@ body {
   #pauseCubesButton::before { content: '🧊'; }
 
 /* Simplified horseshoe rainbow bow - cleaner approach */
-/* Perfect horseshoe rainbow bow - working from your baseline */
+/* Perfect horseshoe rainbow bow - RED ON TOP (outermost) */
 #arcToggleBtn {
     position: relative;
     overflow: hidden; /* Essential for clipping into bow shape */
@@ -288,46 +288,45 @@ body {
 #arcToggleBtn::before {
     content: '';
     position: absolute;
-    top: 100%; /* Move to bottom edge instead of center */
+    top: 100%; /* Bottom edge position for bow shape */
     left: 50%;
-    transform: translate(-50%, -50%); /* This centers it on the bottom edge */
+    transform: translate(-50%, -50%);
     width: 28px;
     height: 28px;
     border-radius: 50%;
     background: transparent;
     border: 2px solid transparent;
     
-    /* Keep your working concentric bands - RED to VIOLET (outer to inner) */
+    /* REVERSED: RED (top/outermost) to VIOLET (innermost) */
     box-shadow:
         0 0 0 0px transparent,
-        0 0 0 2px #ff0000,    /* Red - outermost */
-        0 0 0 4px #ffa500,    /* Orange */
-        0 0 0 6px #ffff00,    /* Yellow */
+        0 0 0 14px #ff0000,   /* Red - TOP/OUTERMOST (biggest arc) */
+        0 0 0 12px #ffa500,   /* Orange */
+        0 0 0 10px #ffff00,   /* Yellow */
         0 0 0 8px #008000,    /* Green */
-        0 0 0 10px #0000ff,   /* Blue */
-        0 0 0 12px #4b0082,   /* Indigo */
-        0 0 0 14px #ee82ee,   /* Violet - innermost */
+        0 0 0 6px #0000ff,    /* Blue */
+        0 0 0 4px #4b0082,    /* Indigo */
+        0 0 0 2px #ee82ee,    /* Violet - INNERMOST (smallest arc) */
         
-        /* Enhanced glows for red and violet */
-        0 0 12px 2px #ff0000,   /* Stronger red glow */
-        0 0 15px 14px #ee82ee;  /* Stronger violet glow */
+        /* Enhanced glows for red (outer) and violet (inner) */
+        0 0 12px 14px #ff0000,  /* Red glow on outermost band */
+        0 0 15px 2px #ee82ee;   /* Violet glow on innermost band */
 }
 
 #arcToggleBtn:hover::before {
     box-shadow:
         0 0 0 0px transparent,
-        0 0 0 2px #ff0000,
-        0 0 0 4px #ffa500,
-        0 0 0 6px #ffff00,
-        0 0 0 8px #008000,
-        0 0 0 10px #0000ff,
-        0 0 0 12px #4b0082,
-        0 0 0 14px #ee82ee,
+        0 0 0 14px #ff0000,   /* Red - outermost */
+        0 0 0 12px #ffa500,   /* Orange */
+        0 0 0 10px #ffff00,   /* Yellow */
+        0 0 0 8px #008000,    /* Green */
+        0 0 0 6px #0000ff,    /* Blue */
+        0 0 0 4px #4b0082,    /* Indigo */
+        0 0 0 2px #ee82ee,    /* Violet - innermost */
         /* Maximum glows on hover */
-        0 0 20px 2px #ff0000,   /* Maximum red glow */
-        0 0 25px 14px #ee82ee;  /* Maximum violet glow */
+        0 0 20px 14px #ff0000,  /* Maximum red glow */
+        0 0 25px 2px #ee82ee;   /* Maximum violet glow */
 }
-
 
 
   /* Bottom Row (Nav + Scroll Lock) */
