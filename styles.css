@@ -495,25 +495,43 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
   opacity: 0.54;
 }
 
-/* Miscellaneous */
-.scroll-lock-ui {
-  margin-top: 10px;
-  padding: 7px 0;
-  background: #23356af2;
-  border-radius: 5px;
-  font-size: 1em;
-  text-align: center;
+/* **REMOVED: Old scroll-lock-ui styling - No longer needed** */
+
+/* **NEW: Globe Status Popup** */
+.globe-status-popup {
+  position: fixed;
+  bottom: 80px; /* ABOVE CONTROLS */
+  left: 50%;
+  transform: translateX(-50%);
+  background: #22356a;
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.9em;
+  font-weight: 500;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  border: 2px solid #ffa500;
+  z-index: 15;
+  opacity: 0;
+  transform: translateX(-50%) translateY(10px);
+  transition: all 0.3s ease;
+  pointer-events: none;
+  white-space: nowrap;
 }
 
-#scrollLockBtn {
-  margin: 8px auto 2px auto;
-  padding: 5px 18px;
-  background: #ffa500;
-  color: #222;
-  border-radius: 8px;
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
+.globe-status-popup.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.globe-status-popup::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border: 5px solid transparent;
+  border-top-color: #ffa500;
 }
 
 /* **MOBILE RESPONSIVE - IMPROVED LAYOUT** */
@@ -656,35 +674,30 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
     color: #222;
   }
   
-  /* **IMPROVED: RECTANGULAR SCROLL BUTTON WITH TEXT** */
+  /* **IMPROVED: WIDER RECTANGULAR SCROLL BUTTON WITH BETTER TEXT** */
   #scrollLockBtn {
-    width: 60px !important; /* WIDER RECTANGLE */
+    width: 80px !important; /* WIDER FOR BETTER TEXT VISIBILITY */
     height: 32px !important; /* SAME HEIGHT AS OTHER BUTTONS */
-    padding: 0 6px !important; /* HORIZONTAL PADDING FOR TEXT */
-    margin: 0 0 0 8px !important; /* LEFT MARGIN TO SEPARATE */
-    font-size: 0.65em !important; /* READABLE FONT SIZE */
+    padding: 0 8px !important; /* MORE HORIZONTAL PADDING */
+    margin: 0 0 0 10px !important; /* MORE LEFT MARGIN TO SEPARATE */
+    font-size: 0.7em !important; /* BETTER READABLE FONT SIZE */
     border-radius: 6px !important;
-    min-width: 60px;
+    min-width: 80px;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     background: #ffa500 !important;
     color: #222 !important;
-    font-weight: 600 !important;
+    font-weight: 700 !important; /* BOLDER TEXT */
     white-space: nowrap !important;
     order: 20; /* PLACE AT END OF ROW */
+    text-transform: uppercase !important; /* UPPERCASE FOR CLARITY */
+    letter-spacing: 0.5px !important; /* BETTER LETTER SPACING */
   }
   
+  /* **REMOVED: Old scroll-lock-ui styling** */
   .scroll-lock-ui {
-    background: transparent !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    border-radius: 0 !important;
-    font-size: 1em !important;
-    text-align: center !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
+    display: none !important; /* HIDE OLD TEXT */
   }
   
   .nav-btn.active,
@@ -700,6 +713,13 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
   #globe-canvas {
     height: calc(100vh - 140px); /* ACCOUNT FOR TWO ROWS */
   }
+  
+  /* **MOBILE: Adjust popup position** */
+  .globe-status-popup {
+    bottom: 120px; /* ABOVE MOBILE CONTROLS */
+    font-size: 0.8em;
+    padding: 6px 12px;
+  }
 }
 
 /* **DESKTOP/TABLET: Keep side layout** */
@@ -710,6 +730,11 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
   
   .left-controls-stack {
     flex-direction: column;
+  }
+  
+  /* **DESKTOP: Remove old scroll lock text** */
+  .scroll-lock-ui {
+    display: none !important;
   }
 }
 
@@ -733,11 +758,12 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
   }
   
   #scrollLockBtn {
-    width: 50px !important; /* SMALLER RECTANGLE */
+    width: 70px !important; /* SLIGHTLY SMALLER BUT STILL READABLE */
     height: 28px !important;
-    font-size: 0.6em !important;
-    min-width: 50px !important;
-    margin-left: 6px !important;
+    font-size: 0.65em !important;
+    min-width: 70px !important;
+    margin-left: 8px !important;
+    padding: 0 6px !important;
   }
 }
 
@@ -768,10 +794,11 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
   }
   
   #scrollLockBtn {
-    width: 55px !important;
+    width: 75px !important; /* LANDSCAPE OPTIMIZED SIZE */
     height: 30px !important;
-    font-size: 0.6em !important;
-    min-width: 55px !important;
+    font-size: 0.65em !important;
+    min-width: 75px !important;
+    padding: 0 7px !important;
   }
   
   .footer-ui-bar {
@@ -781,5 +808,9 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
   
   #globe-canvas {
     height: calc(100vh - 125px);
+  }
+  
+  .globe-status-popup {
+    bottom: 100px;
   }
 }
