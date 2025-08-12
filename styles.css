@@ -555,23 +555,26 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
     font-size: 0.6em;
   }
   
-  /* **MOBILE: Controls below carousel spanning width** */
+  /* **FIXED: Controls below carousel - NO CUTOFF** */
   .left-controls-stack {
     position: fixed;
-    left: 0;
-    right: 0;
+    left: 8px; /* ADD LEFT MARGIN */
+    right: 8px; /* ADD RIGHT MARGIN */
     bottom: 35px;
-    width: 100%;
+    width: calc(100% - 16px); /* ACCOUNT FOR MARGINS */
     flex-direction: row;
-    justify-content: center;
+    justify-content: space-evenly; /* EVENLY DISTRIBUTE BUTTONS */
     align-items: center;
-    gap: 12px;
-    padding: 8px 12px;
+    flex-wrap: wrap; /* ALLOW WRAPPING IF NEEDED */
+    gap: 8px; /* REDUCED GAP */
+    padding: 10px 12px; /* INCREASED PADDING */
     background: linear-gradient(135deg, #252f39ea, #1a2332ea);
     backdrop-filter: blur(10px);
     border-top: 1px solid rgba(255, 165, 0, 0.2);
+    border-radius: 12px 12px 0 0; /* ROUNDED TOP CORNERS */
     box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.3);
     z-index: 10;
+    overflow: visible; /* ENSURE NOTHING IS CLIPPED */
   }
   
   .movement-controls,
@@ -584,7 +587,9 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
     order: unset;
     max-width: none;
     display: flex;
-    gap: 8px;
+    gap: 6px; /* TIGHTER GAP */
+    justify-content: center;
+    flex-wrap: wrap; /* ALLOW BUTTON WRAPPING */
   }
   
   /* **MOBILE: Hide right side controls, merge into bottom bar** */
@@ -592,12 +597,17 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
     display: none;
   }
   
-  /* **MOBILE: Compact nav buttons** */
+  /* **FIXED: Properly sized nav buttons - NO CUTOFF** */
   .nav-btn {
-    width: 40px;
-    height: 40px;
-    font-size: 1.1em;
+    width: 38px; /* SLIGHTLY SMALLER FOR BETTER FIT */
+    height: 38px;
+    font-size: 1em; /* REDUCED FONT SIZE */
     border-radius: 8px;
+    flex-shrink: 0; /* PREVENT SHRINKING */
+    min-width: 38px; /* ENSURE MINIMUM SIZE */
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   
   .nav-btn.active,
@@ -623,7 +633,31 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
   }
 }
 
-/* **LANDSCAPE ORIENTATION on Mobile** */
+/* **FIXED: Small Mobile Screens - Extra Protection** */
+@media (max-width: 480px) {
+  .left-controls-stack {
+    left: 4px;
+    right: 4px;
+    width: calc(100% - 8px);
+    padding: 8px 8px;
+    gap: 4px;
+  }
+  
+  .nav-btn {
+    width: 34px;
+    height: 34px;
+    font-size: 0.9em;
+    min-width: 34px;
+  }
+  
+  .movement-controls,
+  .other-controls,
+  .navigation-controls {
+    gap: 4px;
+  }
+}
+
+/* **LANDSCAPE ORIENTATION on Mobile - FIXED** */
 @media (orientation: landscape) and (max-width: 768px) {
   .carousel-card {
     min-width: 130px;
@@ -633,13 +667,17 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
   
   .left-controls-stack {
     bottom: 30px;
-    padding: 6px 8px;
+    padding: 6px 10px;
+    left: 6px;
+    right: 6px;
+    width: calc(100% - 12px);
   }
   
   .nav-btn {
     width: 36px;
     height: 36px;
     font-size: 1em;
+    min-width: 36px;
   }
   
   .footer-ui-bar {
