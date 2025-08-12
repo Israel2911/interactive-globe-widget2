@@ -1,5 +1,3 @@
-
-
 body {
   margin: 0;
   font-family: 'Segoe UI', Arial, sans-serif;
@@ -249,26 +247,23 @@ body {
   .control-buttons button {
     width: 36px; height: 36px;
     padding: 0;
-    font-size: 0;
+    font-size: 0; /* Hide original button text */
     position: relative;
     white-space: normal;
     background: #22356a;
     border-radius: 6px;
-    overflow: hidden; /* required for arc clipping */
   }
   .control-buttons button:hover {
     background: #ffa500;
   }
 
-  /* Mobile icon glyphs */
+  /* Add Icons using ::before pseudo-elements */
   .control-buttons button::before {
     font-size: 1.2rem;
     color: #eee;
     font-family: 'Segoe UI', Arial, sans-serif;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
+    display: block;
+    line-height: 36px;
   }
   .control-buttons button:hover::before {
     color: #222;
@@ -277,57 +272,18 @@ body {
   #toggleNodesButton::before { content: '⚛️'; }
   #toggleMeshButton::before { content: '🌐'; }
   #pauseCubesButton::before { content: '🧊'; }
-
-/* Simplified horseshoe rainbow bow - cleaner approach */
-/* Perfect horseshoe rainbow bow - RED ON TOP (outermost) */
-#arcToggleBtn {
-    position: relative;
-    overflow: hidden; /* Essential for clipping into bow shape */
-}
-
-#arcToggleBtn::before {
+  #arcToggleBtn::before {
     content: '';
-    position: absolute;
-    top: 100%; /* Bottom edge position for bow shape */
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 28px;
-    height: 28px;
+    display: block;
+    width: 20px;
+    height: 20px;
+    margin: 8px;
     border-radius: 50%;
-    background: transparent;
-    border: 2px solid transparent;
-    
-    /* REVERSED: RED (top/outermost) to VIOLET (innermost) */
-    box-shadow:
-        0 0 0 0px transparent,
-        0 0 0 14px #ff0000,   /* Red - TOP/OUTERMOST (biggest arc) */
-        0 0 0 12px #ffa500,   /* Orange */
-        0 0 0 10px #ffff00,   /* Yellow */
-        0 0 0 8px #008000,    /* Green */
-        0 0 0 6px #0000ff,    /* Blue */
-        0 0 0 4px #4b0082,    /* Indigo */
-        0 0 0 2px #ee82ee,    /* Violet - INNERMOST (smallest arc) */
-        
-        /* Enhanced glows for red (outer) and violet (inner) */
-        0 0 12px 14px #ff0000,  /* Red glow on outermost band */
-        0 0 15px 2px #ee82ee;   /* Violet glow on innermost band */
-}
-
-#arcToggleBtn:hover::before {
-    box-shadow:
-        0 0 0 0px transparent,
-        0 0 0 14px #ff0000,   /* Red - outermost */
-        0 0 0 12px #ffa500,   /* Orange */
-        0 0 0 10px #ffff00,   /* Yellow */
-        0 0 0 8px #008000,    /* Green */
-        0 0 0 6px #0000ff,    /* Blue */
-        0 0 0 4px #4b0082,    /* Indigo */
-        0 0 0 2px #ee82ee,    /* Violet - innermost */
-        /* Maximum glows on hover */
-        0 0 20px 14px #ff0000,  /* Maximum red glow */
-        0 0 25px 2px #ee82ee;   /* Maximum violet glow */
-}
-
+    background: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet);
+  }
+  #arcToggleBtn:hover::before {
+    opacity: 0.8;
+  }
 
   /* Bottom Row (Nav + Scroll Lock) */
   .left-controls-stack {
@@ -375,7 +331,6 @@ body {
   .nav-btn { width: 32px !important; height: 32px !important; }
   #scrollLockBtn { width: 80px !important; height: 32px !important; font-size: 0.7em !important; }
   .control-buttons button { width: 32px; height: 32px; }
-  .control-buttons button::before { font-size: 1rem; }
-  #arcToggleBtn::before { transform: translate(-50%, -50%) scale(0.8); }
+  .control-buttons button::before { font-size: 1rem; line-height: 32px; }
+  #arcToggleBtn::before { width: 18px; height: 18px; margin: 7px; }
 }
-
