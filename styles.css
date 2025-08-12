@@ -651,31 +651,37 @@ a.partner-cta.disabled, a.partner-cta.apply.disabled {
     color: #222;
   }
   
-  /* **INTEGRATED: YELLOW SCROLL BUTTON - WIDER RECTANGLE** */
+/* **FIXED: Keep existing functionality, just make it rectangular on mobile** */
+@media (max-width: 768px) {
+  /* ... your existing mobile styles ... */
+  
+  /* **INTEGRATED: Make the existing scroll button wider and rectangular** */
   #scrollLockBtn {
     width: 90px !important; /* WIDER RECTANGLE */
     height: 32px !important; /* RECTANGLE NOT SQUARE */
-    padding: 0 10px !important; /* PADDING FOR TEXT INSIDE BUTTON */
-    margin: 0 0 0 12px !important; /* SEPARATE FROM OTHER BUTTONS */
-    font-size: 0.75em !important; /* READABLE FONT */
+    padding: 0 8px !important; /* PADDING FOR TEXT */
+    margin: 0 0 0 8px !important; /* SMALL LEFT MARGIN */
+    font-size: 0.75em !important; /* READABLE FONT SIZE */
     border-radius: 6px !important;
-    min-width: 90px;
-    display: flex !important;
+    display: inline-flex !important; /* KEEP INLINE WITH OTHER BUTTONS */
     align-items: center !important;
     justify-content: center !important;
-    background: #ffa500 !important; /* YELLOW BACKGROUND */
-    color: #222 !important; /* BLACK TEXT */
-    font-weight: 700 !important;
+    background: #ffa500 !important;
+    color: #222 !important;
+    border: none !important;
+    font-weight: 600 !important;
     white-space: nowrap !important;
-    order: 20; /* AT END OF ROW */
-    text-transform: none !important;
-    letter-spacing: 0.3px !important;
   }
   
-  /* **INTEGRATED: ENSURE NO TEXT CONTAINER EXISTS** */
+  /* **Keep the scroll-lock-ui container but make it transparent** */
   .scroll-lock-ui {
-    display: none !important; /* COMPLETELY HIDDEN */
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: inline-block !important; /* KEEP IT INLINE */
   }
+}
+
   
   .nav-btn.active,
   .pan-mode {
