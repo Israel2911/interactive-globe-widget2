@@ -278,38 +278,42 @@ body {
   #toggleMeshButton::before { content: '🌐'; }
   #pauseCubesButton::before { content: '🧊'; }
 
-  /* Concentric 7‑color rainbow bow with glow on V, I, and stronger outer Red */
-  #arcToggleBtn {
-    position: relative; /* ensure ::before is positioned correctly */
-    overflow: hidden;   /* clip circle into a bow */
-  }
-  #arcToggleBtn::before {
-      content: '';
-      position: absolute;
-      top: 100%;                 /* sit on bottom edge of button */
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 1px;
-      height: 1px;
-      background: transparent;
-      border-radius: 50%;
-      box-shadow:
-          /* V I B G Y O R (inner → outer) */
-          0 0 0 2px #ee82ee,   /* Violet */
-          0 0 0 4px #4b0082,   /* Indigo */
-          0 0 0 6px #0000ff,   /* Blue */
-          0 0 0 8px #008000,   /* Green */
-          0 0 0 10px #ffff00,  /* Yellow */
-          0 0 0 12px #ffa500,  /* Orange */
-          0 0 0 14px #ff0000,  /* Red */
-          /* Glows */
-          0 0 8px 2px #ee82ee,   /* Violet glow */
-          0 0 12px 4px #4b0082,  /* Indigo glow */
-          0 0 20px 14px #ff0000; /* Red glow */
-  }
-  #arcToggleBtn:hover::before {
-      opacity: 0.85;
-  }
+/* Concentric 7‑color rainbow bow with enhanced glow on violet and red */
+#arcToggleBtn {
+  position: relative;
+  overflow: hidden; /* clips the circle into a bow */
+}
+
+#arcToggleBtn::before {
+    content: '';
+    position: absolute;
+    top: 100%; /* position at bottom edge of button */
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 1px;
+    height: 1px;
+    background: transparent;
+    border-radius: 50%;
+    box-shadow:
+        /* VIBGYOR concentric rings (inner to outer) */
+        0 0 0 2px #ee82ee,   /* Violet */
+        0 0 0 4px #4b0082,   /* Indigo */
+        0 0 0 6px #0000ff,   /* Blue */
+        0 0 0 8px #008000,   /* Green */
+        0 0 0 10px #ffff00,  /* Yellow */
+        0 0 0 12px #ffa500,  /* Orange */
+        0 0 0 14px #ff0000,  /* Red */
+        
+        /* Enhanced glows - violet and red highlighted */
+        0 0 15px 2px #ee82ee,  /* Strong violet glow */
+        0 0 8px 4px #4b0082,   /* Indigo glow */
+        0 0 25px 14px #ff0000, /* Strong red glow (Blood of Jesus) */
+        0 0 35px 16px #ff0000; /* Extra red outer glow */
+}
+
+#arcToggleBtn:hover::before {
+    opacity: 0.9;
+}
 
   /* Bottom Row (Nav + Scroll Lock) */
   .left-controls-stack {
