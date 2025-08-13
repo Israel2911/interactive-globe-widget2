@@ -315,7 +315,7 @@ body {
   #arcToggleBtn::before {
     content: '';
     position: absolute;
-    bottom: 4px; /* Centered vertically */
+    bottom: 6px; /* Raised for better centering */
     left: 50%;
     transform: translateX(-50%);
     width: 28px;
