@@ -307,35 +307,60 @@ body {
   #toggleMeshButton::before { content: '🌐'; }
   #pauseCubesButton::before { content: '🧊'; }
 
-  /* FINAL MOBILE-ONLY: Hollow Rainbow Arc (Robust Method) */
+  /* FINAL MOBILE-ONLY: Concentric Rainbow Arc using box-shadow */
   #arcToggleBtn {
     position: relative;
-    overflow: hidden;
+    overflow: hidden; /* Clips the bottom of the circle to create the arc */
   }
   #arcToggleBtn::before {
     content: '';
     position: absolute;
-    bottom: 0;
+    box-sizing: border-box;
     left: 50%;
     transform: translateX(-50%);
-    box-sizing: border-box;
-    width: 30px; /* Inner diameter of the arc */
-    height: 15px; /* Inner radius of the arc */
-    border-radius: 30px 30px 0 0;
+    /* Position the center of the circle just below the button's bottom edge */
+    bottom: -15px; 
+    
+    width: 2px; /* Core element size */
+    height: 2px;
+    border-radius: 50%;
     background: transparent;
-    /* Create the hollow arc using a thick gradient border */
-    border: 4px solid transparent; /* This is the thickness of the band */
-    border-bottom: none; /* No border on the flat bottom edge */
-    border-image-source: linear-gradient(90deg, #ff0000, #ffa500, #ffff00, #008000, #0000ff, #4b0082, #ee82ee);
-    border-image-slice: 1;
-    /* Use filter for a glow that follows the arc shape */
-    filter: drop-shadow(0 0 5px rgba(255,0,0,.9)) drop-shadow(0 0 4px rgba(238,130,238,.9));
+
+    /* Concentric rings (arcs) with Red as the outermost */
+    box-shadow:
+      /* Glows are defined first to be behind the solid color rings */
+      0 0 12px 14px rgba(255,0,0,.7),  /* Red glow */
+      0 0 8px 2px rgba(238,130,238,.8),   /* Violet glow */
+      
+      /* Color Arcs: Red (largest) to Violet (smallest) */
+      0 0 0 14px #ff0000,    /* Red */
+      0 0 0 12px #ffa500,    /* Orange */
+      0 0 0 10px #ffff00,    /* Yellow */
+      0 0 0 8px #008000,     /* Green */
+      0 0 0 6px #0000ff,     /* Blue */
+      0 0 0 4px #4b0082,     /* Indigo */
+      0 0 0 2px #ee82ee;     /* Violet */
   }
+  
+  /* Disable the old ::after rule to prevent conflicts */
   #arcToggleBtn::after {
-    content: none; /* Make sure the old ::after rule is disabled */
+    content: none;
   }
+
+  /* Enhance glows on hover */
   #arcToggleBtn:hover::before {
-    filter: drop-shadow(0 0 8px rgba(255,0,0,1)) drop-shadow(0 0 6px rgba(238,130,238,1));
+    box-shadow:
+      /* Enhanced glows on hover */
+      0 0 16px 14px rgba(255,0,0,1),
+      0 0 12px 2px rgba(238,130,238,1),
+      
+      0 0 0 14px #ff0000,
+      0 0 0 12px #ffa500,
+      0 0 0 10px #ffff00,
+      0 0 0 8px #008000,
+      0 0 0 6px #0000ff,
+      0 0 0 4px #4b0082,
+      0 0 0 2px #ee82ee;
   }
 
   /* Bottom Row (Nav + Scroll Lock) */
@@ -403,10 +428,9 @@ body {
   .control-buttons button { width: 32px; height: 32px; }
   .control-buttons button::before { font-size: 1rem; }
   
-  /* Hollow arc scaling for very small screens */
+  /* Arc scaling for very small screens */
   #arcToggleBtn::before {
-    width: 26px;
-    height: 13px;
-    border-radius: 26px 26px 0 0;
+    bottom: -13px; /* Adjust position for smaller size */
+    /* The box-shadows will scale visually with the button size */
   }
 }
