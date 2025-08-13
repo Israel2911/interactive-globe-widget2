@@ -220,10 +220,6 @@ body {
   box-shadow: 0 0 24px 6px #ffa500;
   border: 3px solid #ffa500;
 }
-.placeholder-cube {
-  background: linear-gradient(120deg, #2a2a2a 64%, #444444 100%);
-  border: 2px solid #444;
-}
 
 /* === MOBILE RESPONSIVE (< 768px) === */
 @media (max-width: 768px) {
@@ -425,39 +421,53 @@ body {
     font-size: 0.6em;
   }
 
-  /* Consolidate all controls into a single row at the bottom */
-  .left-controls-stack, .control-buttons {
-    flex-direction: row;
-    align-items: center;
-    bottom: 40px; /* Position from bottom */
-    left: 10px; /* Position from left */
+  /* --- LANDSCAPE CONTROL LAYOUT --- */
+  
+  /* 1. Nav Arrows on the FAR LEFT */
+  .left-controls-stack {
+    left: 10px;
+    bottom: 10px;
     right: auto;
-    width: auto;
     top: auto;
-    transform: none; /* Reset transform */
+    transform: none;
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+  }
+  .navigation-controls {
     padding: 6px;
-    gap: 6px;
+    margin: 0;
     background: rgba(37, 47, 57, 0.3);
     backdrop-filter: blur(5px);
     border-radius: 8px;
   }
-  
-  /* Combine navigation and other controls */
-  .navigation-controls {
-    display: flex;
-    padding: 0;
-    margin: 0;
-    gap: 6px;
-    background: transparent;
-    box-shadow: none;
-    order: 1; /* Navigation first */
+  .left-controls-stack .scroll-lock-ui {
+    display: none;
   }
+
+  /* 2. Group Scroll Lock and Action Icons on the FAR RIGHT */
   .control-buttons {
-    position: static; /* Let it sit inside the flex container */
-    order: 2; /* Other icons second */
+    position: fixed;
+    right: 10px;
+    bottom: 10px;
+    left: auto;
+    top: auto;
+    transform: none;
+    flex-direction: row-reverse;
+    align-items: center;
+    background: rgba(37, 47, 57, 0.3);
+    backdrop-filter: blur(5px);
+    border-radius: 8px;
+    padding: 6px;
+    gap: 6px;
   }
   .scroll-lock-ui {
-    order: 3; /* Scroll lock button last */
+    position: relative;
+    order: 1;
+    display: flex;
+  }
+  .control-buttons button {
+    order: 2;
   }
 
   /* Adjust globe height */
