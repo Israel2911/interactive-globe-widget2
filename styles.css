@@ -315,9 +315,8 @@ body {
   #arcToggleBtn::before {
     content: '';
     position: absolute;
-    top: 50%; /* Position from the top */
+    top: 50%;
     left: 50%;
-    /* Translate to be perfectly centered */
     transform: translate(-50%, -50%); 
     width: 28px;
     height: 14px;
@@ -335,7 +334,7 @@ body {
     filter: 
       drop-shadow(0 0 5px rgba(255,0,0,1)) 
       drop-shadow(0 0 3px rgba(238,130,238,1));
-    transform: translate(-50%, -50%) scale(1.05); /* Centered transform on hover */
+    transform: translate(-50%, -50%) scale(1.05);
   }
 
   /* Bottom Row (Nav + Scroll Lock) */
@@ -368,7 +367,6 @@ body {
     border-radius: 6px;
   }
 
-  /* Rectangular scroll button */
   #scrollLockBtn {
     width: 90px !important; height: 34px !important;
     padding: 0 8px !important; font-size: 0.75em !important;
@@ -403,9 +401,67 @@ body {
   .control-buttons button { width: 32px; height: 32px; }
   .control-buttons button::before { font-size: 1rem; }
   
-  /* Arc scaling for very small screens */
   #arcToggleBtn::before {
     width: 24px;
     height: 12px;
+  }
+}
+
+/* === LANDSCAPE MOBILE (<926px width, landscape) === */
+@media (max-width: 926px) and (orientation: landscape) {
+  /* Shrink carousel to save vertical space */
+  .carousel-container {
+    padding: 4px;
+    gap: 6px;
+  }
+  .carousel-card {
+    min-width: 120px;
+    height: 80px;
+  }
+  .carousel-card-title {
+    font-size: 0.7em;
+  }
+  .carousel-card-text {
+    font-size: 0.6em;
+  }
+
+  /* Consolidate all controls into a single row at the bottom */
+  .left-controls-stack, .control-buttons {
+    flex-direction: row;
+    align-items: center;
+    bottom: 40px; /* Position from bottom */
+    left: 10px; /* Position from left */
+    right: auto;
+    width: auto;
+    top: auto;
+    transform: none; /* Reset transform */
+    padding: 6px;
+    gap: 6px;
+    background: rgba(37, 47, 57, 0.3);
+    backdrop-filter: blur(5px);
+    border-radius: 8px;
+  }
+  
+  /* Combine navigation and other controls */
+  .navigation-controls {
+    display: flex;
+    padding: 0;
+    margin: 0;
+    gap: 6px;
+    background: transparent;
+    box-shadow: none;
+    order: 1; /* Navigation first */
+  }
+  .control-buttons {
+    position: static; /* Let it sit inside the flex container */
+    order: 2; /* Other icons second */
+  }
+  .scroll-lock-ui {
+    order: 3; /* Scroll lock button last */
+  }
+
+  /* Adjust globe height */
+  #globe-canvas {
+    height: calc(100vh - 145px);
   }
 }
