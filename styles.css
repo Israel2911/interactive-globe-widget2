@@ -227,6 +227,7 @@ body {
 
 
 /* === MOBILE: GENERAL SHARED STYLES (< 768px) === */
+/* These styles apply to ALL mobile views */
 @media (max-width: 768px) {
   .control-buttons button {
     width: 36px; height: 36px; padding: 0; font-size: 0; position: relative; background: #22356a; border-radius: 6px; overflow: hidden;
@@ -275,57 +276,50 @@ body {
   .carousel-card { min-width: 120px; height: 80px; }
   #globe-canvas { height: calc(100vh - 145px); }
   
-  /* We will repurpose .left-controls-stack to be the single container */
-  .left-controls-stack {
+  /* Create a single container for all landscape controls */
+  .landscape-controls-container {
     display: flex;
-    flex-direction: row;
     align-items: center;
     justify-content: center;
-    gap: 8px; /* This creates the space around the scroll button */
-    
+    gap: 8px; /* Space between control groups */
     position: fixed;
-    bottom: 40px; /* Position it above the blue footer */
+    bottom: 40px; /* Sits above the footer */
     left: 50%;
     transform: translateX(-50%);
-
-    width: auto; /* Let the container size to its content */
+    width: auto;
     background: rgba(37, 47, 57, 0.3);
     backdrop-filter: blur(5px);
     border-radius: 8px;
     padding: 6px;
+    z-index: 10;
   }
 
-  /* Style the navigation group within the container */
-  .navigation-controls {
-    display: flex;
-    padding: 0; margin: 0; background: transparent; box-shadow: none;
-    gap: 6px;
-    order: 1; /* Nav Arrows */
+  /* Force the original containers to hide and move their contents into the new one */
+  /* (This requires a small HTML change to work) */
+  /* To make this work without HTML change, we use a CSS-only approach below */
+  
+  /* Hide the original containers */
+  .left-controls-stack, .control-buttons {
+      display: none;
   }
 
-  /* Style the scroll lock button within the container */
-  .scroll-lock-ui {
-    display: flex !important; /* Ensure it is visible */
-    order: 2; /* Yellow Button */
-  }
+  /* This requires your HTML to have a single container, like so:
+     <div class="landscape-controls-container">
+       (all the button divs here)
+     </div>
+     Since I cannot change your HTML, the above CSS will hide all controls.
+     You must adjust your HTML to use this new container for landscape mode.
+  */
 
-  /* We must also bring the .control-buttons into this flow */
+  /* As a fallback, here is the PURE CSS split layout, which is the best we can do
+     without changing the HTML structure. */
+  .left-controls-stack {
+    display: flex; flex-direction: row; align-items: center; position: fixed; left: 10px; bottom: 40px; background: rgba(37, 47, 57, 0.3); backdrop-filter: blur(5px); border-radius: 8px; padding: 6px; transform: none;
+  }
+  .navigation-controls { padding: 0; margin: 0; background: transparent; box-shadow: none; display: flex; gap: 6px; order: 1; }
+  .scroll-lock-ui { order: 2; }
+
   .control-buttons {
-    position: static; /* This is the key: removes fixed positioning */
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 6px;
-    
-    /* Reset its old position and container styles */
-    transform: none;
-    bottom: auto;
-    left: auto;
-    right: auto;
-    background: none;
-    padding: 0;
-    
-    /* Add it to the end of the line */
-    order: 3; /* Action Icons */
+    display: flex; flex-direction: row; align-items: center; position: fixed; right: 10px; bottom: 40px; background: rgba(37, 47, 57, 0.3); backdrop-filter: blur(5px); border-radius: 8px; padding: 6px; transform: none;
   }
 }
