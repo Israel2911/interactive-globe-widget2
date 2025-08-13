@@ -264,55 +264,64 @@ body {
   .carousel-card-title { font-size: 0.7em; }
   .carousel-card-text { font-size: 0.6em; }
 
-  /* --- LANDSCAPE CONTROL LAYOUT: SPLIT LEFT/RIGHT --- */
+  /* --- LANDSCAPE CONTROL LAYOUT: CORRECTED & CENTERED --- */
   
-  /* Reset both control containers first */
-  .left-controls-stack, .control-buttons {
+  /* Use .left-controls-stack as the main container for ALL buttons */
+  .left-controls-stack {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 8px; /* Space between the groups of icons */
+    
+    /* Center the entire bar and place it ABOVE the footer */
+    bottom: 40px; /* Provides space for the footer below */
+    left: 50%;
+    transform: translateX(-50%);
+    
+    /* Reset properties from other modes */
     position: fixed;
-    bottom: 10px;
+    right: auto;
     top: auto;
-    transform: none;
+    width: auto;
+    
+    /* Add background */
     background: rgba(37, 47, 57, 0.3);
     backdrop-filter: blur(5px);
     border-radius: 8px;
     padding: 6px;
+  }
+
+  /* Group for Navigation Arrows */
+  .navigation-controls {
+    display: flex;
+    gap: 6px;
+    padding: 0;
+    margin: 0;
+    background: transparent;
+    box-shadow: none;
+    order: 1; /* Appears on the left */
+  }
+
+  /* The Scroll Button (the separator) */
+  .scroll-lock-ui {
+    display: flex !important; /* Ensure it's visible */
+    order: 2; /* Appears in the middle */
+  }
+
+  /* Group for Action Icons (Pause, Rainbow, etc.) */
+  .control-buttons {
+    position: static; /* Let it be a normal flex item */
     display: flex;
     flex-direction: row;
     align-items: center;
     gap: 6px;
-  }
-  
-  /* 1. Nav Arrows on the FAR LEFT */
-  .left-controls-stack {
-    left: 10px;
-    right: auto;
-  }
-  .navigation-controls {
-    display: flex;
     padding: 0;
-    margin: 0;
-    gap: 6px;
     background: transparent;
-    box-shadow: none;
-  }
-  /* Hide the scroll button from the left group */
-  .left-controls-stack .scroll-lock-ui {
-    display: none; 
+    order: 3; /* Appears on the right */
   }
 
-  /* 2. Action Icons + Scroll Lock on the FAR RIGHT */
-  .control-buttons {
-    right: 10px;
-    left: auto;
-  }
-  /* Bring the scroll button back and add it to this group */
-  .scroll-lock-ui {
-    display: flex !important; /* This overrides the hide rule from the parent */
-    order: -1; /* This places it at the start of the flex group */
-    margin-right: 6px; /* Add a gap */
-  }
-
-  /* Adjust globe height for the new layout */
+  /* Adjust globe height */
   #globe-canvas {
     height: calc(100vh - 145px);
   }
