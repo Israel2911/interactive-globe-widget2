@@ -315,47 +315,50 @@ body {
   #pauseCubesButton::before { content: '🧊'; }
 
 /* Perfect horseshoe rainbow bow – smooth 7‑color arc with red outermost */
+/* Rainbow arc for desktop - works with vertical button layout */
 #arcToggleBtn {
   position: relative;
-  overflow: hidden; /* Clip the bottom half to form the bow */
+  overflow: hidden;
 }
 
 #arcToggleBtn::before {
   content: '';
   position: absolute;
-  top: 100%; /* place the circle so only the top shows */
+  top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 28px;
-  height: 28px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
+  
+  /* 7-color rainbow sweep, RED outer/top */
   background: conic-gradient(
-    from 270deg,           /* start angle so red is on top (outer arc) */
-    #ff0000 0deg,          /* Red */
-    #ffa500 51.43deg,      /* Orange */
-    #ffff00 102.86deg,     /* Yellow */
-    #008000 154.29deg,     /* Green */
-    #0000ff 205.72deg,     /* Blue */
-    #4b0082 257.15deg,     /* Indigo */
-    #ee82ee 308.58deg,     /* Violet */
-    #ff0000 360deg         /* back to Red for smooth loop */
+    from 270deg,
+    #ff0000 0deg,
+    #ffa500 51.43deg,
+    #ffff00 102.86deg,
+    #008000 154.29deg,
+    #0000ff 205.72deg,
+    #4b0082 257.15deg,
+    #ee82ee 308.58deg,
+    #ff0000 360deg
   );
-  /* optional inner cut to make the band thinner */
-  -webkit-mask:
-    radial-gradient(circle farthest-side, transparent calc(100% - 4px), white calc(100% - 4px)) content-box;
-  -webkit-mask-composite: destination-out;
-  mask-composite: exclude;
-
-  /* subtle glow emphasis for red & violet */
+  
+  /* Show only top half to form the bow */
+  clip-path: inset(50% -20% -20% -20%);
+  
+  /* Create ring with inner cut */
   box-shadow:
-    0 0 8px #ff0000,
-    0 0 6px #ee82ee;
+    inset 0 0 0 4px #22356a,              /* inner cut (match button bg) */
+    0 0 8px rgba(255,0,0,.8),             /* outer red glow */
+    inset 0 0 6px rgba(238,130,238,.9);   /* inner violet glow */
 }
 
 #arcToggleBtn:hover::before {
   box-shadow:
-    0 0 14px #ff0000,
-    0 0 12px #ee82ee;
+    inset 0 0 0 4px #ffa500,              /* match button hover bg */
+    0 0 12px rgba(255,0,0,1),
+    inset 0 0 8px rgba(238,130,238,1);
 }
 
   /* Bottom Row (Nav + Scroll Lock) */
