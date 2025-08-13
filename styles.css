@@ -307,62 +307,62 @@ body {
   #toggleMeshButton::before { content: '🌐'; }
   #pauseCubesButton::before { content: '🧊'; }
 
- /* FINAL MOBILE-ONLY: Hollow Rainbow Arc/Band */
-#arcToggleBtn {
-  position: relative;
-  overflow: hidden;
-}
+  /* FINAL MOBILE-ONLY: Hollow Rainbow Arc/Band */
+  #arcToggleBtn {
+    position: relative;
+    overflow: hidden;
+  }
 
-/* This creates the outer rainbow arc */
-#arcToggleBtn::before {
-  content: '';
-  position: absolute;
-  bottom: 0px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 34px;
-  height: 17px;
-  border-radius: 34px 34px 0 0;
-  background: linear-gradient(90deg,
-    #ff0000 0%,
-    #ffa500 16.67%,
-    #ffff00 33.33%,
-    #008000 50%,
-    #0000ff 66.67%,
-    #4b0082 83.33%,
-    #ee82ee 100%
-  );
-  box-shadow:
-    0 0 10px rgba(255,0,0,.85),
-    0 0 8px rgba(238,130,238,.85);
-  z-index: 1; /* Behind the cutout */
-}
+  /* This creates the outer rainbow arc */
+  #arcToggleBtn::before {
+    content: '';
+    position: absolute;
+    bottom: 0px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 34px;
+    height: 17px;
+    border-radius: 34px 34px 0 0;
+    background: linear-gradient(90deg,
+      #ff0000 0%,
+      #ffa500 16.67%,
+      #ffff00 33.33%,
+      #008000 50%,
+      #0000ff 66.67%,
+      #4b0082 83.33%,
+      #ee82ee 100%
+    );
+    box-shadow:
+      0 0 10px rgba(255,0,0,.85),
+      0 0 8px rgba(238,130,238,.85);
+    z-index: 1; /* Behind the cutout */
+  }
 
-/* This creates the inner cutout, making the bow hollow */
-#arcToggleBtn::after {
-  content: '';
-  position: absolute;
-  bottom: 0px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 26px; /* Smaller than the rainbow */
-  height: 13px; /* Half of its own width */
-  border-radius: 26px 26px 0 0;
-  background: #22356a; /* Matches the button background */
-  z-index: 2; /* On top of the rainbow */
-}
+  /* This creates the inner cutout, making the bow hollow */
+  #arcToggleBtn::after {
+    content: '';
+    position: absolute;
+    bottom: 0px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 26px; /* Smaller than the rainbow */
+    height: 13px; /* Half of its own width */
+    border-radius: 26px 26px 0 0;
+    background: #22356a; /* Matches the button background */
+    z-index: 2; /* On top of the rainbow */
+  }
 
-/* Change the cutout color on hover to match the button's hover state */
-#arcToggleBtn:hover::after {
-  background: #ffa500;
-}
+  /* Change the cutout color on hover to match the button's hover state */
+  #arcToggleBtn:hover::after {
+    background: #ffa500;
+  }
 
-/* Enhance rainbow glow on hover */
-#arcToggleBtn:hover::before {
-  box-shadow:
-    0 0 14px rgba(255,0,0,1),
-    0 0 12px rgba(238,130,238,1);
-}
+  /* Enhance rainbow glow on hover */
+  #arcToggleBtn:hover::before {
+    box-shadow:
+      0 0 14px rgba(255,0,0,1),
+      0 0 12px rgba(238,130,238,1);
+  }
 
   /* Bottom Row (Nav + Scroll Lock) */
   .left-controls-stack {
@@ -432,7 +432,13 @@ body {
   /* Arc scaling for very small screens */
   #arcToggleBtn::before {
     width: 30px;
-    height: 15px; /* Keep height at 50% of width */
+    height: 15px;
     border-radius: 30px 30px 0 0;
+  }
+  /* Cutout scaling for the hollow arc */
+  #arcToggleBtn::after {
+    width: 22px;
+    height: 11px;
+    border-radius: 22px 22px 0 0;
   }
 }
