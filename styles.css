@@ -307,60 +307,34 @@ body {
   #toggleMeshButton::before { content: '🌐'; }
   #pauseCubesButton::before { content: '🧊'; }
 
-  /* FINAL MOBILE-ONLY: Concentric Rainbow Arc using box-shadow */
+  /* FINAL MOBILE-ONLY: Custom-Designed 7-Color Rainbow Arc (SVG Method) */
   #arcToggleBtn {
     position: relative;
-    overflow: hidden; /* Clips the bottom of the circle to create the arc */
+    overflow: hidden; /* Ensures clean edges */
   }
   #arcToggleBtn::before {
     content: '';
     position: absolute;
-    box-sizing: border-box;
+    bottom: 3px; /* Fine-tune vertical position */
     left: 50%;
     transform: translateX(-50%);
-    /* Position the center of the circle just below the button's bottom edge */
-    bottom: -15px; 
-    
-    width: 2px; /* Core element size */
-    height: 2px;
-    border-radius: 50%;
-    background: transparent;
-
-    /* Concentric rings (arcs) with Red as the outermost */
-    box-shadow:
-      /* Glows are defined first to be behind the solid color rings */
-      0 0 12px 14px rgba(255,0,0,.7),  /* Red glow */
-      0 0 8px 2px rgba(238,130,238,.8),   /* Violet glow */
-      
-      /* Color Arcs: Red (largest) to Violet (smallest) */
-      0 0 0 14px #ff0000,    /* Red */
-      0 0 0 12px #ffa500,    /* Orange */
-      0 0 0 10px #ffff00,    /* Yellow */
-      0 0 0 8px #008000,     /* Green */
-      0 0 0 6px #0000ff,     /* Blue */
-      0 0 0 4px #4b0082,     /* Indigo */
-      0 0 0 2px #ee82ee;     /* Violet */
+    width: 28px;  /* Size of the icon */
+    height: 14px; /* Half of the width for correct aspect ratio */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 14'%3E%3Cpath d='M2,12 A12,12 0 0,1 26,12' fill='none' stroke='%23ff0000' stroke-width='2'/%3E%3Cpath d='M4,12 A10,10 0 0,1 24,12' fill='none' stroke='%23ffa500' stroke-width='2'/%3E%3Cpath d='M6,12 A8,8 0 0,1 22,12' fill='none' stroke='%23ffff00' stroke-width='2'/%3E%3Cpath d='M8,12 A6,6 0 0,1 20,12' fill='none' stroke='%23008000' stroke-width='2'/%3E%3Cpath d='M10,12 A4,4 0 0,1 18,12' fill='none' stroke='%230000ff' stroke-width='2'/%3E%3Cpath d='M12,12 A2,2 0 0,1 16,12' fill='none' stroke='%234b0082' stroke-width='2'/%3E%3Cpath d='M13,12 A1,1 0 0,1 15,12' fill='none' stroke='%23ee82ee' stroke-width='2'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-size: contain;
+    filter: 
+      drop-shadow(0 0 3px rgba(255,0,0,0.8))      /* Red glow */
+      drop-shadow(0 0 2px rgba(238,130,238,0.8)); /* Violet glow */
   }
-  
-  /* Disable the old ::after rule to prevent conflicts */
   #arcToggleBtn::after {
-    content: none;
+    content: none; /* Make sure the old ::after rule is disabled */
   }
-
-  /* Enhance glows on hover */
   #arcToggleBtn:hover::before {
-    box-shadow:
-      /* Enhanced glows on hover */
-      0 0 16px 14px rgba(255,0,0,1),
-      0 0 12px 2px rgba(238,130,238,1),
-      
-      0 0 0 14px #ff0000,
-      0 0 0 12px #ffa500,
-      0 0 0 10px #ffff00,
-      0 0 0 8px #008000,
-      0 0 0 6px #0000ff,
-      0 0 0 4px #4b0082,
-      0 0 0 2px #ee82ee;
+    filter: 
+      drop-shadow(0 0 5px rgba(255,0,0,1)) 
+      drop-shadow(0 0 3px rgba(238,130,238,1));
+    transform: translateX(-50%) scale(1.05); /* Slight grow on hover */
   }
 
   /* Bottom Row (Nav + Scroll Lock) */
@@ -430,7 +404,7 @@ body {
   
   /* Arc scaling for very small screens */
   #arcToggleBtn::before {
-    bottom: -13px; /* Adjust position for smaller size */
-    /* The box-shadows will scale visually with the button size */
+    width: 24px;
+    height: 12px;
   }
 }
