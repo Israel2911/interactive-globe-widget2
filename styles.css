@@ -220,14 +220,67 @@ body {
   box-shadow: 0 0 24px 6px #ffa500;
   border: 3px solid #ffa500;
 }
+.placeholder-cube {
+  background: linear-gradient(120deg, #2a2a2a 64%, #444444 100%);
+  border: 2px solid #444;
+}
 
-/* === MOBILE: GENERAL SHARED STYLES (< 768px) === */
+/* === MOBILE RESPONSIVE (< 768px) === */
 @media (max-width: 768px) {
+  /* Carousel mobile scaling */
+  .carousel-container {
+    padding: 4px 8px;
+    gap: 6px;
+  }
+  .carousel-card {
+    min-width: 140px;
+    max-width: 140px;
+    height: 100px;
+    padding: 0;
+  }
+  .carousel-card img {
+    height: 65%;
+  }
+  .carousel-card-content {
+    height: 35%;
+    padding: 2px 4px;
+  }
+  .carousel-card-title {
+    font-size: 0.7em;
+    line-height: 1.1;
+  }
+  .carousel-card-text {
+    font-size: 0.6em;
+    line-height: 1.0;
+  }
+  .carousel-arrow {
+    font-size: 1.2em;
+    margin: 0 4px;
+  }
+
+  /* Top Row of Icon Controls */
+  .control-buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 6px;
+    position: fixed;
+    bottom: 85px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(37, 47, 57, 0.3);
+    backdrop-filter: blur(5px);
+    padding: 6px 10px;
+    border-radius: 8px;
+    z-index: 10;
+    max-height: none;
+  }
   .control-buttons button {
     width: 36px; height: 36px;
     padding: 0;
     font-size: 0;
     position: relative;
+    white-space: normal;
     background: #22356a;
     border-radius: 6px;
     overflow: hidden;
@@ -235,6 +288,8 @@ body {
   .control-buttons button:hover {
     background: #ffa500;
   }
+
+  /* Mobile icon glyphs */
   .control-buttons button::before {
     font-size: 1.2rem;
     color: #eee;
@@ -251,71 +306,143 @@ body {
   #toggleNodesButton::before { content: '⚛️'; }
   #toggleMeshButton::before { content: '🌐'; }
   #pauseCubesButton::before { content: '🧊'; }
+
+  /* FINAL MOBILE-ONLY: Centered Custom SVG Rainbow Arc */
+  #arcToggleBtn {
+    position: relative;
+    overflow: hidden;
+  }
   #arcToggleBtn::before {
     content: '';
     position: absolute;
-    top: 50%; left: 50%;
+    top: 50%;
+    left: 50%;
     transform: translate(-50%, -50%); 
-    width: 28px; height: 14px;
+    width: 28px;
+    height: 14px;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 14'%3E%3Cpath d='M2,12 A12,12 0 0,1 26,12' fill='none' stroke='%23ff0000' stroke-width='1.5'/%3E%3Cpath d='M4,12 A10,10 0 0,1 24,12' fill='none' stroke='%23ffa500' stroke-width='1.5'/%3E%3Cpath d='M6,12 A8,8 0 0,1 22,12' fill='none' stroke='%23ffff00' stroke-width='1.5'/%3E%3Cpath d='M8,12 A6,6 0 0,1 20,12' fill='none' stroke='%23008000' stroke-width='1.5'/%3E%3Cpath d='M10,12 A4,4 0 0,1 18,12' fill='none' stroke='%230000ff' stroke-width='1.5'/%3E%3Cpath d='M12,12 A2,2 0 0,1 16,12' fill='none' stroke='%234b0082' stroke-width='1.5'/%3E%3Cpath d='M13.5,12 A0.5,0.5 0 0,1 14.5,12' fill='none' stroke='%23ee82ee' stroke-width='1.5'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-size: contain;
+    filter: 
+      drop-shadow(0 0 3px rgba(255,0,0,0.8))
+      drop-shadow(0 0 2px rgba(238,130,238,0.8));
+  }
+  #arcToggleBtn::after {
+    content: none;
+  }
+  #arcToggleBtn:hover::before {
+    filter: 
+      drop-shadow(0 0 5px rgba(255,0,0,1)) 
+      drop-shadow(0 0 3px rgba(238,130,238,1));
+    transform: translate(-50%, -50%) scale(1.05);
+  }
+
+  /* Bottom Row (Nav + Scroll Lock) */
+  .left-controls-stack {
+    left: 4px; right: 4px; bottom: 40px;
+    width: calc(100% - 8px);
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: rgba(37, 47, 57, 0.3);
+    backdrop-filter: blur(5px);
+    border-radius: 8px;
+    padding: 6px;
+  }
+  .navigation-controls {
+    padding: 0; margin: 0;
+    background: transparent;
+    box-shadow: none;
+    display: flex;
+    gap: 4px;
+    order: 1;
+  }
+  .scroll-lock-ui {
+    order: 2;
   }
   .nav-btn {
     width: 34px; height: 34px;
     font-size: 1.1em;
     border-radius: 6px;
   }
+
   #scrollLockBtn {
     width: 90px !important; height: 34px !important;
     padding: 0 8px !important; font-size: 0.75em !important;
-    border-radius: 6px !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
+    border-radius: 6px !important; display: inline-flex !important;
+    align-items: center !important; justify-content: center !important;
+  }
+  #globe-canvas {
+    height: calc(100vh - 175px);
   }
 }
 
-/* === MOBILE: PORTRAIT ONLY === */
-@media (max-width: 768px) and (orientation: portrait) {
-  .carousel-card { min-width: 140px; height: 100px; }
-  .control-buttons {
-    flex-direction: row;
-    bottom: 85px;
-    left: 50%;
-    transform: translateX(-50%);
+@media (max-width: 480px) {
+  /* Even smaller carousel cards for phones */
+  .carousel-card {
+    min-width: 120px;
+    max-width: 120px;
+    height: 90px;
   }
-  .left-controls-stack {
-    bottom: 40px;
-    left: 50%;
-    transform: translateX(-50%);
-    flex-direction: row;
+  .carousel-card-title {
+    font-size: 0.65em;
   }
-  .navigation-controls { order: 1; }
-  .scroll-lock-ui { order: 2; }
-  #globe-canvas { height: calc(100vh - 175px); }
-}
+  .carousel-card-text {
+    font-size: 0.55em;
+  }
+  .carousel-arrow {
+    font-size: 1em;
+  }
 
-/* === MOBILE: LANDSCAPE ONLY === */
-@media (max-width: 926px) and (orientation: landscape) {
-  .carousel-card { min-width: 120px; height: 80px; }
+  /* Controls scaling */
+  .nav-btn { width: 32px !important; height: 32px !important; }
+  #scrollLockBtn { width: 80px !important; height: 32px !important; font-size: 0.7em !important; }
+  .control-buttons button { width: 32px; height: 32px; }
+  .control-buttons button::before { font-size: 1rem; }
   
-  /* Use .left-controls-stack as the main flex container for ALL controls */
-  .left-controls-stack {
-    display: flex;
+  #arcToggleBtn::before {
+    width: 24px;
+    height: 12px;
+  }
+}
+
+/* === LANDSCAPE MOBILE (<926px width, landscape) === */
+@media (max-width: 926px) and (orientation: landscape) {
+  /* Shrink carousel to save vertical space */
+  .carousel-container {
+    padding: 4px;
+    gap: 6px;
+  }
+  .carousel-card {
+    min-width: 120px;
+    height: 80px;
+  }
+  .carousel-card-title {
+    font-size: 0.7em;
+  }
+  .carousel-card-text {
+    font-size: 0.6em;
+  }
+
+  /* Consolidate all controls into a single row at the bottom */
+  .left-controls-stack, .control-buttons {
     flex-direction: row;
     align-items: center;
-    justify-content: center;
-    gap: 8px; /* Space between the groups */
-    bottom: 40px; 
-    left: 50%;
-    transform: translateX(-50%);
+    bottom: 40px; /* Position from bottom */
+    left: 10px; /* Position from left */
+    right: auto;
     width: auto;
+    top: auto;
+    transform: none; /* Reset transform */
+    padding: 6px;
+    gap: 6px;
     background: rgba(37, 47, 57, 0.3);
     backdrop-filter: blur(5px);
     border-radius: 8px;
-    padding: 6px;
   }
+  
+  /* Combine navigation and other controls */
   .navigation-controls {
     display: flex;
     padding: 0;
@@ -323,21 +450,17 @@ body {
     gap: 6px;
     background: transparent;
     box-shadow: none;
-    order: 1; /* Nav arrows first */
-  }
-  .scroll-lock-ui {
-    display: flex !important; 
-    order: 2; /* Scroll button second */
+    order: 1; /* Navigation first */
   }
   .control-buttons {
-    position: static;
-    display: flex;
-    flex-direction: row;
-    gap: 6px;
-    bottom: auto;
-    transform: none;
-    order: 3; /* Action icons third */
+    position: static; /* Let it sit inside the flex container */
+    order: 2; /* Other icons second */
   }
+  .scroll-lock-ui {
+    order: 3; /* Scroll lock button last */
+  }
+
+  /* Adjust globe height */
   #globe-canvas {
     height: calc(100vh - 145px);
   }
