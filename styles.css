@@ -222,7 +222,10 @@ body {
 }
 
 /* === MOBILE PORTRAIT (< 768px) === */
-@media (max-width: 768px) and (orientation: portrait) {
+@media (max-width: 768px) {
+  /* This block now applies to BOTH portrait and landscape by default, */
+  /* with landscape-specific overrides below. */
+
   /* Carousel mobile scaling */
   .carousel-container {
     padding: 4px 8px;
@@ -254,7 +257,7 @@ body {
     margin: 0 4px;
   }
 
-  /* Top Row of Icon Controls */
+  /* Top Row of Icon Controls (Portrait) */
   .control-buttons {
     display: flex;
     flex-direction: row;
@@ -303,7 +306,7 @@ body {
   #toggleMeshButton::before { content: '🌐'; }
   #pauseCubesButton::before { content: '🧊'; }
 
-  /* Centered Custom SVG Rainbow Arc */
+  /* Custom SVG Rainbow Arc */
   #arcToggleBtn {
     position: relative;
     overflow: hidden;
@@ -333,7 +336,7 @@ body {
     transform: translate(-50%, -50%) scale(1.05);
   }
 
-  /* Bottom Row (Nav + Scroll Lock) */
+  /* Bottom Row (Nav + Scroll Lock) (Portrait) */
   .left-controls-stack {
     left: 50%;
     transform: translateX(-50%);
@@ -365,7 +368,6 @@ body {
     font-size: 1.1em;
     border-radius: 6px;
   }
-
   #scrollLockBtn {
     width: 90px !important; height: 34px !important;
     padding: 0 8px !important; font-size: 0.75em !important;
@@ -377,58 +379,45 @@ body {
   }
 }
 
-/* === LANDSCAPE MOBILE (<926px height) === */
-@media (max-height: 500px) and (orientation: landscape) {
+/* === LANDSCAPE MOBILE (<926px width) === */
+@media (max-width: 926px) and (orientation: landscape) {
   /* Shrink carousel to save vertical space */
-  .carousel-container { padding: 4px; gap: 6px; }
-  .carousel-card { min-width: 120px; height: 80px; }
-  .carousel-card-title { font-size: 0.7em; }
-  .carousel-card-text { font-size: 0.6em; }
+  .carousel-card {
+    min-width: 120px;
+    height: 80px;
+  }
+  .carousel-card-title {
+    font-size: 0.7em;
+  }
+  .carousel-card-text {
+    font-size: 0.6em;
+  }
 
-  /* --- LANDSCAPE CONTROL LAYOUT: CORRECTED & CENTERED --- */
+  /* --- LANDSCAPE CONTROL LAYOUT: SINGLE, CENTERED ROW --- */
   
-  /* Use .left-controls-stack as the main container for ALL buttons */
+  /* Use .left-controls-stack as the main flex container for ALL controls */
   .left-controls-stack {
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    gap: 8px; /* Space between the groups of icons */
+    gap: 8px;
     
-    /* Center the entire bar and place it ABOVE the footer */
+    /* Center the bar and position it above the footer */
     bottom: 40px; 
     left: 50%;
     transform: translateX(-50%);
     
+    /* Override portrait styles */
     position: fixed;
-    right: auto;
-    top: auto;
     width: auto;
-    
     background: rgba(37, 47, 57, 0.3);
     backdrop-filter: blur(5px);
     border-radius: 8px;
     padding: 6px;
   }
 
-  /* Group for Navigation Arrows */
-  .navigation-controls {
-    display: flex;
-    gap: 6px;
-    padding: 0;
-    margin: 0;
-    background: transparent;
-    box-shadow: none;
-    order: 1; /* Appears on the left */
-  }
-
-  /* The Scroll Button (the separator) */
-  .scroll-lock-ui {
-    display: flex !important; 
-    order: 2; /* Appears in the middle */
-  }
-
-  /* Group for Action Icons (Pause, Rainbow, etc.) */
+  /* Make .control-buttons a simple flex item inside the container */
   .control-buttons {
     position: static;
     display: flex;
@@ -437,7 +426,22 @@ body {
     gap: 6px;
     padding: 0;
     background: transparent;
-    order: 3; /* Appears on the right */
+    bottom: auto; /* Reset position */
+    left: auto;
+    transform: none;
+    order: 3; /* Nav -> Scroll -> Action Icons */
+  }
+
+  /* Ensure Navigation group is a flex item */
+  .navigation-controls {
+    display: flex;
+    order: 1; /* Nav -> Scroll -> Action Icons */
+  }
+
+  /* Ensure Scroll Lock button is a flex item */
+  .scroll-lock-ui {
+    display: flex !important; /* Make sure it's visible */
+    order: 2; /* Nav -> Scroll -> Action Icons */
   }
 
   /* Adjust globe height */
