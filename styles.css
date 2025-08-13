@@ -307,7 +307,7 @@ body {
   #toggleMeshButton::before { content: '🌐'; }
   #pauseCubesButton::before { content: '🧊'; }
 
-  /* FINAL MOBILE-ONLY: Centered Custom SVG Rainbow Arc */
+  /* Centered Custom SVG Rainbow Arc */
   #arcToggleBtn {
     position: relative;
     overflow: hidden;
@@ -339,8 +339,11 @@ body {
 
   /* Bottom Row (Nav + Scroll Lock) */
   .left-controls-stack {
-    left: 4px; right: 4px; bottom: 40px;
-    width: calc(100% - 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    right: auto;
+    bottom: 40px;
+    width: auto;
     flex-direction: row;
     align-items: center;
     justify-content: center;
@@ -407,7 +410,7 @@ body {
   }
 }
 
-/* === LANDSCAPE MOBILE (<926px width, landscape) === */
+/* === LANDSCAPE MOBILE (<926px width) - FINAL CORRECTED LAYOUT === */
 @media (max-width: 926px) and (orientation: landscape) {
   /* Shrink carousel to save vertical space */
   .carousel-container {
@@ -425,24 +428,24 @@ body {
     font-size: 0.6em;
   }
 
-  /* Consolidate all controls into a single row at the bottom */
-  .left-controls-stack, .control-buttons {
+  /* Use .left-controls-stack as the main flex container for ALL controls */
+  .left-controls-stack {
+    display: flex;
     flex-direction: row;
     align-items: center;
-    bottom: 40px; /* Position from bottom */
-    left: 10px; /* Position from left */
-    right: auto;
+    justify-content: center;
+    gap: 8px;
+    bottom: 40px; 
+    left: 50%;
+    transform: translateX(-50%);
     width: auto;
-    top: auto;
-    transform: none; /* Reset transform */
-    padding: 6px;
-    gap: 6px;
     background: rgba(37, 47, 57, 0.3);
     backdrop-filter: blur(5px);
     border-radius: 8px;
+    padding: 6px;
   }
-  
-  /* Combine navigation and other controls */
+
+  /* Group 1: Navigation Arrows */
   .navigation-controls {
     display: flex;
     padding: 0;
@@ -450,16 +453,26 @@ body {
     gap: 6px;
     background: transparent;
     box-shadow: none;
-    order: 1; /* Navigation first */
-  }
-  .control-buttons {
-    position: static; /* Let it sit inside the flex container */
-    order: 2; /* Other icons second */
-  }
-  .scroll-lock-ui {
-    order: 3; /* Scroll lock button last */
+    order: 1; /* Nav arrows first */
   }
 
+  /* Group 2: Scroll Button (Separator) */
+  .scroll-lock-ui {
+    display: flex !important; 
+    order: 2; /* Scroll button second */
+  }
+
+  /* Group 3: Action Icons */
+  .control-buttons {
+    position: static;
+    display: flex;
+    flex-direction: row;
+    gap: 6px;
+    bottom: auto;
+    transform: none;
+    order: 3; /* Action icons third */
+  }
+  
   /* Adjust globe height */
   #globe-canvas {
     height: calc(100vh - 145px);
