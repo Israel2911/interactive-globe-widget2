@@ -335,8 +335,11 @@ body {
 
   /* Bottom Row (Nav + Scroll Lock) */
   .left-controls-stack {
-    left: 4px; right: 4px; bottom: 40px;
-    width: calc(100% - 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    right: auto;
+    bottom: 40px;
+    width: auto;
     flex-direction: row;
     align-items: center;
     justify-content: center;
@@ -375,32 +378,7 @@ body {
 }
 
 @media (max-width: 480px) {
-  /* Even smaller carousel cards for phones */
-  .carousel-card {
-    min-width: 120px;
-    max-width: 120px;
-    height: 90px;
-  }
-  .carousel-card-title {
-    font-size: 0.65em;
-  }
-  .carousel-card-text {
-    font-size: 0.55em;
-  }
-  .carousel-arrow {
-    font-size: 1em;
-  }
-
-  /* Controls scaling */
-  .nav-btn { width: 32px !important; height: 32px !important; }
-  #scrollLockBtn { width: 80px !important; height: 32px !important; font-size: 0.7em !important; }
-  .control-buttons button { width: 32px; height: 32px; }
-  .control-buttons button::before { font-size: 1rem; }
-  
-  #arcToggleBtn::before {
-    width: 24px;
-    height: 12px;
-  }
+  /* ... (no changes here) ... */
 }
 
 /* === LANDSCAPE MOBILE (<926px width, landscape) === */
@@ -421,53 +399,59 @@ body {
     font-size: 0.6em;
   }
 
-  /* --- LANDSCAPE CONTROL LAYOUT --- */
+  /* --- LANDSCAPE CONTROL LAYOUT: SINGLE, CENTERED ROW --- */
   
-  /* 1. Nav Arrows on the FAR LEFT */
+  /* Use .left-controls-stack as the main container for ALL buttons */
   .left-controls-stack {
-    left: 10px;
-    bottom: 10px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    
+    /* Center the entire bar and place it above the footer */
+    bottom: 40px; 
+    left: 50%;
+    transform: translateX(-50%);
+    
+    /* Reset properties from other modes */
     right: auto;
     top: auto;
-    transform: none;
-    background: transparent;
-    box-shadow: none;
-    padding: 0;
-  }
-  .navigation-controls {
-    padding: 6px;
-    margin: 0;
+    width: auto;
+    
+    /* Add background */
     background: rgba(37, 47, 57, 0.3);
     backdrop-filter: blur(5px);
     border-radius: 8px;
-  }
-  .left-controls-stack .scroll-lock-ui {
-    display: none;
+    padding: 6px;
   }
 
-  /* 2. Group Scroll Lock and Action Icons on the FAR RIGHT */
-  .control-buttons {
-    position: fixed;
-    right: 10px;
-    bottom: 10px;
-    left: auto;
-    top: auto;
-    transform: none;
-    flex-direction: row-reverse;
-    align-items: center;
-    background: rgba(37, 47, 57, 0.3);
-    backdrop-filter: blur(5px);
-    border-radius: 8px;
-    padding: 6px;
-    gap: 6px;
-  }
-  .scroll-lock-ui {
-    position: relative;
-    order: 1;
+  /* Make .navigation-controls a simple flex item inside the main bar */
+  .navigation-controls {
     display: flex;
+    padding: 0;
+    margin: 0;
+    gap: 6px;
+    background: transparent;
+    box-shadow: none;
+    order: 1; /* Order: Nav arrows first */
   }
-  .control-buttons button {
-    order: 2;
+
+  /* Make .control-buttons a simple flex item inside the main bar */
+  .control-buttons {
+    position: static; /* Remove fixed positioning */
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    padding: 0;
+    background: transparent;
+    order: 2; /* Order: Action icons second */
+  }
+
+  /* Ensure the scroll button is visible and part of the main bar */
+  .scroll-lock-ui {
+    display: flex;
+    order: 3; /* Order: Scroll button last */
   }
 
   /* Adjust globe height */
