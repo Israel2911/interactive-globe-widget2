@@ -314,54 +314,49 @@ body {
   #toggleMeshButton::before { content: '🌐'; }
   #pauseCubesButton::before { content: '🧊'; }
 
-  /* Perfect horseshoe rainbow bow - RED ON TOP (outermost) */
-  #arcToggleBtn {
-    position: relative;
-    overflow: hidden; /* Essential for clipping into bow shape */
-  }
+/* Perfect horseshoe rainbow bow – smooth 7‑color arc with red outermost */
+#arcToggleBtn {
+  position: relative;
+  overflow: hidden; /* Clip the bottom half to form the bow */
+}
 
-  #arcToggleBtn::before {
-    content: '';
-    position: absolute;
-    top: 100%; /* Bottom edge position for bow shape */
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: transparent;
-    border: 2px solid transparent;
-    
-    /* REVERSED: RED (top/outermost) to VIOLET (innermost) */
-    box-shadow:
-        0 0 0 0px transparent,
-        0 0 0 14px #ff0000,   /* Red - TOP/OUTERMOST (biggest arc) */
-        0 0 0 12px #ffa500,   /* Orange */
-        0 0 0 10px #ffff00,   /* Yellow */
-        0 0 0 8px #008000,    /* Green */
-        0 0 0 6px #0000ff,    /* Blue */
-        0 0 0 4px #4b0082,    /* Indigo */
-        0 0 0 2px #ee82ee,    /* Violet - INNERMOST (smallest arc) */
-        
-        /* Enhanced glows for red (outer) and violet (inner) */
-        0 0 12px 14px #ff0000,  /* Red glow on outermost band */
-        0 0 15px 2px #ee82ee;   /* Violet glow on innermost band */
-  }
+#arcToggleBtn::before {
+  content: '';
+  position: absolute;
+  top: 100%; /* place the circle so only the top shows */
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 270deg,           /* start angle so red is on top (outer arc) */
+    #ff0000 0deg,          /* Red */
+    #ffa500 51.43deg,      /* Orange */
+    #ffff00 102.86deg,     /* Yellow */
+    #008000 154.29deg,     /* Green */
+    #0000ff 205.72deg,     /* Blue */
+    #4b0082 257.15deg,     /* Indigo */
+    #ee82ee 308.58deg,     /* Violet */
+    #ff0000 360deg         /* back to Red for smooth loop */
+  );
+  /* optional inner cut to make the band thinner */
+  -webkit-mask:
+    radial-gradient(circle farthest-side, transparent calc(100% - 4px), white calc(100% - 4px)) content-box;
+  -webkit-mask-composite: destination-out;
+  mask-composite: exclude;
 
-  #arcToggleBtn:hover::before {
-    box-shadow:
-        0 0 0 0px transparent,
-        0 0 0 14px #ff0000,   /* Red - outermost */
-        0 0 0 12px #ffa500,   /* Orange */
-        0 0 0 10px #ffff00,   /* Yellow */
-        0 0 0 8px #008000,    /* Green */
-        0 0 0 6px #0000ff,    /* Blue */
-        0 0 0 4px #4b0082,    /* Indigo */
-        0 0 0 2px #ee82ee,    /* Violet - innermost */
-        /* Maximum glows on hover */
-        0 0 20px 14px #ff0000,  /* Maximum red glow */
-        0 0 25px 2px #ee82ee;   /* Maximum violet glow */
-  }
+  /* subtle glow emphasis for red & violet */
+  box-shadow:
+    0 0 8px #ff0000,
+    0 0 6px #ee82ee;
+}
+
+#arcToggleBtn:hover::before {
+  box-shadow:
+    0 0 14px #ff0000,
+    0 0 12px #ee82ee;
+}
 
   /* Bottom Row (Nav + Scroll Lock) */
   .left-controls-stack {
