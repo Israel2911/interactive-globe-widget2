@@ -229,40 +229,33 @@ body {
 @media (max-width: 768px) {
   /* Carousel mobile scaling */
   .carousel-container {
-    padding: 4px 8px; /* Reduce padding */
-    gap: 6px; /* Smaller gaps between cards */
+    padding: 4px 8px;
+    gap: 6px;
   }
-  
   .carousel-card {
-    min-width: 140px; /* Slightly smaller than desktop 160px */
+    min-width: 140px;
     max-width: 140px;
-    height: 100px; /* Reduced from 120px */
+    height: 100px;
     padding: 0;
   }
-  
   .carousel-card img {
-    height: 65%; /* Adjust image proportion */
+    height: 65%;
   }
-  
   .carousel-card-content {
     height: 35%;
-    padding: 2px 4px; /* Tighter padding */
+    padding: 2px 4px;
   }
-  
   .carousel-card-title {
-    font-size: 0.7em; /* Smaller text */
+    font-size: 0.7em;
     line-height: 1.1;
   }
-  
   .carousel-card-text {
-    font-size: 0.6em; /* Smaller subtext */
+    font-size: 0.6em;
     line-height: 1.0;
   }
-  
-  /* Carousel arrows scaling */
   .carousel-arrow {
-    font-size: 1.2em; /* Smaller arrows */
-    margin: 0 4px; /* Less margin */
+    font-size: 1.2em;
+    margin: 0 4px;
   }
 
   /* Top Row of Icon Controls */
@@ -290,7 +283,7 @@ body {
     white-space: normal;
     background: #22356a;
     border-radius: 6px;
-    overflow: hidden; /* required for arc clipping */
+    overflow: hidden;
   }
   .control-buttons button:hover {
     background: #ffa500;
@@ -314,52 +307,38 @@ body {
   #toggleMeshButton::before { content: '🌐'; }
   #pauseCubesButton::before { content: '🧊'; }
 
-/* Perfect horseshoe rainbow bow – smooth 7‑color arc with red outermost */
-/* Rainbow arc for desktop - works with vertical button layout */
-#arcToggleBtn {
-  position: relative;
-  overflow: hidden;
-}
-
-#arcToggleBtn::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  
-  /* 7-color rainbow sweep, RED outer/top */
-  background: conic-gradient(
-    from 270deg,
-    #ff0000 0deg,
-    #ffa500 51.43deg,
-    #ffff00 102.86deg,
-    #008000 154.29deg,
-    #0000ff 205.72deg,
-    #4b0082 257.15deg,
-    #ee82ee 308.58deg,
-    #ff0000 360deg
-  );
-  
-  /* Show only top half to form the bow */
-  clip-path: inset(50% -20% -20% -20%);
-  
-  /* Create ring with inner cut */
-  box-shadow:
-    inset 0 0 0 4px #22356a,              /* inner cut (match button bg) */
-    0 0 8px rgba(255,0,0,.8),             /* outer red glow */
-    inset 0 0 6px rgba(238,130,238,.9);   /* inner violet glow */
-}
-
-#arcToggleBtn:hover::before {
-  box-shadow:
-    inset 0 0 0 4px #ffa500,              /* match button hover bg */
-    0 0 12px rgba(255,0,0,1),
-    inset 0 0 8px rgba(238,130,238,1);
-}
+  /* FINAL MOBILE-ONLY: Single, correct rainbow horseshoe bow */
+  #arcToggleBtn {
+    position: relative;
+    overflow: hidden;
+  }
+  #arcToggleBtn::before {
+    content: '';
+    position: absolute;
+    bottom: 0px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 34px;
+    height: 17px;
+    border-radius: 34px 34px 0 0;
+    background: linear-gradient(90deg,
+      #ff0000 0%,
+      #ffa500 16.67%,
+      #ffff00 33.33%,
+      #008000 50%,
+      #0000ff 66.67%,
+      #4b0082 83.33%,
+      #ee82ee 100%
+    );
+    box-shadow:
+      0 0 10px rgba(255,0,0,.85),
+      0 0 8px rgba(238,130,238,.85);
+  }
+  #arcToggleBtn:hover::before {
+    box-shadow:
+      0 0 14px rgba(255,0,0,1),
+      0 0 12px rgba(238,130,238,1);
+  }
 
   /* Bottom Row (Nav + Scroll Lock) */
   .left-controls-stack {
@@ -406,19 +385,16 @@ body {
 @media (max-width: 480px) {
   /* Even smaller carousel cards for phones */
   .carousel-card {
-    min-width: 120px; /* Further reduced */
+    min-width: 120px;
     max-width: 120px;
     height: 90px;
   }
-  
   .carousel-card-title {
     font-size: 0.65em;
   }
-  
   .carousel-card-text {
     font-size: 0.55em;
   }
-  
   .carousel-arrow {
     font-size: 1em;
   }
@@ -428,5 +404,11 @@ body {
   #scrollLockBtn { width: 80px !important; height: 32px !important; font-size: 0.7em !important; }
   .control-buttons button { width: 32px; height: 32px; }
   .control-buttons button::before { font-size: 1rem; }
-  #arcToggleBtn::before { transform: translate(-50%, -50%) scale(0.8); }
+  
+  /* Arc scaling for very small screens */
+  #arcToggleBtn::before {
+    width: 30px;
+    height: 15px; /* Keep height at 50% of width */
+    border-radius: 30px 30px 0 0;
+  }
 }
