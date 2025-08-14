@@ -853,4 +853,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log('✅ Globe Widget fully loaded and populated!');
     
   } catch (error) {
-    console.error('❌ Error during data
+    console.error('❌ Error during data-dependent initialization:', error);
+  }
+});
+
+async function logout() {
+  try {
+    await fetch('/logout', { method: 'POST' });
+    alert('You have been logged out.');
+    location.reload();
+  } catch (error) {
+    console.error('Logout failed:', error);
+    alert('Could not log out at this time. Please try again.');
+  }
+}
