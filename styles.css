@@ -225,19 +225,11 @@ body {
   border: 2px solid #444;
 }
 
-/* === MOBILE RESPONSIVE (< 768px) - BASELINE STYLES === */
+/* === MOBILE: GENERAL SHARED STYLES (< 768px) === */
 @media (max-width: 768px) {
-  /* This block sets the default styles for all mobile views */
-  .carousel-container {
-    padding: 4px 8px;
-    gap: 6px;
-  }
-  .carousel-card {
-    min-width: 140px;
-    max-width: 140px;
-    height: 100px;
-    padding: 0;
-  }
+  /* This block contains styles shared by BOTH portrait and landscape */
+  .carousel-container { padding: 4px 8px; gap: 6px; }
+  .carousel-card { min-width: 140px; max-width: 140px; height: 100px; padding: 0; }
   .carousel-card img { height: 65%; }
   .carousel-card-content { height: 35%; padding: 2px 4px; }
   .carousel-card-title { font-size: 0.7em; }
@@ -258,6 +250,7 @@ body {
 
 /* === MOBILE: PORTRAIT ONLY === */
 @media (max-width: 768px) and (orientation: portrait) {
+  /* This block ONLY contains LAYOUT rules for portrait mode */
   .control-buttons {
     display: flex; flex-direction: row; justify-content: center; gap: 6px; position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%); background: rgba(37, 47, 57, 0.3); backdrop-filter: blur(5px); padding: 6px 10px; border-radius: 8px; z-index: 10;
   }
@@ -269,54 +262,28 @@ body {
   #globe-canvas { height: calc(100vh - 175px); }
 }
 
-/* === MOBILE: LANDSCAPE ONLY - FINAL CORRECTED LAYOUT === */
+/* === MOBILE: LANDSCAPE ONLY - DEFINITIVE SPLIT LAYOUT === */
 @media (max-width: 926px) and (orientation: landscape) {
+  /* This block ONLY contains LAYOUT rules for landscape mode */
   .carousel-card { min-width: 120px; height: 80px; }
   #globe-canvas { height: calc(100vh - 145px); }
 
-  /* We will repurpose .left-controls-stack to be the single, centered container */
+  /* LEFT GROUP: Navigation Arrows */
   .left-controls-stack {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    gap: 8px; /* This creates the space between control groups */
-    position: fixed;
-    bottom: 40px; /* Position it above the blue footer */
-    left: 50%;
-    transform: translateX(-50%);
-    width: auto; 
-    right: auto;
-    top: auto;
-    background: rgba(37, 47, 57, 0.3);
-    backdrop-filter: blur(5px);
-    border-radius: 8px;
-    padding: 6px;
+    position: fixed; left: 10px; bottom: 40px; right: auto; top: auto; transform: none; display: flex; flex-direction: row; align-items: center; background: rgba(37, 47, 57, 0.3); backdrop-filter: blur(5px); border-radius: 8px; padding: 6px; gap: 8px;
   }
+  .navigation-controls { padding: 0; margin: 0; background: transparent; box-shadow: none; display: flex; gap: 6px; }
+  .left-controls-stack .scroll-lock-ui { display: none; } /* Hide scroll button from the left group */
 
-  /* Style the navigation group to fit inside the container */
-  .navigation-controls {
-    display: flex; padding: 0; margin: 0; background: transparent; box-shadow: none;
-    gap: 6px;
-    order: 1; /* [Nav Arrows] */
-  }
-
-  /* Style the scroll lock button to fit inside the container */
-  .scroll-lock-ui {
-    display: flex !important; /* This is crucial to ensure it's visible */
-    order: 2; /* [Scroll Button] */
-  }
-
-  /* Bring the .control-buttons container into this flow */
+  /* RIGHT GROUP: Action Icons + Scroll Button */
   .control-buttons {
-    position: static; /* This is the key: removes fixed positioning and lets it be a flex item */
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 6px;
-    transform: none; bottom: auto; left: auto; right: auto;
-    background: none; padding: 0;
-    order: 3; /* [Action Icons] */
+    position: fixed; right: 10px; bottom: 40px; left: auto; top: auto; transform: none; display: flex; flex-direction: row; align-items: center; gap: 6px; background: rgba(37, 47, 57, 0.3); backdrop-filter: blur(5px); border-radius: 8px; padding: 6px;
+  }
+  /* Manually bring the original scroll button into this group */
+  .scroll-lock-ui {
+    display: flex !important; /* Override other rules to ensure it's visible */
+    order: -1; /* This places it at the very beginning of the right-side group */
+    margin-right: 6px;
   }
 }
 
