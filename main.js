@@ -91,7 +91,6 @@ async function handleWixLoginCallback() {
     }
 }
 
-
 // =============================================================
 // YOUR ORIGINAL CODE STARTS HERE (PRESERVED AND COMPLETE)
 // =============================================================
