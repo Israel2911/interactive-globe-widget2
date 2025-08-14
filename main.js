@@ -1,7 +1,6 @@
 // =============================================================
-// NEW SECURE AUTHENTICATION LOGIC (INTEGRATED)
+// NEW SECURE WIX AUTHENTICATION LOGIC
 // =============================================================
-
 // Helper functions for the PKCE security protocol
 function generateRandomString(length) {
     let text = '';
@@ -43,14 +42,9 @@ async function redirectToWixLogin() {
     sessionStorage.setItem('wix_code_verifier', codeVerifier);
     const hashed = await sha256(codeVerifier);
     const codeChallenge = base64urlencode(hashed);
-
-    // YOUR ACTUAL CLIENT ID IS NOW INCLUDED
     const wixClientId = 'fbee306e-6797-40c2-8a51-70f052b8dde4';
     const redirectUri = 'https://interactive-globe-widget2.onrender.com/';
-
-    // CORRECTED: The URL now correctly includes "www."
     const authUrl = new URL('https://www.wix.com/oauth2/authorize');
-
     authUrl.searchParams.append('client_id', wixClientId);
     authUrl.searchParams.append('redirect_uri', redirectUri);
     authUrl.searchParams.append('response_type', 'code');
@@ -92,43 +86,46 @@ async function handleWixLoginCallback() {
 }
 
 // =============================================================
-// YOUR ORIGINAL CODE STARTS HERE (PRESERVED AND COMPLETE)
+// YOUR BASELINE GLOBE CODE STARTS HERE
 // =============================================================
-
 let scene, camera, renderer, controls, globeGroup, transformControls;
 let GLOBE_RADIUS = 1.0;
 let isPanMode = false;
 let isRotationPaused = false;
 let isCubeMovementPaused = false;
-
 let isDragging = false;
 let previousMousePosition = { x: 0, y: 0 };
-
 let europeCube, newThailandCube, canadaCube, ukCube, usaCube, indiaCube, singaporeCube, malaysiaCube;
 const europeSubCubes = [], newThailandSubCubes = [], canadaSubCubes = [], ukSubCubes = [], usaSubCubes = [], indiaSubCubes = [], singaporeSubCubes = [], malaysiaSubCubes = [];
 const explodedPositions = [], newThailandExplodedPositions = [], canadaExplodedPositions = [], ukExplodedPositions = [], usaExplodedPositions = [], indiaExplodedPositions = [], singaporeExplodedPositions = [], malaysiaExplodedPositions = [];
 const explodedSpacing = 0.1;
 let isEuropeCubeExploded = false, isNewThailandCubeExploded = false, isCanadaCubeExploded = false, isUkCubeExploded = false, isUsaCubeExploded = false, isIndiaCubeExploded = false, isSingaporeCubeExploded = false, isMalaysiaCubeExploded = false;
-
 const neuronGroup = new THREE.Group();
 const count = 150, maxRadius = 1.5, vortexCubeSize = 0.01, microGap = 0.002;
 const velocities = [], cubes = [], dummyDataSet = [];
 const neuralCubeMap = {};
 let neuralNetworkLines;
-
 const countryBlocks = {};
 let arcPaths = [];
 let countryLabels = [];
 const fontLoader = new THREE.FontLoader();
-
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 const mouseDownPos = new THREE.Vector2();
 const clock = new THREE.Clock();
-
 let countryConfigs = [];
-let europeContent = [], newThailandContent = [], canadaContent = [], ukContent = [], usaContent = [], indiaContent = [], singaporeContent = [], malaysiaContent = [];
-let allUniversityContent = [], countryPrograms = {}, globalContentMap = {}, carouselData = [];
+let europeContent = [];
+let newThailandContent = [];
+let canadaContent = [];
+let ukContent = [];
+let usaContent = [];
+let indiaContent = [];
+let singaporeContent = [];
+let malaysiaContent = [];
+let allUniversityContent = [];
+let countryPrograms = {};
+let globalContentMap = {};
+let carouselData = [];
 let isInteracting = false, hoverTimeout;
 
 async function fetchCarouselData() {
@@ -157,19 +154,29 @@ async function fetchDataFromBackend() {
   try {
     console.log('🔄 Fetching data from server...');
     const response = await fetch('/api/globe-data');
+    
     if (response.ok) {
       const data = await response.json();
       console.log('✅ Server data received:', data);
-      europeContent = data.europeContent || []; newThailandContent = data.newThailandContent || [];
-      canadaContent = data.canadaContent || []; ukContent = data.ukContent || [];
-      usaContent = data.usaContent || []; indiaContent = data.indiaContent || [];
-      singaporeContent = data.singaporeContent || []; malaysiaContent = data.malaysiaContent || [];
-      countryPrograms = data.countryPrograms || {}; countryConfigs = data.countryConfigs || [];
+      
+      europeContent = data.europeContent || [];
+      newThailandContent = data.newThailandContent || [];
+      canadaContent = data.canadaContent || [];
+      ukContent = data.ukContent || [];
+      usaContent = data.usaContent || [];
+      indiaContent = data.indiaContent || [];
+      singaporeContent = data.singaporeContent || [];
+      malaysiaContent = data.malaysiaContent || [];
+      countryPrograms = data.countryPrograms || {};
+      countryConfigs = data.countryConfigs || [];
+      
       globalContentMap = {
         'Europe': europeContent, 'Thailand': newThailandContent, 'Canada': canadaContent, 'UK': ukContent,
         'USA': usaContent, 'India': indiaContent, 'Singapore': singaporeContent, 'Malaysia': malaysiaContent
       };
+      
       allUniversityContent = [...europeContent, ...newThailandContent, ...canadaContent, ...ukContent, ...usaContent, ...indiaContent, ...singaporeContent, ...malaysiaContent];
+      
       console.log('✅ Data loaded successfully!');
       return true;
     }
@@ -330,9 +337,8 @@ function toggleGlobeRotation() {
   }
 }
 
-// MODIFIED: This function is now leaner and only initializes the core scene.
 function initializeThreeJS() {
-  console.log('🔄 Initializing Three.js core scene and controls...');
+  console.log('🔄 Initializing Three.js...');
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.001, 1000);
   camera.position.z = 3.5;
@@ -364,7 +370,7 @@ function initializeThreeJS() {
   scene.add(pointLight);
   renderer.domElement.addEventListener('mousedown', () => { isInteracting = true; clearTimeout(hoverTimeout); if (isPanMode) renderer.domElement.style.cursor = 'grabbing'; });
   renderer.domElement.addEventListener('mouseup', () => { hoverTimeout = setTimeout(() => { isInteracting = false; }, 200); if (isPanMode) renderer.domElement.style.cursor = 'grab'; });
-  console.log('✅ Three.js core initialized successfully');
+  console.log('✅ Three.js initialized successfully');
 }
 
 function updateCanvasSize() {
@@ -392,7 +398,8 @@ function getColorByData(data) {
 
 function createTexture(text, logoUrl, bgColor = '#003366') {
   const canvas = document.createElement('canvas');
-  canvas.width = 256; canvas.height = 256;
+  canvas.width = 256;
+  canvas.height = 256;
   const ctx = canvas.getContext('2d');
   ctx.fillStyle = bgColor;
   ctx.fillRect(0, 0, 256, 256);
@@ -416,23 +423,20 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
   } else { drawText(); }
   return new THREE.MeshStandardMaterial({ map: texture, emissive: new THREE.Color(bgColor), emissiveIntensity: 0.6 });
 }
-// =============================================================
-// YOUR ORIGINAL CODE CONTINUES HERE (PRESERVED AND COMPLETE)
-// =============================================================
 
-function createToggleFunction(countryName) {
-    const explosionStateMap = { 'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded, 'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded, 'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded };
-    const setExplosionStateMap = { 'Europe': (v) => isEuropeCubeExploded = v, 'Thailand': (v) => isNewThailandCubeExploded = v, 'Canada': (v) => isCanadaCubeExploded = v, 'UK': (v) => isUkCubeExploded = v, 'USA': (v) => isUsaCubeExploded = v, 'India': (v) => isIndiaCubeExploded = v, 'Singapore': (v) => isSingaporeCubeExploded = v, 'Malaysia': (v) => isMalaysiaCubeExploded = v };
-    const cubeMap = { 'Europe': europeCube, 'Thailand': newThailandCube, 'Canada': canadaCube, 'UK': ukCube, 'USA': usaCube, 'India': indiaCube, 'Singapore': singaporeCube, 'Malaysia': malaysiaCube };
-    const subCubeMap = { 'Europe': europeSubCubes, 'Thailand': newThailandSubCubes, 'Canada': canadaSubCubes, 'UK': ukSubCubes, 'USA': usaSubCubes, 'India': indiaSubCubes, 'Singapore': singaporeSubCubes, 'Malaysia': malaysiaSubCubes };
-    const explodedPosMap = { 'Europe': explodedPositions, 'Thailand': newThailandExplodedPositions, 'Canada': canadaExplodedPositions, 'UK': ukExplodedPositions, 'USA': usaExplodedPositions, 'India': indiaExplodedPositions, 'Singapore': singaporeExplodedPositions, 'Malaysia': malaysiaExplodedPositions };
-
+function createToggleFunction(cubeName) {
     return function() {
-        const isExploded = explosionStateMap[countryName];
-        const setExploded = setExplosionStateMap[countryName];
-        const cube = cubeMap[countryName];
-        const subCubes = subCubeMap[countryName];
-        const explodedPos = explodedPosMap[countryName];
+        const explosionStateMap = { 'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded, 'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded, 'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded };
+        const setExplosionStateMap = { 'Europe': (v) => isEuropeCubeExploded = v, 'Thailand': (v) => isNewThailandCubeExploded = v, 'Canada': (v) => isCanadaCubeExploded = v, 'UK': (v) => isUkCubeExploded = v, 'USA': (v) => isUsaCubeExploded = v, 'India': (v) => isIndiaCubeExploded = v, 'Singapore': (v) => isSingaporeCubeExploded = v, 'Malaysia': (v) => isMalaysiaCubeExploded = v };
+        const cubeMap = { 'Europe': europeCube, 'Thailand': newThailandCube, 'Canada': canadaCube, 'UK': ukCube, 'USA': usaCube, 'India': indiaCube, 'Singapore': singaporeCube, 'Malaysia': malaysiaCube };
+        const subCubeMap = { 'Europe': europeSubCubes, 'Thailand': newThailandSubCubes, 'Canada': canadaSubCubes, 'UK': ukSubCubes, 'USA': usaSubCubes, 'India': indiaSubCubes, 'Singapore': singaporeSubCubes, 'Malaysia': malaysiaSubCubes };
+        const explodedPosMap = { 'Europe': explodedPositions, 'Thailand': newThailandExplodedPositions, 'Canada': canadaExplodedPositions, 'UK': ukExplodedPositions, 'USA': usaExplodedPositions, 'India': indiaExplodedPositions, 'Singapore': singaporeExplodedPositions, 'Malaysia': malaysiaExplodedPositions };
+        
+        const isExploded = explosionStateMap[cubeName];
+        const setExploded = setExplosionStateMap[cubeName];
+        const cube = cubeMap[cubeName];
+        const subCubes = subCubeMap[cubeName];
+        const explodedPos = explodedPosMap[cubeName];
         
         const shouldBeExploded = !isExploded;
         setExploded(shouldBeExploded);
@@ -538,10 +542,10 @@ function drawAllConnections() {
     }).filter(Boolean);
 }
 
-// MODIFIED: This function now checks for login before proceeding
+// THIS IS THE KEY FUNCTION - OAuth only triggers when clicking individual subcubes
 async function showInfoPanel(data) {
-  const isLoggedIn = await userIsAuthenticated();
-  if (!isLoggedIn) {
+  // OAUTH CHECK ONLY WHEN VIEWING PROGRAM DETAILS
+  if (!(await userIsAuthenticated())) {
     redirectToWixLogin();
     return;
   }
@@ -549,9 +553,8 @@ async function showInfoPanel(data) {
   if (!data || data.university === "Unassigned") return;
   const uniData = allUniversityContent.filter(item => item && item.university === data.university);
   if (uniData.length === 0) return;
-  
   const mainErasmusLink = uniData[0].erasmusLink;
-  document.getElementById('infoPanelMainCard').innerHTML = `<div class="main-card-details"><img src="${uniData[0].logo}" alt="${uniData[0].university}"><h3>${uniData[0].university}</h3></div><div class="main-card-actions">${mainErasmusLink ? `<a href="${mainErasmusLink}" target="_blank" class="partner-cta erasmus">Erasmus Info</a>` : ''}</div>`;
+  document.getElementById('infoPanelMainCard').innerHTML = `<div class="main-card-details"><img src="${uniData[0].logo}" alt="${data.university}"><h3>${data.university}</h3></div><div class="main-card-actions">${mainErasmusLink ? `<a href="${mainErasmusLink}" target="_blank" class="partner-cta erasmus">Erasmus Info</a>` : ''}</div>`;
   document.getElementById('infoPanelSubcards').innerHTML = '';
   uniData.forEach(item => {
     if (!item) return;
@@ -584,7 +587,7 @@ function closeAllExploded() {
   if (isMalaysiaCubeExploded) toggleFunctionMap['Malaysia']();
 }
 
-// RESTORED: This is your original interaction logic, carefully preserved.
+// THE KEY CLICK HANDLER - NO AUTH NEEDED FOR EXPLOSION
 function onCanvasMouseUp(event) {
     if (transformControls.dragging) return;
     const deltaX = Math.abs(event.clientX - mouseDownPos.x);
@@ -599,7 +602,8 @@ function onCanvasMouseUp(event) {
     const intersects = raycaster.intersectObjects(allClickableObjects, true);
     if (intersects.length === 0) { closeAllExploded(); return; }
     const clickedObject = intersects[0].object;
-
+    
+    // COUNTRY BLOCK CLICKED - NO AUTH CHECK, JUST EXPLODE
     if (clickedObject.userData.countryName) {
         const countryName = clickedObject.userData.countryName;
         const correspondingNeuralCube = neuralCubeMap[countryName];
@@ -613,12 +617,11 @@ function onCanvasMouseUp(event) {
         }
         return;
     }
-
+    
     let parent = clickedObject;
     let neuralName = null;
     let clickedSubCube = clickedObject.userData.isSubCube ? clickedObject : null;
     while (parent) { if (parent.userData.neuralName) { neuralName = parent.userData.neuralName; break; } parent = parent.parent; }
-    
     const explosionStateMap = { 'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded, 'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded, 'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded };
     
     if (neuralName) {
@@ -626,14 +629,16 @@ function onCanvasMouseUp(event) {
         const toggleFunc = toggleFunctionMap[neuralName];
         
         if (isExploded && clickedSubCube && clickedSubCube.userData.university !== "Unassigned") {
-            showInfoPanel(clickedSubCube.userData); // This now calls the panel with the auth check
+            // INDIVIDUAL SUBCUBE CLICKED - OAUTH CHECK HAPPENS HERE
+            showInfoPanel(clickedSubCube.userData);
         } else {
+            // NEURAL CUBE CLICKED BUT NOT INDIVIDUAL SUBCUBE - NO AUTH, JUST EXPLODE
             const anyExploded = Object.values(explosionStateMap).some(state => state);
             closeAllExploded();
             setTimeout(() => toggleFunc(), anyExploded ? 810 : 0);
         }
-    } else {
-        closeAllExploded();
+    } else { 
+        closeAllExploded(); 
     }
 }
 
@@ -651,8 +656,10 @@ function onCanvasMouseMovePan(event) {
   if (isPanMode && isDragging) {
     const deltaMove = { x: event.clientX - previousMousePosition.x, y: event.clientY - previousMousePosition.y };
     const panSpeed = 0.001;
-    const deltaX = deltaMove.x * panSpeed; const deltaY = deltaMove.y * panSpeed;
-    controls.target.x -= deltaX; controls.target.y += deltaY;
+    const deltaX = deltaMove.x * panSpeed;
+    const deltaY = deltaMove.y * panSpeed;
+    controls.target.x -= deltaX;
+    controls.target.y += deltaY;
     const maxPan = 2.0;
     controls.target.x = Math.max(-maxPan, Math.min(maxPan, controls.target.x));
     controls.target.y = Math.max(-maxPan, Math.min(maxPan, controls.target.y));
@@ -681,8 +688,8 @@ function setupEventListeners() {
   const btnDown = document.getElementById('btn-down'); if (btnDown) { btnDown.addEventListener('click', () => { controls.target.y -= panSpeed; controls.update(); }); }
   const btnLeft = document.getElementById('btn-left'); if (btnLeft) { btnLeft.addEventListener('click', () => { controls.target.x -= panSpeed; controls.update(); }); }
   const btnRight = document.getElementById('btn-right'); if (btnRight) { btnRight.addEventListener('click', () => { controls.target.x += panSpeed; controls.update(); }); }
-  const btnZoomIn = document.getElementById('btn-zoom-in'); if (btnZoomIn) { btnZoomIn.addEventListener('click', () => { const zoomFactor = 0.9; camera.position.multiplyScalar(zoomFactor); controls.update(); }); }
-  const btnZoomOut = document.getElementById('btn-zoom-out'); if (btnZoomOut) { btnZoomOut.addEventListener('click', () => { const zoomFactor = 1.1; camera.position.multiplyScalar(zoomFactor); controls.update(); }); }
+  const btnZoomIn = document.getElementById('btn-zoom-in'); if (btnZoomIn) { btnZoomIn.addEventListener('click', () => { camera.position.multiplyScalar(0.9); controls.update(); }); }
+  const btnZoomOut = document.getElementById('btn-zoom-out'); if (btnZoomOut) { btnZoomOut.addEventListener('click', () => { camera.position.multiplyScalar(1.1); controls.update(); }); }
   const btnRotate = document.getElementById('btn-rotate'); if (btnRotate) { btnRotate.addEventListener('click', toggleGlobeRotation); }
   const btnPan = document.getElementById('btn-pan'); if (btnPan) { btnPan.addEventListener('click', togglePanMode); }
   const pauseButton = document.getElementById("pauseButton"); if (pauseButton) { pauseButton.addEventListener("click", () => { isRotationPaused = !isRotationPaused; controls.autoRotate = !isRotationPaused; pauseButton.textContent = isRotationPaused ? "Resume Rotation" : "Pause Rotation"; }); }
@@ -733,19 +740,21 @@ async function createGlobeAndCubes() {
     else {
       cubeObject = new THREE.Group();
       const data = { domain: i % 12, engagement: Math.random(), age: Math.random(), risk: Math.random(), confidence: 0.7 + Math.random() * 0.3 };
-      dummyDataSet.push(data); const color = getColorByData(data);
+      dummyDataSet.push(data);
+      const color = getColorByData(data);
       const subCubeMaterial = new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.6, transparent: true, opacity: 1.0 });
-      const microcube = new THREE.Mesh(new THREE.BoxGeometry(vortexCubeSize, vortexCubeSize, vortexCubeSize), subCubeMaterial);
-      cubeObject.add(microcube); cubeObject.userData.isSmallNode = true;
+      const microcube = new THREE.Mesh( new THREE.BoxGeometry(vortexCubeSize, vortexCubeSize, vortexCubeSize), subCubeMaterial );
+      cubeObject.add(microcube);
+      cubeObject.userData.isSmallNode = true;
     }
     cubeObject.position.set(x, y, z);
     neuronGroup.add(cubeObject);
     cubes.push(cubeObject);
-    velocities.push(new THREE.Vector3((Math.random() - 0.5) * 0.002, (Math.random() - 0.5) * 0.002, (Math.random() - 0.5) * 0.002));
+    velocities.push(new THREE.Vector3( (Math.random() - 0.5) * 0.002, (Math.random() - 0.5) * 0.002, (Math.random() - 0.5) * 0.002 ));
     if (cubeObject.userData.neuralName) { neuralCubeMap[cubeObject.userData.neuralName] = cubeObject; }
   }
   new THREE.TextureLoader().load("https://static.wixstatic.com/media/d77f36_8f868995fda643a0a61562feb20eb733~mv2.jpg", (tex) => {
-    const globe = new THREE.Mesh(new THREE.SphereGeometry(GLOBE_RADIUS, 64, 64), new THREE.MeshPhongMaterial({ map: tex, transparent: true, opacity: 0.28 }));
+    const globe = new THREE.Mesh( new THREE.SphereGeometry(GLOBE_RADIUS, 64, 64), new THREE.MeshPhongMaterial({ map: tex, transparent: true, opacity: 0.28 }) );
     globeGroup.add(globe);
   });
   let wireframeMesh = new THREE.Mesh( new THREE.SphereGeometry(GLOBE_RADIUS + 0.05, 64, 64), new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true, transparent: true, opacity: 0.12 }) );
@@ -757,10 +766,13 @@ async function createGlobeAndCubes() {
       const blockMesh = new THREE.Mesh(blockGeometry, blockMaterial);
       blockMesh.userData.countryName = config.name;
       const position = latLonToVector3(config.lat, config.lon, 1.1);
-      blockMesh.position.copy(position); blockMesh.lookAt(0, 0, 0);
-      globeGroup.add(blockMesh); countryBlocks[config.name] = blockMesh;
+      blockMesh.position.copy(position);
+      blockMesh.lookAt(0, 0, 0);
+      globeGroup.add(blockMesh);
+      countryBlocks[config.name] = blockMesh;
       const lG = new THREE.TextGeometry(config.name, { font: font, size: 0.018, height: 0.0001, curveSegments: 8 });
-      lG.center(); const lM = new THREE.MeshBasicMaterial({ color: 0xffffff });
+      lG.center();
+      const lM = new THREE.MeshBasicMaterial({ color: 0xffffff });
       const lMesh = new THREE.Mesh(lG, lM);
       countryLabels.push({ label: lMesh, block: blockMesh, offset: 0.06 });
       globeGroup.add(lMesh);
@@ -778,14 +790,16 @@ function animate() {
   TWEEN.update();
   arcPaths.forEach(path => { if (path.material.isShaderMaterial) { path.material.uniforms.time.value = elapsedTime; } });
   countryLabels.forEach(item => {
-    const worldPosition = new THREE.Vector3(); item.block.getWorldPosition(worldPosition);
+    const worldPosition = new THREE.Vector3();
+    item.block.getWorldPosition(worldPosition);
     const offsetDirection = worldPosition.clone().normalize();
     const labelPosition = worldPosition.clone().add(offsetDirection.multiplyScalar(item.offset));
     item.label.position.copy(labelPosition);
     item.label.lookAt(camera.position);
   });
   const explosionStateMap = { 'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded, 'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded, 'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded };
-  const boundaryRadius = 1.0; const buffer = 0.02;
+  const boundaryRadius = 1.0;
+  const buffer = 0.02;
   if (!isCubeMovementPaused) {
     cubes.forEach((cube, i) => {
       const isExploded = cube.userData.neuralName && explosionStateMap[cube.userData.neuralName];
@@ -798,7 +812,9 @@ function animate() {
       }
     });
     if (neuralNetworkLines) {
-      const vertices = []; const maxDist = 0.6; const connectionsPerCube = 4;
+      const vertices = [];
+      const maxDist = 0.6;
+      const connectionsPerCube = 4;
       for (let i = 0; i < cubes.length; i++) {
         if (!cubes[i].visible || cubes[i].userData.neuralName) continue;
         let neighbors = [];
@@ -814,57 +830,53 @@ function animate() {
           vertices.push(n.cube.position.x, n.cube.position.y, n.cube.position.z);
         });
       }
-      if (neuralNetworkLines.visible) { neuralNetworkLines.geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3)); }
+      if (neuralNetworkLines.visible) {
+        neuralNetworkLines.geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+      }
     }
   }
   renderer.render(scene, camera);
 }
 
-// MODIFIED: This is the new, re-ordered startup sequence
+// STARTUP SEQUENCE - HANDLES OAUTH CALLBACK FIRST
 document.addEventListener('DOMContentLoaded', async () => {
-  // This MUST run first to handle the login redirect from Wix
-  await handleWixLoginCallback();
-
+  await handleWixLoginCallback(); // Handle OAuth callback first
   console.log('🚀 Loading Interactive Globe Widget...');
   
-  // STEP 1: Initialize the core scene and controls FIRST to make the globe interactive immediately.
-  console.log('2️⃣ Initializing Three.js core...');
-  initializeThreeJS();
-  
-  // STEP 2: Start the animation loop right away.
-  console.log('6️⃣ Starting animation loop...');
-  animate();
-
-  // STEP 3: Set up event listeners and initial canvas size.
-  console.log('3️⃣ Setting up event listeners...');
-  setupEventListeners();
-  updateCanvasSize();
-  
   try {
-    // STEP 4: Now, fetch the data in the background. The globe is already interactive while this happens.
     console.log('1️⃣ Fetching server data...');
     await fetchDataFromBackend();
     
-    // STEP 5: Once data arrives, create the data-dependent objects.
-    console.log('4️⃣ Creating globe objects (cubes, labels)...');
+    console.log('2️⃣ Initializing Three.js...');
+    initializeThreeJS();
+    
+    console.log('3️⃣ Setting up event listeners...');
+    setupEventListeners();
+    
+    console.log('4️⃣ Creating globe and cubes...');
     await createGlobeAndCubes();
     
-    // STEP 6: Finally, populate the carousel with its data.
     console.log('5️⃣ Populating carousel...');
     await populateCarousel();
+    
+    console.log('6️⃣ Starting animation...');
+    animate();
     
     const leftBtn = document.getElementById('carouselScrollLeft');
     const rightBtn = document.getElementById('carouselScrollRight');
     if (leftBtn) leftBtn.onclick = () => scrollCarousel(-1);
     if (rightBtn) rightBtn.onclick = () => scrollCarousel(1);
     
-    console.log('✅ Globe Widget fully loaded and populated!');
+    updateCanvasSize();
+    
+    console.log('✅ Globe Widget loaded successfully!');
     
   } catch (error) {
-    console.error('❌ Error during data-dependent initialization:', error);
+    console.error('❌ Error during initialization:', error);
   }
 });
 
+// LOGOUT FUNCTION
 async function logout() {
   try {
     await fetch('/logout', { method: 'POST' });
