@@ -36,7 +36,8 @@ async function userIsAuthenticated() {
     }
 }
 
-// This function handles the redirect to Wix for login
+// REPLACE your old redirectToWixLogin function with this corrected version
+
 async function redirectToWixLogin() {
     console.log("User is not authenticated. Preparing PKCE flow and redirecting to Wix...");
     const codeVerifier = generateRandomString(128);
@@ -44,11 +45,12 @@ async function redirectToWixLogin() {
     const hashed = await sha256(codeVerifier);
     const codeChallenge = base64urlencode(hashed);
 
-    // YOUR ACTUAL CLIENT ID IS NOW INCLUDED
     const wixClientId = 'fbee306e-6797-40c2-8a51-70f052b8dde4';
     const redirectUri = 'https://interactive-globe-widget2.onrender.com/';
 
+    // THE FIX IS HERE: The URL now correctly includes "www."
     const authUrl = new URL('https://www.wix.com/oauth2/authorize');
+
     authUrl.searchParams.append('client_id', wixClientId);
     authUrl.searchParams.append('redirect_uri', redirectUri);
     authUrl.searchParams.append('response_type', 'code');
