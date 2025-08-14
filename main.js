@@ -1,5 +1,5 @@
 // =============================================================
-// NEW SECURE AUTHENTICATION LOGIC (WITH YOUR CLIENT ID)
+// NEW SECURE AUTHENTICATION LOGIC (INTEGRATED)
 // =============================================================
 
 // Helper functions for the PKCE security protocol
@@ -44,6 +44,7 @@ async function redirectToWixLogin() {
     const hashed = await sha256(codeVerifier);
     const codeChallenge = base64urlencode(hashed);
 
+    // YOUR ACTUAL CLIENT ID IS NOW INCLUDED
     const wixClientId = 'fbee306e-6797-40c2-8a51-70f052b8dde4';
     const redirectUri = 'https://interactive-globe-widget2.onrender.com/';
 
@@ -89,7 +90,6 @@ async function handleWixLoginCallback() {
         }
     }
 }
-
 
 // =============================================================
 // YOUR ORIGINAL CODE STARTS HERE (PRESERVED AND COMPLETE)
