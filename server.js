@@ -1,9 +1,30 @@
+// server.js - The Complete, Final, and Precise Server File
+
 const express = require('express');
-const jwt = require('jsonwebtoken');
+// const jwt = require('jsonwebtoken'); // THIS LINE IS REMOVED
+const axios = require('axios'); 
+const session = require('express-session');
+const cookieParser = require('cookie-parser');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// --- Middleware Setup ---
 app.use(express.json());
+app.use(cookieParser());
+
+// This sets up secure, server-side sessions.
+app.use(session({
+    // IMPORTANT: Replace this with a long, random string. This keeps sessions secure.
+    secret: 'your_super_strong_and_secret_session_key_goes_here', 
+    resave: false,
+    saveUninitialized: true,
+    cookie: { 
+        secure: process.env.NODE_ENV === 'production', // In production (HTTPS), this should be true
+        httpOnly: true, // This prevents client-side scripts from accessing the session cookie
+        maxAge: 24 * 60 * 60 * 1000 // Session will expire after 24 hours
+    }
+}));
+
 app.use(express.static('.', {
   setHeaders: (res, path) => {
     if (path.endsWith('.js')) {
@@ -13,7 +34,13 @@ app.use(express.static('.', {
   }
 }));
 
-// **ALL YOUR ORIGINAL UNIVERSITY DATA**
+// --- Wix OAuth Configuration ---
+// IMPORTANT: Replace these with your actual credentials from the Wix Dev Center
+const WIX_CLIENT_ID = 'YOUR_WIX_CLIENT_ID';
+const WIX_CLIENT_SECRET = 'YOUR_WIX_CLIENT_SECRET';
+const GLOBE_APP_URL = 'https://interactive-globe-widget2.onrender.com/'; // The homepage of your globe app
+
+// **ALL YOUR ORIGINAL UNIVERSITY DATA (Unchanged)**
 const europeContent = [
   {
     university: "University of Passau",
@@ -592,19 +619,50 @@ const countryConfigs = [
   {"name": "USA", "lat": 39.8283, "lon": -98.5795, "color": 0x003366}
 ];
 
-// **FIXED: Always serve data instead of blocking**
-function checkAuth(req, res, next) {
-  const token = req.headers['authorization'];
-  if (token && token.includes('logged-in-user')) {
-    req.authenticated = true;
-  } else {
-    req.authenticated = false;
-  }
-  next(); // Always continue instead of blocking
-}
+// **REMOVED: Old, insecure checkAuth function**
+// function checkAuth(req, res, next) { ... }
 
-// **MAIN DATA ENDPOINT - ALWAYS RETURNS DATA**
-app.get('/api/globe-data', checkAuth, (req, res) => {
+// =============================================================
+// NEW SECURE AUTHENTICATION ENDPOINTS
+// =============================================================
+
+app.get('/auth/callback', async (req, res) => {
+    const { code } = req.query;
+    if (!code) {
+        return res.status(400).send('Authentication Error: No authorization code was provided by Wix.');
+    }
+    try {
+        const tokenResponse = await axios.post('https://www.wix.com/oauth2/access', {
+            grant_type: 'authorization_code',
+            client_id: WIX_CLIENT_ID,
+            client_secret: WIX_CLIENT_SECRET,
+            code: code,
+        });
+        req.session.isLoggedIn = true;
+        req.session.accessToken = tokenResponse.data.access_token;
+        res.redirect(GLOBE_APP_URL); 
+    } catch (error) {
+        console.error('Failed to exchange Wix authorization code:', error.response?.data || error.message);
+        res.status(500).send('Authentication with Wix failed. Please try again.');
+    }
+});
+
+app.get('/check-auth', (req, res) => {
+    res.json({ isAuthenticated: !!req.session.isLoggedIn });
+});
+
+app.post('/logout', (req, res) => {
+    req.session.destroy(err => {
+        if (err) {
+            return res.status(500).send('Could not log out due to a server error.');
+        }
+        res.clearCookie('connect.sid');
+        res.status(200).send('Logged out successfully');
+    });
+});
+
+// **UPDATED MAIN DATA ENDPOINT - USES SECURE SESSION**
+app.get('/api/globe-data', (req, res) => {
   res.json({
     europeContent,
     newThailandContent,
@@ -616,11 +674,11 @@ app.get('/api/globe-data', checkAuth, (req, res) => {
     malaysiaContent,
     countryPrograms,
     countryConfigs,
-    isAuthenticated: req.authenticated
+    isAuthenticated: !!req.session.isLoggedIn // Securely check session
   });
 });
 
-// **CAROUSEL DATA ENDPOINT**
+// **CAROUSEL DATA ENDPOINT (Unchanged)**
 app.get('/api/carousel/data', (req, res) => {
   res.json([
     {
