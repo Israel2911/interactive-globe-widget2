@@ -250,7 +250,6 @@ body {
 
 /* === MOBILE: PORTRAIT ONLY === */
 @media (max-width: 768px) and (orientation: portrait) {
-  /* This block ONLY contains LAYOUT rules for portrait mode */
   .control-buttons {
     display: flex; flex-direction: row; justify-content: center; gap: 6px; position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%); background: rgba(37, 47, 57, 0.3); backdrop-filter: blur(5px); padding: 6px 10px; border-radius: 8px; z-index: 10;
   }
@@ -264,26 +263,27 @@ body {
 
 /* === MOBILE: LANDSCAPE ONLY - DEFINITIVE SPLIT LAYOUT === */
 @media (max-width: 926px) and (orientation: landscape) {
-  /* This block ONLY contains LAYOUT rules for landscape mode */
   .carousel-card { min-width: 120px; height: 80px; }
   #globe-canvas { height: calc(100vh - 145px); }
 
-  /* LEFT GROUP: Navigation Arrows */
+  /* LEFT GROUP: Navigation Arrows + Scroll Button */
   .left-controls-stack {
-    position: fixed; left: 10px; bottom: 40px; right: auto; top: auto; transform: none; display: flex; flex-direction: row; align-items: center; background: rgba(37, 47, 57, 0.3); backdrop-filter: blur(5px); border-radius: 8px; padding: 6px; gap: 8px;
+    position: fixed; left: 10px; bottom: 40px; right: auto; top: auto; transform: none;
+    display: flex; flex-direction: row; align-items: center; gap: 8px;
+    background: rgba(37, 47, 57, 0.3); backdrop-filter: blur(5px); border-radius: 8px; padding: 6px;
   }
-  .navigation-controls { padding: 0; margin: 0; background: transparent; box-shadow: none; display: flex; gap: 6px; }
-  .left-controls-stack .scroll-lock-ui { display: none; } /* Hide scroll button from the left group */
-
-  /* RIGHT GROUP: Action Icons + Scroll Button */
-  .control-buttons {
-    position: fixed; right: 10px; bottom: 40px; left: auto; top: auto; transform: none; display: flex; flex-direction: row; align-items: center; gap: 6px; background: rgba(37, 47, 57, 0.3); backdrop-filter: blur(5px); border-radius: 8px; padding: 6px;
+  .navigation-controls {
+    padding: 0; margin: 0; background: transparent; box-shadow: none; display: flex; gap: 6px; order: 1;
   }
-  /* Manually bring the original scroll button into this group */
   .scroll-lock-ui {
-    display: flex !important; /* Override other rules to ensure it's visible */
-    order: -1; /* This places it at the very beginning of the right-side group */
-    margin-right: 6px;
+    display: flex !important; order: 2; /* Make sure it's visible and comes after the nav arrows */
+  }
+
+  /* RIGHT GROUP: Action Icons */
+  .control-buttons {
+    position: fixed; right: 10px; bottom: 40px; left: auto; top: auto; transform: none;
+    display: flex; flex-direction: row; align-items: center; gap: 6px;
+    background: rgba(37, 47, 57, 0.3); backdrop-filter: blur(5px); border-radius: 8px; padding: 6px;
   }
 }
 
