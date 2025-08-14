@@ -45,7 +45,7 @@ async function redirectToWixLogin() {
     const codeChallenge = base64urlencode(hashed);
 
     // IMPORTANT: Replace this with your actual Client ID from the Wix Dashboard
-    const wixClientId = 'PASTE_YOUR_WIX_CLIENT_ID_HERE';
+    const wixClientId = 'fbee306e-6797-40c2-8a51-70f052b8dde4';
     const redirectUri = 'https://interactive-globe-widget2.onrender.com/';
 
     const authUrl = new URL('https://www.wix.com/oauth2/authorize');
