@@ -227,14 +227,14 @@ body {
 
 /* === MOBILE: GENERAL SHARED STYLES (< 768px) === */
 @media (max-width: 768px) {
-  /* THIS IS THE FIX: General carousel scaling rules for all mobile devices */
+  /* THIS IS THE FIX: Carousel cards made significantly smaller */
   .carousel-container {
     padding: 4px 8px;
     gap: 6px;
   }
   .carousel-card {
-    min-width: 140px;
-    height: 100px;
+    min-width: 120px; /* Smaller */
+    height: 90px;    /* Smaller */
     padding: 0;
   }
   .carousel-card img {
@@ -245,13 +245,13 @@ body {
     padding: 2px 4px;
   }
   .carousel-card-title {
-    font-size: 0.7em;
+    font-size: 0.65em; /* Smaller */
   }
   .carousel-card-text {
-    font-size: 0.6em;
+    font-size: 0.55em; /* Smaller */
   }
   .carousel-arrow {
-    font-size: 1.2em;
+    font-size: 1.0em; /* Smaller */
     margin: 0 4px;
   }
 
@@ -299,11 +299,6 @@ body {
 
 /* === MOBILE: LANDSCAPE ONLY - DEFINITIVE SPLIT LAYOUT === */
 @media (max-width: 926px) and (orientation: landscape) {
-  /* Override for smaller cards in landscape */
-  .carousel-card {
-    min-width: 120px;
-    height: 80px;
-  }
   #globe-canvas { height: calc(100vh - 145px); }
 
   /* LEFT GROUP: Navigation Arrows + Scroll Button */
