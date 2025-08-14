@@ -36,8 +36,7 @@ async function userIsAuthenticated() {
     }
 }
 
-// REPLACE your old redirectToWixLogin function with this corrected version
-
+// This function handles the redirect to Wix for login
 async function redirectToWixLogin() {
     console.log("User is not authenticated. Preparing PKCE flow and redirecting to Wix...");
     const codeVerifier = generateRandomString(128);
@@ -48,7 +47,7 @@ async function redirectToWixLogin() {
     const wixClientId = 'fbee306e-6797-40c2-8a51-70f052b8dde4';
     const redirectUri = 'https://interactive-globe-widget2.onrender.com/';
 
-    // THE FIX IS HERE: The URL now correctly includes "www."
+    // CORRECTED: The URL now correctly includes "www."
     const authUrl = new URL('https://www.wix.com/oauth2/authorize');
 
     authUrl.searchParams.append('client_id', wixClientId);
@@ -331,8 +330,9 @@ function toggleGlobeRotation() {
   }
 }
 
+// MODIFIED: This function is now leaner and only initializes the core scene.
 function initializeThreeJS() {
-  console.log('🔄 Initializing Three.js...');
+  console.log('🔄 Initializing Three.js core scene and controls...');
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.001, 1000);
   camera.position.z = 3.5;
@@ -364,7 +364,7 @@ function initializeThreeJS() {
   scene.add(pointLight);
   renderer.domElement.addEventListener('mousedown', () => { isInteracting = true; clearTimeout(hoverTimeout); if (isPanMode) renderer.domElement.style.cursor = 'grabbing'; });
   renderer.domElement.addEventListener('mouseup', () => { hoverTimeout = setTimeout(() => { isInteracting = false; }, 200); if (isPanMode) renderer.domElement.style.cursor = 'grab'; });
-  console.log('✅ Three.js initialized successfully');
+  console.log('✅ Three.js core initialized successfully');
 }
 
 function updateCanvasSize() {
@@ -811,30 +811,48 @@ function animate() {
   renderer.render(scene, camera);
 }
 
+// MODIFIED: This is the new, re-ordered startup sequence
 document.addEventListener('DOMContentLoaded', async () => {
+  // This MUST run first to handle the login redirect from Wix
   await handleWixLoginCallback();
+
   console.log('🚀 Loading Interactive Globe Widget...');
+  
+  // STEP 1: Initialize the core scene and controls FIRST to make the globe interactive immediately.
+  console.log('2️⃣ Initializing Three.js core...');
+  initializeThreeJS();
+  
+  // STEP 2: Start the animation loop right away.
+  console.log('6️⃣ Starting animation loop...');
+  animate();
+
+  // STEP 3: Set up event listeners and initial canvas size.
+  console.log('3️⃣ Setting up event listeners...');
+  setupEventListeners();
+  updateCanvasSize();
+  
   try {
+    // STEP 4: Now, fetch the data in the background. The globe is already interactive while this happens.
     console.log('1️⃣ Fetching server data...');
     await fetchDataFromBackend();
-    console.log('2️⃣ Initializing Three.js...');
-    initializeThreeJS();
-    console.log('3️⃣ Setting up event listeners...');
-    setupEventListeners();
-    console.log('4️⃣ Creating globe and cubes...');
+    
+    // STEP 5: Once data arrives, create the data-dependent objects.
+    console.log('4️⃣ Creating globe objects (cubes, labels)...');
     await createGlobeAndCubes();
+    
+    // STEP 6: Finally, populate the carousel with its data.
     console.log('5️⃣ Populating carousel...');
     await populateCarousel();
-    console.log('6️⃣ Starting animation...');
-    animate();
+    
     const leftBtn = document.getElementById('carouselScrollLeft');
     const rightBtn = document.getElementById('carouselScrollRight');
     if (leftBtn) leftBtn.onclick = () => scrollCarousel(-1);
     if (rightBtn) rightBtn.onclick = () => scrollCarousel(1);
-    updateCanvasSize();
-    console.log('✅ Globe Widget loaded successfully!');
+    
+    console.log('✅ Globe Widget fully loaded and populated!');
+    
   } catch (error) {
-    console.error('❌ Error during initialization:', error);
+    console.error('❌ Error during data-dependent initialization:', error);
   }
 });
 
