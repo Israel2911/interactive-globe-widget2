@@ -538,6 +538,7 @@ function drawAllConnections() {
     }).filter(Boolean);
 }
 
+// MODIFIED: This function now checks for login before proceeding
 async function showInfoPanel(data) {
   const isLoggedIn = await userIsAuthenticated();
   if (!isLoggedIn) {
@@ -583,6 +584,7 @@ function closeAllExploded() {
   if (isMalaysiaCubeExploded) toggleFunctionMap['Malaysia']();
 }
 
+// RESTORED: This is your original interaction logic, carefully preserved.
 function onCanvasMouseUp(event) {
     if (transformControls.dragging) return;
     const deltaX = Math.abs(event.clientX - mouseDownPos.x);
@@ -597,6 +599,7 @@ function onCanvasMouseUp(event) {
     const intersects = raycaster.intersectObjects(allClickableObjects, true);
     if (intersects.length === 0) { closeAllExploded(); return; }
     const clickedObject = intersects[0].object;
+
     if (clickedObject.userData.countryName) {
         const countryName = clickedObject.userData.countryName;
         const correspondingNeuralCube = neuralCubeMap[countryName];
@@ -610,22 +613,28 @@ function onCanvasMouseUp(event) {
         }
         return;
     }
+
     let parent = clickedObject;
     let neuralName = null;
     let clickedSubCube = clickedObject.userData.isSubCube ? clickedObject : null;
     while (parent) { if (parent.userData.neuralName) { neuralName = parent.userData.neuralName; break; } parent = parent.parent; }
+    
     const explosionStateMap = { 'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded, 'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded, 'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded };
+    
     if (neuralName) {
         const isExploded = explosionStateMap[neuralName];
         const toggleFunc = toggleFunctionMap[neuralName];
+        
         if (isExploded && clickedSubCube && clickedSubCube.userData.university !== "Unassigned") {
-            showInfoPanel(clickedSubCube.userData);
+            showInfoPanel(clickedSubCube.userData); // This now calls the panel with the auth check
         } else {
             const anyExploded = Object.values(explosionStateMap).some(state => state);
             closeAllExploded();
             setTimeout(() => toggleFunc(), anyExploded ? 810 : 0);
         }
-    } else { closeAllExploded(); }
+    } else {
+        closeAllExploded();
+    }
 }
 
 function onCanvasMouseDownPan(event) {
