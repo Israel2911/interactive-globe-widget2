@@ -225,10 +225,37 @@ body {
   border: 2px solid #444;
 }
 
-
 /* === MOBILE: GENERAL SHARED STYLES (< 768px) === */
-/* These styles apply to ALL mobile views */
 @media (max-width: 768px) {
+  /* THIS IS THE FIX: General carousel scaling rules for all mobile devices */
+  .carousel-container {
+    padding: 4px 8px;
+    gap: 6px;
+  }
+  .carousel-card {
+    min-width: 140px;
+    height: 100px;
+    padding: 0;
+  }
+  .carousel-card img {
+    height: 65%;
+  }
+  .carousel-card-content {
+    height: 35%;
+    padding: 2px 4px;
+  }
+  .carousel-card-title {
+    font-size: 0.7em;
+  }
+  .carousel-card-text {
+    font-size: 0.6em;
+  }
+  .carousel-arrow {
+    font-size: 1.2em;
+    margin: 0 4px;
+  }
+
+  /* Other shared mobile styles */
   .control-buttons button {
     width: 36px; height: 36px; padding: 0; font-size: 0; position: relative; background: #22356a; border-radius: 6px; overflow: hidden;
   }
@@ -257,7 +284,6 @@ body {
 
 /* === MOBILE: PORTRAIT ONLY === */
 @media (max-width: 768px) and (orientation: portrait) {
-  .carousel-card { min-width: 140px; height: 100px; }
   .control-buttons {
     display: flex; flex-direction: row; justify-content: center; gap: 6px; position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%);
     background: rgba(37, 47, 57, 0.3); backdrop-filter: blur(5px); padding: 6px 10px; border-radius: 8px; z-index: 10;
@@ -271,55 +297,32 @@ body {
   #globe-canvas { height: calc(100vh - 175px); }
 }
 
-/* === MOBILE: LANDSCAPE ONLY - DEFINITIVE LAYOUT === */
+/* === MOBILE: LANDSCAPE ONLY - DEFINITIVE SPLIT LAYOUT === */
 @media (max-width: 926px) and (orientation: landscape) {
-  .carousel-card { min-width: 120px; height: 80px; }
+  /* Override for smaller cards in landscape */
+  .carousel-card {
+    min-width: 120px;
+    height: 80px;
+  }
   #globe-canvas { height: calc(100vh - 145px); }
-  
-  /* Create a single container for all landscape controls */
-  .landscape-controls-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px; /* Space between control groups */
-    position: fixed;
-    bottom: 40px; /* Sits above the footer */
-    left: 50%;
-    transform: translateX(-50%);
-    width: auto;
-    background: rgba(37, 47, 57, 0.3);
-    backdrop-filter: blur(5px);
-    border-radius: 8px;
-    padding: 6px;
-    z-index: 10;
-  }
 
-  /* Force the original containers to hide and move their contents into the new one */
-  /* (This requires a small HTML change to work) */
-  /* To make this work without HTML change, we use a CSS-only approach below */
-  
-  /* Hide the original containers */
-  .left-controls-stack, .control-buttons {
-      display: none;
-  }
-
-  /* This requires your HTML to have a single container, like so:
-     <div class="landscape-controls-container">
-       (all the button divs here)
-     </div>
-     Since I cannot change your HTML, the above CSS will hide all controls.
-     You must adjust your HTML to use this new container for landscape mode.
-  */
-
-  /* As a fallback, here is the PURE CSS split layout, which is the best we can do
-     without changing the HTML structure. */
+  /* LEFT GROUP: Navigation Arrows + Scroll Button */
   .left-controls-stack {
-    display: flex; flex-direction: row; align-items: center; position: fixed; left: 10px; bottom: 40px; background: rgba(37, 47, 57, 0.3); backdrop-filter: blur(5px); border-radius: 8px; padding: 6px; transform: none;
+    position: fixed; left: 10px; bottom: 40px; right: auto; top: auto; transform: none;
+    display: flex; flex-direction: row; align-items: center; gap: 8px;
+    background: rgba(37, 47, 57, 0.3); backdrop-filter: blur(5px); border-radius: 8px; padding: 6px;
   }
-  .navigation-controls { padding: 0; margin: 0; background: transparent; box-shadow: none; display: flex; gap: 6px; order: 1; }
-  .scroll-lock-ui { order: 2; }
+  .navigation-controls {
+    padding: 0; margin: 0; background: transparent; box-shadow: none; display: flex; gap: 6px; order: 1;
+  }
+  .scroll-lock-ui {
+    display: flex !important; order: 2;
+  }
 
+  /* RIGHT GROUP: Action Icons */
   .control-buttons {
-    display: flex; flex-direction: row; align-items: center; position: fixed; right: 10px; bottom: 40px; background: rgba(37, 47, 57, 0.3); backdrop-filter: blur(5px); border-radius: 8px; padding: 6px; transform: none;
+    position: fixed; right: 10px; bottom: 40px; left: auto; top: auto; transform: none;
+    display: flex; flex-direction: row; align-items: center; gap: 6px;
+    background: rgba(37, 47, 57, 0.3); backdrop-filter: blur(5px); border-radius: 8px; padding: 6px;
   }
 }
