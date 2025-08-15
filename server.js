@@ -62,7 +62,7 @@ const countryPrograms = { "India": ["UG", "PG", "Mobility", "Research"], "Europe
 
 const countryConfigs = [{"name": "India", "lat": 22, "lon": 78, "color": 0xFF9933}, {"name": "Europe", "lat": 48.8566, "lon": 2.3522, "color": 0x0000FF}, {"name": "UK", "lat": 53, "lon": -0.1276, "color": 0x191970}, {"name": "Singapore", "lat": 1.35, "lon": 103.8, "color": 0xff0000}, {"name": "Malaysia", "lat": 4, "lon": 102, "color": 0x0000ff}, {"name": "Thailand", "lat": 13.7563, "lon": 100.5018, "color": 0xffcc00}, {"name": "Canada", "lat": 56.1304, "lon": -106.3468, "color": 0xff0000}, {"name": "USA", "lat": 39.8283, "lon": -98.5795, "color": 0x003366}];
 
-// NEW: OAuth callback handler for Option 2
+// FIXED: OAuth callback handler that completes the login flow
 app.get('/oauth/callback', async (req, res) => {
     const { code, state } = req.query;
     
@@ -74,10 +74,39 @@ app.get('/oauth/callback', async (req, res) => {
     try {
         console.log('OAuth callback received with code:', code.substring(0, 8) + '...');
         
-        // Redirect to main app with success indicator
+        // THIS IS THE FIX - Exchange code for tokens to complete login
+        const tokenResponse = await axios.post(config.wixTokenUrl, {
+            grant_type: 'authorization_code',
+            client_id: config.wixClientId,
+            code: code,
+            redirect_uri: config.redirectUri
+        });
+        
+        // Get user info
+        const userResponse = await axios.get(config.wixUserUrl, {
+            headers: { Authorization: `Bearer ${tokenResponse.data.access_token}` }
+        });
+        const user = userResponse.data;
+        
+        // Set up session (same as your /auth/complete endpoint)
+        const previousSession = activeSessions.get(user.id);
+        if (previousSession && previousSession !== req.sessionID) {
+            req.sessionStore.destroy(previousSession, () => {});
+        }
+        activeSessions.set(user.id, req.sessionID);
+        
+        req.session.isLoggedIn = true;
+        req.session.wixUserId = user.id;
+        req.session.userEmail = user.email;
+        req.session.userName = user.name || user.displayName;
+        req.session.accessToken = tokenResponse.data.access_token;
+        
+        console.log(`User ${user.email} logged in successfully via OAuth callback`);
+        
+        // Now redirect with success
         res.redirect('/?auth=success');
     } catch (error) {
-        console.error('OAuth callback error:', error);
+        console.error('OAuth callback error:', error.response?.data || error.message);
         res.redirect('/?auth=error&reason=processing_failed');
     }
 });
