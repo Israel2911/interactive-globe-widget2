@@ -1,4 +1,3 @@
-// server.js - Complete Backend with Secure OAuth & Student Portal
 const express = require('express');
 const axios = require('axios');
 const session = require('express-session');
@@ -19,7 +18,7 @@ app.use(session({
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
         sameSite: 'strict',
-        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        maxAge: 7 * 24 * 60 * 60 * 1000
     }
 }));
 
@@ -32,7 +31,7 @@ app.use(express.static('.', {
     }
 }));
 
-// OAuth Configuration (Server-Side Only)
+// OAuth Configuration
 const config = {
     wixClientId: process.env.WIX_CLIENT_ID || 'fbee306e-6797-40c2-8a51-70f052b8dde4',
     redirectUri: process.env.REDIRECT_URI || 'https://interactive-globe-widget2.onrender.com/',
@@ -41,10 +40,9 @@ const config = {
     wixAuthUrl: 'https://www.wix.com/oauth2/authorize'
 };
 
-// Single session per user enforcement
 const activeSessions = new Map();
 
-// Complete data arrays (keeping your original data)
+// Complete data arrays
 const europeContent = [ { university: "University of Passau", logo: "https://static.wixstatic.com/shapes/d77f36_467b1d2eed4042eab43fdff25124915b.svg", erasmusLink: "https://www.uni-passau.de/en/incoming-exchange-students", programName: "Degree-Seeking", programLink: "https://www.uni-passau.de/en/international/coming-to-passau/coming-to-passau-as-degree-seeking-student", applyLink: "https://www.globaleducarealliance.com/6?partner=Passau", researchLink: "https://www.uni-passau.de/en/international/going-abroad/research-and-teaching-sta" }, { university: "University of Passau", logo: "https://static.wixstatic.com/shapes/d77f36_467b1d2eed4042eab43fdff25124915b.svg", erasmusLink: "https://www.uni-passau.de/en/incoming-exchange-students", programName: "Exchange", programLink: "https://www.uni-passau.de/en/incoming-exchange-students", applyLink: "https://www.globaleducarealliance.com/6?partner=Passau", researchLink: "https://www.uni-passau.de/en/international/going-abroad/research-and-teaching-sta" }, null, null, { university: "ICES", logo: "https://static.wixstatic.com/media/d77f36_c11cec0bd94f4ab7a1b611cecb9e90cb~mv2.png", erasmusLink: "https://ices.fr/linternational/erasmus/", programName: "Full Degree", programLink: "https://ices-university.com/studies/", applyLink: "https://www.globaleducarealliance.com/6?partner=ICES" }, { university: "ICES", logo: "https://static.wixstatic.com/media/d77f36_c11cec0bd94f4ab7a1b611cecb9e90cb~mv2.png", erasmusLink: "https://ices.fr/linternational/erasmus/", programName: "Mobility", programLink: "https://ices-university.com/mobility/incoming/", applyLink: "https://www.globaleducarealliance.com/6?partner=ICES" }, null, null, { university: "Université Catholique de Lille", logo: "https://static.wixstatic.com/media/d77f36_009f964ce876419f9391e6a604f9257c~mv2.png", erasmusLink: "https://www.univ-catholille.fr/en/exchange-programs-academic-calendars", programName: "Exchange", programLink: "https://www.univ-catholille.fr/en/exchange-programs-academic-calendars", applyLink: "https://www.globaleducarealliance.com/6?partner=Lille", researchLink: "https://www.univ-catholille.fr/en/research-presentation/" }, { university: "Université Catholique de Lille", logo: "https://static.wixstatic.com/media/d77f36_009f964ce876419f9391e6a604f9257c~mv2.png", erasmusLink: "https://www.univ-catholille.fr/en/exchange-programs-academic-calendars", programName: "Summer Program", programLink: "https://www.univ-catholille.fr/en/lille-programs/lille-european-summer-program/", applyLink: "https://www.globaleducarealliance.com/6?partner=Lille", researchLink: "https://www.univ-catholille.fr/en/research-presentation/" }, null, null, { university: "IRCOM", logo: "https://static.wixstatic.com/media/d77f36_592f23b64ee44211abcb87444198e26a~mv2.jpg", erasmusLink: "https://www.ircom.fr/partir/", programName: "Master\nHumanitarian", programLink: "https://www.ircom.fr/formations/master-humanitaire/", applyLink: "https://www.globaleducarealliance.com/6?partner=IRCOM", researchLink: "https://www.ircom.fr/laborem/" }, { university: "IRCOM", logo: "https://static.wixstatic.com/media/d77f36_592f23b64ee44211abcb87444198e26a~mv2.jpg", erasmusLink: "https://www.ircom.fr/partir/", programName: "Mobility", programLink: "https://www.ircom.fr/partir/", applyLink: "https://www.globaleducarealliance.com/6?partner=IRCOM", researchLink: "https://www.ircom.fr/laborem/" }, null, null, { university: "KATHO-NRW", logo: "https://static.wixstatic.com/shapes/d77f36_b6a110be4758449f8537733a427f2dba.svg", erasmusLink: "https://katho-nrw.de/en/international/erasmus", programName: "Int'l Studies", programLink: "https://katho-nrw.de/en/international/international-studies", applyLink: "https://www.globaleducarealliance.com/6?partner=KATHO-NRW", researchLink: "https://katho-nrw.de/en/international/international-research" }, { university: "KATHO-NRW", logo: "https://static.wixstatic.com/shapes/d77f36_b6a110be4758449f8537733a427f2dba.svg", erasmusLink: "https://katho-nrw.de/en/international/erasmus", programName: "Study Abroad", programLink: "https://katho-nrw.de/en/international/international-studies/students-at-the-catholic-university-of-applied-sciences-studying-abroad", applyLink: "https://www.globaleducarealliance.com/6?partner=KATHO-NRW", researchLink: "https://www.univ-catholille.fr/en/research-presentation/" }, null, null, { university: "TSI", logo: "https://static.wixstatic.com/media/d77f36_1992247272bb4d55a3cac5060abec418~mv2.jpeg", erasmusLink: "https://tsi.lv/future-students/international/", programName: "Int'l Students", programLink: "https://tsi.lv/future-students/international/", applyLink: "https://www.globaleducarealliance.com/6?partner=TSI" }, { university: "TSI", logo: "https://static.wixstatic.com/media/d77f36_1992247272bb4d55a3cac5060abec418~mv2.jpeg", erasmusLink: "https://tsi.lv/future-students/international/", programName: "Innovation", programLink: "https://tsi.lv/research/innovation-knowledge-transfer/", applyLink: "https://www.globaleducarealliance.com/6?partner=TSI" }, null, null, { university: "INSEEC", logo: "https://static.wixstatic.com/media/d77f36_66d4c88c4ebb4b7da6cacaed57178165~mv2.webp", erasmusLink: "https://www.inseec.com/en/erasmus/", programName: "Exchanges", programLink: "https://www.inseec.com/en/academic-exchanges/", applyLink: "https://www.globaleducarealliance.com/6?partner=INSEEC" }, null, null];
 
 const newThailandContent = [ { university: "Assumption University", logo: "https://static.wixstatic.com/media/d77f36_7dd03d8eefa54bc8a73c18f0a7f35230~mv2.png", programName: "Undergraduate Business (BBA)", programLink: "https://simba.au.edu/", applyLink: "https://www.globaleducarealliance.com/blank-9?partner=AssumptionUniversity" }, { university: "Assumption University", logo: "https://static.wixstatic.com/media/d77f36_7dd03d8eefa54bc8a73c18f0a7f35230~mv2.png", programName: "Master of Business Administration (MBA)", programLink: "https://simba.au.edu/", applyLink: "https://www.globaleducarealliance.com/blank-9?partner=AssumptionUniversity" }, { university: "Assumption University", logo: "https://static.wixstatic.com/media/d77f36_7dd03d8eefa54bc8a73c18f0a7f35230~mv2.png", programName: "Study Abroad / Exchange", programLink: "https://oia.au.edu/comingtoau", applyLink: "https://www.globaleducarealliance.com/blank-9?partner=AssumptionUniversity" }, { university: "Bangkok University", logo: "https://static.wixstatic.com/media/d77f36_5d91110e0e094c799bb3647dbcbaa590~mv2.jpg", programName: "Innovative Media Production", programLink: "https://www.bu.ac.th/en/international-programs/innovative-media-production", applyLink: "https://www.globaleducarealliance.com/blank-9?partner=BangkokUniversity" }, { university: "Bangkok University", logo: "https://static.wixstatic.com/media/d77f36_5d91110e0e094c799bb3647dbcbaa590~mv2.jpg", programName: "Media & Communication", programLink: "https://www.bu.ac.th/en/international-programs/media-communication", applyLink: "https://www.globaleducarealliance.com/blank-9?partner=BangkokUniversity" }, { university: "Bangkok University", logo: "https://static.wixstatic.com/media/d77f36_5d91110e0e094c799bb3647dbcbaa590~mv2.jpg", programName: "Innovation Management (MBA)", programLink: "https://www.bu.ac.th/en/international-programs/mba-i", applyLink: "https://www.globaleducarealliance.com/blank-9?partner=BangkokUniversity" }, { university: "Siam University", logo: "https://static.wixstatic.com/media/d77f36_69fce6d5825e467a88fc02a01b416cf7~mv2.png", programName: "Bachelor of Business Admin. (BBA)", programLink: "https://inter.siam.edu/international-business-administration/", applyLink: "https://www.globaleducarealliance.com/blank-9?partner=SiamUniversity" }, { university: "Siam University", logo: "https://static.wixstatic.com/media/d77f36_69fce6d5825e467a88fc02a01b416cf7~mv2.png", programName: "Master of Business Admin. (MBA)", programLink: "https://inter.siam.edu/international-masters-in-business-administration/", applyLink: "https://www.globaleducarealliance.com/blank-9?partner=SiamUniversity" }, { university: "Siam University", logo: "https://static.wixstatic.com/media/d77f36_69fce6d5825e467a88fc02a01b416cf7~mv2.png", programName: "Semester Abroad / Exchange", programLink: "https://inter.siam.edu/international-masters-in-business-administration/", applyLink: "https://www.globaleducarealliance.com/blank-9?partner=SiamUniversity" }, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null];
@@ -65,11 +63,7 @@ const countryPrograms = { "India": ["UG", "PG", "Mobility", "Research"], "Europe
 
 const countryConfigs = [{"name": "India", "lat": 22, "lon": 78, "color": 0xFF9933}, {"name": "Europe", "lat": 48.8566, "lon": 2.3522, "color": 0x0000FF}, {"name": "UK", "lat": 53, "lon": -0.1276, "color": 0x191970}, {"name": "Singapore", "lat": 1.35, "lon": 103.8, "color": 0xff0000}, {"name": "Malaysia", "lat": 4, "lon": 102, "color": 0x0000ff}, {"name": "Thailand", "lat": 13.7563, "lon": 100.5018, "color": 0xffcc00}, {"name": "Canada", "lat": 56.1304, "lon": -106.3468, "color": 0xff0000}, {"name": "USA", "lat": 39.8283, "lon": -98.5795, "color": 0x003366}];
 
-// ===============================
-// SECURE OAUTH ENDPOINTS
-// ===============================
-
-// Generate OAuth URL (server builds it)
+// OAuth endpoints
 app.post('/auth/login-url', (req, res) => {
     const { challenge } = req.body;
     const params = new URLSearchParams({
@@ -83,15 +77,12 @@ app.post('/auth/login-url', (req, res) => {
     res.json({ loginUrl: `${config.wixAuthUrl}?${params.toString()}` });
 });
 
-// Complete OAuth flow
 app.post('/auth/complete', async (req, res) => {
     const { code, verifier } = req.body;
     if (!code || !verifier) {
         return res.status(400).json({ error: 'Missing code or verifier' });
     }
-
     try {
-        // Exchange code for tokens
         const tokenResponse = await axios.post(config.wixTokenUrl, {
             grant_type: 'authorization_code',
             client_id: config.wixClientId,
@@ -99,38 +90,28 @@ app.post('/auth/complete', async (req, res) => {
             code: code,
             redirect_uri: config.redirectUri
         });
-
-        // Get user profile
         const userResponse = await axios.get(config.wixUserUrl, {
             headers: { 'Authorization': `Bearer ${tokenResponse.data.access_token}` }
         });
-
         const user = userResponse.data;
-
-        // Enforce one session per user
         const previousSession = activeSessions.get(user.id);
         if (previousSession && previousSession !== req.sessionID) {
             req.sessionStore.destroy(previousSession, () => {});
         }
         activeSessions.set(user.id, req.sessionID);
-
-        // Store in session
         req.session.isLoggedIn = true;
         req.session.wixUserId = user.id;
         req.session.userEmail = user.email;
         req.session.userName = user.name || user.displayName;
         req.session.accessToken = tokenResponse.data.access_token;
-
-        console.log(`✅ User ${user.email} logged in successfully`);
+        console.log(`User ${user.email} logged in successfully`);
         res.json({ success: true });
-
     } catch (error) {
         console.error('OAuth error:', error.response?.data || error.message);
         res.status(500).json({ error: 'Authentication failed' });
     }
 });
 
-// Auth status check
 app.get('/auth/status', (req, res) => {
     res.json({
         isAuthenticated: !!req.session.isLoggedIn,
@@ -142,7 +123,6 @@ app.get('/auth/status', (req, res) => {
     });
 });
 
-// Logout
 app.post('/auth/logout', (req, res) => {
     if (req.session.wixUserId) {
         activeSessions.delete(req.session.wixUserId);
@@ -156,26 +136,17 @@ app.post('/auth/logout', (req, res) => {
     });
 });
 
-// ===============================
-// PROTECTED STUDENT ENDPOINTS
-// ===============================
-
-// Auth middleware
 function requireAuth(req, res, next) {
     if (!req.session.isLoggedIn) {
         return res.status(401).json({ error: 'Authentication required' });
     }
-    
-    // Verify session is still active
     const userId = req.session.wixUserId;
     if (!activeSessions.has(userId) || activeSessions.get(userId) !== req.sessionID) {
         return res.status(401).json({ error: 'Session expired or superseded' });
     }
-    
     next();
 }
 
-// Student profile
 app.get('/api/student/profile', requireAuth, (req, res) => {
     res.json({
         id: req.session.wixUserId,
@@ -184,10 +155,9 @@ app.get('/api/student/profile', requireAuth, (req, res) => {
     });
 });
 
-// Document upload
 const upload = multer({ 
     dest: 'uploads/',
-    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+    limits: { fileSize: 10 * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
         const allowedTypes = /pdf|jpg|jpeg|png|doc|docx/;
         const extname = allowedTypes.test(file.originalname.toLowerCase());
@@ -200,8 +170,6 @@ app.post('/api/student/documents', requireAuth, upload.single('document'), (req,
     if (!req.file) {
         return res.status(400).json({ error: 'No file uploaded' });
     }
-
-    // Store document info (linked to user)
     const documentInfo = {
         userId: req.session.wixUserId,
         filename: req.file.filename,
@@ -209,7 +177,6 @@ app.post('/api/student/documents', requireAuth, upload.single('document'), (req,
         size: req.file.size,
         uploadDate: new Date()
     };
-
     console.log('Document uploaded:', documentInfo);
     res.json({ 
         success: true,
@@ -221,7 +188,6 @@ app.post('/api/student/documents', requireAuth, upload.single('document'), (req,
     });
 });
 
-// Application forms
 app.get('/api/student/applications', requireAuth, (req, res) => {
     res.json({
         applications: [],
@@ -232,10 +198,6 @@ app.get('/api/student/applications', requireAuth, (req, res) => {
         ]
     });
 });
-
-// ===============================
-// EXISTING API ENDPOINTS
-// ===============================
 
 app.get('/api/globe-data', (req, res) => {
     res.json({
@@ -260,8 +222,7 @@ app.get('/health', (req, res) => {
     res.json({ status: 'Secure Globe Widget backend running', timestamp: new Date().toISOString() });
 });
 
-// Start server
 app.listen(PORT, () => {
-    console.log(`🚀 Secure server running on port ${PORT}`);
-    console.log(`🔑 OAuth Client ID: ${config.wixClientId.substring(0, 8)}...`);
+    console.log('Secure server running on port ' + PORT);
+    console.log('OAuth Client ID: ' + config.wixClientId.substring(0, 8) + '...');
 });
