@@ -70,7 +70,9 @@ app.post('/auth/login-url', (req, res) => {
         client_id: config.wixClientId,
         redirect_uri: config.redirectUri,
         response_type: 'code',
-        scope: 'openid email profile',
+          scope: 'openid',
+      
+
         code_challenge: challenge,
         code_challenge_method: 'S256'
     });
