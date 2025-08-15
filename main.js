@@ -129,6 +129,7 @@ async function openStudentDashboard() {
             <p>Email: ${userData.email}</p>
             <p>Student ID: ${userData.id}</p>
         `;
+        document.getElementById('dashboard-container').style.display = 'block';
     } catch (error) {
         console.error('Dashboard access error:', error);
     }
@@ -160,13 +161,13 @@ async function uploadDocument() {
             
             if (response.ok) {
                 const result = await response.json();
-                alert(`Document uploaded successfully: ${result.document.name}`);
+                showNotification(`Document uploaded successfully: ${result.document.name}`);
             } else {
-                alert('Upload failed');
+                showNotification('Upload failed', false);
             }
         } catch (error) {
             console.error('Upload error:', error);
-            alert('Upload failed');
+            showNotification('Upload failed', false);
         }
     };
     
@@ -944,6 +945,46 @@ function animate() {
         }
     }
     renderer.render(scene, camera);
+}
+
+// =============================================================
+// UI INTERACTION FUNCTIONS (INTEGRATED AT THE END)
+// =============================================================
+
+// Toggle privacy section
+function togglePrivacySection() {
+    const privacy = document.querySelector('.privacy-assurance');
+    const trust = document.querySelector('.trust-indicators');
+    
+    privacy.classList.toggle('active');
+    trust.classList.toggle('active');
+    
+    if (privacy.classList.contains('active')) {
+        privacy.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+// Show trust indicators after load
+window.addEventListener('load', () => {
+    setTimeout(() => {
+        document.querySelector('.trust-indicators').classList.add('active');
+    }, 2000);
+});
+
+// Notification helpers
+function showNotification(message, isSuccess = true) {
+    const div = document.createElement('div');
+    const bgColor = isSuccess ? '#4CAF50' : '#ff4444';
+    const icon = isSuccess ? '✅' : '❌';
+    
+    div.innerHTML = `
+        <div style="position: fixed; top: 20px; right: 20px; background: ${bgColor}; color: white; padding: 15px; border-radius: 8px; z-index: 3000; cursor: pointer;" onclick="this.remove()">
+            ${icon} ${message}
+        </div>
+    `;
+    document.body.appendChild(div);
+    
+    setTimeout(() => div.remove(), 5000);
 }
 
 // STARTUP SEQUENCE - HANDLES OAUTH CALLBACK FIRST, THEN INITIALIZES GLOBE
