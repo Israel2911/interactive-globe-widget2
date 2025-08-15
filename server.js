@@ -34,7 +34,7 @@ app.use(express.static('.', {
 // OAuth Configuration
 const config = {
     wixClientId: process.env.WIX_CLIENT_ID || 'fbee306e-6797-40c2-8a51-70f052b8dde4',
-    redirectUri: process.env.REDIRECT_URI || 'https://interactive-globe-widget2.onrender.com/',
+    redirectUri: process.env.REDIRECT_URI || 'https://www.globaleducarealliance.com/',
     wixTokenUrl: 'https://www.wix.com/oauth2/token',
     wixUserUrl: 'https://www.wixapis.com/identity/v1/identity',
     wixAuthUrl: 'https://www.wix.com/oauth2/authorize'
