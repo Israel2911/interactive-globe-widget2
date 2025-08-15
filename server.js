@@ -82,18 +82,20 @@ app.get('/oauth/callback', async (req, res) => {
     }
 });
 
-// OAuth endpoints
 app.post('/auth/login-url', (req, res) => {
     const { challenge } = req.body;
+    const state = Math.random().toString(36).substring(2, 15); // Generate random state
     const params = new URLSearchParams({
         client_id: config.wixClientId,
         redirect_uri: config.redirectUri,
         response_type: 'code',
         code_challenge: challenge,
-        code_challenge_method: 'S256'
+        code_challenge_method: 'S256',
+        state: state // Add this line
     });
     res.json({ loginUrl: `${config.wixAuthUrl}?${params.toString()}` });
 });
+
 
 app.post('/auth/complete', async (req, res) => {
     const { code, verifier } = req.body;
