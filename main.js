@@ -1,50 +1,42 @@
-// =============================================================
-// SECURE WIX AUTHENTICATION LOGIC (Client-Side Only)
-// =============================================================
+// =============
+// SECURE WIX AUTHENTICATION LOGIC (Client-Side Only) - NO PKCE
+// =============
 
-// PKCE generation (must stay client-side)
-async function generateCodeVerifier() {
-    const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
-    let result = '';
-    for (let i = 0; i < 128; i++) {
-        result += charset.charAt(Math.floor(Math.random() * charset.length));
+// Server builds OAuth URL for us (no PKCE)
+async function redirectToWix() {
+    const response = await fetch('/auth/login-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}) // Empty body
+    });
+    
+    const { loginUrl } = await response.json();
+    window.location.href = loginUrl;
+}
+
+// Handle OAuth callback (no PKCE)
+async function handleCallback() {
+    const url = new URL(window.location.href);
+    const code = url.searchParams.get('code');
+    if (!code) return;
+    
+    try {
+        const response = await fetch('/auth/complete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code })
+        });
+        
+        if (response.ok) {
+            window.history.replaceState({}, '', '/');
+            console.log('🔑 Login complete');
+            location.reload();
+        }
+    } catch (e) {
+        console.error('Login failed', e);
+        alert('Login failed – please try again.');
     }
-    return result;
 }
-
-async function sha256(str) {
-    const buf = new TextEncoder().encode(str);
-    const hash = await crypto.subtle.digest('SHA-256', buf);
-    return btoa(String.fromCharCode(...new Uint8Array(hash)))
-             .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
-
-// BEFORE  (with PKCE)
-async function redirectToWix() {
-    const verifier  = await generateCodeVerifier();
-    sessionStorage.setItem('wix_code_verifier', verifier);
-    const challenge = await sha256(verifier);
-
-    const response  = await fetch('/auth/login-url', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ challenge })          // ← remove
-    });
-    const { loginUrl } = await response.json();
-    window.location.href = loginUrl;
-}
-
-// AFTER  (no PKCE)
-async function redirectToWix() {
-    const response  = await fetch('/auth/login-url', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({})                     // ← empty body
-    });
-    const { loginUrl } = await response.json();
-    window.location.href = loginUrl;
-}
-
 
 // Check auth status
 async function isLoggedIn() {
