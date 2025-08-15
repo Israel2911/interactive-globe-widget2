@@ -1,98 +1,182 @@
 // =============================================================
-// NEW SECURE WIX AUTHENTICATION LOGIC
+// SECURE WIX AUTHENTICATION LOGIC (Client-Side Only)
 // =============================================================
-// Helper functions for the PKCE security protocol
-function generateRandomString(length) {
-    let text = '';
-    const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
-    for (let i = 0; i < length; i++) {
-        text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+// PKCE generation (must stay client-side)
+async function generateCodeVerifier() {
+    const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+    let result = '';
+    for (let i = 0; i < 128; i++) {
+        result += charset.charAt(Math.floor(Math.random() * charset.length));
     }
-    return text;
+    return result;
 }
 
-async function sha256(plain) {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(plain);
-    return window.crypto.subtle.digest('SHA-256', data);
+async function sha256(str) {
+    const buf = new TextEncoder().encode(str);
+    const hash = await crypto.subtle.digest('SHA-256', buf);
+    return btoa(String.fromCharCode(...new Uint8Array(hash)))
+             .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
-function base64urlencode(a) {
-    return btoa(String.fromCharCode.apply(null, new Uint8Array(a)))
-        .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+// Server builds OAuth URL for us
+async function redirectToWix() {
+    const verifier = await generateCodeVerifier();
+    sessionStorage.setItem('wix_code_verifier', verifier);
+    const challenge = await sha256(verifier);
+    
+    // Server builds the complete OAuth URL
+    const response = await fetch('/auth/login-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ challenge })
+    });
+    
+    const { loginUrl } = await response.json();
+    window.location.href = loginUrl;
 }
 
-// This function now securely checks the server session
-async function userIsAuthenticated() {
+// Handle OAuth callback
+async function handleCallback() {
+    const url = new URL(window.location.href);
+    const code = url.searchParams.get('code');
+    if (!code) return;
+
     try {
-        const response = await fetch('/check-auth');
-        if (!response.ok) return false;
-        const data = await response.json();
-        return data.isAuthenticated;
-    } catch (error) {
-        console.error('Auth check error:', error);
-        return false;
+        const verifier = sessionStorage.getItem('wix_code_verifier');
+        const response = await fetch('/auth/complete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code, verifier })
+        });
+        
+        if (response.ok) {
+            window.history.replaceState({}, '', '/');
+            sessionStorage.removeItem('wix_code_verifier');
+            console.log('🔑 Login complete');
+            location.reload();
+        }
+    } catch (e) {
+        console.error('Login failed', e);
+        alert('Login failed – please try again.');
     }
 }
 
-// This function handles the redirect to Wix for login
-// This function handles the redirect to Wix for login
-async function redirectToWixLogin() {
-    console.log("User is not authenticated. Preparing PKCE flow and redirecting to Wix...");
-    const codeVerifier = generateRandomString(128);
-    sessionStorage.setItem('wix_code_verifier', codeVerifier);
-    const hashed = await sha256(codeVerifier);
-    const codeChallenge = base64urlencode(hashed);
-    const wixClientId = 'fbee306e-6797-40c2-8a51-70f052b8dde4';
-    
-    // FIXED: Updated to match your Wix configuration
-    const redirectUri = 'https://interactive-globe-widget2.onrender.com/auth/callback';
-    
-    const authUrl = new URL('https://www.wix.com/oauth2/authorize');
-    authUrl.searchParams.append('client_id', wixClientId);
-    authUrl.searchParams.append('redirect_uri', redirectUri);
-    authUrl.searchParams.append('response_type', 'code');
-    authUrl.searchParams.append('scope', 'openid email');
-    authUrl.searchParams.append('code_challenge', codeChallenge);
-    authUrl.searchParams.append('code_challenge_method', 'S256');
-    
-    window.location.href = authUrl.toString();
+// Check auth status
+async function isLoggedIn() {
+    const response = await fetch('/auth/status');
+    const data = await response.json();
+    return data.isAuthenticated;
 }
 
+// Show user their login status
+async function updateAuthStatus() {
+    const authIndicator = document.getElementById('auth-indicator');
+    if (!authIndicator) return;
+    
+    try {
+        const response = await fetch('/auth/status');
+        const data = await response.json();
+        
+        if (data.isAuthenticated) {
+            authIndicator.innerHTML = `
+                <div style="color: green; padding: 10px; background: rgba(0,255,0,0.1); border-radius: 5px;">
+                    🔐 Securely logged in as ${data.user.name || data.user.email}
+                    <button onclick="logout()" style="margin-left: 10px; padding: 5px 10px;">Logout</button>
+                </div>
+            `;
+        } else {
+            authIndicator.innerHTML = `
+                <div style="color: orange; padding: 10px; background: rgba(255,165,0,0.1); border-radius: 5px;">
+                    🛡️ Login required for program details - Click subcubes to login
+                </div>
+            `;
+        }
+    } catch (error) {
+        authIndicator.innerHTML = '<div style="color: red;">⚠️ Auth system unavailable</div>';
+    }
+}
 
-// This function handles the user returning from Wix after login
-async function handleWixLoginCallback() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const authorizationCode = urlParams.get('code');
-    if (authorizationCode) {
-        const codeVerifier = sessionStorage.getItem('wix_code_verifier');
-        if (!codeVerifier) {
-            console.error("Login callback error: Code verifier not found.");
+// Logout function
+async function logout() {
+    try {
+        await fetch('/auth/logout', { method: 'POST' });
+        alert('You have been logged out.');
+        location.reload();
+    } catch (error) {
+        console.error('Logout failed:', error);
+        alert('Could not log out at this time.');
+    }
+}
+
+// Access student dashboard
+async function openStudentDashboard() {
+    if (!(await isLoggedIn())) {
+        redirectToWix();
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/student/profile');
+        if (response.status === 401) {
+            redirectToWix();
             return;
         }
-        try {
-            const response = await fetch('/auth/exchange-token', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ authorizationCode, codeVerifier })
-            });
-            if (response.ok) {
-                console.log("Wix login successful. Reloading page.");
-                window.history.replaceState({}, document.title, "/");
-                sessionStorage.removeItem('wix_code_verifier');
-                location.reload();
-            } else {
-                console.error("Failed to exchange token with server.");
-            }
-        } catch (error) {
-            console.error("Error during token exchange:", error);
-        }
+        
+        const userData = await response.json();
+        document.getElementById('dashboard-content').innerHTML = `
+            <h2>Welcome ${userData.name}!</h2>
+            <p>Email: ${userData.email}</p>
+            <p>Student ID: ${userData.id}</p>
+        `;
+    } catch (error) {
+        console.error('Dashboard access error:', error);
     }
 }
 
+// File upload
+async function uploadDocument() {
+    if (!(await isLoggedIn())) {
+        redirectToWix();
+        return;
+    }
+    
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.pdf,.jpg,.jpeg,.png,.doc,.docx';
+    
+    fileInput.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const formData = new FormData();
+        formData.append('document', file);
+        
+        try {
+            const response = await fetch('/api/student/documents', {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                alert(`Document uploaded successfully: ${result.document.name}`);
+            } else {
+                alert('Upload failed');
+            }
+        } catch (error) {
+            console.error('Upload error:', error);
+            alert('Upload failed');
+        }
+    };
+    
+    fileInput.click();
+}
+
 // =============================================================
-// YOUR BASELINE GLOBE CODE STARTS HERE
+// GLOBE WIDGET LOGIC (Client-Side UI Only)
 // =============================================================
+
 let scene, camera, renderer, controls, globeGroup, transformControls;
 let GLOBE_RADIUS = 1.0;
 let isPanMode = false;
@@ -133,137 +217,141 @@ let globalContentMap = {};
 let carouselData = [];
 let isInteracting = false, hoverTimeout;
 
+// Fetch data from server (all data now comes from backend)
 async function fetchCarouselData() {
-  try {
-    const response = await fetch('/api/carousel/data');
-    if (response.ok) {
-      carouselData = await response.json();
-      console.log('📊 Carousel data loaded:', carouselData);
-      return true;
+    try {
+        const response = await fetch('/api/carousel/data');
+        if (response.ok) {
+            carouselData = await response.json();
+            console.log('📊 Carousel data loaded:', carouselData);
+            return true;
+        }
+    } catch (error) {
+        console.log('Using fallback carousel data');
+        carouselData = [
+            { category: "UG", img: "https://static.wixstatic.com/media/d77f36_deddd99f45db4a55953835f5d3926246~mv2.png", title: "Undergraduate", text: "Bachelor-level opportunities." },
+            { category: "PG", img: "https://static.wixstatic.com/media/d77f36_ae2a1e8b47514fb6b0a995be456a9eec~mv2.png", title: "Postgraduate", text: "Master's & advanced programs." },
+            { category: "Diploma", img: "https://static.wixstatic.com/media/d77f36_e8f60f4350304ee79afab3978a44e307~mv2.png", title: "Diploma", text: "Professional & foundation." },
+            { category: "Mobility", img: "https://static.wixstatic.com/media/d77f36_1118d15eee5a45f2a609c762d077857e~mv2.png", title: "Semester Abroad", text: "Exchange & mobility." },
+            { category: "Upskilling", img: "https://static.wixstatic.com/media/d77f36_d8d9655ba23f4849abba7d09ddb12092~mv2.png", title: "Upskilling", text: "Short-term training." },
+            { category: "Research", img: "https://static.wixstatic.com/media/d77f36_aa9eb498381d4adc897522e38301ae6f~mv2.jpg", title: "Research", text: "Opportunities & links." }
+        ];
+        return false;
     }
-  } catch (error) {
-    console.log('Using fallback carousel data');
-    carouselData = [
-      { category: "UG", img: "https://static.wixstatic.com/media/d77f36_deddd99f45db4a55953835f5d3926246~mv2.png", title: "Undergraduate", text: "Bachelor-level opportunities." },
-      { category: "PG", img: "https://static.wixstatic.com/media/d77f36_ae2a1e8b47514fb6b0a995be456a9eec~mv2.png", title: "Postgraduate", text: "Master's & advanced programs." },
-      { category: "Diploma", img: "https://static.wixstatic.com/media/d77f36_e8f60f4350304ee79afab3978a44e307~mv2.png", title: "Diploma", text: "Professional & foundation." },
-      { category: "Mobility", img: "https://static.wixstatic.com/media/d77f36_1118d15eee5a45f2a609c762d077857e~mv2.png", title: "Semester Abroad", text: "Exchange & mobility." },
-      { category: "Upskilling", img: "https://static.wixstatic.com/media/d77f36_d8d9655ba23f4849abba7d09ddb12092~mv2.png", title: "Upskilling", text: "Short-term training." },
-      { category: "Research", img: "https://static.wixstatic.com/media/d77f36_aa9eb498381d4adc897522e38301ae6f~mv2.jpg", title: "Research", text: "Opportunities & links." }
-    ];
-    return false;
-  }
 }
 
 async function fetchDataFromBackend() {
-  try {
-    console.log('🔄 Fetching data from server...');
-    const response = await fetch('/api/globe-data');
-    
-    if (response.ok) {
-      const data = await response.json();
-      console.log('✅ Server data received:', data);
-      
-      europeContent = data.europeContent || [];
-      newThailandContent = data.newThailandContent || [];
-      canadaContent = data.canadaContent || [];
-      ukContent = data.ukContent || [];
-      usaContent = data.usaContent || [];
-      indiaContent = data.indiaContent || [];
-      singaporeContent = data.singaporeContent || [];
-      malaysiaContent = data.malaysiaContent || [];
-      countryPrograms = data.countryPrograms || {};
-      countryConfigs = data.countryConfigs || [];
-      
-      globalContentMap = {
-        'Europe': europeContent, 'Thailand': newThailandContent, 'Canada': canadaContent, 'UK': ukContent,
-        'USA': usaContent, 'India': indiaContent, 'Singapore': singaporeContent, 'Malaysia': malaysiaContent
-      };
-      
-      allUniversityContent = [...europeContent, ...newThailandContent, ...canadaContent, ...ukContent, ...usaContent, ...indiaContent, ...singaporeContent, ...malaysiaContent];
-      
-      console.log('✅ Data loaded successfully!');
-      return true;
+    try {
+        console.log('🔄 Fetching data from server...');
+        const response = await fetch('/api/globe-data');
+        
+        if (response.ok) {
+            const data = await response.json();
+            console.log('✅ Server data received:', data);
+            
+            europeContent = data.europeContent || [];
+            newThailandContent = data.newThailandContent || [];
+            canadaContent = data.canadaContent || [];
+            ukContent = data.ukContent || [];
+            usaContent = data.usaContent || [];
+            indiaContent = data.indiaContent || [];
+            singaporeContent = data.singaporeContent || [];
+            malaysiaContent = data.malaysiaContent || [];
+            countryPrograms = data.countryPrograms || {};
+            countryConfigs = data.countryConfigs || [];
+            
+            globalContentMap = {
+                'Europe': europeContent, 'Thailand': newThailandContent, 'Canada': canadaContent, 'UK': ukContent,
+                'USA': usaContent, 'India': indiaContent, 'Singapore': singaporeContent, 'Malaysia': malaysiaContent
+            };
+            
+            allUniversityContent = [...europeContent, ...newThailandContent, ...canadaContent, ...ukContent, ...usaContent, ...indiaContent, ...singaporeContent, ...malaysiaContent];
+            
+            console.log('✅ Data loaded successfully!');
+            return true;
+        }
+    } catch (error) {
+        console.error('❌ Error fetching data:', error);
+        // Fallback data
+        countryConfigs = [
+            {"name": "India", "lat": 22, "lon": 78, "color": 0xFF9933}, {"name": "Europe", "lat": 48.8566, "lon": 2.3522, "color": 0x0000FF},
+            {"name": "UK", "lat": 53, "lon": -0.1276, "color": 0x191970}, {"name": "Singapore", "lat": 1.35, "lon": 103.8, "color": 0xff0000},
+            {"name": "Malaysia", "lat": 4, "lon": 102, "color": 0x0000ff}, {"name": "Thailand", "lat": 13.7563, "lon": 100.5018, "color": 0xffcc00},
+            {"name": "Canada", "lat": 56.1304, "lon": -106.3468, "color": 0xff0000}, {"name": "USA", "lat": 39.8283, "lon": -98.5795, "color": 0x003366}
+        ];
+        europeContent = Array(27).fill(null); newThailandContent = Array(27).fill(null); canadaContent = Array(27).fill(null);
+        ukContent = Array(27).fill(null); usaContent = Array(27).fill(null); indiaContent = Array(27).fill(null);
+        singaporeContent = Array(27).fill(null); malaysiaContent = Array(27).fill(null);
     }
-  } catch (error) {
-    console.error('❌ Error fetching data:', error);
-    countryConfigs = [
-      {"name": "India", "lat": 22, "lon": 78, "color": 0xFF9933}, {"name": "Europe", "lat": 48.8566, "lon": 2.3522, "color": 0x0000FF},
-      {"name": "UK", "lat": 53, "lon": -0.1276, "color": 0x191970}, {"name": "Singapore", "lat": 1.35, "lon": 103.8, "color": 0xff0000},
-      {"name": "Malaysia", "lat": 4, "lon": 102, "color": 0x0000ff}, {"name": "Thailand", "lat": 13.7563, "lon": 100.5018, "color": 0xffcc00},
-      {"name": "Canada", "lat": 56.1304, "lon": -106.3468, "color": 0xff0000}, {"name": "USA", "lat": 39.8283, "lon": -98.5795, "color": 0x003366}
-    ];
-    europeContent = Array(27).fill(null); newThailandContent = Array(27).fill(null); canadaContent = Array(27).fill(null);
-    ukContent = Array(27).fill(null); usaContent = Array(27).fill(null); indiaContent = Array(27).fill(null);
-    singaporeContent = Array(27).fill(null); malaysiaContent = Array(27).fill(null);
-  }
-  return false;
+    return false;
 }
 
+// Program filtering functions
 function getMatchingCountries(category) {
-  if (!globalContentMap || Object.keys(globalContentMap).length === 0) { return []; }
-  const matcherMap = {
-    'ug': content => content.some(p => p && /bachelor|bba|undergraduate|bsn|degree/i.test(p.programName)),
-    'pg': content => content.some(p => p && /master|mba|postgraduate|ms|msn/i.test(p.programName)),
-    'mobility': content => content.some(p => p && /exchange|abroad|mobility|study/i.test(p.programName)),  
-    'diploma': content => content.some(p => p && /diploma/i.test(p.programName)),
-    'upskilling': content => content.some(p => p && /cyber|data|tech|ux|upskill/i.test(p.programName)),
-    'research': content => content.some(p => p && /research|phd|doctor/i.test(p.programName))
-  };
-  const matcher = matcherMap[category.toLowerCase()] || (() => false);
-  return Object.keys(globalContentMap).filter(country => matcher(globalContentMap[country]));
+    if (!globalContentMap || Object.keys(globalContentMap).length === 0) { return []; }
+    const matcherMap = {
+        'ug': content => content.some(p => p && /bachelor|bba|undergraduate|bsn|degree/i.test(p.programName)),
+        'pg': content => content.some(p => p && /master|mba|postgraduate|ms|msn/i.test(p.programName)),
+        'mobility': content => content.some(p => p && /exchange|abroad|mobility|study/i.test(p.programName)),  
+        'diploma': content => content.some(p => p && /diploma/i.test(p.programName)),
+        'upskilling': content => content.some(p => p && /cyber|data|tech|ux|upskill/i.test(p.programName)),
+        'research': content => content.some(p => p && /research|phd|doctor/i.test(p.programName))
+    };
+    const matcher = matcherMap[category.toLowerCase()] || (() => false);
+    return Object.keys(globalContentMap).filter(country => matcher(globalContentMap[country]));
 }
 
 function highlightCountriesByProgram(level) {
-  console.log('🌍 Highlighting countries for program:', level);
-  const matchingCountries = getMatchingCountries(level);
-  Object.entries(countryBlocks).forEach(([country, group]) => {
-    const isActive = matchingCountries.includes(country);
-    group.material.emissiveIntensity = isActive ? 1.8 : 0.4;
-    group.material.opacity = isActive ? 1.0 : 0.7;
-    group.scale.setScalar(isActive ? 1.2 : 1.0);
-    const labelItem = countryLabels.find(item => item.block === group);
-    if (labelItem) { labelItem.label.material.color.set(isActive ? 0xffff00 : 0xffffff); }
-    if (typeof TWEEN !== 'undefined' && isActive) {
-      new TWEEN.Tween(group.material).to({ emissiveIntensity: 2.0 }, 300).yoyo(true).repeat(2).start();
-    }
-  });
-  console.log(`✨ Highlighted ${matchingCountries.length} countries:`, matchingCountries);
+    console.log('🌍 Highlighting countries for program:', level);
+    const matchingCountries = getMatchingCountries(level);
+    Object.entries(countryBlocks).forEach(([country, group]) => {
+        const isActive = matchingCountries.includes(country);
+        group.material.emissiveIntensity = isActive ? 1.8 : 0.4;
+        group.material.opacity = isActive ? 1.0 : 0.7;
+        group.scale.setScalar(isActive ? 1.2 : 1.0);
+        const labelItem = countryLabels.find(item => item.block === group);
+        if (labelItem) { labelItem.label.material.color.set(isActive ? 0xffff00 : 0xffffff); }
+        if (typeof TWEEN !== 'undefined' && isActive) {
+            new TWEEN.Tween(group.material).to({ emissiveIntensity: 2.0 }, 300).yoyo(true).repeat(2).start();
+        }
+    });
+    console.log(`✨ Highlighted ${matchingCountries.length} countries:`, matchingCountries);
 }
 
 function highlightNeuralCubesByProgram(selectedCategory) {
-  console.log(`🌍 Global neural cube filtering for: ${selectedCategory}`);
-  const category = selectedCategory.toLowerCase();
-  const matchingCountries = getMatchingCountries(category);
-  Object.keys(neuralCubeMap).forEach(countryName => {
-    const cube = neuralCubeMap[countryName];
-    if (cube && typeof TWEEN !== 'undefined') { new TWEEN.Tween(cube.scale).to({ x: 1.0, y: 1.0, z: 1.0 }, 300).start(); }
-  });
-  matchingCountries.forEach(countryName => {
-    const cube = neuralCubeMap[countryName];
-    if (cube && typeof TWEEN !== 'undefined') { new TWEEN.Tween(cube.scale).to({ x: 1.3, y: 1.3, z: 1.3 }, 500).start(); }
-  });
-  cubes.forEach(cube => {
-    if (cube.children && cube.children.length > 10) {
-      cube.children.forEach(subCube => {
-        if (!subCube.userData || !subCube.userData.programName) return;
-        const prog = subCube.userData.programName.toLowerCase();
-        let shouldHighlight = false;
-        if (category === "ug") { shouldHighlight = /ug|undergraduate|degree|bachelor|bsn|bba|business school|academic/i.test(prog); }
-        else if (category === "pg") { shouldHighlight = /pg|postgraduate|master|msc|ma|msn|mba|phd|public policy|journalism|prospectus/i.test(prog); }
-        else if (category === "diploma") { shouldHighlight = /diploma/i.test(prog); }
-        else if (category === "mobility") { shouldHighlight = /exchange|mobility|semester|abroad|short|global/i.test(prog); }
-        else if (category === "upskilling") { shouldHighlight = /upskill|certificat|short|cyber|data|stack|design/i.test(prog); }
-        else if (category === "research") { shouldHighlight = !!subCube.userData.researchLink; }
-        else if (category === "language") { shouldHighlight = /lang/i.test(prog); }
-        if (shouldHighlight) { subCube.material.emissiveIntensity = 1.5; subCube.material.opacity = 1.0; subCube.scale.setScalar(1.3); }
-        else { subCube.material.emissiveIntensity = 0.2; subCube.material.opacity = 0.25; subCube.scale.setScalar(1.0); }
-      });
-    }
-  });
-  console.log(`✨ Scaled ${matchingCountries.length} neural cubes for ${selectedCategory}`);
+    console.log(`🌍 Global neural cube filtering for: ${selectedCategory}`);
+    const category = selectedCategory.toLowerCase();
+    const matchingCountries = getMatchingCountries(category);
+    Object.keys(neuralCubeMap).forEach(countryName => {
+        const cube = neuralCubeMap[countryName];
+        if (cube && typeof TWEEN !== 'undefined') { new TWEEN.Tween(cube.scale).to({ x: 1.0, y: 1.0, z: 1.0 }, 300).start(); }
+    });
+    matchingCountries.forEach(countryName => {
+        const cube = neuralCubeMap[countryName];
+        if (cube && typeof TWEEN !== 'undefined') { new TWEEN.Tween(cube.scale).to({ x: 1.3, y: 1.3, z: 1.3 }, 500).start(); }
+    });
+    cubes.forEach(cube => {
+        if (cube.children && cube.children.length > 10) {
+            cube.children.forEach(subCube => {
+                if (!subCube.userData || !subCube.userData.programName) return;
+                const prog = subCube.userData.programName.toLowerCase();
+                let shouldHighlight = false;
+                if (category === "ug") { shouldHighlight = /ug|undergraduate|degree|bachelor|bsn|bba|business school|academic/i.test(prog); }
+                else if (category === "pg") { shouldHighlight = /pg|postgraduate|master|msc|ma|msn|mba|phd|public policy|journalism|prospectus/i.test(prog); }
+                else if (category === "diploma") { shouldHighlight = /diploma/i.test(prog); }
+                else if (category === "mobility") { shouldHighlight = /exchange|mobility|semester|abroad|short|global/i.test(prog); }
+                else if (category === "upskilling") { shouldHighlight = /upskill|certificat|short|cyber|data|stack|design/i.test(prog); }
+                else if (category === "research") { shouldHighlight = !!subCube.userData.researchLink; }
+                else if (category === "language") { shouldHighlight = /lang/i.test(prog); }
+                if (shouldHighlight) { subCube.material.emissiveIntensity = 1.5; subCube.material.opacity = 1.0; subCube.scale.setScalar(1.3); }
+                else { subCube.material.emissiveIntensity = 0.2; subCube.material.opacity = 0.25; subCube.scale.setScalar(1.0); }
+            });
+        }
+    });
+    console.log(`✨ Scaled ${matchingCountries.length} neural cubes for ${selectedCategory}`);
 }
 
+// Carousel functions
 async function populateCarousel() {
     await fetchCarouselData();
     const container = document.getElementById('carouselContainer');
@@ -300,6 +388,7 @@ function scrollCarousel(direction) {
     container.scrollBy({ left: direction * cardWidth, behavior: 'smooth' });
 }
 
+// Control functions
 function togglePanMode() {
     isPanMode = !isPanMode;
     const panButton = document.getElementById('btn-pan');
@@ -335,47 +424,48 @@ function togglePanMode() {
 }
 
 function toggleGlobeRotation() {
-  if (controls) {
-    controls.autoRotate = !controls.autoRotate;
-    const rotateBtn = document.getElementById('btn-rotate');
-    if (rotateBtn) { rotateBtn.style.background = controls.autoRotate ? '#a46bfd' : 'rgba(0,0,0,0.8)'; }
-  }
+    if (controls) {
+        controls.autoRotate = !controls.autoRotate;
+        const rotateBtn = document.getElementById('btn-rotate');
+        if (rotateBtn) { rotateBtn.style.background = controls.autoRotate ? '#a46bfd' : 'rgba(0,0,0,0.8)'; }
+    }
 }
 
+// Three.js initialization
 function initializeThreeJS() {
-  console.log('🔄 Initializing Three.js...');
-  scene = new THREE.Scene();
-  camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.001, 1000);
-  camera.position.z = 3.5;
-  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  document.body.appendChild(renderer.domElement);
-  renderer.domElement.id = 'threejs-canvas';
-  globeGroup = new THREE.Group();
-  scene.add(globeGroup);
-  globeGroup.add(neuronGroup);
-  controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.1;
-  controls.enablePan = true;
-  controls.autoRotate = true;
-  controls.autoRotateSpeed = 0.6;
-  controls.minDistance = 0.01;
-  controls.maxDistance = 15.0;
-  controls.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN };
-  controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
-  transformControls = new THREE.TransformControls(camera, renderer.domElement);
-  transformControls.setMode('translate');
-  transformControls.addEventListener('dragging-changed', event => { if (controls) controls.enabled = !event.value; });
-  transformControls.visible = false;
-  scene.add(transformControls);
-  scene.add(new THREE.AmbientLight(0x88ccff, 1.5));
-  const pointLight = new THREE.PointLight(0xffffff, 1.5);
-  pointLight.position.set(5, 5, 5);
-  scene.add(pointLight);
-  renderer.domElement.addEventListener('mousedown', () => { isInteracting = true; clearTimeout(hoverTimeout); if (isPanMode) renderer.domElement.style.cursor = 'grabbing'; });
-  renderer.domElement.addEventListener('mouseup', () => { hoverTimeout = setTimeout(() => { isInteracting = false; }, 200); if (isPanMode) renderer.domElement.style.cursor = 'grab'; });
-  console.log('✅ Three.js initialized successfully');
+    console.log('🔄 Initializing Three.js...');
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.001, 1000);
+    camera.position.z = 3.5;
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+    renderer.domElement.id = 'threejs-canvas';
+    globeGroup = new THREE.Group();
+    scene.add(globeGroup);
+    globeGroup.add(neuronGroup);
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.1;
+    controls.enablePan = true;
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 0.6;
+    controls.minDistance = 0.01;
+    controls.maxDistance = 15.0;
+    controls.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN };
+    controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
+    transformControls = new THREE.TransformControls(camera, renderer.domElement);
+    transformControls.setMode('translate');
+    transformControls.addEventListener('dragging-changed', event => { if (controls) controls.enabled = !event.value; });
+    transformControls.visible = false;
+    scene.add(transformControls);
+    scene.add(new THREE.AmbientLight(0x88ccff, 1.5));
+    const pointLight = new THREE.PointLight(0xffffff, 1.5);
+    pointLight.position.set(5, 5, 5);
+    scene.add(pointLight);
+    renderer.domElement.addEventListener('mousedown', () => { isInteracting = true; clearTimeout(hoverTimeout); if (isPanMode) renderer.domElement.style.cursor = 'grabbing'; });
+    renderer.domElement.addEventListener('mouseup', () => { hoverTimeout = setTimeout(() => { isInteracting = false; }, 200); if (isPanMode) renderer.domElement.style.cursor = 'grab'; });
+    console.log('✅ Three.js initialized successfully');
 }
 
 function updateCanvasSize() {
@@ -390,45 +480,47 @@ function updateCanvasSize() {
     camera.updateProjectionMatrix();
 }
 
+// Utility functions
 function getColorByData(data) {
-  const baseHue = data.domain * 30 % 360;
-  const lightness = 50 + data.engagement * 25;
-  const saturation = 70;
-  const riskShift = data.risk > 0.5 ? 0 : 120;
-  const hue = (baseHue + riskShift) % 360;
-  const color = new THREE.Color(`hsl(${hue}, ${saturation}%, ${lightness}%)`);
-  color.multiplyScalar(data.confidence);
-  return color;
+    const baseHue = data.domain * 30 % 360;
+    const lightness = 50 + data.engagement * 25;
+    const saturation = 70;
+    const riskShift = data.risk > 0.5 ? 0 : 120;
+    const hue = (baseHue + riskShift) % 360;
+    const color = new THREE.Color(`hsl(${hue}, ${saturation}%, ${lightness}%)`);
+    color.multiplyScalar(data.confidence);
+    return color;
 }
 
 function createTexture(text, logoUrl, bgColor = '#003366') {
-  const canvas = document.createElement('canvas');
-  canvas.width = 256;
-  canvas.height = 256;
-  const ctx = canvas.getContext('2d');
-  ctx.fillStyle = bgColor;
-  ctx.fillRect(0, 0, 256, 256);
-  ctx.fillStyle = '#FFFFFF';
-  ctx.textAlign = 'center';
-  const texture = new THREE.CanvasTexture(canvas);
-  function drawText() {
-    const lines = text.split('\n');
-    const fontSize = lines.length > 1 ? 28 : 32;
-    ctx.font = `bold ${fontSize}px Arial`;
-    let y = 128 + (lines.length > 1 ? 0 : 10);
-    lines.forEach(line => { ctx.fillText(line, 128, y); y += (fontSize + 6); });
-    texture.needsUpdate = true;
-  }
-  if (logoUrl) {
-    const logoImg = new Image();
-    logoImg.crossOrigin = "Anonymous";
-    logoImg.src = logoUrl;
-    logoImg.onload = () => { ctx.drawImage(logoImg, 16, 16, 64, 64); drawText(); };
-    logoImg.onerror = () => { drawText(); }
-  } else { drawText(); }
-  return new THREE.MeshStandardMaterial({ map: texture, emissive: new THREE.Color(bgColor), emissiveIntensity: 0.6 });
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = bgColor;
+    ctx.fillRect(0, 0, 256, 256);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.textAlign = 'center';
+    const texture = new THREE.CanvasTexture(canvas);
+    function drawText() {
+        const lines = text.split('\n');
+        const fontSize = lines.length > 1 ? 28 : 32;
+        ctx.font = `bold ${fontSize}px Arial`;
+        let y = 128 + (lines.length > 1 ? 0 : 10);
+        lines.forEach(line => { ctx.fillText(line, 128, y); y += (fontSize + 6); });
+        texture.needsUpdate = true;
+    }
+    if (logoUrl) {
+        const logoImg = new Image();
+        logoImg.crossOrigin = "Anonymous";
+        logoImg.src = logoUrl;
+        logoImg.onload = () => { ctx.drawImage(logoImg, 16, 16, 64, 64); drawText(); };
+        logoImg.onerror = () => { drawText(); }
+    } else { drawText(); }
+    return new THREE.MeshStandardMaterial({ map: texture, emissive: new THREE.Color(bgColor), emissiveIntensity: 0.6 });
 }
 
+// Toggle function creation
 function createToggleFunction(cubeName) {
     return function() {
         const explosionStateMap = { 'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded, 'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded, 'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded };
@@ -467,12 +559,13 @@ function createToggleFunction(cubeName) {
 }
 
 const toggleFunctionMap = {
-  'Europe': createToggleFunction('Europe'), 'Thailand': createToggleFunction('Thailand'),
-  'Canada': createToggleFunction('Canada'), 'UK': createToggleFunction('UK'),
-  'USA': createToggleFunction('USA'), 'India': createToggleFunction('India'),
-  'Singapore': createToggleFunction('Singapore'), 'Malaysia': createToggleFunction('Malaysia')
+    'Europe': createToggleFunction('Europe'), 'Thailand': createToggleFunction('Thailand'),
+    'Canada': createToggleFunction('Canada'), 'UK': createToggleFunction('UK'),
+    'USA': createToggleFunction('USA'), 'India': createToggleFunction('India'),
+    'Singapore': createToggleFunction('Singapore'), 'Malaysia': createToggleFunction('Malaysia')
 };
 
+// Cube creation
 function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
     let contentIdx = 0;
     const cubeObject = new THREE.Group();
@@ -510,12 +603,12 @@ function createNeuralNetwork() {
 }
 
 function latLonToVector3(lat, lon, radius) {
-  const phi = (90 - lat) * (Math.PI / 180);
-  const theta = (lon + 180) * (Math.PI / 180);
-  const x = -(radius * Math.sin(phi) * Math.cos(theta));
-  const z = (radius * Math.sin(phi) * Math.sin(theta));
-  const y = (radius * Math.cos(phi));
-  return new THREE.Vector3(x, y, z);
+    const phi = (90 - lat) * (Math.PI / 180);
+    const theta = (lon + 180) * (Math.PI / 180);
+    const x = -(radius * Math.sin(phi) * Math.cos(theta));
+    const z = (radius * Math.sin(phi) * Math.sin(theta));
+    const y = (radius * Math.cos(phi));
+    return new THREE.Vector3(x, y, z);
 }
 
 function createConnectionPath(fromGroup, toGroup, color = 0xffff00) {
@@ -547,52 +640,53 @@ function drawAllConnections() {
     }).filter(Boolean);
 }
 
-// THIS IS THE KEY FUNCTION - OAuth only triggers when clicking individual subcubes
+// Info panel - triggers OAuth for individual subcube clicks
 async function showInfoPanel(data) {
-  // OAUTH CHECK ONLY WHEN VIEWING PROGRAM DETAILS
-  if (!(await userIsAuthenticated())) {
-    redirectToWixLogin();
-    return;
-  }
-  
-  if (!data || data.university === "Unassigned") return;
-  const uniData = allUniversityContent.filter(item => item && item.university === data.university);
-  if (uniData.length === 0) return;
-  const mainErasmusLink = uniData[0].erasmusLink;
-  document.getElementById('infoPanelMainCard').innerHTML = `<div class="main-card-details"><img src="${uniData[0].logo}" alt="${data.university}"><h3>${data.university}</h3></div><div class="main-card-actions">${mainErasmusLink ? `<a href="${mainErasmusLink}" target="_blank" class="partner-cta erasmus">Erasmus Info</a>` : ''}</div>`;
-  document.getElementById('infoPanelSubcards').innerHTML = '';
-  uniData.forEach(item => {
-    if (!item) return;
-    const infoLinkClass = item.programLink && item.programLink !== '#' ? 'partner-cta' : 'partner-cta disabled';
-    const infoLinkHref = item.programLink && item.programLink !== '#' ? `javascript:window.open('${item.programLink}', '_blank')` : 'javascript:void(0);';
-    const applyLinkClass = item.applyLink && item.applyLink !== '#' ? 'partner-cta apply' : 'partner-cta apply disabled';
-    const applyLinkHref = item.applyLink && item.applyLink !== '#' ? `javascript:window.open('${item.applyLink}', '_blank')` : 'javascript:void(0);';
-    const subcardHTML = `<div class="subcard"><div class="subcard-info"><img src="${item.logo}" alt=""><h4>${item.programName.replace(/\n/g, ' ')}</h4></div><div class="subcard-buttons"><a href="${infoLinkHref}" class="${infoLinkClass}">Info</a><a href="${applyLinkHref}" class="${applyLinkClass}">Apply</a></div></div>`;
-    document.getElementById('infoPanelSubcards').insertAdjacentHTML('beforeend', subcardHTML);
-  });
-  document.getElementById('infoPanelOverlay').style.display = 'flex';
+    // OAUTH CHECK ONLY WHEN VIEWING PROGRAM DETAILS
+    if (!(await isLoggedIn())) {
+        redirectToWix();
+        return;
+    }
+    
+    if (!data || data.university === "Unassigned") return;
+    const uniData = allUniversityContent.filter(item => item && item.university === data.university);
+    if (uniData.length === 0) return;
+    const mainErasmusLink = uniData.erasmusLink;
+    document.getElementById('infoPanelMainCard').innerHTML = `<div class="main-card-details"><img src="${uniData.logo}" alt="${data.university}"><h3>${data.university}</h3></div><div class="main-card-actions">${mainErasmusLink ? `<a href="${mainErasmusLink}" target="_blank" class="partner-cta erasmus">Erasmus Info</a>` : ''}</div>`;
+    document.getElementById('infoPanelSubcards').innerHTML = '';
+    uniData.forEach(item => {
+        if (!item) return;
+        const infoLinkClass = item.programLink && item.programLink !== '#' ? 'partner-cta' : 'partner-cta disabled';
+        const infoLinkHref = item.programLink && item.programLink !== '#' ? `javascript:window.open('${item.programLink}', '_blank')` : 'javascript:void(0);';
+        const applyLinkClass = item.applyLink && item.applyLink !== '#' ? 'partner-cta apply' : 'partner-cta apply disabled';
+        const applyLinkHref = item.applyLink && item.applyLink !== '#' ? `javascript:window.open('${item.applyLink}', '_blank')` : 'javascript:void(0);';
+        const subcardHTML = `<div class="subcard"><div class="subcard-info"><img src="${item.logo}" alt=""><h4>${item.programName.replace(/\n/g, ' ')}</h4></div><div class="subcard-buttons"><a href="${infoLinkHref}" class="${infoLinkClass}">Info</a><a href="${applyLinkHref}" class="${applyLinkClass}">Apply</a></div></div>`;
+        document.getElementById('infoPanelSubcards').insertAdjacentHTML('beforeend', subcardHTML);
+    });
+    document.getElementById('infoPanelOverlay').style.display = 'flex';
 }
 
 function hideInfoPanel() {
-  document.getElementById('infoPanelOverlay').style.display = 'none';
+    document.getElementById('infoPanelOverlay').style.display = 'none';
 }
 
+// Mouse event handlers
 function onCanvasMouseDown(event) {
-  mouseDownPos.set(event.clientX, event.clientY);
+    mouseDownPos.set(event.clientX, event.clientY);
 }
 
 function closeAllExploded() {
-  if (isEuropeCubeExploded) toggleFunctionMap['Europe']();
-  if (isNewThailandCubeExploded) toggleFunctionMap['Thailand']();
-  if (isCanadaCubeExploded) toggleFunctionMap['Canada']();
-  if (isUkCubeExploded) toggleFunctionMap['UK']();
-  if (isUsaCubeExploded) toggleFunctionMap['USA']();
-  if (isIndiaCubeExploded) toggleFunctionMap['India']();
-  if (isSingaporeCubeExploded) toggleFunctionMap['Singapore']();
-  if (isMalaysiaCubeExploded) toggleFunctionMap['Malaysia']();
+    if (isEuropeCubeExploded) toggleFunctionMap['Europe']();
+    if (isNewThailandCubeExploded) toggleFunctionMap['Thailand']();
+    if (isCanadaCubeExploded) toggleFunctionMap['Canada']();
+    if (isUkCubeExploded) toggleFunctionMap['UK']();
+    if (isUsaCubeExploded) toggleFunctionMap['USA']();
+    if (isIndiaCubeExploded) toggleFunctionMap['India']();
+    if (isSingaporeCubeExploded) toggleFunctionMap['Singapore']();
+    if (isMalaysiaCubeExploded) toggleFunctionMap['Malaysia']();
 }
 
-// THE KEY CLICK HANDLER - NO AUTH NEEDED FOR EXPLOSION
+// THE KEY CLICK HANDLER - NO AUTH NEEDED FOR EXPLOSION, AUTH ONLY FOR INDIVIDUAL SUBCUBE DETAILS
 function onCanvasMouseUp(event) {
     if (transformControls.dragging) return;
     const deltaX = Math.abs(event.clientX - mouseDownPos.x);
@@ -647,248 +741,254 @@ function onCanvasMouseUp(event) {
     }
 }
 
+// Pan mode mouse handlers
 function onCanvasMouseDownPan(event) {
-  mouseDownPos.set(event.clientX, event.clientY);
-  if (isPanMode) {
-    isDragging = true;
-    previousMousePosition = { x: event.clientX, y: event.clientY };
-    renderer.domElement.style.cursor = 'grabbing';
-    event.preventDefault(); event.stopPropagation();
-  }
+    mouseDownPos.set(event.clientX, event.clientY);
+    if (isPanMode) {
+        isDragging = true;
+        previousMousePosition = { x: event.clientX, y: event.clientY };
+        renderer.domElement.style.cursor = 'grabbing';
+        event.preventDefault(); event.stopPropagation();
+    }
 }
 
 function onCanvasMouseMovePan(event) {
-  if (isPanMode && isDragging) {
-    const deltaMove = { x: event.clientX - previousMousePosition.x, y: event.clientY - previousMousePosition.y };
-    const panSpeed = 0.001;
-    const deltaX = deltaMove.x * panSpeed;
-    const deltaY = deltaMove.y * panSpeed;
-    controls.target.x -= deltaX;
-    controls.target.y += deltaY;
-    const maxPan = 2.0;
-    controls.target.x = Math.max(-maxPan, Math.min(maxPan, controls.target.x));
-    controls.target.y = Math.max(-maxPan, Math.min(maxPan, controls.target.y));
-    controls.update();
-    previousMousePosition = { x: event.clientX, y: event.clientY };
-    event.preventDefault(); event.stopPropagation();
-  }
+    if (isPanMode && isDragging) {
+        const deltaMove = { x: event.clientX - previousMousePosition.x, y: event.clientY - previousMousePosition.y };
+        const panSpeed = 0.001;
+        const deltaX = deltaMove.x * panSpeed;
+        const deltaY = deltaMove.y * panSpeed;
+        controls.target.x -= deltaX;
+        controls.target.y += deltaY;
+        const maxPan = 2.0;
+        controls.target.x = Math.max(-maxPan, Math.min(maxPan, controls.target.x));
+        controls.target.y = Math.max(-maxPan, Math.min(maxPan, controls.target.y));
+        controls.update();
+        previousMousePosition = { x: event.clientX, y: event.clientY };
+        event.preventDefault(); event.stopPropagation();
+    }
 }
 
 function onCanvasMouseUpPan(event) {
-  if (isPanMode) {
-    isDragging = false;
-    renderer.domElement.style.cursor = isPanMode ? 'grab' : 'default';
-    event.preventDefault(); event.stopPropagation();
-  }
-  onCanvasMouseUp(event);
+    if (isPanMode) {
+        isDragging = false;
+        renderer.domElement.style.cursor = isPanMode ? 'grab' : 'default';
+        event.preventDefault(); event.stopPropagation();
+    }
+    onCanvasMouseUp(event);
 }
 
+// Event listeners setup
 function setupEventListeners() {
-  renderer.domElement.addEventListener('mousedown', onCanvasMouseDownPan);
-  renderer.domElement.addEventListener('mousemove', onCanvasMouseMovePan);
-  renderer.domElement.addEventListener('mouseup', onCanvasMouseUpPan);
-  renderer.domElement.addEventListener('mouseenter', () => { if (isPanMode) { renderer.domElement.style.cursor = 'grab'; } });
-  const panSpeed = 0.1;
-  const btnUp = document.getElementById('btn-up'); if (btnUp) { btnUp.addEventListener('click', () => { controls.target.y += panSpeed; controls.update(); }); }
-  const btnDown = document.getElementById('btn-down'); if (btnDown) { btnDown.addEventListener('click', () => { controls.target.y -= panSpeed; controls.update(); }); }
-  const btnLeft = document.getElementById('btn-left'); if (btnLeft) { btnLeft.addEventListener('click', () => { controls.target.x -= panSpeed; controls.update(); }); }
-  const btnRight = document.getElementById('btn-right'); if (btnRight) { btnRight.addEventListener('click', () => { controls.target.x += panSpeed; controls.update(); }); }
-  const btnZoomIn = document.getElementById('btn-zoom-in'); if (btnZoomIn) { btnZoomIn.addEventListener('click', () => { camera.position.multiplyScalar(0.9); controls.update(); }); }
-  const btnZoomOut = document.getElementById('btn-zoom-out'); if (btnZoomOut) { btnZoomOut.addEventListener('click', () => { camera.position.multiplyScalar(1.1); controls.update(); }); }
-  const btnRotate = document.getElementById('btn-rotate'); if (btnRotate) { btnRotate.addEventListener('click', toggleGlobeRotation); }
-  const btnPan = document.getElementById('btn-pan'); if (btnPan) { btnPan.addEventListener('click', togglePanMode); }
-  const pauseButton = document.getElementById("pauseButton"); if (pauseButton) { pauseButton.addEventListener("click", () => { isRotationPaused = !isRotationPaused; controls.autoRotate = !isRotationPaused; pauseButton.textContent = isRotationPaused ? "Resume Rotation" : "Pause Rotation"; }); }
-  const pauseCubesButton = document.getElementById("pauseCubesButton"); if (pauseCubesButton) { pauseCubesButton.addEventListener("click", () => { isCubeMovementPaused = !isCubeMovementPaused; pauseCubesButton.textContent = isCubeMovementPaused ? "Resume Cube Motion" : "Pause Cube Motion"; }); }
-  const toggleMeshButton = document.getElementById("toggleMeshButton"); if (toggleMeshButton) { toggleMeshButton.addEventListener("click", () => { const wireframeMesh = globeGroup.children.find(child => child.material && child.material.wireframe); if (wireframeMesh) { wireframeMesh.visible = !wireframeMesh.visible; toggleMeshButton.textContent = wireframeMesh.visible ? "Hide Globe Mesh" : "Show Globe Mesh"; } }); }
-  const arcToggleBtn = document.getElementById("arcToggleBtn"); if (arcToggleBtn) { arcToggleBtn.addEventListener("click", () => { let visible = false; arcPaths.forEach((p, i) => { if (i === 0) { visible = !p.visible; } p.visible = visible; }); }); }
-  const toggleNodesButton = document.getElementById('toggleNodesButton'); if (toggleNodesButton) { toggleNodesButton.addEventListener('click', () => { const neuralNodes = cubes.filter(cube => cube.userData.isSmallNode); const areVisible = neuralNodes.length > 0 && neuralNodes[0].visible; const newVisibility = !areVisible; neuralNodes.forEach(node => { node.visible = newVisibility; }); if (neuralNetworkLines) { neuralNetworkLines.visible = newVisibility; } toggleNodesButton.textContent = newVisibility ? "Hide Neural Nodes" : "Show Neural Nodes"; }); }
-  const scrollLockButton = document.getElementById('scrollLockBtn');
-  if (scrollLockButton) {
-    function setGlobeInteraction(isInteractive) {
-      if (controls) { controls.enabled = isInteractive; }
-      const scrollInstruction = document.getElementById('scrollLockInstruction');
-      if (isInteractive) { scrollLockButton.textContent = 'Unlock Scroll'; scrollLockButton.classList.remove('unlocked'); if (scrollInstruction) scrollInstruction.textContent = 'Globe is active.'; }
-      else { scrollLockButton.textContent = 'Lock Globe'; scrollLockButton.classList.add('unlocked'); if (scrollInstruction) scrollInstruction.textContent = 'Page scroll is active.'; }
+    renderer.domElement.addEventListener('mousedown', onCanvasMouseDownPan);
+    renderer.domElement.addEventListener('mousemove', onCanvasMouseMovePan);
+    renderer.domElement.addEventListener('mouseup', onCanvasMouseUpPan);
+    renderer.domElement.addEventListener('mouseenter', () => { if (isPanMode) { renderer.domElement.style.cursor = 'grab'; } });
+    const panSpeed = 0.1;
+    const btnUp = document.getElementById('btn-up'); if (btnUp) { btnUp.addEventListener('click', () => { controls.target.y += panSpeed; controls.update(); }); }
+    const btnDown = document.getElementById('btn-down'); if (btnDown) { btnDown.addEventListener('click', () => { controls.target.y -= panSpeed; controls.update(); }); }
+    const btnLeft = document.getElementById('btn-left'); if (btnLeft) { btnLeft.addEventListener('click', () => { controls.target.x -= panSpeed; controls.update(); }); }
+    const btnRight = document.getElementById('btn-right'); if (btnRight) { btnRight.addEventListener('click', () => { controls.target.x += panSpeed; controls.update(); }); }
+    const btnZoomIn = document.getElementById('btn-zoom-in'); if (btnZoomIn) { btnZoomIn.addEventListener('click', () => { camera.position.multiplyScalar(0.9); controls.update(); }); }
+    const btnZoomOut = document.getElementById('btn-zoom-out'); if (btnZoomOut) { btnZoomOut.addEventListener('click', () => { camera.position.multiplyScalar(1.1); controls.update(); }); }
+    const btnRotate = document.getElementById('btn-rotate'); if (btnRotate) { btnRotate.addEventListener('click', toggleGlobeRotation); }
+    const btnPan = document.getElementById('btn-pan'); if (btnPan) { btnPan.addEventListener('click', togglePanMode); }
+    
+    // Additional UI controls
+    const pauseButton = document.getElementById("pauseButton"); if (pauseButton) { pauseButton.addEventListener("click", () => { isRotationPaused = !isRotationPaused; controls.autoRotate = !isRotationPaused; pauseButton.textContent = isRotationPaused ? "Resume Rotation" : "Pause Rotation"; }); }
+    const pauseCubesButton = document.getElementById("pauseCubesButton"); if (pauseCubesButton) { pauseCubesButton.addEventListener("click", () => { isCubeMovementPaused = !isCubeMovementPaused; pauseCubesButton.textContent = isCubeMovementPaused ? "Resume Cube Motion" : "Pause Cube Motion"; }); }
+    const toggleMeshButton = document.getElementById("toggleMeshButton"); if (toggleMeshButton) { toggleMeshButton.addEventListener("click", () => { const wireframeMesh = globeGroup.children.find(child => child.material && child.material.wireframe); if (wireframeMesh) { wireframeMesh.visible = !wireframeMesh.visible; toggleMeshButton.textContent = wireframeMesh.visible ? "Hide Globe Mesh" : "Show Globe Mesh"; } }); }
+    const arcToggleBtn = document.getElementById("arcToggleBtn"); if (arcToggleBtn) { arcToggleBtn.addEventListener("click", () => { let visible = false; arcPaths.forEach((p, i) => { if (i === 0) { visible = !p.visible; } p.visible = visible; }); }); }
+    const toggleNodesButton = document.getElementById('toggleNodesButton'); if (toggleNodesButton) { toggleNodesButton.addEventListener('click', () => { const neuralNodes = cubes.filter(cube => cube.userData.isSmallNode); const areVisible = neuralNodes.length > 0 && neuralNodes[0].visible; const newVisibility = !areVisible; neuralNodes.forEach(node => { node.visible = newVisibility; }); if (neuralNetworkLines) { neuralNetworkLines.visible = newVisibility; } toggleNodesButton.textContent = newVisibility ? "Hide Neural Nodes" : "Show Neural Nodes"; }); }
+    
+    const scrollLockButton = document.getElementById('scrollLockBtn');
+    if (scrollLockButton) {
+        function setGlobeInteraction(isInteractive) {
+            if (controls) { controls.enabled = isInteractive; }
+            const scrollInstruction = document.getElementById('scrollLockInstruction');
+            if (isInteractive) { scrollLockButton.textContent = 'Unlock Scroll'; scrollLockButton.classList.remove('unlocked'); if (scrollInstruction) scrollInstruction.textContent = 'Globe is active.'; }
+            else { scrollLockButton.textContent = 'Lock Globe'; scrollLockButton.classList.add('unlocked'); if (scrollInstruction) scrollInstruction.textContent = 'Page scroll is active.'; }
+        }
+        scrollLockButton.addEventListener('click', () => { setGlobeInteraction(!controls.enabled); });
     }
-    scrollLockButton.addEventListener('click', () => { setGlobeInteraction(!controls.enabled); });
-  }
-  document.addEventListener('keydown', (event) => {
-    if (!controls) return;
-    switch(event.code) {
-      case 'ArrowUp': case 'KeyW': event.preventDefault(); controls.target.y += panSpeed; controls.update(); break;
-      case 'ArrowDown': case 'KeyS': event.preventDefault(); controls.target.y -= panSpeed; controls.update(); break;
-      case 'ArrowLeft': case 'KeyA': event.preventDefault(); controls.target.x -= panSpeed; controls.update(); break;
-      case 'ArrowRight': case 'KeyD': event.preventDefault(); controls.target.x += panSpeed; controls.update(); break;
-      case 'Equal': case 'NumpadAdd': event.preventDefault(); camera.position.multiplyScalar(0.9); controls.update(); break;
-      case 'Minus': case 'NumpadSubtract': event.preventDefault(); camera.position.multiplyScalar(1.1); controls.update(); break;
-      case 'Space': event.preventDefault(); toggleGlobeRotation(); break;
-    }
-  });
-  window.addEventListener('resize', () => { updateCanvasSize(); });
+    
+    // Keyboard controls
+    document.addEventListener('keydown', (event) => {
+        if (!controls) return;
+        switch(event.code) {
+            case 'ArrowUp': case 'KeyW': event.preventDefault(); controls.target.y += panSpeed; controls.update(); break;
+            case 'ArrowDown': case 'KeyS': event.preventDefault(); controls.target.y -= panSpeed; controls.update(); break;
+            case 'ArrowLeft': case 'KeyA': event.preventDefault(); controls.target.x -= panSpeed; controls.update(); break;
+            case 'ArrowRight': case 'KeyD': event.preventDefault(); controls.target.x += panSpeed; controls.update(); break;
+            case 'Equal': case 'NumpadAdd': event.preventDefault(); camera.position.multiplyScalar(0.9); controls.update(); break;
+            case 'Minus': case 'NumpadSubtract': event.preventDefault(); camera.position.multiplyScalar(1.1); controls.update(); break;
+            case 'Space': event.preventDefault(); toggleGlobeRotation(); break;
+        }
+    });
+    window.addEventListener('resize', () => { updateCanvasSize(); });
 }
 
+// Globe and cubes creation
 async function createGlobeAndCubes() {
-  console.log('🔄 Creating globe and cubes...');
-  createNeuralNetwork();
-  for (let i = 0; i < count; i++) {
-    const r = maxRadius * Math.random(); const theta = Math.random() * 2 * Math.PI; const phi = Math.acos(2 * Math.random() - 1);
-    const x = r * Math.sin(phi) * Math.cos(theta); const y = r * Math.sin(phi) * Math.sin(theta); const z = r * Math.cos(phi);
-    let cubeObject;
-    if (i === 0) { cubeObject = createNeuralCube(europeContent, europeSubCubes, explodedPositions, '#003366'); cubeObject.userData.neuralName = 'Europe'; europeCube = cubeObject; }
-    else if (i === 1) { cubeObject = createNeuralCube(newThailandContent, newThailandSubCubes, newThailandExplodedPositions, '#A52A2A'); cubeObject.userData.neuralName = 'Thailand'; newThailandCube = cubeObject; }
-    else if (i === 2) { cubeObject = createNeuralCube(canadaContent, canadaSubCubes, canadaExplodedPositions, '#006400'); cubeObject.userData.neuralName = 'Canada'; canadaCube = cubeObject; }
-    else if (i === 3) { cubeObject = createNeuralCube(ukContent, ukSubCubes, ukExplodedPositions, '#483D8B'); cubeObject.userData.neuralName = 'UK'; ukCube = cubeObject; }
-    else if (i === 4) { cubeObject = createNeuralCube(usaContent, usaSubCubes, usaExplodedPositions, '#B22234'); cubeObject.userData.neuralName = 'USA'; usaCube = cubeObject; }
-    else if (i === 5) { cubeObject = createNeuralCube(indiaContent, indiaSubCubes, indiaExplodedPositions, '#FF9933'); cubeObject.userData.neuralName = 'India'; indiaCube = cubeObject; }
-    else if (i === 6) { cubeObject = createNeuralCube(singaporeContent, singaporeSubCubes, singaporeExplodedPositions, '#EE2536'); cubeObject.userData.neuralName = 'Singapore'; singaporeCube = cubeObject; }
-    else if (i === 7) { cubeObject = createNeuralCube(malaysiaContent, malaysiaSubCubes, malaysiaExplodedPositions, '#FFD700'); cubeObject.userData.neuralName = 'Malaysia'; malaysiaCube = cubeObject; }
-    else {
-      cubeObject = new THREE.Group();
-      const data = { domain: i % 12, engagement: Math.random(), age: Math.random(), risk: Math.random(), confidence: 0.7 + Math.random() * 0.3 };
-      dummyDataSet.push(data);
-      const color = getColorByData(data);
-      const subCubeMaterial = new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.6, transparent: true, opacity: 1.0 });
-      const microcube = new THREE.Mesh( new THREE.BoxGeometry(vortexCubeSize, vortexCubeSize, vortexCubeSize), subCubeMaterial );
-      cubeObject.add(microcube);
-      cubeObject.userData.isSmallNode = true;
+    console.log('🔄 Creating globe and cubes...');
+    createNeuralNetwork();
+    for (let i = 0; i < count; i++) {
+        const r = maxRadius * Math.random(); const theta = Math.random() * 2 * Math.PI; const phi = Math.acos(2 * Math.random() - 1);
+        const x = r * Math.sin(phi) * Math.cos(theta); const y = r * Math.sin(phi) * Math.sin(theta); const z = r * Math.cos(phi);
+        let cubeObject;
+        if (i === 0) { cubeObject = createNeuralCube(europeContent, europeSubCubes, explodedPositions, '#003366'); cubeObject.userData.neuralName = 'Europe'; europeCube = cubeObject; }
+        else if (i === 1) { cubeObject = createNeuralCube(newThailandContent, newThailandSubCubes, newThailandExplodedPositions, '#A52A2A'); cubeObject.userData.neuralName = 'Thailand'; newThailandCube = cubeObject; }
+        else if (i === 2) { cubeObject = createNeuralCube(canadaContent, canadaSubCubes, canadaExplodedPositions, '#006400'); cubeObject.userData.neuralName = 'Canada'; canadaCube = cubeObject; }
+        else if (i === 3) { cubeObject = createNeuralCube(ukContent, ukSubCubes, ukExplodedPositions, '#483D8B'); cubeObject.userData.neuralName = 'UK'; ukCube = cubeObject; }
+        else if (i === 4) { cubeObject = createNeuralCube(usaContent, usaSubCubes, usaExplodedPositions, '#B22234'); cubeObject.userData.neuralName = 'USA'; usaCube = cubeObject; }
+        else if (i === 5) { cubeObject = createNeuralCube(indiaContent, indiaSubCubes, indiaExplodedPositions, '#FF9933'); cubeObject.userData.neuralName = 'India'; indiaCube = cubeObject; }
+        else if (i === 6) { cubeObject = createNeuralCube(singaporeContent, singaporeSubCubes, singaporeExplodedPositions, '#EE2536'); cubeObject.userData.neuralName = 'Singapore'; singaporeCube = cubeObject; }
+        else if (i === 7) { cubeObject = createNeuralCube(malaysiaContent, malaysiaSubCubes, malaysiaExplodedPositions, '#FFD700'); cubeObject.userData.neuralName = 'Malaysia'; malaysiaCube = cubeObject; }
+        else {
+            cubeObject = new THREE.Group();
+            const data = { domain: i % 12, engagement: Math.random(), age: Math.random(), risk: Math.random(), confidence: 0.7 + Math.random() * 0.3 };
+            dummyDataSet.push(data);
+            const color = getColorByData(data);
+            const subCubeMaterial = new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.6, transparent: true, opacity: 1.0 });
+            const microcube = new THREE.Mesh( new THREE.BoxGeometry(vortexCubeSize, vortexCubeSize, vortexCubeSize), subCubeMaterial );
+            cubeObject.add(microcube);
+            cubeObject.userData.isSmallNode = true;
+        }
+        cubeObject.position.set(x, y, z);
+        neuronGroup.add(cubeObject);
+        cubes.push(cubeObject);
+        velocities.push(new THREE.Vector3( (Math.random() - 0.5) * 0.002, (Math.random() - 0.5) * 0.002, (Math.random() - 0.5) * 0.002 ));
+        if (cubeObject.userData.neuralName) { neuralCubeMap[cubeObject.userData.neuralName] = cubeObject; }
     }
-    cubeObject.position.set(x, y, z);
-    neuronGroup.add(cubeObject);
-    cubes.push(cubeObject);
-    velocities.push(new THREE.Vector3( (Math.random() - 0.5) * 0.002, (Math.random() - 0.5) * 0.002, (Math.random() - 0.5) * 0.002 ));
-    if (cubeObject.userData.neuralName) { neuralCubeMap[cubeObject.userData.neuralName] = cubeObject; }
-  }
-  new THREE.TextureLoader().load("https://static.wixstatic.com/media/d77f36_8f868995fda643a0a61562feb20eb733~mv2.jpg", (tex) => {
-    const globe = new THREE.Mesh( new THREE.SphereGeometry(GLOBE_RADIUS, 64, 64), new THREE.MeshPhongMaterial({ map: tex, transparent: true, opacity: 0.28 }) );
-    globeGroup.add(globe);
-  });
-  let wireframeMesh = new THREE.Mesh( new THREE.SphereGeometry(GLOBE_RADIUS + 0.05, 64, 64), new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true, transparent: true, opacity: 0.12 }) );
-  globeGroup.add(wireframeMesh);
-  fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', (font) => {
-    countryConfigs.forEach(config => {
-      const size = 0.03; const blockGeometry = new THREE.BoxGeometry(size, size, size);
-      const blockMaterial = new THREE.MeshStandardMaterial({ color: config.color, emissive: config.color, emissiveIntensity: 0.6, transparent: true, opacity: 0.95 });
-      const blockMesh = new THREE.Mesh(blockGeometry, blockMaterial);
-      blockMesh.userData.countryName = config.name;
-      const position = latLonToVector3(config.lat, config.lon, 1.1);
-      blockMesh.position.copy(position);
-      blockMesh.lookAt(0, 0, 0);
-      globeGroup.add(blockMesh);
-      countryBlocks[config.name] = blockMesh;
-      const lG = new THREE.TextGeometry(config.name, { font: font, size: 0.018, height: 0.0001, curveSegments: 8 });
-      lG.center();
-      const lM = new THREE.MeshBasicMaterial({ color: 0xffffff });
-      const lMesh = new THREE.Mesh(lG, lM);
-      countryLabels.push({ label: lMesh, block: blockMesh, offset: 0.06 });
-      globeGroup.add(lMesh);
+    new THREE.TextureLoader().load("https://static.wixstatic.com/media/d77f36_8f868995fda643a0a61562feb20eb733~mv2.jpg", (tex) => {
+        const globe = new THREE.Mesh( new THREE.SphereGeometry(GLOBE_RADIUS, 64, 64), new THREE.MeshPhongMaterial({ map: tex, transparent: true, opacity: 0.28 }) );
+        globeGroup.add(globe);
     });
-    drawAllConnections();
-    setTimeout(() => { highlightCountriesByProgram("UG"); }, 500);
-  });
-  console.log('✅ Globe and cubes created successfully');
-}
-
-function animate() {
-  requestAnimationFrame(animate);
-  const elapsedTime = clock.getElapsedTime();
-  if (controls && controls.enabled) { controls.update(); }
-  TWEEN.update();
-  arcPaths.forEach(path => { if (path.material.isShaderMaterial) { path.material.uniforms.time.value = elapsedTime; } });
-  countryLabels.forEach(item => {
-    const worldPosition = new THREE.Vector3();
-    item.block.getWorldPosition(worldPosition);
-    const offsetDirection = worldPosition.clone().normalize();
-    const labelPosition = worldPosition.clone().add(offsetDirection.multiplyScalar(item.offset));
-    item.label.position.copy(labelPosition);
-    item.label.lookAt(camera.position);
-  });
-  const explosionStateMap = { 'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded, 'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded, 'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded };
-  const boundaryRadius = 1.0;
-  const buffer = 0.02;
-  if (!isCubeMovementPaused) {
-    cubes.forEach((cube, i) => {
-      const isExploded = cube.userData.neuralName && explosionStateMap[cube.userData.neuralName];
-      if (!isExploded) {
-        cube.position.add(velocities[i]);
-        if (cube.position.length() > boundaryRadius - buffer) {
-          cube.position.normalize().multiplyScalar(boundaryRadius - buffer);
-          velocities[i].reflect(cube.position.clone().normalize());
-        }
-      }
-    });
-    if (neuralNetworkLines) {
-      const vertices = [];
-      const maxDist = 0.6;
-      const connectionsPerCube = 4;
-      for (let i = 0; i < cubes.length; i++) {
-        if (!cubes[i].visible || cubes[i].userData.neuralName) continue;
-        let neighbors = [];
-        for (let j = 0; j < cubes.length; j++) {
-          if (i === j || !cubes[j].visible || cubes[j].userData.neuralName) continue;
-          const dist = cubes[i].position.distanceTo(cubes[j].position);
-          if (dist < maxDist) { neighbors.push({ dist: dist, cube: cubes[j] }); }
-        }
-        neighbors.sort((a, b) => a.dist - b.dist);
-        const closest = neighbors.slice(0, connectionsPerCube);
-        closest.forEach(n => {
-          vertices.push(cubes[i].position.x, cubes[i].position.y, cubes[i].position.z);
-          vertices.push(n.cube.position.x, n.cube.position.y, n.cube.position.z);
+    let wireframeMesh = new THREE.Mesh( new THREE.SphereGeometry(GLOBE_RADIUS + 0.05, 64, 64), new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true, transparent: true, opacity: 0.12 }) );
+    globeGroup.add(wireframeMesh);
+    fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', (font) => {
+        countryConfigs.forEach(config => {
+            const size = 0.03; const blockGeometry = new THREE.BoxGeometry(size, size, size);
+            const blockMaterial = new THREE.MeshStandardMaterial({ color: config.color, emissive: config.color, emissiveIntensity: 0.6, transparent: true, opacity: 0.95 });
+            const blockMesh = new THREE.Mesh(blockGeometry, blockMaterial);
+            blockMesh.userData.countryName = config.name;
+            const position = latLonToVector3(config.lat, config.lon, 1.1);
+            blockMesh.position.copy(position);
+            blockMesh.lookAt(0, 0, 0);
+            globeGroup.add(blockMesh);
+            countryBlocks[config.name] = blockMesh;
+            const lG = new THREE.TextGeometry(config.name, { font: font, size: 0.018, height: 0.0001, curveSegments: 8 });
+            lG.center();
+            const lM = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            const lMesh = new THREE.Mesh(lG, lM);
+            countryLabels.push({ label: lMesh, block: blockMesh, offset: 0.06 });
+            globeGroup.add(lMesh);
         });
-      }
-      if (neuralNetworkLines.visible) {
-        neuralNetworkLines.geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-      }
+        drawAllConnections();
+        setTimeout(() => { highlightCountriesByProgram("UG"); }, 500);
+    });
+    console.log('✅ Globe and cubes created successfully');
+}
+
+// Animation loop
+function animate() {
+    requestAnimationFrame(animate);
+    const elapsedTime = clock.getElapsedTime();
+    if (controls && controls.enabled) { controls.update(); }
+    if (typeof TWEEN !== 'undefined') { TWEEN.update(); }
+    arcPaths.forEach(path => { if (path.material.isShaderMaterial) { path.material.uniforms.time.value = elapsedTime; } });
+    countryLabels.forEach(item => {
+        const worldPosition = new THREE.Vector3();
+        item.block.getWorldPosition(worldPosition);
+        const offsetDirection = worldPosition.clone().normalize();
+        const labelPosition = worldPosition.clone().add(offsetDirection.multiplyScalar(item.offset));
+        item.label.position.copy(labelPosition);
+        item.label.lookAt(camera.position);
+    });
+    const explosionStateMap = { 'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded, 'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded, 'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded };
+    const boundaryRadius = 1.0;
+    const buffer = 0.02;
+    if (!isCubeMovementPaused) {
+        cubes.forEach((cube, i) => {
+            const isExploded = cube.userData.neuralName && explosionStateMap[cube.userData.neuralName];
+            if (!isExploded) {
+                cube.position.add(velocities[i]);
+                if (cube.position.length() > boundaryRadius - buffer) {
+                    cube.position.normalize().multiplyScalar(boundaryRadius - buffer);
+                    velocities[i].reflect(cube.position.clone().normalize());
+                }
+            }
+        });
+        if (neuralNetworkLines) {
+            const vertices = [];
+            const maxDist = 0.6;
+            const connectionsPerCube = 4;
+            for (let i = 0; i < cubes.length; i++) {
+                if (!cubes[i].visible || cubes[i].userData.neuralName) continue;
+                let neighbors = [];
+                for (let j = 0; j < cubes.length; j++) {
+                    if (i === j || !cubes[j].visible || cubes[j].userData.neuralName) continue;
+                    const dist = cubes[i].position.distanceTo(cubes[j].position);
+                    if (dist < maxDist) { neighbors.push({ dist: dist, cube: cubes[j] }); }
+                }
+                neighbors.sort((a, b) => a.dist - b.dist);
+                const closest = neighbors.slice(0, connectionsPerCube);
+                closest.forEach(n => {
+                    vertices.push(cubes[i].position.x, cubes[i].position.y, cubes[i].position.z);
+                    vertices.push(n.cube.position.x, n.cube.position.y, n.cube.position.z);
+                });
+            }
+            if (neuralNetworkLines.visible) {
+                neuralNetworkLines.geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            }
+        }
     }
-  }
-  renderer.render(scene, camera);
+    renderer.render(scene, camera);
 }
 
-// STARTUP SEQUENCE - HANDLES OAUTH CALLBACK FIRST
+// STARTUP SEQUENCE - HANDLES OAUTH CALLBACK FIRST, THEN INITIALIZES GLOBE
 document.addEventListener('DOMContentLoaded', async () => {
-  await handleWixLoginCallback(); // Handle OAuth callback first
-  console.log('🚀 Loading Interactive Globe Widget...');
-  
-  try {
-    console.log('1️⃣ Fetching server data...');
-    await fetchDataFromBackend();
+    await handleCallback(); // Handle OAuth callback first
+    console.log('🚀 Loading Interactive Globe Widget...');
     
-    console.log('2️⃣ Initializing Three.js...');
-    initializeThreeJS();
+    // Add auth status indicator to page if it doesn't exist
+    if (!document.getElementById('auth-indicator')) {
+        const indicator = document.createElement('div');
+        indicator.id = 'auth-indicator';
+        indicator.style.cssText = 'position: fixed; top: 10px; right: 10px; z-index: 1000; font-size: 14px; max-width: 300px;';
+        document.body.appendChild(indicator);
+    }
+    updateAuthStatus(); // Show initial auth status
     
-    console.log('3️⃣ Setting up event listeners...');
-    setupEventListeners();
-    
-    console.log('4️⃣ Creating globe and cubes...');
-    await createGlobeAndCubes();
-    
-    console.log('5️⃣ Populating carousel...');
-    await populateCarousel();
-    
-    console.log('6️⃣ Starting animation...');
-    animate();
-    
-    const leftBtn = document.getElementById('carouselScrollLeft');
-    const rightBtn = document.getElementById('carouselScrollRight');
-    if (leftBtn) leftBtn.onclick = () => scrollCarousel(-1);
-    if (rightBtn) rightBtn.onclick = () => scrollCarousel(1);
-    
-    updateCanvasSize();
-    
-    console.log('✅ Globe Widget loaded successfully!');
-    
-  } catch (error) {
-    console.error('❌ Error during initialization:', error);
-  }
+    try {
+        console.log('1️⃣ Fetching server data...');
+        await fetchDataFromBackend();
+        
+        console.log('2️⃣ Initializing Three.js...');
+        initializeThreeJS();
+        
+        console.log('3️⃣ Setting up event listeners...');
+        setupEventListeners();
+        
+        console.log('4️⃣ Creating globe and cubes...');
+        await createGlobeAndCubes();
+        
+        console.log('5️⃣ Populating carousel...');
+        await populateCarousel();
+        
+        console.log('6️⃣ Starting animation...');
+        animate();
+        
+        const leftBtn = document.getElementById('carouselScrollLeft');
+        const rightBtn = document.getElementById('carouselScrollRight');
+        if (leftBtn) leftBtn.onclick = () => scrollCarousel(-1);
+        if (rightBtn) rightBtn.onclick = () => scrollCarousel(1);
+        
+        updateCanvasSize();
+        
+        console.log('✅ Globe Widget loaded successfully!');
+        
+    } catch (error) {
+        console.error('❌ Error during initialization:', error);
+    }
 });
-
-// LOGOUT FUNCTION
-async function logout() {
-  try {
-    await fetch('/logout', { method: 'POST' });
-    alert('You have been logged out.');
-    location.reload();
-  } catch (error) {
-    console.error('Logout failed:', error);
-    alert('Could not log out at this time. Please try again.');
-  }
-}
