@@ -19,48 +19,32 @@ async function sha256(str) {
              .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
-// Server builds OAuth URL for us
+// BEFORE  (with PKCE)
 async function redirectToWix() {
-    const verifier = await generateCodeVerifier();
+    const verifier  = await generateCodeVerifier();
     sessionStorage.setItem('wix_code_verifier', verifier);
     const challenge = await sha256(verifier);
-    
-    // Server builds the complete OAuth URL
-    const response = await fetch('/auth/login-url', {
+
+    const response  = await fetch('/auth/login-url', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ challenge })
+        body: JSON.stringify({ challenge })          // ← remove
     });
-    
     const { loginUrl } = await response.json();
     window.location.href = loginUrl;
 }
 
-// Handle OAuth callback
-async function handleCallback() {
-    const url = new URL(window.location.href);
-    const code = url.searchParams.get('code');
-    if (!code) return;
-
-    try {
-        const verifier = sessionStorage.getItem('wix_code_verifier');
-        const response = await fetch('/auth/complete', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code, verifier })
-        });
-        
-        if (response.ok) {
-            window.history.replaceState({}, '', '/');
-            sessionStorage.removeItem('wix_code_verifier');
-            console.log('🔑 Login complete');
-            location.reload();
-        }
-    } catch (e) {
-        console.error('Login failed', e);
-        alert('Login failed – please try again.');
-    }
+// AFTER  (no PKCE)
+async function redirectToWix() {
+    const response  = await fetch('/auth/login-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})                     // ← empty body
+    });
+    const { loginUrl } = await response.json();
+    window.location.href = loginUrl;
 }
+
 
 // Check auth status
 async function isLoggedIn() {
