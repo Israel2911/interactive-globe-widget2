@@ -30,6 +30,7 @@ app.use(express.static('.', {
     }
 }));
 
+// OAuth Configuration - UPDATED for Option 2
 const config = {
     wixClientId: process.env.WIX_CLIENT_ID || 'fbee306e-6797-40c2-8a51-70f052b8dde4',
     redirectUri: process.env.REDIRECT_URI || 'https://interactive-globe-widget2.onrender.com/oauth/callback',
@@ -37,7 +38,6 @@ const config = {
     wixUserUrl: 'https://www.wixapis.com/identity/v1/identity',
     wixAuthUrl: 'https://www.wix.com/oauth/authorize'
 };
-
 
 const activeSessions = new Map();
 
@@ -61,6 +61,26 @@ const malaysiaContent = [ { university: "Limkokwing University", logo: "https://
 const countryPrograms = { "India": ["UG", "PG", "Mobility", "Research"], "Europe": ["UG", "PG", "Mobility", "Language", "Research"], "UK": ["UG", "PG", "Mobility"], "Singapore": ["UG", "PG", "Mobility", "Upskilling", "Diploma"], "Malaysia": ["UG", "PG", "Diploma", "Mobility"], "Canada": ["UG", "PG", "Diploma", "Mobility", "Upskilling"], "Thailand": ["UG", "PG", "Diploma", "Mobility"], "USA": ["UG", "PG", "Mobility"] };
 
 const countryConfigs = [{"name": "India", "lat": 22, "lon": 78, "color": 0xFF9933}, {"name": "Europe", "lat": 48.8566, "lon": 2.3522, "color": 0x0000FF}, {"name": "UK", "lat": 53, "lon": -0.1276, "color": 0x191970}, {"name": "Singapore", "lat": 1.35, "lon": 103.8, "color": 0xff0000}, {"name": "Malaysia", "lat": 4, "lon": 102, "color": 0x0000ff}, {"name": "Thailand", "lat": 13.7563, "lon": 100.5018, "color": 0xffcc00}, {"name": "Canada", "lat": 56.1304, "lon": -106.3468, "color": 0xff0000}, {"name": "USA", "lat": 39.8283, "lon": -98.5795, "color": 0x003366}];
+
+// NEW: OAuth callback handler for Option 2
+app.get('/oauth/callback', async (req, res) => {
+    const { code, state } = req.query;
+    
+    if (!code) {
+        console.error('OAuth callback: Authorization code missing');
+        return res.redirect('/?auth=error&reason=no_code');
+    }
+    
+    try {
+        console.log('OAuth callback received with code:', code.substring(0, 8) + '...');
+        
+        // Redirect to main app with success indicator
+        res.redirect('/?auth=success');
+    } catch (error) {
+        console.error('OAuth callback error:', error);
+        res.redirect('/?auth=error&reason=processing_failed');
+    }
+});
 
 // OAuth endpoints
 app.post('/auth/login-url', (req, res) => {
