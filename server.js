@@ -9,7 +9,6 @@ const PORT = process.env.PORT || 3001;
 // Middleware Setup
 app.use(express.json());
 app.use(cookieParser());
-
 app.use(session({
     secret: process.env.SESSION_SECRET || 'your_super_strong_and_secret_session_key_goes_here',
     resave: false,
@@ -31,14 +30,14 @@ app.use(express.static('.', {
     }
 }));
 
+// OAuth Configuration
 const config = {
     wixClientId: process.env.WIX_CLIENT_ID || 'fbee306e-6797-40c2-8a51-70f052b8dde4',
     redirectUri: process.env.REDIRECT_URI || 'https://interactive-globe-widget2.onrender.com/',
     wixTokenUrl: 'https://www.wix.com/oauth2/token',
     wixUserUrl: 'https://www.wixapis.com/identity/v1/identity',
-    wixAuthUrl: 'https://www.wix.com/oauth/authorize'  // ✅ Remove the "2"
+    wixAuthUrl: 'https://www.wix.com/oauth/authorize'
 };
-
 
 const activeSessions = new Map();
 
@@ -70,9 +69,7 @@ app.post('/auth/login-url', (req, res) => {
         client_id: config.wixClientId,
         redirect_uri: config.redirectUri,
         response_type: 'code',
-          scope: 'openid',
-      
-
+        scope: 'openid',
         code_challenge: challenge,
         code_challenge_method: 'S256'
     });
@@ -93,7 +90,7 @@ app.post('/auth/complete', async (req, res) => {
             redirect_uri: config.redirectUri
         });
         const userResponse = await axios.get(config.wixUserUrl, {
-            headers: { 'Authorization': `Bearer ${tokenResponse.data.access_token}` }
+            headers: { Authorization: `Bearer ${tokenResponse.data.access_token}` }
         });
         const user = userResponse.data;
         const previousSession = activeSessions.get(user.id);
@@ -225,6 +222,6 @@ app.get('/health', (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log('Secure server running on port ' + PORT);
-    console.log('OAuth Client ID: ' + config.wixClientId.substring(0, 8) + '...');
+    console.log(`Secure server running on port ${PORT}`);
+    console.log(`OAuth Client ID: ${config.wixClientId.substring(0, 8)}...`);
 });
