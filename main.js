@@ -185,34 +185,227 @@ function activateAllCubes() {
     showNotification('🎮 All university programs are now accessible!');
 }
 
-// Info panel - FIXED to open university links instead of redirecting to login
-async function showInfoPanel(data) {
-    // LOGIN CHECK ONLY WHEN VIEWING PROGRAM DETAILS
+// =====
+// WIX MEMBERS AUTHENTICATION INTEGRATION (Fixed - No $w Dependencies)
+// =====
+async function redirectToWix() {
+    try {
+        // Always redirect to login page instead of using $w
+        window.location.href = 'https://www.globaleducarealliance.com/home';
+        console.log('🔑 Redirecting to Wix login page');
+    } catch(e) {
+        console.error('Login redirect failed:', e);
+        alert('Please visit our login page to continue.');
+    }
+}
+
+async function handleCallback() {
+    await updateAuthStatus();
+}
+
+// UPDATED: Use backend endpoint instead of Wix direct calls
+async function isLoggedIn() {
+    try {
+        const response = await fetch('/api/wix-member-status');
+        const data = await response.json();
+        return data.isAuthenticated;
+    } catch {
+        return false;
+    }
+}
+
+async function updateAuthStatus() {
+    const authIndicator = document.getElementById('auth-indicator');
+    if (!authIndicator) return;
+    
+    // Show loading state
+    authIndicator.innerHTML = '<div style="color: blue;">🔄 Checking login status...</div>';
+    
+    try {
+        const response = await fetch('/api/wix-member-status');
+        const data = await response.json();
+        
+        if (data.isAuthenticated) {
+            authIndicator.innerHTML = `
+                <div style="color: green; padding: 10px; background: rgba(0,255,0,0.1); border-radius: 5px;">
+                    🔐 Logged in as ${data.user.name || data.user.email}
+                    <button onclick="logout()" style="margin-left: 10px; padding: 5px 10px;">Logout</button>
+                </div>
+            `;
+            activateAllCubes();
+        } else {
+            authIndicator.innerHTML = `
+                <div style="color: orange; padding: 10px; background: rgba(255,165,0,0.1); border-radius: 5px;">
+                    🛡️ Login required for program details - Click subcubes to login
+                </div>
+            `;
+        }
+    } catch (error) {
+        authIndicator.innerHTML = '<div style="color: red;">⚠️ Auth system unavailable</div>';
+    }
+}
+
+async function logout() {
+    try {
+        // Get current user ID before logout
+        let userId = 'manual-logout';
+        try {
+            const authResponse = await fetch('/api/wix-member-status');
+            const authData = await authResponse.json();
+            if (authData.isAuthenticated) {
+                userId = authData.user.id;
+            }
+        } catch {}
+        
+        // Notify your Express backend about the logout (no $w needed)
+        const response = await fetch('/api/wix-member-logout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userId: userId,
+                logoutTimestamp: new Date().toISOString(),
+                source: 'manual_frontend'
+            })
+        });
+        
+        if (response.ok) {
+            alert('You have been logged out.');
+            location.reload();
+        } else {
+            throw new Error('Backend logout failed');
+        }
+    } catch (error) {
+        console.error('Logout failed:', error);
+        alert('Logged out (with warnings).');
+        location.reload();
+    }
+}
+
+async function openStudentDashboard() {
     if (!(await isLoggedIn())) {
         redirectToWix();
         return;
     }
     
-    if (!data || data.university === "Unassigned") return;
-    const uniData = allUniversityContent.filter(item => item && item.university === data.university);
-    if (uniData.length === 0) return;
-    const mainErasmusLink = uniData[0].erasmusLink;
-    
-    document.getElementById('infoPanelMainCard').innerHTML = `<div class="main-card-details"><img src="${uniData[0].logo}" alt="${data.university}"><h3>${data.university}</h3></div><div class="main-card-actions">${mainErasmusLink ? `<a href="${mainErasmusLink}" target="_blank" class="partner-cta erasmus">Erasmus Info</a>` : ''}</div>`;
-    document.getElementById('infoPanelSubcards').innerHTML = '';
-    
-    uniData.forEach(item => {
-        if (!item) return;
-        const infoLinkClass = item.programLink && item.programLink !== '#' ? 'partner-cta' : 'partner-cta disabled';
-        const infoLinkAction = item.programLink && item.programLink !== '#' ? `window.open('${item.programLink}', '_blank')` : 'void(0);';
-        const applyLinkClass = item.applyLink && item.applyLink !== '#' ? 'partner-cta apply' : 'partner-cta apply disabled';
-        const applyLinkAction = item.applyLink && item.applyLink !== '#' ? `window.open('${item.applyLink}', '_blank')` : 'void(0);';
+    try {
+        // Get user info from your backend instead of Wix direct
+        const response = await fetch('/api/wix-member-status');
+        const authData = await response.json();
         
-        const subcardHTML = `<div class="subcard"><div class="subcard-info"><img src="${item.logo}" alt=""><h4>${item.programName.replace(/\n/g, ' ')}</h4></div><div class="subcard-buttons"><button onclick="${infoLinkAction}" class="${infoLinkClass}">Info</button><button onclick="${applyLinkAction}" class="${applyLinkClass}">Apply</button></div></div>`;
-        document.getElementById('infoPanelSubcards').insertAdjacentHTML('beforeend', subcardHTML);
+        if (!authData.isAuthenticated) {
+            redirectToWix();
+            return;
+        }
+        
+        const user = authData.user;
+        document.getElementById('dashboard-content').innerHTML = `
+            <h2>Welcome ${user.name || 'Member'}!</h2>
+            <p>Email: ${user.email}</p>
+            <p>Member ID: ${user.id}</p>
+            <p>Auth Method: ${authData.authMethod}</p>
+        `;
+        document.getElementById('dashboard-container').style.display = 'block';
+    } catch (error) {
+        console.error('Dashboard access error:', error);
+        redirectToWix();
+    }
+}
+
+async function uploadDocument() {
+    if (!(await isLoggedIn())) {
+        redirectToWix();
+        return;
+    }
+    
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.pdf,.jpg,.jpeg,.png,.doc,.docx';
+    
+    fileInput.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const formData = new FormData();
+        formData.append('document', file);
+        
+        try {
+            const response = await fetch('/api/student/documents', {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                showNotification(`Document uploaded successfully: ${result.document.name}`);
+            } else {
+                showNotification('Upload failed', false);
+            }
+        } catch (error) {
+            console.error('Upload error:', error);
+            showNotification('Upload failed', false);
+        }
+    };
+    
+    fileInput.click();
+}
+
+function activateAllCubes() {
+    console.log('🎮 Activating all university cubes for authenticated member');
+    
+    Object.entries(countryBlocks).forEach(([country, group]) => {
+        group.userData.isClickable = true;
+        group.material.opacity = 1.0;
+        group.material.emissiveIntensity = 1.2;
     });
     
-    document.getElementById('infoPanelOverlay').style.display = 'flex';
+    [europeSubCubes, newThailandSubCubes, canadaSubCubes, ukSubCubes, 
+     usaSubCubes, indiaSubCubes, singaporeSubCubes, malaysiaSubCubes].forEach(subCubeArray => {
+        subCubeArray.forEach(subCube => {
+            if (subCube && subCube.userData) {
+                subCube.userData.isClickable = true;
+                subCube.material.opacity = 1.0;
+                subCube.material.emissiveIntensity = 0.8;
+            }
+        });
+    });
+    
+    showNotification('🎮 All university programs are now accessible!');
+}
+
+// Info panel - DEBUG VERSION to test university links
+async function showInfoPanel(data) {
+    console.log('🎯 showInfoPanel called with:', data);
+    console.log('🔗 University:', data?.university);
+    console.log('🔗 Program Link:', data?.programLink);
+    console.log('🔗 Apply Link:', data?.applyLink);
+    
+    // TEMPORARY: Skip login check to test cube clicks
+    // if (!(await isLoggedIn())) {
+    //     console.log('❌ Not logged in, redirecting...');
+    //     redirectToWix();
+    //     return;
+    // }
+    
+    if (!data || data.university === "Unassigned") {
+        console.log('❌ No valid university data');
+        return;
+    }
+    
+    // Test direct link opening first
+    if (data.programLink && data.programLink !== '#') {
+        console.log('✅ Opening program link:', data.programLink);
+        window.open(data.programLink, '_blank');
+        return;
+    }
+    
+    if (data.applyLink && data.applyLink !== '#') {
+        console.log('✅ Opening apply link:', data.applyLink);
+        window.open(data.applyLink, '_blank');
+        return;
+    }
+    
+    console.log('❌ No valid links found');
+    alert(`University: ${data.university} - No links available`);
 }
 
 function hideInfoPanel() {
@@ -294,7 +487,8 @@ function addInfoPanelStyles() {
 
 // Initialize info panel on page load
 document.addEventListener('DOMContentLoaded', addInfoPanelStyles);
-// =============
+// =====
+
 // GLOBE WIDGET LOGIC (Client-Side UI Only)
 // =============
 let scene, camera, renderer, controls, globeGroup, transformControls;
