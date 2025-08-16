@@ -1,16 +1,31 @@
-// =====
-// WIX MEMBERS AUTHENTICATION INTEGRATION (Fixed - No $w Dependencies)
-// =====
+// EMERGENCY FIX - Replace redirectToWix to test university links
 async function redirectToWix() {
-    try {
-        // Always redirect to login page instead of using $w
-        window.location.href = 'https://www.globaleducarealliance.com/home';
-        console.log('🔑 Redirecting to Wix login page');
-    } catch(e) {
-        console.error('Login redirect failed:', e);
-        alert('Please visit our login page to continue.');
+    console.log('🚨 redirectToWix called - this should be showInfoPanel!');
+    
+    // Try to find the clicked cube data
+    if (clickedSubCube && clickedSubCube.userData) {
+        console.log('🎯 Found cube data:', clickedSubCube.userData);
+        
+        // Test opening university link directly
+        const data = clickedSubCube.userData;
+        if (data.programLink && data.programLink !== '#') {
+            console.log('✅ Opening program link:', data.programLink);
+            window.open(data.programLink, '_blank');
+            return;
+        }
+        
+        if (data.applyLink && data.applyLink !== '#') {
+            console.log('✅ Opening apply link:', data.applyLink);
+            window.open(data.applyLink, '_blank');
+            return;
+        }
     }
+    
+    // Fallback - show what we know
+    console.log('❌ No university data found');
+    alert('Cube clicked but no university data available');
 }
+
 
 async function handleCallback() {
     await updateAuthStatus();
