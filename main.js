@@ -1,22 +1,16 @@
 // =====
-// WIX MEMBERS AUTHENTICATION INTEGRATION (No Import - Using Wix APIs)
+// WIX MEMBERS AUTHENTICATION INTEGRATION (Fixed - No $w Dependencies)
 // =====
-
 async function redirectToWix() {
     try {
-        if (typeof $w !== 'undefined' && $w('#memberLoginBar')) {
-            await $w('#memberLoginBar').promptLogin();
-            console.log('🔑 Wix login prompt opened');
-        } else {
-            window.location.href = 'https://www.globaleducarealliance.com/home';
-        }
+        // Always redirect to login page instead of using $w
+        window.location.href = 'https://www.globaleducarealliance.com/home';
+        console.log('🔑 Redirecting to Wix login page');
     } catch(e) {
-        console.error('Login prompt failed:', e);
-        alert('Login failed – please try again.');
+        console.error('Login redirect failed:', e);
+        alert('Please visit our login page to continue.');
     }
 }
-
-
 
 async function handleCallback() {
     await updateAuthStatus();
@@ -64,7 +58,6 @@ async function updateAuthStatus() {
     }
 }
 
-
 async function logout() {
     try {
         // Get current user ID before logout
@@ -77,17 +70,12 @@ async function logout() {
             }
         } catch {}
         
-        // First try to logout from Wix Members (if available)
-        if (typeof $w !== 'undefined' && $w('#memberLoginBar')) {
-            await $w('#memberLoginBar').logout();
-        }
-        
-        // Then notify your Express backend about the logout
+        // Notify your Express backend about the logout (no $w needed)
         const response = await fetch('/api/wix-member-logout', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                userId: userId,  // Use actual user ID
+                userId: userId,
                 logoutTimestamp: new Date().toISOString(),
                 source: 'manual_frontend'
             })
@@ -196,6 +184,7 @@ function activateAllCubes() {
     
     showNotification('🎮 All university programs are now accessible!');
 }
+
 
 // =============
 // GLOBE WIDGET LOGIC (Client-Side UI Only)
