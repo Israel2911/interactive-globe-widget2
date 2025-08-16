@@ -916,9 +916,6 @@ function animate() {
     renderer.render(scene, camera);
 }
 
-// =============
-// UI INTERACTION FUNCTIONS (INTEGRATED AT THE END)
-// =============
 // Toggle privacy section
 function togglePrivacySection() {
     const privacy = document.querySelector('.privacy-assurance');
@@ -927,4 +924,81 @@ function togglePrivacySection() {
     privacy.classList.toggle('active');
     trust.classList.toggle('active');
     
-    if (privacy.classList.
+    if (privacy.classList.contains('active')) {
+        privacy.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+// Show trust indicators after load
+window.addEventListener('load', () => {
+    setTimeout(() => {
+        const trustElement = document.querySelector('.trust-indicators');
+        if (trustElement) {
+            trustElement.classList.add('active');
+        }
+    }, 2000);
+});
+
+// Notification helpers
+function showNotification(message, isSuccess = true) {
+    const div = document.createElement('div');
+    const bgColor = isSuccess ? '#4CAF50' : '#ff4444';
+    const icon = isSuccess ? '✅' : '❌';
+    
+    div.innerHTML = `
+        <div style="position: fixed; top: 20px; right: 20px; background: ${bgColor}; color: white; padding: 15px; border-radius: 8px; z-index: 3000; cursor: pointer;" onclick="this.remove()">
+            ${icon} ${message}
+        </div>
+    `;
+    document.body.appendChild(div);
+    
+    setTimeout(() => div.remove(), 5000);
+}
+
+// STARTUP SEQUENCE - HANDLES WIX MEMBERS FIRST, THEN INITIALIZES GLOBE
+document.addEventListener('DOMContentLoaded', async () => {
+    await handleCallback();
+    console.log('🚀 Loading Interactive Globe Widget...');
+    
+    // Add auth status indicator to page if it doesn't exist
+    if (!document.getElementById('auth-indicator')) {
+        const indicator = document.createElement('div');
+        indicator.id = 'auth-indicator';
+        indicator.style.cssText = 'position: fixed; top: 10px; right: 10px; z-index: 1000; font-size: 14px; max-width: 300px;';
+        document.body.appendChild(indicator);
+    }
+    updateAuthStatus(); // Show initial auth status
+    
+    try {
+        console.log('1️⃣ Fetching server data...');
+        await fetchDataFromBackend();
+        
+        console.log('2️⃣ Initializing Three.js...');
+        initializeThreeJS();
+        
+        console.log('3️⃣ Setting up event listeners...');
+        setupEventListeners();
+        
+        console.log('4️⃣ Creating globe and cubes...');
+        await createGlobeAndCubes();
+        
+        console.log('5️⃣ Populating carousel...');
+        await populateCarousel();
+        
+        console.log('6️⃣ Starting animation...');
+        animate();
+        
+        const leftBtn = document.getElementById('carouselScrollLeft');
+        const rightBtn = document.getElementById('carouselScrollRight');
+        if (leftBtn) leftBtn.onclick = () => scrollCarousel(-1);
+        if (rightBtn) rightBtn.onclick = () => scrollCarousel(1);
+        
+        updateCanvasSize();
+        
+        console.log('✅ Globe Widget loaded successfully!');
+        
+    } catch (error) {
+        console.error('❌ Error during initialization:', error);
+    }
+});
+
