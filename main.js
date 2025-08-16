@@ -1,63 +1,125 @@
-// WIX MEMBERS AUTHENTICATION
+// =====
+// WIX MEMBERS AUTHENTICATION INTEGRATION (Client-Side Only)
+// =====
 import { authentication } from 'wix-members-frontend';
 
-async function isWixMemberLoggedIn() {
+async function redirectToWix() {
+    try {
+        await authentication.promptLogin();
+        console.log('🔑 Wix Members login prompt opened');
+    } catch(e) {
+        console.error('Login prompt failed:', e);
+        alert('Login failed – please try again.');
+    }
+}
+
+async function handleCallback() {
+    await updateAuthStatus();
+}
+
+async function isLoggedIn() {
     try {
         const member = await authentication.currentUser.getMember();
         return member !== null;
-    } catch (error) {
+    } catch {
         return false;
     }
 }
 
-async function getCurrentMemberInfo() {
-    try {
-        const member = await authentication.currentUser.getMember();
-        return {
-            isAuthenticated: !!member,
-            user: member ? {
-                name: member.profile.nickname || member.profile.slug,
-                email: member.loginEmail,
-                id: member._id
-            } : null
-        };
-    } catch (error) {
-        return { isAuthenticated: false, user: null };
-    }
-}
-
-async function updateWixAuthStatus() {
+async function updateAuthStatus() {
     const authIndicator = document.getElementById('auth-indicator');
     if (!authIndicator) return;
     
-    const authData = await getCurrentMemberInfo();
-    
-    if (authData.isAuthenticated) {
-        authIndicator.innerHTML = `
-            <div style="color: green; padding: 10px; background: rgba(0,255,0,0.1); border-radius: 5px;">
-                🔐 Logged in as ${authData.user.name || authData.user.email}
-                <button onclick="wixLogout()" style="margin-left: 10px; padding: 5px 10px;">Logout</button>
-            </div>
-        `;
-        activateAllCubes();
-    } else {
-        authIndicator.innerHTML = `
-            <div style="color: orange; padding: 10px; background: rgba(255,165,0,0.1); border-radius: 5px;">
-                🛡️ Login required for program details - Click subcubes to login
-            </div>
-        `;
+    try {
+        const member = await authentication.currentUser.getMember();
+        
+        if (member) {
+            authIndicator.innerHTML = `
+                <div style="color: green; padding: 10px; background: rgba(0,255,0,0.1); border-radius: 5px;">
+                    🔐 Logged in as ${member.profile.nickname || member.profile.slug || member.loginEmail}
+                    <button onclick="logout()" style="margin-left: 10px; padding: 5px 10px;">Logout</button>
+                </div>
+            `;
+            activateAllCubes();
+        } else {
+            authIndicator.innerHTML = `
+                <div style="color: orange; padding: 10px; background: rgba(255,165,0,0.1); border-radius: 5px;">
+                    🛡️ Login required for program details - Click subcubes to login
+                </div>
+            `;
+        }
+    } catch (error) {
+        authIndicator.innerHTML = '<div style="color: red;">⚠️ Auth system unavailable</div>';
     }
 }
 
-async function wixLogout() {
+async function logout() {
     try {
         await authentication.logout();
-        showNotification('You have been logged out.');
+        alert('You have been logged out.');
         location.reload();
     } catch (error) {
         console.error('Logout failed:', error);
-        showNotification('Could not log out at this time.', false);
+        alert('Could not log out at this time.');
     }
+}
+
+async function openStudentDashboard() {
+    if (!(await isLoggedIn())) {
+        redirectToWix();
+        return;
+    }
+    
+    try {
+        const member = await authentication.currentUser.getMember();
+        document.getElementById('dashboard-content').innerHTML = `
+            <h2>Welcome ${member.profile.nickname || member.profile.slug}!</h2>
+            <p>Email: ${member.loginEmail}</p>
+            <p>Member ID: ${member._id}</p>
+        `;
+        document.getElementById('dashboard-container').style.display = 'block';
+    } catch (error) {
+        console.error('Dashboard access error:', error);
+        redirectToWix();
+    }
+}
+
+async function uploadDocument() {
+    if (!(await isLoggedIn())) {
+        redirectToWix();
+        return;
+    }
+    
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.pdf,.jpg,.jpeg,.png,.doc,.docx';
+    
+    fileInput.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const formData = new FormData();
+        formData.append('document', file);
+        
+        try {
+            const response = await fetch('/api/student/documents', {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                showNotification(`Document uploaded successfully: ${result.document.name}`);
+            } else {
+                showNotification('Upload failed', false);
+            }
+        } catch (error) {
+            console.error('Upload error:', error);
+            showNotification('Upload failed', false);
+        }
+    };
+    
+    fileInput.click();
 }
 
 function activateAllCubes() {
@@ -83,68 +145,9 @@ function activateAllCubes() {
     showNotification('🎮 All university programs are now accessible!');
 }
 
-async function openStudentDashboard() {
-    const isLoggedIn = await isWixMemberLoggedIn();
-    if (!isLoggedIn) {
-        authentication.promptLogin();
-        return;
-    }
-    
-    try {
-        const response = await fetch('/api/student/profile');
-        if (!response.ok) throw new Error();
-        const userData = await response.json();
-        document.getElementById('dashboard-content').innerHTML = `
-            <h2>Welcome ${userData.name}!</h2>
-            <p>Email: ${userData.email}</p>
-            <p>Member ID: ${userData.id}</p>
-        `;
-        document.getElementById('dashboard-container').style.display = 'block';
-    } catch (error) {
-        showNotification('Error loading profile', false);
-    }
-}
-
-async function uploadDocument() {
-    const isLoggedIn = await isWixMemberLoggedIn();
-    if (!isLoggedIn) {
-        authentication.promptLogin();
-        return;
-    }
-    
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = '.pdf,.jpg,.jpeg,.png,.doc,.docx';
-    
-    fileInput.onchange = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        
-        const formData = new FormData();
-        formData.append('document', file);
-        
-        try {
-            const response = await fetch('/api/student/documents', {
-                method: 'POST',
-                body: formData
-            });
-            
-            if (response.ok) {
-                const result = await response.json();
-                showNotification(`Document uploaded: ${result.document.name}`);
-            } else {
-                showNotification('Upload failed', false);
-            }
-        } catch (error) {
-            console.error('Upload error:', error);
-            showNotification('Upload failed', false);
-        }
-    };
-    
-    fileInput.click();
-}
-
-// GLOBE WIDGET LOGIC
+// =============
+// GLOBE WIDGET LOGIC (Client-Side UI Only)
+// =============
 let scene, camera, renderer, controls, globeGroup, transformControls;
 let GLOBE_RADIUS = 1.0;
 let isPanMode = false;
@@ -185,7 +188,7 @@ let globalContentMap = {};
 let carouselData = [];
 let isInteracting = false, hoverTimeout;
 
-// FETCH DATA FROM SERVER
+// Fetch data from server (all data now comes from backend)
 async function fetchCarouselData() {
     try {
         const response = await fetch('/api/carousel/data');
@@ -240,6 +243,7 @@ async function fetchDataFromBackend() {
         }
     } catch (error) {
         console.error('❌ Error fetching data:', error);
+        // Fallback data
         countryConfigs = [
             {"name": "India", "lat": 22, "lon": 78, "color": 0xFF9933}, {"name": "Europe", "lat": 48.8566, "lon": 2.3522, "color": 0x0000FF},
             {"name": "UK", "lat": 53, "lon": -0.1276, "color": 0x191970}, {"name": "Singapore", "lat": 1.35, "lon": 103.8, "color": 0xff0000},
@@ -253,7 +257,7 @@ async function fetchDataFromBackend() {
     return false;
 }
 
-// PROGRAM FILTERING FUNCTIONS
+// Program filtering functions
 function getMatchingCountries(category) {
     if (!globalContentMap || Object.keys(globalContentMap).length === 0) { return []; }
     const matcherMap = {
@@ -318,7 +322,7 @@ function highlightNeuralCubesByProgram(selectedCategory) {
     console.log(`✨ Scaled ${matchingCountries.length} neural cubes for ${selectedCategory}`);
 }
 
-// CAROUSEL FUNCTIONS
+// Carousel functions
 async function populateCarousel() {
     await fetchCarouselData();
     const container = document.getElementById('carouselContainer');
@@ -355,7 +359,7 @@ function scrollCarousel(direction) {
     container.scrollBy({ left: direction * cardWidth, behavior: 'smooth' });
 }
 
-// CONTROL FUNCTIONS
+// Control functions
 function togglePanMode() {
     isPanMode = !isPanMode;
     const panButton = document.getElementById('btn-pan');
@@ -398,7 +402,7 @@ function toggleGlobeRotation() {
     }
 }
 
-// THREE.JS INITIALIZATION
+// Three.js initialization
 function initializeThreeJS() {
     console.log('🔄 Initializing Three.js...');
     scene = new THREE.Scene();
@@ -447,7 +451,7 @@ function updateCanvasSize() {
     camera.updateProjectionMatrix();
 }
 
-// UTILITY FUNCTIONS
+// Utility functions
 function getColorByData(data) {
     const baseHue = data.domain * 30 % 360;
     const lightness = 50 + data.engagement * 25;
@@ -487,7 +491,7 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
     return new THREE.MeshStandardMaterial({ map: texture, emissive: new THREE.Color(bgColor), emissiveIntensity: 0.6 });
 }
 
-// TOGGLE FUNCTION CREATION
+// Toggle function creation
 function createToggleFunction(cubeName) {
     return function() {
         const explosionStateMap = { 'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded, 'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded, 'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded };
@@ -532,7 +536,7 @@ const toggleFunctionMap = {
     'Singapore': createToggleFunction('Singapore'), 'Malaysia': createToggleFunction('Malaysia')
 };
 
-// CUBE CREATION
+// Cube creation
 function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
     let contentIdx = 0;
     const cubeObject = new THREE.Group();
@@ -607,65 +611,37 @@ function drawAllConnections() {
     }).filter(Boolean);
 }
 
-// INFO PANEL FUNCTIONS
+// Info panel - triggers authentication for individual subcube clicks
 async function showInfoPanel(data) {
-    const isLoggedIn = await isWixMemberLoggedIn();
-    if (!isLoggedIn) {
-        authentication.promptLogin();
+    // LOGIN CHECK ONLY WHEN VIEWING PROGRAM DETAILS
+    if (!(await isLoggedIn())) {
+        redirectToWix();
         return;
     }
     
     if (!data || data.university === "Unassigned") return;
-    
     const uniData = allUniversityContent.filter(item => item && item.university === data.university);
     if (uniData.length === 0) return;
-    
-    const mainErasmusLink = uniData[0].erasmusLink;
-    document.getElementById('infoPanelMainCard').innerHTML = `
-        <div class="main-card-details">
-            <img src="${uniData[0].logo}" alt="${data.university}">
-            <h3>${data.university}</h3>
-        </div>
-        <div class="main-card-actions">
-            ${mainErasmusLink ? `<a href="${mainErasmusLink}" target="_blank" class="partner-cta erasmus">Erasmus Info</a>` : ''}
-        </div>
-    `;
-    
+    const mainErasmusLink = uniData.erasmusLink;
+    document.getElementById('infoPanelMainCard').innerHTML = `<div class="main-card-details"><img src="${uniData.logo}" alt="${data.university}"><h3>${data.university}</h3></div><div class="main-card-actions">${mainErasmusLink ? `<a href="${mainErasmusLink}" target="_blank" class="partner-cta erasmus">Erasmus Info</a>` : ''}</div>`;
     document.getElementById('infoPanelSubcards').innerHTML = '';
     uniData.forEach(item => {
         if (!item) return;
-        
         const infoLinkClass = item.programLink && item.programLink !== '#' ? 'partner-cta' : 'partner-cta disabled';
         const infoLinkHref = item.programLink && item.programLink !== '#' ? `javascript:window.open('${item.programLink}', '_blank')` : 'javascript:void(0);';
         const applyLinkClass = item.applyLink && item.applyLink !== '#' ? 'partner-cta apply' : 'partner-cta apply disabled';
         const applyLinkHref = item.applyLink && item.applyLink !== '#' ? `javascript:window.open('${item.applyLink}', '_blank')` : 'javascript:void(0);';
-        
-        const subcardHTML = `
-            <div class="subcard">
-                <div class="subcard-info">
-                    <img src="${item.logo}" alt="">
-                    <h4>${item.programName.replace(/\n/g, ' ')}</h4>
-                </div>
-                <div class="subcard-buttons">
-                    <a href="${infoLinkHref}" class="${infoLinkClass}">Info</a>
-                    <a href="${applyLinkHref}" class="${applyLinkClass}">Apply</a>
-                </div>
-            </div>
-        `;
+        const subcardHTML = `<div class="subcard"><div class="subcard-info"><img src="${item.logo}" alt=""><h4>${item.programName.replace(/\n/g, ' ')}</h4></div><div class="subcard-buttons"><a href="${infoLinkHref}" class="${infoLinkClass}">Info</a><a href="${applyLinkHref}" class="${applyLinkClass}">Apply</a></div></div>`;
         document.getElementById('infoPanelSubcards').insertAdjacentHTML('beforeend', subcardHTML);
     });
-    
     document.getElementById('infoPanelOverlay').style.display = 'flex';
 }
 
 function hideInfoPanel() {
-    const infoPanel = document.getElementById('infoPanelOverlay');
-    if (infoPanel) {
-        infoPanel.style.display = 'none';
-    }
+    document.getElementById('infoPanelOverlay').style.display = 'none';
 }
 
-// MOUSE EVENT HANDLERS
+// Mouse event handlers
 function onCanvasMouseDown(event) {
     mouseDownPos.set(event.clientX, event.clientY);
 }
@@ -681,6 +657,7 @@ function closeAllExploded() {
     if (isMalaysiaCubeExploded) toggleFunctionMap['Malaysia']();
 }
 
+// THE KEY CLICK HANDLER - NO AUTH NEEDED FOR EXPLOSION, AUTH ONLY FOR INDIVIDUAL SUBCUBE DETAILS
 function onCanvasMouseUp(event) {
     if (transformControls.dragging) return;
     const deltaX = Math.abs(event.clientX - mouseDownPos.x);
@@ -696,6 +673,7 @@ function onCanvasMouseUp(event) {
     if (intersects.length === 0) { closeAllExploded(); return; }
     const clickedObject = intersects[0].object;
     
+    // COUNTRY BLOCK CLICKED - NO AUTH CHECK, JUST EXPLODE
     if (clickedObject.userData.countryName) {
         const countryName = clickedObject.userData.countryName;
         const correspondingNeuralCube = neuralCubeMap[countryName];
@@ -721,8 +699,10 @@ function onCanvasMouseUp(event) {
         const toggleFunc = toggleFunctionMap[neuralName];
         
         if (isExploded && clickedSubCube && clickedSubCube.userData.university !== "Unassigned") {
+            // INDIVIDUAL SUBCUBE CLICKED - LOGIN CHECK HAPPENS HERE
             showInfoPanel(clickedSubCube.userData);
         } else {
+            // NEURAL CUBE CLICKED BUT NOT INDIVIDUAL SUBCUBE - NO AUTH, JUST EXPLODE
             const anyExploded = Object.values(explosionStateMap).some(state => state);
             closeAllExploded();
             setTimeout(() => toggleFunc(), anyExploded ? 810 : 0);
@@ -732,11 +712,49 @@ function onCanvasMouseUp(event) {
     }
 }
 
-// EVENT LISTENERS SETUP
+// Pan mode mouse handlers
+function onCanvasMouseDownPan(event) {
+    mouseDownPos.set(event.clientX, event.clientY);
+    if (isPanMode) {
+        isDragging = true;
+        previousMousePosition = { x: event.clientX, y: event.clientY };
+        renderer.domElement.style.cursor = 'grabbing';
+        event.preventDefault(); event.stopPropagation();
+    }
+}
+
+function onCanvasMouseMovePan(event) {
+    if (isPanMode && isDragging) {
+        const deltaMove = { x: event.clientX - previousMousePosition.x, y: event.clientY - previousMousePosition.y };
+        const panSpeed = 0.001;
+        const deltaX = deltaMove.x * panSpeed;
+        const deltaY = deltaMove.y * panSpeed;
+        controls.target.x -= deltaX;
+        controls.target.y += deltaY;
+        const maxPan = 2.0;
+        controls.target.x = Math.max(-maxPan, Math.min(maxPan, controls.target.x));
+        controls.target.y = Math.max(-maxPan, Math.min(maxPan, controls.target.y));
+        controls.update();
+        previousMousePosition = { x: event.clientX, y: event.clientY };
+        event.preventDefault(); event.stopPropagation();
+    }
+}
+
+function onCanvasMouseUpPan(event) {
+    if (isPanMode) {
+        isDragging = false;
+        renderer.domElement.style.cursor = isPanMode ? 'grab' : 'default';
+        event.preventDefault(); event.stopPropagation();
+    }
+    onCanvasMouseUp(event);
+}
+
+// Event listeners setup
 function setupEventListeners() {
-    renderer.domElement.addEventListener('mousedown', onCanvasMouseDown);
-    renderer.domElement.addEventListener('mouseup', onCanvasMouseUp);
-    
+    renderer.domElement.addEventListener('mousedown', onCanvasMouseDownPan);
+    renderer.domElement.addEventListener('mousemove', onCanvasMouseMovePan);
+    renderer.domElement.addEventListener('mouseup', onCanvasMouseUpPan);
+    renderer.domElement.addEventListener('mouseenter', () => { if (isPanMode) { renderer.domElement.style.cursor = 'grab'; } });
     const panSpeed = 0.1;
     const btnUp = document.getElementById('btn-up'); if (btnUp) { btnUp.addEventListener('click', () => { controls.target.y += panSpeed; controls.update(); }); }
     const btnDown = document.getElementById('btn-down'); if (btnDown) { btnDown.addEventListener('click', () => { controls.target.y -= panSpeed; controls.update(); }); }
@@ -747,10 +765,41 @@ function setupEventListeners() {
     const btnRotate = document.getElementById('btn-rotate'); if (btnRotate) { btnRotate.addEventListener('click', toggleGlobeRotation); }
     const btnPan = document.getElementById('btn-pan'); if (btnPan) { btnPan.addEventListener('click', togglePanMode); }
     
+    // Additional UI controls
+    const pauseButton = document.getElementById("pauseButton"); if (pauseButton) { pauseButton.addEventListener("click", () => { isRotationPaused = !isRotationPaused; controls.autoRotate = !isRotationPaused; pauseButton.textContent = isRotationPaused ? "Resume Rotation" : "Pause Rotation"; }); }
+    const pauseCubesButton = document.getElementById("pauseCubesButton"); if (pauseCubesButton) { pauseCubesButton.addEventListener("click", () => { isCubeMovementPaused = !isCubeMovementPaused; pauseCubesButton.textContent = isCubeMovementPaused ? "Resume Cube Motion" : "Pause Cube Motion"; }); }
+    const toggleMeshButton = document.getElementById("toggleMeshButton"); if (toggleMeshButton) { toggleMeshButton.addEventListener("click", () => { const wireframeMesh = globeGroup.children.find(child => child.material && child.material.wireframe); if (wireframeMesh) { wireframeMesh.visible = !wireframeMesh.visible; toggleMeshButton.textContent = wireframeMesh.visible ? "Hide Globe Mesh" : "Show Globe Mesh"; } }); }
+    const arcToggleBtn = document.getElementById("arcToggleBtn"); if (arcToggleBtn) { arcToggleBtn.addEventListener("click", () => { let visible = false; arcPaths.forEach((p, i) => { if (i === 0) { visible = !p.visible; } p.visible = visible; }); }); }
+    const toggleNodesButton = document.getElementById('toggleNodesButton'); if (toggleNodesButton) { toggleNodesButton.addEventListener('click', () => { const neuralNodes = cubes.filter(cube => cube.userData.isSmallNode); const areVisible = neuralNodes.length > 0 && neuralNodes[0].visible; const newVisibility = !areVisible; neuralNodes.forEach(node => { node.visible = newVisibility; }); if (neuralNetworkLines) { neuralNetworkLines.visible = newVisibility; } toggleNodesButton.textContent = newVisibility ? "Hide Neural Nodes" : "Show Neural Nodes"; }); }
+    
+    const scrollLockButton = document.getElementById('scrollLockBtn');
+    if (scrollLockButton) {
+        function setGlobeInteraction(isInteractive) {
+            if (controls) { controls.enabled = isInteractive; }
+            const scrollInstruction = document.getElementById('scrollLockInstruction');
+            if (isInteractive) { scrollLockButton.textContent = 'Unlock Scroll'; scrollLockButton.classList.remove('unlocked'); if (scrollInstruction) scrollInstruction.textContent = 'Globe is active.'; }
+            else { scrollLockButton.textContent = 'Lock Globe'; scrollLockButton.classList.add('unlocked'); if (scrollInstruction) scrollInstruction.textContent = 'Page scroll is active.'; }
+        }
+        scrollLockButton.addEventListener('click', () => { setGlobeInteraction(!controls.enabled); });
+    }
+    
+    // Keyboard controls
+    document.addEventListener('keydown', (event) => {
+        if (!controls) return;
+        switch(event.code) {
+            case 'ArrowUp': case 'KeyW': event.preventDefault(); controls.target.y += panSpeed; controls.update(); break;
+            case 'ArrowDown': case 'KeyS': event.preventDefault(); controls.target.y -= panSpeed; controls.update(); break;
+            case 'ArrowLeft': case 'KeyA': event.preventDefault(); controls.target.x -= panSpeed; controls.update(); break;
+            case 'ArrowRight': case 'KeyD': event.preventDefault(); controls.target.x += panSpeed; controls.update(); break;
+            case 'Equal': case 'NumpadAdd': event.preventDefault(); camera.position.multiplyScalar(0.9); controls.update(); break;
+            case 'Minus': case 'NumpadSubtract': event.preventDefault(); camera.position.multiplyScalar(1.1); controls.update(); break;
+            case 'Space': event.preventDefault(); toggleGlobeRotation(); break;
+        }
+    });
     window.addEventListener('resize', () => { updateCanvasSize(); });
 }
 
-// GLOBE AND CUBES CREATION
+// Globe and cubes creation
 async function createGlobeAndCubes() {
     console.log('🔄 Creating globe and cubes...');
     createNeuralNetwork();
@@ -812,7 +861,7 @@ async function createGlobeAndCubes() {
     console.log('✅ Globe and cubes created successfully');
 }
 
-// ANIMATION LOOP
+// Animation loop
 function animate() {
     requestAnimationFrame(animate);
     const elapsedTime = clock.getElapsedTime();
@@ -868,6 +917,30 @@ function animate() {
     renderer.render(scene, camera);
 }
 
+// =============
+// UI INTERACTION FUNCTIONS (INTEGRATED AT THE END)
+// =============
+// Toggle privacy section
+function togglePrivacySection() {
+    const privacy = document.querySelector('.privacy-assurance');
+    const trust = document.querySelector('.trust-indicators');
+    
+    privacy.classList.toggle('active');
+    trust.classList.toggle('active');
+    
+    if (privacy.classList.contains('active')) {
+        privacy.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+// Show trust indicators after load
+window.addEventListener('load', () => {
+    setTimeout(() => {
+        document.querySelector('.trust-indicators').classList.add('active');
+    }, 2000);
+});
+
+// Notification helpers
 function showNotification(message, isSuccess = true) {
     const div = document.createElement('div');
     const bgColor = isSuccess ? '#4CAF50' : '#ff4444';
@@ -883,50 +956,50 @@ function showNotification(message, isSuccess = true) {
     setTimeout(() => div.remove(), 5000);
 }
 
-// STARTUP SEQUENCE
+// STARTUP SEQUENCE - HANDLES WIX MEMBERS FIRST, THEN INITIALIZES GLOBE
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log('🚀 Loading Interactive Globe Widget with Wix Members...');
+    // Setup Wix Members event listeners
+    authentication.onLogin(async (member) => {
+        console.log('🔑 Member logged in:', member.profile.nickname || member.loginEmail);
+        await updateAuthStatus();
+        showNotification(`Welcome back, ${member.profile.nickname || member.loginEmail}!`);
+    });
     
+    authentication.onLogout(() => {
+        console.log('👋 Member logged out');
+        showNotification('Logged out successfully');
+        setTimeout(() => location.reload(), 1000);
+    });
+    
+    await handleCallback();
+    console.log('🚀 Loading Interactive Globe Widget...');
+    
+    // Add auth status indicator to page if it doesn't exist
     if (!document.getElementById('auth-indicator')) {
         const indicator = document.createElement('div');
         indicator.id = 'auth-indicator';
         indicator.style.cssText = 'position: fixed; top: 10px; right: 10px; z-index: 1000; font-size: 14px; max-width: 300px;';
         document.body.appendChild(indicator);
     }
+    updateAuthStatus(); // Show initial auth status
     
     try {
-        console.log('1️⃣ Initializing Wix Members authentication...');
-        
-        authentication.onLogin(async (member) => {
-            console.log('🔑 Member logged in:', member.profile.nickname || member.loginEmail);
-            await updateWixAuthStatus();
-            showNotification(`Welcome back, ${member.profile.nickname || member.loginEmail}!`);
-        });
-        
-        authentication.onLogout(() => {
-            console.log('👋 Member logged out');
-            showNotification('Logged out successfully');
-            setTimeout(() => location.reload(), 1000);
-        });
-        
-        await updateWixAuthStatus();
-        
-        console.log('2️⃣ Fetching server data...');
+        console.log('1️⃣ Fetching server data...');
         await fetchDataFromBackend();
         
-        console.log('3️⃣ Initializing Three.js...');
+        console.log('2️⃣ Initializing Three.js...');
         initializeThreeJS();
         
-        console.log('4️⃣ Setting up event listeners...');
+        console.log('3️⃣ Setting up event listeners...');
         setupEventListeners();
         
-        console.log('5️⃣ Creating globe and cubes...');
+        console.log('4️⃣ Creating globe and cubes...');
         await createGlobeAndCubes();
         
-        console.log('6️⃣ Populating carousel...');
+        console.log('5️⃣ Populating carousel...');
         await populateCarousel();
         
-        console.log('7️⃣ Starting animation...');
+        console.log('6️⃣ Starting animation...');
         animate();
         
         const leftBtn = document.getElementById('carouselScrollLeft');
@@ -936,10 +1009,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         updateCanvasSize();
         
-        console.log('✅ Globe Widget with Wix Members loaded successfully!');
+        console.log('✅ Globe Widget loaded successfully!');
         
     } catch (error) {
         console.error('❌ Error during initialization:', error);
-        showNotification('Failed to initialize globe widget', false);
     }
 });
