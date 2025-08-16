@@ -4,22 +4,30 @@
 
 async function redirectToWix() {
     try {
-        await $w('#memberLoginBar').promptLogin();
-        console.log('🔑 Wix login prompt opened');
+        if (typeof $w !== 'undefined' && $w('#memberLoginBar')) {
+            await $w('#memberLoginBar').promptLogin();
+            console.log('🔑 Wix login prompt opened');
+        } else {
+            window.location.href = 'https://www.globaleducarealliance.com/home';
+        }
     } catch(e) {
         console.error('Login prompt failed:', e);
         alert('Login failed – please try again.');
     }
 }
 
+
+
 async function handleCallback() {
     await updateAuthStatus();
 }
 
+// UPDATED: Use backend endpoint instead of Wix direct calls
 async function isLoggedIn() {
     try {
-        const user = await $w('#memberLoginBar').getCurrentMember();
-        return user !== null;
+        const response = await fetch('/api/wix-member-status');
+        const data = await response.json();
+        return data.isAuthenticated;
     } catch {
         return false;
     }
@@ -29,13 +37,17 @@ async function updateAuthStatus() {
     const authIndicator = document.getElementById('auth-indicator');
     if (!authIndicator) return;
     
+    // Show loading state
+    authIndicator.innerHTML = '<div style="color: blue;">🔄 Checking login status...</div>';
+    
     try {
-        const user = await $w('#memberLoginBar').getCurrentMember();
+        const response = await fetch('/api/wix-member-status');
+        const data = await response.json();
         
-        if (user) {
+        if (data.isAuthenticated) {
             authIndicator.innerHTML = `
                 <div style="color: green; padding: 10px; background: rgba(0,255,0,0.1); border-radius: 5px;">
-                    🔐 Logged in as ${user.nickname || user.name}
+                    🔐 Logged in as ${data.user.name || data.user.email}
                     <button onclick="logout()" style="margin-left: 10px; padding: 5px 10px;">Logout</button>
                 </div>
             `;
@@ -52,14 +64,45 @@ async function updateAuthStatus() {
     }
 }
 
+
 async function logout() {
     try {
-        await $w('#memberLoginBar').logout();
-        alert('You have been logged out.');
-        location.reload();
+        // Get current user ID before logout
+        let userId = 'manual-logout';
+        try {
+            const authResponse = await fetch('/api/wix-member-status');
+            const authData = await authResponse.json();
+            if (authData.isAuthenticated) {
+                userId = authData.user.id;
+            }
+        } catch {}
+        
+        // First try to logout from Wix Members (if available)
+        if (typeof $w !== 'undefined' && $w('#memberLoginBar')) {
+            await $w('#memberLoginBar').logout();
+        }
+        
+        // Then notify your Express backend about the logout
+        const response = await fetch('/api/wix-member-logout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userId: userId,  // Use actual user ID
+                logoutTimestamp: new Date().toISOString(),
+                source: 'manual_frontend'
+            })
+        });
+        
+        if (response.ok) {
+            alert('You have been logged out.');
+            location.reload();
+        } else {
+            throw new Error('Backend logout failed');
+        }
     } catch (error) {
         console.error('Logout failed:', error);
-        alert('Could not log out at this time.');
+        alert('Logged out (with warnings).');
+        location.reload();
     }
 }
 
@@ -70,11 +113,21 @@ async function openStudentDashboard() {
     }
     
     try {
-        const user = await $w('#memberLoginBar').getCurrentMember();
+        // Get user info from your backend instead of Wix direct
+        const response = await fetch('/api/wix-member-status');
+        const authData = await response.json();
+        
+        if (!authData.isAuthenticated) {
+            redirectToWix();
+            return;
+        }
+        
+        const user = authData.user;
         document.getElementById('dashboard-content').innerHTML = `
-            <h2>Welcome ${user.nickname || user.name}!</h2>
+            <h2>Welcome ${user.name || 'Member'}!</h2>
             <p>Email: ${user.email}</p>
             <p>Member ID: ${user.id}</p>
+            <p>Auth Method: ${authData.authMethod}</p>
         `;
         document.getElementById('dashboard-container').style.display = 'block';
     } catch (error) {
