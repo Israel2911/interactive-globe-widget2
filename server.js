@@ -53,14 +53,12 @@ const config = {
 
 const activeSessions = new Map();
 
-// === WIX MEMBERS NOTIFICATION ENDPOINTS (NEW) ===
-// Wix Members login notification endpoint
+// = WIX MEMBERS NOTIFICATION ENDPOINTS =
 app.post('/api/wix-member-login', (req, res) => {
     const { userId, email, name, loginTimestamp, source } = req.body;
     
     console.log('🔑 Wix Member login notification received:', email);
     
-    // Create session for this Wix member
     activeSessions.set(userId, `wix_session_${userId}`);
     
     const memberInfo = {
@@ -83,7 +81,6 @@ app.post('/api/wix-member-login', (req, res) => {
     });
 });
 
-// Wix Members logout notification endpoint
 app.post('/api/wix-member-logout', (req, res) => {
     const { userId, logoutTimestamp } = req.body;
     
@@ -99,6 +96,53 @@ app.post('/api/wix-member-logout', (req, res) => {
         message: 'Member logout recorded',
         sessionRemoved: true 
     });
+});
+
+// NEW: Check Wix Members authentication status
+app.get('/api/wix-member-status', (req, res) => {
+    const wixMemberSessions = Array.from(activeSessions.entries())
+        .filter(([key]) => key.startsWith('member_info_'));
+    
+    if (wixMemberSessions.length > 0) {
+        const [, memberInfo] = wixMemberSessions[wixMemberSessions.length - 1];
+        
+        return res.json({
+            isAuthenticated: true,
+            authMethod: 'wix_members',
+            user: {
+                id: memberInfo.id,
+                email: memberInfo.email,
+                name: memberInfo.name
+            }
+        });
+    }
+    
+    res.json({
+        isAuthenticated: false,
+        user: null
+    });
+});
+
+// NEW: Manual cube activation endpoint
+app.post('/api/activate-cubes', (req, res) => {
+    const { userId } = req.body;
+    
+    const memberInfo = activeSessions.get(`member_info_${userId}`);
+    
+    if (memberInfo && memberInfo.isLoggedIn) {
+        console.log('🎮 Cubes activated for member:', memberInfo.email);
+        res.json({ 
+            success: true, 
+            cubesActivated: true,
+            message: 'Cubes are now accessible'
+        });
+    } else {
+        res.status(401).json({ 
+            success: false, 
+            cubesActivated: false,
+            message: 'Authentication required'
+        });
+    }
 });
 
 // All your data arrays (COMPLETE - keeping them as-is)
@@ -245,7 +289,6 @@ app.get('/oauth/callback', async (req, res) => {
     try {
         console.log('OAuth callback received with code:', code.substring(0, 8) + '...');
         
-        // Exchange code for tokens (no PKCE verification needed)
         const tokenResponse = await axios.post(config.wixTokenUrl, {
             grant_type: 'authorization_code',
             client_id: config.wixClientId,
@@ -253,13 +296,11 @@ app.get('/oauth/callback', async (req, res) => {
             redirect_uri: config.redirectUri
         });
         
-        // Get user info
         const userResponse = await axios.get(config.wixUserUrl, {
             headers: { Authorization: `Bearer ${tokenResponse.data.access_token}` }
         });
         const user = userResponse.data;
         
-        // Set up session
         const previousSession = activeSessions.get(user.id);
         if (previousSession && previousSession !== req.sessionID) {
             req.sessionStore.destroy(previousSession, () => {});
@@ -281,7 +322,6 @@ app.get('/oauth/callback', async (req, res) => {
     }
 });
 
-// OAuth login URL endpoint (no PKCE)
 app.post('/auth/login-url', (req, res) => {
     const state = Math.random().toString(36).substring(2, 15);
     const params = new URLSearchParams({
@@ -294,7 +334,6 @@ app.post('/auth/login-url', (req, res) => {
     res.json({ loginUrl: `${config.wixAuthUrl}?${params.toString()}` });
 });
 
-// Simplified auth complete (no PKCE)
 app.post('/auth/complete', async (req, res) => {
     const { code } = req.body;
     if (!code) {
@@ -333,9 +372,7 @@ app.post('/auth/complete', async (req, res) => {
     }
 });
 
-// === ENHANCED AUTH STATUS (UPDATED) ===
 app.get('/auth/status', (req, res) => {
-    // Check OAuth session first
     if (req.session.isLoggedIn) {
         return res.json({
             isAuthenticated: true,
@@ -348,7 +385,6 @@ app.get('/auth/status', (req, res) => {
         });
     }
     
-    // Check if there are any active Wix Members sessions
     const wixMemberSessions = Array.from(activeSessions.entries())
         .filter(([key]) => key.startsWith('member_info_'));
     
