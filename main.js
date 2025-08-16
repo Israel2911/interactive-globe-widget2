@@ -185,7 +185,115 @@ function activateAllCubes() {
     showNotification('🎮 All university programs are now accessible!');
 }
 
+// Info panel - FIXED to open university links instead of redirecting to login
+async function showInfoPanel(data) {
+    // LOGIN CHECK ONLY WHEN VIEWING PROGRAM DETAILS
+    if (!(await isLoggedIn())) {
+        redirectToWix();
+        return;
+    }
+    
+    if (!data || data.university === "Unassigned") return;
+    const uniData = allUniversityContent.filter(item => item && item.university === data.university);
+    if (uniData.length === 0) return;
+    const mainErasmusLink = uniData[0].erasmusLink;
+    
+    document.getElementById('infoPanelMainCard').innerHTML = `<div class="main-card-details"><img src="${uniData[0].logo}" alt="${data.university}"><h3>${data.university}</h3></div><div class="main-card-actions">${mainErasmusLink ? `<a href="${mainErasmusLink}" target="_blank" class="partner-cta erasmus">Erasmus Info</a>` : ''}</div>`;
+    document.getElementById('infoPanelSubcards').innerHTML = '';
+    
+    uniData.forEach(item => {
+        if (!item) return;
+        const infoLinkClass = item.programLink && item.programLink !== '#' ? 'partner-cta' : 'partner-cta disabled';
+        const infoLinkAction = item.programLink && item.programLink !== '#' ? `window.open('${item.programLink}', '_blank')` : 'void(0);';
+        const applyLinkClass = item.applyLink && item.applyLink !== '#' ? 'partner-cta apply' : 'partner-cta apply disabled';
+        const applyLinkAction = item.applyLink && item.applyLink !== '#' ? `window.open('${item.applyLink}', '_blank')` : 'void(0);';
+        
+        const subcardHTML = `<div class="subcard"><div class="subcard-info"><img src="${item.logo}" alt=""><h4>${item.programName.replace(/\n/g, ' ')}</h4></div><div class="subcard-buttons"><button onclick="${infoLinkAction}" class="${infoLinkClass}">Info</button><button onclick="${applyLinkAction}" class="${applyLinkClass}">Apply</button></div></div>`;
+        document.getElementById('infoPanelSubcards').insertAdjacentHTML('beforeend', subcardHTML);
+    });
+    
+    document.getElementById('infoPanelOverlay').style.display = 'flex';
+}
 
+function hideInfoPanel() {
+    document.getElementById('infoPanelOverlay').style.display = 'none';
+}
+
+// Add info panel styles and HTML
+function addInfoPanelStyles() {
+    const style = document.createElement('style');
+    style.textContent = `
+        #infoPanelOverlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+        }
+        .info-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .partner-cta {
+            padding: 8px 16px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        .partner-cta.disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .partner-cta:hover:not(.disabled) {
+            background: #0056b3;
+        }
+        .subcard {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .subcard-info img {
+            width: 40px;
+            height: 40px;
+            margin-right: 10px;
+        }
+        .main-card-details img {
+            width: 60px;
+            height: 60px;
+            margin-right: 15px;
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // Add HTML for info panel
+    const overlay = document.createElement('div');
+    overlay.id = 'infoPanelOverlay';
+    overlay.onclick = hideInfoPanel;
+    overlay.innerHTML = `
+        <div class="info-panel" onclick="event.stopPropagation()">
+            <div id="infoPanelMainCard"></div>
+            <div id="infoPanelSubcards"></div>
+            <button onclick="hideInfoPanel()" style="margin-top: 20px; padding: 10px 20px;">Close</button>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+}
+
+// Initialize info panel on page load
+document.addEventListener('DOMContentLoaded', addInfoPanelStyles);
 // =============
 // GLOBE WIDGET LOGIC (Client-Side UI Only)
 // =============
