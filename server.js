@@ -53,6 +53,54 @@ const config = {
 
 const activeSessions = new Map();
 
+// === WIX MEMBERS NOTIFICATION ENDPOINTS (NEW) ===
+// Wix Members login notification endpoint
+app.post('/api/wix-member-login', (req, res) => {
+    const { userId, email, name, loginTimestamp, source } = req.body;
+    
+    console.log('🔑 Wix Member login notification received:', email);
+    
+    // Create session for this Wix member
+    activeSessions.set(userId, `wix_session_${userId}`);
+    
+    const memberInfo = {
+        id: userId,
+        email: email,
+        name: name,
+        loginTime: loginTimestamp,
+        authMethod: 'wix_members',
+        isLoggedIn: true
+    };
+    
+    activeSessions.set(`member_info_${userId}`, memberInfo);
+    
+    console.log('✅ Wix member session created for:', email);
+    
+    res.json({ 
+        success: true, 
+        message: 'Member login recorded',
+        sessionCreated: true 
+    });
+});
+
+// Wix Members logout notification endpoint
+app.post('/api/wix-member-logout', (req, res) => {
+    const { userId, logoutTimestamp } = req.body;
+    
+    console.log('👋 Wix Member logout notification received for:', userId);
+    
+    activeSessions.delete(userId);
+    activeSessions.delete(`member_info_${userId}`);
+    
+    console.log('✅ Wix member session removed');
+    
+    res.json({ 
+        success: true, 
+        message: 'Member logout recorded',
+        sessionRemoved: true 
+    });
+});
+
 // All your data arrays (COMPLETE - keeping them as-is)
 const europeContent = [ 
     { university: "University of Passau", logo: "https://static.wixstatic.com/shapes/d77f36_467b1d2eed4042eab43fdff25124915b.svg", erasmusLink: "https://www.uni-passau.de/en/incoming-exchange-students", programName: "Degree-Seeking", programLink: "https://www.uni-passau.de/en/international/coming-to-passau/coming-to-passau-as-degree-seeking-student", applyLink: "https://www.globaleducarealliance.com/6?partner=Passau", researchLink: "https://www.uni-passau.de/en/international/going-abroad/research-and-teaching-sta" }, 
@@ -285,14 +333,42 @@ app.post('/auth/complete', async (req, res) => {
     }
 });
 
+// === ENHANCED AUTH STATUS (UPDATED) ===
 app.get('/auth/status', (req, res) => {
+    // Check OAuth session first
+    if (req.session.isLoggedIn) {
+        return res.json({
+            isAuthenticated: true,
+            authMethod: 'oauth',
+            user: {
+                id: req.session.wixUserId,
+                email: req.session.userEmail,
+                name: req.session.userName
+            }
+        });
+    }
+    
+    // Check if there are any active Wix Members sessions
+    const wixMemberSessions = Array.from(activeSessions.entries())
+        .filter(([key]) => key.startsWith('member_info_'));
+    
+    if (wixMemberSessions.length > 0) {
+        const [, memberInfo] = wixMemberSessions[wixMemberSessions.length - 1];
+        
+        return res.json({
+            isAuthenticated: true,
+            authMethod: 'wix_members',
+            user: {
+                id: memberInfo.id,
+                email: memberInfo.email,
+                name: memberInfo.name
+            }
+        });
+    }
+    
     res.json({
-        isAuthenticated: !!req.session.isLoggedIn,
-        user: req.session.isLoggedIn ? {
-            id: req.session.wixUserId,
-            email: req.session.userEmail,
-            name: req.session.userName
-        } : null
+        isAuthenticated: false,
+        user: null
     });
 });
 
