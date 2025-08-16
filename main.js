@@ -1,12 +1,11 @@
 // =====
-// WIX MEMBERS AUTHENTICATION INTEGRATION (Client-Side Only)
+// WIX MEMBERS AUTHENTICATION INTEGRATION (No Import - Using Wix APIs)
 // =====
-import { authentication } from 'wix-members-frontend';
 
 async function redirectToWix() {
     try {
-        await authentication.promptLogin();
-        console.log('🔑 Wix Members login prompt opened');
+        await $w('#memberLoginBar').promptLogin();
+        console.log('🔑 Wix login prompt opened');
     } catch(e) {
         console.error('Login prompt failed:', e);
         alert('Login failed – please try again.');
@@ -19,8 +18,8 @@ async function handleCallback() {
 
 async function isLoggedIn() {
     try {
-        const member = await authentication.currentUser.getMember();
-        return member !== null;
+        const user = await $w('#memberLoginBar').getCurrentMember();
+        return user !== null;
     } catch {
         return false;
     }
@@ -31,12 +30,12 @@ async function updateAuthStatus() {
     if (!authIndicator) return;
     
     try {
-        const member = await authentication.currentUser.getMember();
+        const user = await $w('#memberLoginBar').getCurrentMember();
         
-        if (member) {
+        if (user) {
             authIndicator.innerHTML = `
                 <div style="color: green; padding: 10px; background: rgba(0,255,0,0.1); border-radius: 5px;">
-                    🔐 Logged in as ${member.profile.nickname || member.profile.slug || member.loginEmail}
+                    🔐 Logged in as ${user.nickname || user.name}
                     <button onclick="logout()" style="margin-left: 10px; padding: 5px 10px;">Logout</button>
                 </div>
             `;
@@ -55,7 +54,7 @@ async function updateAuthStatus() {
 
 async function logout() {
     try {
-        await authentication.logout();
+        await $w('#memberLoginBar').logout();
         alert('You have been logged out.');
         location.reload();
     } catch (error) {
@@ -71,11 +70,11 @@ async function openStudentDashboard() {
     }
     
     try {
-        const member = await authentication.currentUser.getMember();
+        const user = await $w('#memberLoginBar').getCurrentMember();
         document.getElementById('dashboard-content').innerHTML = `
-            <h2>Welcome ${member.profile.nickname || member.profile.slug}!</h2>
-            <p>Email: ${member.loginEmail}</p>
-            <p>Member ID: ${member._id}</p>
+            <h2>Welcome ${user.nickname || user.name}!</h2>
+            <p>Email: ${user.email}</p>
+            <p>Member ID: ${user.id}</p>
         `;
         document.getElementById('dashboard-container').style.display = 'block';
     } catch (error) {
@@ -622,8 +621,8 @@ async function showInfoPanel(data) {
     if (!data || data.university === "Unassigned") return;
     const uniData = allUniversityContent.filter(item => item && item.university === data.university);
     if (uniData.length === 0) return;
-    const mainErasmusLink = uniData.erasmusLink;
-    document.getElementById('infoPanelMainCard').innerHTML = `<div class="main-card-details"><img src="${uniData.logo}" alt="${data.university}"><h3>${data.university}</h3></div><div class="main-card-actions">${mainErasmusLink ? `<a href="${mainErasmusLink}" target="_blank" class="partner-cta erasmus">Erasmus Info</a>` : ''}</div>`;
+    const mainErasmusLink = uniData[0].erasmusLink;
+    document.getElementById('infoPanelMainCard').innerHTML = `<div class="main-card-details"><img src="${uniData[0].logo}" alt="${data.university}"><h3>${data.university}</h3></div><div class="main-card-actions">${mainErasmusLink ? `<a href="${mainErasmusLink}" target="_blank" class="partner-cta erasmus">Erasmus Info</a>` : ''}</div>`;
     document.getElementById('infoPanelSubcards').innerHTML = '';
     uniData.forEach(item => {
         if (!item) return;
@@ -928,90 +927,4 @@ function togglePrivacySection() {
     privacy.classList.toggle('active');
     trust.classList.toggle('active');
     
-    if (privacy.classList.contains('active')) {
-        privacy.scrollIntoView({ behavior: 'smooth' });
-    }
-}
-
-// Show trust indicators after load
-window.addEventListener('load', () => {
-    setTimeout(() => {
-        document.querySelector('.trust-indicators').classList.add('active');
-    }, 2000);
-});
-
-// Notification helpers
-function showNotification(message, isSuccess = true) {
-    const div = document.createElement('div');
-    const bgColor = isSuccess ? '#4CAF50' : '#ff4444';
-    const icon = isSuccess ? '✅' : '❌';
-    
-    div.innerHTML = `
-        <div style="position: fixed; top: 20px; right: 20px; background: ${bgColor}; color: white; padding: 15px; border-radius: 8px; z-index: 3000; cursor: pointer;" onclick="this.remove()">
-            ${icon} ${message}
-        </div>
-    `;
-    document.body.appendChild(div);
-    
-    setTimeout(() => div.remove(), 5000);
-}
-
-// STARTUP SEQUENCE - HANDLES WIX MEMBERS FIRST, THEN INITIALIZES GLOBE
-document.addEventListener('DOMContentLoaded', async () => {
-    // Setup Wix Members event listeners
-    authentication.onLogin(async (member) => {
-        console.log('🔑 Member logged in:', member.profile.nickname || member.loginEmail);
-        await updateAuthStatus();
-        showNotification(`Welcome back, ${member.profile.nickname || member.loginEmail}!`);
-    });
-    
-    authentication.onLogout(() => {
-        console.log('👋 Member logged out');
-        showNotification('Logged out successfully');
-        setTimeout(() => location.reload(), 1000);
-    });
-    
-    await handleCallback();
-    console.log('🚀 Loading Interactive Globe Widget...');
-    
-    // Add auth status indicator to page if it doesn't exist
-    if (!document.getElementById('auth-indicator')) {
-        const indicator = document.createElement('div');
-        indicator.id = 'auth-indicator';
-        indicator.style.cssText = 'position: fixed; top: 10px; right: 10px; z-index: 1000; font-size: 14px; max-width: 300px;';
-        document.body.appendChild(indicator);
-    }
-    updateAuthStatus(); // Show initial auth status
-    
-    try {
-        console.log('1️⃣ Fetching server data...');
-        await fetchDataFromBackend();
-        
-        console.log('2️⃣ Initializing Three.js...');
-        initializeThreeJS();
-        
-        console.log('3️⃣ Setting up event listeners...');
-        setupEventListeners();
-        
-        console.log('4️⃣ Creating globe and cubes...');
-        await createGlobeAndCubes();
-        
-        console.log('5️⃣ Populating carousel...');
-        await populateCarousel();
-        
-        console.log('6️⃣ Starting animation...');
-        animate();
-        
-        const leftBtn = document.getElementById('carouselScrollLeft');
-        const rightBtn = document.getElementById('carouselScrollRight');
-        if (leftBtn) leftBtn.onclick = () => scrollCarousel(-1);
-        if (rightBtn) rightBtn.onclick = () => scrollCarousel(1);
-        
-        updateCanvasSize();
-        
-        console.log('✅ Globe Widget loaded successfully!');
-        
-    } catch (error) {
-        console.error('❌ Error during initialization:', error);
-    }
-});
+    if (privacy.classList.
