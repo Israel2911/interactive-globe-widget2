@@ -36,44 +36,42 @@ async function handleCallback() {
     }
 }
 // Check auth status
+// MODIFIED: This now correctly checks the backend session
 async function isLoggedIn() {
-    const response = await fetch('/auth/status');
-    const data = await response.json();
-    return data.isAuthenticated;
+    try {
+        const response = await fetch('/api/auth/status');
+        const data = await response.json();
+        return data.isAuthenticated;
+    } catch {
+        return false;
+    }
 }
 // Show user their login status
+// MODIFIED: Updated status messages for SSO flow
 async function updateAuthStatus() {
     const authIndicator = document.getElementById('auth-indicator');
     if (!authIndicator) return;
     
     try {
-        const response = await fetch('/auth/status');
+        const response = await fetch('/api/auth/status');
         const data = await response.json();
         
         if (data.isAuthenticated) {
-            authIndicator.innerHTML = `
-                <div style="color: green; padding: 10px; background: rgba(0,255,0,0.1); border-radius: 5px;">
-                    🔐 Securely logged in as ${data.user.name || data.user.email}
-                    <button onclick="logout()" style="margin-left: 10px; padding: 5px 10px;">Logout</button>
-                </div>
-            `;
+            authIndicator.innerHTML = `<div style="color: green; padding: 10px; background: rgba(0,255,0,0.1); border-radius: 5px;">🔐 Securely logged in as ${data.user.name || data.user.email} <button onclick="logout()" style="margin-left: 10px; padding: 5px 10px;">Logout</button></div>`;
         } else {
-            authIndicator.innerHTML = `
-                <div style="color: orange; padding: 10px; background: rgba(255,165,0,0.1); border-radius: 5px;">
-                    🛡️ Login required for program details - Click subcubes to login
-                </div>
-            `;
+            authIndicator.innerHTML = `<div style="color: #cc0000; padding: 10px; background: rgba(255,0,0,0.1); border-radius: 5px;">🛡️ Authentication Error: Please return to the homepage and log in to access the globe.</div>`;
         }
     } catch (error) {
         authIndicator.innerHTML = '<div style="color: red;">⚠️ Auth system unavailable</div>';
     }
 }
 // Logout function
+// MODIFIED: Redirects to home page on logout
 async function logout() {
     try {
-        await fetch('/auth/logout', { method: 'POST' });
+        await fetch('/api/auth/logout', { method: 'POST' });
         alert('You have been logged out.');
-        location.reload();
+        window.location.href = 'https://www.globaleducarealliance.com/home';
     } catch (error) {
         console.error('Logout failed:', error);
         alert('Could not log out at this time.');
@@ -82,23 +80,19 @@ async function logout() {
 // Access student dashboard
 async function openStudentDashboard() {
     if (!(await isLoggedIn())) {
-        redirectToWix();
+        alert("Please log in to access the dashboard.");
         return;
     }
     
     try {
         const response = await fetch('/api/student/profile');
         if (response.status === 401) {
-            redirectToWix();
+            alert("Your session has expired. Please log in again.");
             return;
         }
         
         const userData = await response.json();
-        document.getElementById('dashboard-content').innerHTML = `
-            <h2>Welcome ${userData.name}!</h2>
-            <p>Email: ${userData.email}</p>
-            <p>Student ID: ${userData.id}</p>
-        `;
+        document.getElementById('dashboard-content').innerHTML = `<h2>Welcome ${userData.name}!</h2><p>Email: ${userData.email}</p><p>Student ID: ${userData.id}</p>`;
         document.getElementById('dashboard-container').style.display = 'block';
     } catch (error) {
         console.error('Dashboard access error:', error);
@@ -107,7 +101,7 @@ async function openStudentDashboard() {
 // File upload
 async function uploadDocument() {
     if (!(await isLoggedIn())) {
-        redirectToWix();
+        alert("Please log in to upload documents.");
         return;
     }
     
@@ -184,10 +178,8 @@ let countryPrograms = {};
 let globalContentMap = {};
 let carouselData = [];
 let isInteracting = false, hoverTimeout;
-
-// CRITICAL FIX: Add missing global variables
+// NEW: Add global variable for click handling
 let clickedSubCube = null;
-let isExploded = false;
 
 // Fetch data from server (all data now comes from backend)
 async function fetchCarouselData() {
@@ -592,78 +584,34 @@ function drawAllConnections() {
         if (fromBlock && toBlock) return createConnectionPath(fromBlock, toBlock);
     }).filter(Boolean);
 }
-// UPDATED Info panel - Complete with authentication and both university/application links
+// Info panel - triggers OAuth for individual subcube clicks
+// MODIFIED: This is the core of the new SSO-aware flow
 async function showInfoPanel(data) {
-    console.log('🎯 showInfoPanel called with:', data);
-    console.log('🔗 University:', data?.university);
-    console.log('🔗 Program Link:', data?.programLink);
-    console.log('🔗 Apply Link:', data?.applyLink);
-    
-    // LOGIN CHECK - authenticate to see program details
+    // 1. Check if the user is already authenticated
     if (!(await isLoggedIn())) {
-        console.log('❌ Not logged in, redirecting...');
-        redirectToWix();
+        // This case should not happen if the user follows the correct flow,
+        // but as a fallback, we tell them to log in again.
+        alert("Your session has expired or is invalid. Please return to the homepage and log in again.");
         return;
     }
-    
-    if (!data || data.university === "Unassigned") {
-        console.log('❌ No valid university data');
-        return;
-    }
-    
+
+    // 2. If authenticated, proceed to show the info panel
+    if (!data || data.university === "Unassigned") return;
     const uniData = allUniversityContent.filter(item => item && item.university === data.university);
-    if (uniData.length === 0) {
-        console.log('❌ No university content found');
-        return;
-    }
-    
-    const mainErasmusLink = uniData[0].erasmusLink;
-    
-    // Create main card
-    document.getElementById('infoPanelMainCard').innerHTML = `
-        <div class="main-card-details">
-            <img src="${uniData[0].logo}" alt="${data.university}">
-            <h3>${data.university}</h3>
-        </div>
-        <div class="main-card-actions">
-            ${mainErasmusLink ? `<a href="${mainErasmusLink}" target="_blank" class="partner-cta erasmus">Erasmus Info</a>` : ''}
-        </div>
-    `;
-    
+    if (uniData.length === 0) return;
+    const mainErasmusLink = uniData.erasmusLink;
+    document.getElementById('infoPanelMainCard').innerHTML = `<div class="main-card-details"><img src="${uniData.logo}" alt="${data.university}"><h3>${data.university}</h3></div><div class="main-card-actions">${mainErasmusLink ? `<a href="${mainErasmusLink}" target="_blank" class="partner-cta erasmus">Erasmus Info</a>` : ''}</div>`;
     document.getElementById('infoPanelSubcards').innerHTML = '';
-    
-    // Create program cards with BOTH university links AND application forms
     uniData.forEach(item => {
         if (!item) return;
-        
-        // University Info Link (programLink) - Direct university pages
-        const infoLinkClass = item.programLink && item.programLink !== '#' ? 'partner-cta info' : 'partner-cta disabled';
-        const infoLinkAction = item.programLink && item.programLink !== '#' ? 
-            `window.open('${item.programLink}', '_blank')` : 'void(0);';
-        
-        // Application Form Link (applyLink) - Your Wix forms (authenticated access)
-        const applyLinkClass = item.applyLink && item.applyLink !== '#' ? 'partner-cta apply' : 'partner-cta disabled';
-        const applyLinkAction = item.applyLink && item.applyLink !== '#' ? 
-            `window.open('${item.applyLink}', '_blank')` : 'void(0);';
-        
-        const subcardHTML = `
-            <div class="subcard">
-                <div class="subcard-info">
-                    <img src="${item.logo}" alt="">
-                    <h4>${item.programName.replace(/\n/g, ' ')}</h4>
-                </div>
-                <div class="subcard-buttons">
-                    <button onclick="${infoLinkAction}" class="${infoLinkClass}">University Info</button>
-                    <button onclick="${applyLinkAction}" class="${applyLinkClass}">Apply Now</button>
-                </div>
-            </div>
-        `;
+        const infoLinkClass = item.programLink && item.programLink !== '#' ? 'partner-cta' : 'partner-cta disabled';
+        const infoLinkHref = item.programLink && item.programLink !== '#' ? `javascript:window.open('${item.programLink}', '_blank')` : 'javascript:void(0);';
+        const applyLinkClass = item.applyLink && item.applyLink !== '#' ? 'partner-cta apply' : 'partner-cta apply disabled';
+        const applyLinkHref = item.applyLink && item.applyLink !== '#' ? `javascript:window.open('${item.applyLink}', '_blank')` : 'javascript:void(0);';
+        const subcardHTML = `<div class="subcard"><div class="subcard-info"><img src="${item.logo}" alt=""><h4>${item.programName.replace(/\n/g, ' ')}</h4></div><div class="subcard-buttons"><a href="${infoLinkHref}" class="${infoLinkClass}">Info</a><a href="${applyLinkHref}" class="${applyLinkClass}">Apply</a></div></div>`;
         document.getElementById('infoPanelSubcards').insertAdjacentHTML('beforeend', subcardHTML);
     });
-    
-    // Show the info panel
     document.getElementById('infoPanelOverlay').style.display = 'flex';
-    console.log('✅ Info panel displayed with both university and application links');
 }
 function hideInfoPanel() {
     document.getElementById('infoPanelOverlay').style.display = 'none';
@@ -682,7 +630,8 @@ function closeAllExploded() {
     if (isSingaporeCubeExploded) toggleFunctionMap['Singapore']();
     if (isMalaysiaCubeExploded) toggleFunctionMap['Malaysia']();
 }
-// THE KEY CLICK HANDLER - FIXED to use global clickedSubCube variable
+// THE KEY CLICK HANDLER - NO AUTH NEEDED FOR EXPLOSION, AUTH ONLY FOR INDIVIDUAL SUBCUBE DETAILS
+// MODIFIED: This now assigns to a global variable
 function onCanvasMouseUp(event) {
     if (transformControls.dragging) return;
     const deltaX = Math.abs(event.clientX - mouseDownPos.x);
@@ -715,7 +664,7 @@ function onCanvasMouseUp(event) {
     
     let parent = clickedObject;
     let neuralName = null;
-    // CRITICAL FIX: Use global variable instead of local
+    // CRITICAL FIX: Assign to the global variable
     clickedSubCube = clickedObject.userData.isSubCube ? clickedObject : null;
     while (parent) { if (parent.userData.neuralName) { neuralName = parent.userData.neuralName; break; } parent = parent.parent; }
     const explosionStateMap = { 'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded, 'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded, 'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded };
@@ -725,7 +674,7 @@ function onCanvasMouseUp(event) {
         const toggleFunc = toggleFunctionMap[neuralName];
         
         if (isExploded && clickedSubCube && clickedSubCube.userData.university !== "Unassigned") {
-            // INDIVIDUAL SUBCUBE CLICKED - OAUTH CHECK HAPPENS HERE
+            // INDIVIDUAL SUBCUBE CLICKED - This triggers the info panel and its auth check
             showInfoPanel(clickedSubCube.userData);
         } else {
             // NEURAL CUBE CLICKED BUT NOT INDIVIDUAL SUBCUBE - NO AUTH, JUST EXPLODE
@@ -951,72 +900,70 @@ function togglePrivacySection() {
         privacy.scrollIntoView({ behavior: 'smooth' });
     }
 }
-// Show trust indicators after
 // Show trust indicators after load
 window.addEventListener('load', () => {
     setTimeout(() => {
         document.querySelector('.trust-indicators').classList.add('active');
     }, 2000);
 });
-
 // Notification helpers
 function showNotification(message, isSuccess = true) {
     const div = document.createElement('div');
     const bgColor = isSuccess ? '#4CAF50' : '#ff4444';
     const icon = isSuccess ? '✅' : '❌';
     
-    div.innerHTML = `
-        <div style="position: fixed; top: 20px; right: 20px; background: ${bgColor}; color: white; padding: 15px; border-radius: 8px; z-index: 3000; cursor: pointer;" onclick="this.remove()">
-            ${icon} ${message}
-        </div>
-    `;
+    div.innerHTML = `<div style="position: fixed; top: 20px; right: 20px; background: ${bgColor}; color: white; padding: 15px; border-radius: 8px; z-index: 3000; cursor: pointer;" onclick="this.remove()">${icon} ${message}</div>`;
     document.body.appendChild(div);
     
     setTimeout(() => div.remove(), 5000);
 }
-
 // STARTUP SEQUENCE - HANDLES OAUTH CALLBACK FIRST, THEN INITIALIZES GLOBE
+// MODIFIED: Added SSO token handling at the beginning
 document.addEventListener('DOMContentLoaded', async () => {
-    await handleCallback(); // Handle OAuth callback first
+    // 1. Handle SSO Token on page load
+    const urlParams = new URLSearchParams(window.location.search);
+    const ssoToken = urlParams.get('sso_token');
+
+    if (ssoToken) {
+        try {
+            const response = await fetch('/api/verify-sso-token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: ssoToken })
+            });
+            if (response.ok) {
+                console.log("SSO Token verified successfully. Session created.");
+                // Clean the token from the URL for a better user experience
+                window.history.replaceState({}, document.title, window.location.pathname);
+            } else {
+                console.error("SSO Token verification failed.");
+                alert("Your login session could not be verified. Please try accessing the globe from your home page again.");
+            }
+        } catch (error) {
+            console.error("Error during SSO token verification:", error);
+        }
+    }
+
+    // 2. Continue with the rest of the page load
     console.log('🚀 Loading Interactive Globe Widget...');
     
-    // Add auth status indicator to page if it doesn't exist
     if (!document.getElementById('auth-indicator')) {
         const indicator = document.createElement('div');
         indicator.id = 'auth-indicator';
         indicator.style.cssText = 'position: fixed; top: 10px; right: 10px; z-index: 1000; font-size: 14px; max-width: 300px;';
         document.body.appendChild(indicator);
     }
-    updateAuthStatus(); // Show initial auth status
+    await updateAuthStatus();
     
     try {
-        console.log('1️⃣ Fetching server data...');
         await fetchDataFromBackend();
-        
-        console.log('2️⃣ Initializing Three.js...');
         initializeThreeJS();
-        
-        console.log('3️⃣ Setting up event listeners...');
         setupEventListeners();
-        
-        console.log('4️⃣ Creating globe and cubes...');
         await createGlobeAndCubes();
-        
-        console.log('5️⃣ Populating carousel...');
         await populateCarousel();
-        
-        console.log('6️⃣ Starting animation...');
         animate();
-        
-        const leftBtn = document.getElementById('carouselScrollLeft');
-        const rightBtn = document.getElementById('carouselScrollRight');
-        if (leftBtn) leftBtn.onclick = () => scrollCarousel(-1);
-        if (rightBtn) rightBtn.onclick = () => scrollCarousel(1);
-        
         updateCanvasSize();
-        
         console.log('✅ Globe Widget loaded successfully!');
-        
     } catch (error) {
         console.error('❌ Error during initialization:', error);
     }
