@@ -1,69 +1,62 @@
 // =====
-// WIX MEMBERS AUTHENTICATION INTEGRATION (Complete - No Duplicates)
+// SECURE WIX AUTHENTICATION LOGIC (Client-Side Only) - NO PKCE
 // =====
-
-// EMERGENCY FIX - Replace redirectToWix to test university links
+// Server builds OAuth URL for us (no PKCE)
 async function redirectToWix() {
-    console.log('🚨 redirectToWix called - this should be showInfoPanel!');
+    const response = await fetch('/auth/login-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}) // Empty body
+    });
     
-    // Try to find the clicked cube data
-    if (clickedSubCube && clickedSubCube.userData) {
-        console.log('🎯 Found cube data:', clickedSubCube.userData);
-        
-        // Test opening university link directly
-        const data = clickedSubCube.userData;
-        if (data.programLink && data.programLink !== '#') {
-            console.log('✅ Opening program link:', data.programLink);
-            window.open(data.programLink, '_blank');
-            return;
-        }
-        
-        if (data.applyLink && data.applyLink !== '#') {
-            console.log('✅ Opening apply link:', data.applyLink);
-            window.open(data.applyLink, '_blank');
-            return;
-        }
-    }
-    
-    // Fallback - show what we know
-    console.log('❌ No university data found');
-    alert('Cube clicked but no university data available');
+    const { loginUrl } = await response.json();
+    window.location.href = loginUrl;
 }
-
+// Handle OAuth callback (no PKCE)
 async function handleCallback() {
-    await updateAuthStatus();
-}
-
-// UPDATED: Use backend endpoint instead of Wix direct calls
-async function isLoggedIn() {
+    const url = new URL(window.location.href);
+    const code = url.searchParams.get('code');
+    if (!code) return;
+    
     try {
-        const response = await fetch('/api/wix-member-status');
-        const data = await response.json();
-        return data.isAuthenticated;
-    } catch {
-        return false;
+        const response = await fetch('/auth/complete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code })
+        });
+        
+        if (response.ok) {
+            window.history.replaceState({}, '', '/');
+            console.log('🔑 Login complete');
+            location.reload();
+        }
+    } catch (e) {
+        console.error('Login failed', e);
+        alert('Login failed – please try again.');
     }
 }
-
+// Check auth status
+async function isLoggedIn() {
+    const response = await fetch('/auth/status');
+    const data = await response.json();
+    return data.isAuthenticated;
+}
+// Show user their login status
 async function updateAuthStatus() {
     const authIndicator = document.getElementById('auth-indicator');
     if (!authIndicator) return;
     
-    // Show loading state
-    authIndicator.innerHTML = '<div style="color: blue;">🔄 Checking login status...</div>';
-    
     try {
-        const response = await fetch('/api/wix-member-status');
+        const response = await fetch('/auth/status');
         const data = await response.json();
         
         if (data.isAuthenticated) {
             authIndicator.innerHTML = `
                 <div style="color: green; padding: 10px; background: rgba(0,255,0,0.1); border-radius: 5px;">
-                    🔐 Logged in as ${data.user.name || data.user.email}
+                    🔐 Securely logged in as ${data.user.name || data.user.email}
                     <button onclick="logout()" style="margin-left: 10px; padding: 5px 10px;">Logout</button>
                 </div>
             `;
-            activateAllCubes();
         } else {
             authIndicator.innerHTML = `
                 <div style="color: orange; padding: 10px; background: rgba(255,165,0,0.1); border-radius: 5px;">
@@ -75,43 +68,18 @@ async function updateAuthStatus() {
         authIndicator.innerHTML = '<div style="color: red;">⚠️ Auth system unavailable</div>';
     }
 }
-
+// Logout function
 async function logout() {
     try {
-        // Get current user ID before logout
-        let userId = 'manual-logout';
-        try {
-            const authResponse = await fetch('/api/wix-member-status');
-            const authData = await authResponse.json();
-            if (authData.isAuthenticated) {
-                userId = authData.user.id;
-            }
-        } catch {}
-        
-        // Notify your Express backend about the logout (no $w needed)
-        const response = await fetch('/api/wix-member-logout', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                userId: userId,
-                logoutTimestamp: new Date().toISOString(),
-                source: 'manual_frontend'
-            })
-        });
-        
-        if (response.ok) {
-            alert('You have been logged out.');
-            location.reload();
-        } else {
-            throw new Error('Backend logout failed');
-        }
+        await fetch('/auth/logout', { method: 'POST' });
+        alert('You have been logged out.');
+        location.reload();
     } catch (error) {
         console.error('Logout failed:', error);
-        alert('Logged out (with warnings).');
-        location.reload();
+        alert('Could not log out at this time.');
     }
 }
-
+// Access student dashboard
 async function openStudentDashboard() {
     if (!(await isLoggedIn())) {
         redirectToWix();
@@ -119,29 +87,24 @@ async function openStudentDashboard() {
     }
     
     try {
-        // Get user info from your backend instead of Wix direct
-        const response = await fetch('/api/wix-member-status');
-        const authData = await response.json();
-        
-        if (!authData.isAuthenticated) {
+        const response = await fetch('/api/student/profile');
+        if (response.status === 401) {
             redirectToWix();
             return;
         }
         
-        const user = authData.user;
+        const userData = await response.json();
         document.getElementById('dashboard-content').innerHTML = `
-            <h2>Welcome ${user.name || 'Member'}!</h2>
-            <p>Email: ${user.email}</p>
-            <p>Member ID: ${user.id}</p>
-            <p>Auth Method: ${authData.authMethod}</p>
+            <h2>Welcome ${userData.name}!</h2>
+            <p>Email: ${userData.email}</p>
+            <p>Student ID: ${userData.id}</p>
         `;
         document.getElementById('dashboard-container').style.display = 'block';
     } catch (error) {
         console.error('Dashboard access error:', error);
-        redirectToWix();
     }
 }
-
+// File upload
 async function uploadDocument() {
     if (!(await isLoggedIn())) {
         redirectToWix();
@@ -179,187 +142,7 @@ async function uploadDocument() {
     
     fileInput.click();
 }
-
-function activateAllCubes() {
-    console.log('🎮 Activating all university cubes for authenticated member');
-    
-    Object.entries(countryBlocks).forEach(([country, group]) => {
-        group.userData.isClickable = true;
-        group.material.opacity = 1.0;
-        group.material.emissiveIntensity = 1.2;
-    });
-    
-    [europeSubCubes, newThailandSubCubes, canadaSubCubes, ukSubCubes, 
-     usaSubCubes, indiaSubCubes, singaporeSubCubes, malaysiaSubCubes].forEach(subCubeArray => {
-        subCubeArray.forEach(subCube => {
-            if (subCube && subCube.userData) {
-                subCube.userData.isClickable = true;
-                subCube.material.opacity = 1.0;
-                subCube.material.emissiveIntensity = 0.8;
-            }
-        });
-    });
-    
-    showNotification('🎮 All university programs are now accessible!');
-}
-
-// Info panel - COMPLETE VERSION with both university info and application links
-async function showInfoPanel(data) {
-    console.log('🎯 showInfoPanel called with:', data);
-    console.log('🔗 University:', data?.university);
-    console.log('🔗 Program Link:', data?.programLink);
-    console.log('🔗 Apply Link:', data?.applyLink);
-    
-    // LOGIN CHECK - authenticate to see program details
-    if (!(await isLoggedIn())) {
-        console.log('❌ Not logged in, redirecting...');
-        redirectToWix();
-        return;
-    }
-    
-    if (!data || data.university === "Unassigned") {
-        console.log('❌ No valid university data');
-        return;
-    }
-    
-    // Get all programs for this university from server data
-    const uniData = allUniversityContent.filter(item => item && item.university === data.university);
-    if (uniData.length === 0) {
-        console.log('❌ No university content found');
-        return;
-    }
-    
-    const mainErasmusLink = uniData[0].erasmusLink;
-    
-    // Create info panel with university details
-    document.getElementById('infoPanelMainCard').innerHTML = `
-        <div class="main-card-details">
-            <img src="${uniData[0].logo}" alt="${data.university}">
-            <h3>${data.university}</h3>
-        </div>
-        <div class="main-card-actions">
-            ${mainErasmusLink ? `<a href="${mainErasmusLink}" target="_blank" class="partner-cta erasmus">Erasmus Info</a>` : ''}
-        </div>
-    `;
-    
-    document.getElementById('infoPanelSubcards').innerHTML = '';
-    
-    // Create program cards with BOTH university links AND application forms
-    uniData.forEach(item => {
-        if (!item) return;
-        
-        // University Info Link (programLink) - Direct university pages
-        const infoLinkClass = item.programLink && item.programLink !== '#' ? 'partner-cta info' : 'partner-cta disabled';
-        const infoLinkAction = item.programLink && item.programLink !== '#' ? 
-            `window.open('${item.programLink}', '_blank')` : 'void(0);';
-        
-        // Application Form Link (applyLink) - Your Wix forms (authenticated access)
-        const applyLinkClass = item.applyLink && item.applyLink !== '#' ? 'partner-cta apply' : 'partner-cta disabled';
-        const applyLinkAction = item.applyLink && item.applyLink !== '#' ? 
-            `window.open('${item.applyLink}', '_blank')` : 'void(0);';
-        
-        const subcardHTML = `
-            <div class="subcard">
-                <div class="subcard-info">
-                    <img src="${item.logo}" alt="">
-                    <h4>${item.programName.replace(/\n/g, ' ')}</h4>
-                </div>
-                <div class="subcard-buttons">
-                    <button onclick="${infoLinkAction}" class="${infoLinkClass}">University Info</button>
-                    <button onclick="${applyLinkAction}" class="${applyLinkClass}">Apply Now</button>
-                </div>
-            </div>
-        `;
-        document.getElementById('infoPanelSubcards').insertAdjacentHTML('beforeend', subcardHTML);
-    });
-    
-    // Show the info panel
-    document.getElementById('infoPanelOverlay').style.display = 'flex';
-    console.log('✅ Info panel displayed with both university and application links');
-}
-
-function hideInfoPanel() {
-    document.getElementById('infoPanelOverlay').style.display = 'none';
-}
-
-// Add info panel styles and HTML
-function addInfoPanelStyles() {
-    const style = document.createElement('style');
-    style.textContent = `
-        #infoPanelOverlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.8);
-            z-index: 10000;
-            justify-content: center;
-            align-items: center;
-        }
-        .info-panel {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            max-width: 600px;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-        .partner-cta {
-            padding: 8px 16px;
-            margin: 5px;
-            border: none;
-            border-radius: 5px;
-            background: #007bff;
-            color: white;
-            cursor: pointer;
-        }
-        .partner-cta.disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-        .partner-cta:hover:not(.disabled) {
-            background: #0056b3;
-        }
-        .subcard {
-            border: 1px solid #ddd;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 5px;
-        }
-        .subcard-info img {
-            width: 40px;
-            height: 40px;
-            margin-right: 10px;
-        }
-        .main-card-details img {
-            width: 60px;
-            height: 60px;
-            margin-right: 15px;
-        }
-    `;
-    document.head.appendChild(style);
-    
-    // Add HTML for info panel
-    const overlay = document.createElement('div');
-    overlay.id = 'infoPanelOverlay';
-    overlay.onclick = hideInfoPanel;
-    overlay.innerHTML = `
-        <div class="info-panel" onclick="event.stopPropagation()">
-            <div id="infoPanelMainCard"></div>
-            <div id="infoPanelSubcards"></div>
-            <button onclick="hideInfoPanel()" style="margin-top: 20px; padding: 10px 20px;">Close</button>
-        </div>
-    `;
-    document.body.appendChild(overlay);
-}
-
-// Initialize info panel on page load
-document.addEventListener('DOMContentLoaded', addInfoPanelStyles);
-// =====
-
-
+// =============
 // GLOBE WIDGET LOGIC (Client-Side UI Only)
 // =============
 let scene, camera, renderer, controls, globeGroup, transformControls;
@@ -402,6 +185,10 @@ let globalContentMap = {};
 let carouselData = [];
 let isInteracting = false, hoverTimeout;
 
+// CRITICAL FIX: Add missing global variables
+let clickedSubCube = null;
+let isExploded = false;
+
 // Fetch data from server (all data now comes from backend)
 async function fetchCarouselData() {
     try {
@@ -424,7 +211,6 @@ async function fetchCarouselData() {
         return false;
     }
 }
-
 async function fetchDataFromBackend() {
     try {
         console.log('🔄 Fetching data from server...');
@@ -470,7 +256,6 @@ async function fetchDataFromBackend() {
     }
     return false;
 }
-
 // Program filtering functions
 function getMatchingCountries(category) {
     if (!globalContentMap || Object.keys(globalContentMap).length === 0) { return []; }
@@ -485,7 +270,6 @@ function getMatchingCountries(category) {
     const matcher = matcherMap[category.toLowerCase()] || (() => false);
     return Object.keys(globalContentMap).filter(country => matcher(globalContentMap[country]));
 }
-
 function highlightCountriesByProgram(level) {
     console.log('🌍 Highlighting countries for program:', level);
     const matchingCountries = getMatchingCountries(level);
@@ -502,7 +286,6 @@ function highlightCountriesByProgram(level) {
     });
     console.log(`✨ Highlighted ${matchingCountries.length} countries:`, matchingCountries);
 }
-
 function highlightNeuralCubesByProgram(selectedCategory) {
     console.log(`🌍 Global neural cube filtering for: ${selectedCategory}`);
     const category = selectedCategory.toLowerCase();
@@ -535,7 +318,6 @@ function highlightNeuralCubesByProgram(selectedCategory) {
     });
     console.log(`✨ Scaled ${matchingCountries.length} neural cubes for ${selectedCategory}`);
 }
-
 // Carousel functions
 async function populateCarousel() {
     await fetchCarouselData();
@@ -563,7 +345,6 @@ async function populateCarousel() {
     }
     console.log('✅ Carousel populated successfully');
 }
-
 function scrollCarousel(direction) {
     const container = document.getElementById('carouselContainer');
     if (!container) return;
@@ -572,7 +353,6 @@ function scrollCarousel(direction) {
     const cardWidth = card.offsetWidth + 16;
     container.scrollBy({ left: direction * cardWidth, behavior: 'smooth' });
 }
-
 // Control functions
 function togglePanMode() {
     isPanMode = !isPanMode;
@@ -607,7 +387,6 @@ function togglePanMode() {
     }
     console.log(isPanMode ? '🖐️ Pan mode enabled - left click drags to move globe' : '🔄 Pan mode disabled - normal rotation enabled');
 }
-
 function toggleGlobeRotation() {
     if (controls) {
         controls.autoRotate = !controls.autoRotate;
@@ -615,7 +394,6 @@ function toggleGlobeRotation() {
         if (rotateBtn) { rotateBtn.style.background = controls.autoRotate ? '#a46bfd' : 'rgba(0,0,0,0.8)'; }
     }
 }
-
 // Three.js initialization
 function initializeThreeJS() {
     console.log('🔄 Initializing Three.js...');
@@ -652,7 +430,6 @@ function initializeThreeJS() {
     renderer.domElement.addEventListener('mouseup', () => { hoverTimeout = setTimeout(() => { isInteracting = false; }, 200); if (isPanMode) renderer.domElement.style.cursor = 'grab'; });
     console.log('✅ Three.js initialized successfully');
 }
-
 function updateCanvasSize() {
     const headerHeight = document.querySelector('.header-ui-bar')?.offsetHeight || 0;
     const footerHeight = document.querySelector('.footer-ui-bar')?.offsetHeight || 0;
@@ -664,7 +441,6 @@ function updateCanvasSize() {
     camera.aspect = window.innerWidth / newHeight;
     camera.updateProjectionMatrix();
 }
-
 // Utility functions
 function getColorByData(data) {
     const baseHue = data.domain * 30 % 360;
@@ -676,7 +452,6 @@ function getColorByData(data) {
     color.multiplyScalar(data.confidence);
     return color;
 }
-
 function createTexture(text, logoUrl, bgColor = '#003366') {
     const canvas = document.createElement('canvas');
     canvas.width = 256;
@@ -704,7 +479,6 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
     } else { drawText(); }
     return new THREE.MeshStandardMaterial({ map: texture, emissive: new THREE.Color(bgColor), emissiveIntensity: 0.6 });
 }
-
 // Toggle function creation
 function createToggleFunction(cubeName) {
     return function() {
@@ -742,14 +516,12 @@ function createToggleFunction(cubeName) {
         });
     }
 }
-
 const toggleFunctionMap = {
     'Europe': createToggleFunction('Europe'), 'Thailand': createToggleFunction('Thailand'),
     'Canada': createToggleFunction('Canada'), 'UK': createToggleFunction('UK'),
     'USA': createToggleFunction('USA'), 'India': createToggleFunction('India'),
     'Singapore': createToggleFunction('Singapore'), 'Malaysia': createToggleFunction('Malaysia')
 };
-
 // Cube creation
 function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
     let contentIdx = 0;
@@ -777,7 +549,6 @@ function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
             }
     return cubeObject;
 }
-
 function createNeuralNetwork() {
     const vertices = [];
     const geometry = new THREE.BufferGeometry();
@@ -786,7 +557,6 @@ function createNeuralNetwork() {
     neuralNetworkLines = new THREE.LineSegments(geometry, material);
     globeGroup.add(neuralNetworkLines);
 }
-
 function latLonToVector3(lat, lon, radius) {
     const phi = (90 - lat) * (Math.PI / 180);
     const theta = (lon + 180) * (Math.PI / 180);
@@ -795,7 +565,6 @@ function latLonToVector3(lat, lon, radius) {
     const y = (radius * Math.cos(phi));
     return new THREE.Vector3(x, y, z);
 }
-
 function createConnectionPath(fromGroup, toGroup, color = 0xffff00) {
     const start = new THREE.Vector3(); fromGroup.getWorldPosition(start);
     const end = new THREE.Vector3(); toGroup.getWorldPosition(end);
@@ -814,7 +583,6 @@ function createConnectionPath(fromGroup, toGroup, color = 0xffff00) {
     globeGroup.add(path);
     return path;
 }
-
 function drawAllConnections() {
     const countryNames = ["India", "Europe", "UK", "Canada", "USA", "Singapore", "Malaysia"];
     const pairs = countryNames.map(country => ["Thailand", country]);
@@ -824,42 +592,86 @@ function drawAllConnections() {
         if (fromBlock && toBlock) return createConnectionPath(fromBlock, toBlock);
     }).filter(Boolean);
 }
-
-// Info panel - triggers authentication for individual subcube clicks
+// UPDATED Info panel - Complete with authentication and both university/application links
 async function showInfoPanel(data) {
-    // LOGIN CHECK ONLY WHEN VIEWING PROGRAM DETAILS
+    console.log('🎯 showInfoPanel called with:', data);
+    console.log('🔗 University:', data?.university);
+    console.log('🔗 Program Link:', data?.programLink);
+    console.log('🔗 Apply Link:', data?.applyLink);
+    
+    // LOGIN CHECK - authenticate to see program details
     if (!(await isLoggedIn())) {
+        console.log('❌ Not logged in, redirecting...');
         redirectToWix();
         return;
     }
     
-    if (!data || data.university === "Unassigned") return;
+    if (!data || data.university === "Unassigned") {
+        console.log('❌ No valid university data');
+        return;
+    }
+    
     const uniData = allUniversityContent.filter(item => item && item.university === data.university);
-    if (uniData.length === 0) return;
+    if (uniData.length === 0) {
+        console.log('❌ No university content found');
+        return;
+    }
+    
     const mainErasmusLink = uniData[0].erasmusLink;
-    document.getElementById('infoPanelMainCard').innerHTML = `<div class="main-card-details"><img src="${uniData[0].logo}" alt="${data.university}"><h3>${data.university}</h3></div><div class="main-card-actions">${mainErasmusLink ? `<a href="${mainErasmusLink}" target="_blank" class="partner-cta erasmus">Erasmus Info</a>` : ''}</div>`;
+    
+    // Create main card
+    document.getElementById('infoPanelMainCard').innerHTML = `
+        <div class="main-card-details">
+            <img src="${uniData[0].logo}" alt="${data.university}">
+            <h3>${data.university}</h3>
+        </div>
+        <div class="main-card-actions">
+            ${mainErasmusLink ? `<a href="${mainErasmusLink}" target="_blank" class="partner-cta erasmus">Erasmus Info</a>` : ''}
+        </div>
+    `;
+    
     document.getElementById('infoPanelSubcards').innerHTML = '';
+    
+    // Create program cards with BOTH university links AND application forms
     uniData.forEach(item => {
         if (!item) return;
-        const infoLinkClass = item.programLink && item.programLink !== '#' ? 'partner-cta' : 'partner-cta disabled';
-        const infoLinkHref = item.programLink && item.programLink !== '#' ? `javascript:window.open('${item.programLink}', '_blank')` : 'javascript:void(0);';
-        const applyLinkClass = item.applyLink && item.applyLink !== '#' ? 'partner-cta apply' : 'partner-cta apply disabled';
-        const applyLinkHref = item.applyLink && item.applyLink !== '#' ? `javascript:window.open('${item.applyLink}', '_blank')` : 'javascript:void(0);';
-        const subcardHTML = `<div class="subcard"><div class="subcard-info"><img src="${item.logo}" alt=""><h4>${item.programName.replace(/\n/g, ' ')}</h4></div><div class="subcard-buttons"><a href="${infoLinkHref}" class="${infoLinkClass}">Info</a><a href="${applyLinkHref}" class="${applyLinkClass}">Apply</a></div></div>`;
+        
+        // University Info Link (programLink) - Direct university pages
+        const infoLinkClass = item.programLink && item.programLink !== '#' ? 'partner-cta info' : 'partner-cta disabled';
+        const infoLinkAction = item.programLink && item.programLink !== '#' ? 
+            `window.open('${item.programLink}', '_blank')` : 'void(0);';
+        
+        // Application Form Link (applyLink) - Your Wix forms (authenticated access)
+        const applyLinkClass = item.applyLink && item.applyLink !== '#' ? 'partner-cta apply' : 'partner-cta disabled';
+        const applyLinkAction = item.applyLink && item.applyLink !== '#' ? 
+            `window.open('${item.applyLink}', '_blank')` : 'void(0);';
+        
+        const subcardHTML = `
+            <div class="subcard">
+                <div class="subcard-info">
+                    <img src="${item.logo}" alt="">
+                    <h4>${item.programName.replace(/\n/g, ' ')}</h4>
+                </div>
+                <div class="subcard-buttons">
+                    <button onclick="${infoLinkAction}" class="${infoLinkClass}">University Info</button>
+                    <button onclick="${applyLinkAction}" class="${applyLinkClass}">Apply Now</button>
+                </div>
+            </div>
+        `;
         document.getElementById('infoPanelSubcards').insertAdjacentHTML('beforeend', subcardHTML);
     });
+    
+    // Show the info panel
     document.getElementById('infoPanelOverlay').style.display = 'flex';
+    console.log('✅ Info panel displayed with both university and application links');
 }
-
 function hideInfoPanel() {
     document.getElementById('infoPanelOverlay').style.display = 'none';
 }
-
 // Mouse event handlers
 function onCanvasMouseDown(event) {
     mouseDownPos.set(event.clientX, event.clientY);
 }
-
 function closeAllExploded() {
     if (isEuropeCubeExploded) toggleFunctionMap['Europe']();
     if (isNewThailandCubeExploded) toggleFunctionMap['Thailand']();
@@ -870,8 +682,7 @@ function closeAllExploded() {
     if (isSingaporeCubeExploded) toggleFunctionMap['Singapore']();
     if (isMalaysiaCubeExploded) toggleFunctionMap['Malaysia']();
 }
-
-// THE KEY CLICK HANDLER - NO AUTH NEEDED FOR EXPLOSION, AUTH ONLY FOR INDIVIDUAL SUBCUBE DETAILS
+// THE KEY CLICK HANDLER - FIXED to use global clickedSubCube variable
 function onCanvasMouseUp(event) {
     if (transformControls.dragging) return;
     const deltaX = Math.abs(event.clientX - mouseDownPos.x);
@@ -904,7 +715,8 @@ function onCanvasMouseUp(event) {
     
     let parent = clickedObject;
     let neuralName = null;
-    let clickedSubCube = clickedObject.userData.isSubCube ? clickedObject : null;
+    // CRITICAL FIX: Use global variable instead of local
+    clickedSubCube = clickedObject.userData.isSubCube ? clickedObject : null;
     while (parent) { if (parent.userData.neuralName) { neuralName = parent.userData.neuralName; break; } parent = parent.parent; }
     const explosionStateMap = { 'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded, 'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded, 'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded };
     
@@ -913,7 +725,7 @@ function onCanvasMouseUp(event) {
         const toggleFunc = toggleFunctionMap[neuralName];
         
         if (isExploded && clickedSubCube && clickedSubCube.userData.university !== "Unassigned") {
-            // INDIVIDUAL SUBCUBE CLICKED - LOGIN CHECK HAPPENS HERE
+            // INDIVIDUAL SUBCUBE CLICKED - OAUTH CHECK HAPPENS HERE
             showInfoPanel(clickedSubCube.userData);
         } else {
             // NEURAL CUBE CLICKED BUT NOT INDIVIDUAL SUBCUBE - NO AUTH, JUST EXPLODE
@@ -925,7 +737,6 @@ function onCanvasMouseUp(event) {
         closeAllExploded(); 
     }
 }
-
 // Pan mode mouse handlers
 function onCanvasMouseDownPan(event) {
     mouseDownPos.set(event.clientX, event.clientY);
@@ -936,7 +747,6 @@ function onCanvasMouseDownPan(event) {
         event.preventDefault(); event.stopPropagation();
     }
 }
-
 function onCanvasMouseMovePan(event) {
     if (isPanMode && isDragging) {
         const deltaMove = { x: event.clientX - previousMousePosition.x, y: event.clientY - previousMousePosition.y };
@@ -953,7 +763,6 @@ function onCanvasMouseMovePan(event) {
         event.preventDefault(); event.stopPropagation();
     }
 }
-
 function onCanvasMouseUpPan(event) {
     if (isPanMode) {
         isDragging = false;
@@ -962,7 +771,6 @@ function onCanvasMouseUpPan(event) {
     }
     onCanvasMouseUp(event);
 }
-
 // Event listeners setup
 function setupEventListeners() {
     renderer.domElement.addEventListener('mousedown', onCanvasMouseDownPan);
@@ -1012,7 +820,6 @@ function setupEventListeners() {
     });
     window.addEventListener('resize', () => { updateCanvasSize(); });
 }
-
 // Globe and cubes creation
 async function createGlobeAndCubes() {
     console.log('🔄 Creating globe and cubes...');
@@ -1074,7 +881,6 @@ async function createGlobeAndCubes() {
     });
     console.log('✅ Globe and cubes created successfully');
 }
-
 // Animation loop
 function animate() {
     requestAnimationFrame(animate);
@@ -1130,7 +936,9 @@ function animate() {
     }
     renderer.render(scene, camera);
 }
-
+// =============
+// UI INTERACTION FUNCTIONS (INTEGRATED AT THE END)
+// =============
 // Toggle privacy section
 function togglePrivacySection() {
     const privacy = document.querySelector('.privacy-assurance');
@@ -1143,14 +951,11 @@ function togglePrivacySection() {
         privacy.scrollIntoView({ behavior: 'smooth' });
     }
 }
-
+// Show trust indicators after
 // Show trust indicators after load
 window.addEventListener('load', () => {
     setTimeout(() => {
-        const trustElement = document.querySelector('.trust-indicators');
-        if (trustElement) {
-            trustElement.classList.add('active');
-        }
+        document.querySelector('.trust-indicators').classList.add('active');
     }, 2000);
 });
 
@@ -1170,9 +975,9 @@ function showNotification(message, isSuccess = true) {
     setTimeout(() => div.remove(), 5000);
 }
 
-// STARTUP SEQUENCE - HANDLES WIX MEMBERS FIRST, THEN INITIALIZES GLOBE
+// STARTUP SEQUENCE - HANDLES OAUTH CALLBACK FIRST, THEN INITIALIZES GLOBE
 document.addEventListener('DOMContentLoaded', async () => {
-    await handleCallback();
+    await handleCallback(); // Handle OAuth callback first
     console.log('🚀 Loading Interactive Globe Widget...');
     
     // Add auth status indicator to page if it doesn't exist
@@ -1216,4 +1021,3 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error('❌ Error during initialization:', error);
     }
 });
-
