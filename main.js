@@ -136,7 +136,7 @@ async function showInfoPanel(data) {
     if (uniData.length === 0) return;
 
     const mainErasmusLink = uniData[0].erasmusLink;
-    document.getElementById('infoPanelMainCard').innerHTML = `<div class="main-card-details"><img src="${uniData[0].logo}" alt="${data.university}"><h3>${data.university}</h3></div><div class="main-card-actions">${mainErasmusLink ? `<a href="${mainErasmusLink}" target="_blank" class="partner-cta erasmus">Erasmus Info</a>` : ''}</div>`;
+    document.getElementById('infoPanelMainCard').innerHTML = `<div class="main-card-details"><img src="${uniData.logo}" alt="${data.university}"><h3>${data.university}</h3></div><div class="main-card-actions">${mainErasmusLink ? `<a href="${mainErasmusLink}" target="_blank" class="partner-cta erasmus">Erasmus Info</a>` : ''}</div>`;
     document.getElementById('infoPanelSubcards').innerHTML = '';
 
     uniData.forEach(item => {
@@ -421,7 +421,6 @@ function highlightNeuralCubesByProgram(level) {
         cubeGroup.children.forEach(subCube => {
             new TWEEN.Tween(subCube.material)
                 .to({ emissiveIntensity: isActive ? 1.5 : 0.6 }, 500)
-                //.to({ emissiveIntensity: isActive ? 1.5 : 0.6, color: isActive ? new THREE.Color('#FFFF00') : subCube.userData.initialColor }, 500)
                 .easing(TWEEN.Easing.Cubic.InOut)
                 .start();
         });
@@ -473,7 +472,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
             if (response.ok) {
                 console.log("SSO Token verified successfully. Session created.");
-                // Clean the token from the URL for a better user experience
                 window.history.replaceState({}, document.title, window.location.pathname);
             } else {
                 console.error("SSO Token verification failed.");
