@@ -18,7 +18,7 @@ app.use(session({
     cookie: {
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
-        sameSite: 'lax', // MODIFIED: Changed from 'strict' to 'lax' for better cross-site compatibility
+        sameSite: 'lax',
         maxAge: 7 * 24 * 60 * 60 * 1000
     }
 }));
@@ -32,7 +32,6 @@ app.use(express.static('.', {
 // ===================================
 // DATA ARRAYS
 // ===================================
-// (Your data arrays like europeContent, canadaContent, etc., remain here)
 const europeContent = [ { university: "University of Passau", logo: "https://static.wixstatic.com/shapes/d77f36_467b1d2eed4042eab43fdff25124915b.svg", erasmusLink: "https://www.uni-passau.de/en/incoming-exchange-students", programName: "Degree-Seeking", programLink: "https://www.uni-passau.de/en/international/coming-to-passau/coming-to-passau-as-degree-seeking-student", applyLink: "https://www.globaleducarealliance.com/6?partner=Passau", researchLink: "https://www.uni-passau.de/en/international/going-abroad/research-and-teaching-sta" }, { university: "University of Passau", logo: "https://static.wixstatic.com/shapes/d77f36_467b1d2eed4042eab43fdff25124915b.svg", erasmusLink: "https://www.uni-passau.de/en/incoming-exchange-students", programName: "Exchange", programLink: "https://www.uni-passau.de/en/incoming-exchange-students", applyLink: "https://www.globaleducarealliance.com/6?partner=Passau", researchLink: "https://www.uni-passau.de/en/international/going-abroad/research-and-teaching-sta" }, null, null, { university: "ICES", logo: "https://static.wixstatic.com/media/d77f36_c11cec0bd94f4ab7a1b611cecb9e90cb~mv2.png", erasmusLink: "https://ices.fr/linternational/erasmus/", programName: "Full Degree", programLink: "https://ices-university.com/studies/", applyLink: "https://www.globaleducarealliance.com/6?partner=ICES" }, { university: "ICES", logo: "https://static.wixstatic.com/media/d77f36_c11cec0bd94f4ab7a1b611cecb9e90cb~mv2.png", erasmusLink: "https://ices.fr/linternational/erasmus/", programName: "Mobility", programLink: "https://ices-university.com/mobility/incoming/", applyLink: "https://www.globaleducarealliance.com/6?partner=ICES" }, null, null, { university: "Université Catholique de Lille", logo: "https://static.wixstatic.com/media/d77f36_009f964ce876419f9391e6a604f9257c~mv2.png", erasmusLink: "https://www.univ-catholille.fr/en/exchange-programs-academic-calendars", programName: "Exchange", programLink: "https://www.univ-catholille.fr/en/exchange-programs-academic-calendars", applyLink: "https://www.globaleducarealliance.com/6?partner=Lille", researchLink: "https://www.univ-catholille.fr/en/research-presentation/" }, { university: "Université Catholique de Lille", logo: "https://static.wixstatic.com/media/d77f36_009f964ce876419f9391e6a604f9257c~mv2.png", erasmusLink: "https://www.univ-catholille.fr/en/exchange-programs-academic-calendars", programName: "Summer Program", programLink: "https://www.univ-catholille.fr/en/lille-programs/lille-european-summer-program/", applyLink: "https://www.globaleducarealliance.com/6?partner=Lille", researchLink: "https://www.univ-catholille.fr/en/research-presentation/" }, null, null, { university: "IRCOM", logo: "https://static.wixstatic.com/media/d77f36_592f23b64ee44211abcb87444198e26a~mv2.jpg", erasmusLink: "https://www.ircom.fr/partir/", programName: "Master\nHumanitarian", programLink: "https://www.ircom.fr/formations/master-humanitaire/", applyLink: "https://www.globaleducarealliance.com/6?partner=IRCOM", researchLink: "https://www.ircom.fr/laborem/" }, { university: "IRCOM", logo: "https://static.wixstatic.com/media/d77f36_592f23b64ee44211abcb87444198e26a~mv2.jpg", erasmusLink: "https://www.ircom.fr/partir/", programName: "Mobility", programLink: "https://www.ircom.fr/partir/", applyLink: "https://www.globaleducarealliance.com/6?partner=IRCOM", researchLink: "https://www.ircom.fr/laborem/" }, null, null, { university: "KATHO-NRW", logo: "https://static.wixstatic.com/shapes/d77f36_b6a110be4758449f8537733a427f2dba.svg", erasmusLink: "https://katho-nrw.de/en/international/erasmus", programName: "Int'l Studies", programLink: "https://katho-nrw.de/en/international/international-studies", applyLink: "https://www.globaleducarealliance.com/6?partner=KATHO-NRW", researchLink: "https://katho-nrw.de/en/international/international-research" }, { university: "KATHO-NRW", logo: "https://static.wixstatic.com/shapes/d77f36_b6a110be4758449f8537733a427f2dba.svg", erasmusLink: "https://katho-nrw.de/en/international/erasmus", programName: "Study Abroad", programLink: "https://katho-nrw.de/en/international/international-studies/students-at-the-catholic-university-of-applied-sciences-studying-abroad", applyLink: "https://www.globaleducarealliance.com/6?partner=KATHO-NRW", researchLink: "https://www.univ-catholille.fr/en/research-presentation/" }, null, null, { university: "TSI", logo: "https://static.wixstatic.com/media/d77f36_1992247272bb4d55a3cac5060abec418~mv2.jpeg", erasmusLink: "https://tsi.lv/future-students/international/", programName: "Int'l Students", programLink: "https://tsi.lv/future-students/international/", applyLink: "https://www.globaleducarealliance.com/6?partner=TSI" }, { university: "TSI", logo: "https://static.wixstatic.com/media/d77f36_1992247272bb4d55a3cac5060abec418~mv2.jpeg", erasmusLink: "https://tsi.lv/future-students/international/", programName: "Innovation", programLink: "https://tsi.lv/research/innovation-knowledge-transfer/", applyLink: "https://www.globaleducarealliance.com/6?partner=TSI" }, null, null, { university: "INSEEC", logo: "https://static.wixstatic.com/media/d77f36_66d4c88c4ebb4b7da6cacaed57178165~mv2.webp", erasmusLink: "https://www.inseec.com/en/erasmus/", programName: "Exchanges", programLink: "https://www.inseec.com/en/academic-exchanges/", applyLink: "https://www.globaleducarealliance.com/6?partner=INSEEC" }, null, null];
 const newThailandContent = [ { university: "Assumption University", logo: "https://static.wixstatic.com/media/d77f36_7dd03d8eefa54bc8a73c18f0a7f35230~mv2.png", programName: "Undergraduate Business (BBA)", programLink: "https://simba.au.edu/", applyLink: "https://www.globaleducarealliance.com/blank-9?partner=AssumptionUniversity" }, { university: "Assumption University", logo: "https://static.wixstatic.com/media/d77f36_7dd03d8eefa54bc8a73c18f0a7f35230~mv2.png", programName: "Master of Business Administration (MBA)", programLink: "https://simba.au.edu/", applyLink: "https://www.globaleducarealliance.com/blank-9?partner=AssumptionUniversity" }, { university: "Assumption University", logo: "https://static.wixstatic.com/media/d77f36_7dd03d8eefa54bc8a73c18f0a7f35230~mv2.png", programName: "Study Abroad / Exchange", programLink: "https://oia.au.edu/comingtoau", applyLink: "https://www.globaleducarealliance.com/blank-9?partner=AssumptionUniversity" }, { university: "Bangkok University", logo: "https://static.wixstatic.com/media/d77f36_5d91110e0e094c799bb3647dbcbaa590~mv2.jpg", programName: "Innovative Media Production", programLink: "https://www.bu.ac.th/en/international-programs/innovative-media-production", applyLink: "https://www.globaleducarealliance.com/blank-9?partner=BangkokUniversity" }, { university: "Bangkok University", logo: "https://static.wixstatic.com/media/d77f36_5d91110e0e094c799bb3647dbcbaa590~mv2.jpg", programName: "Media & Communication", programLink: "https://www.bu.ac.th/en/international-programs/media-communication", applyLink: "https://www.globaleducarealliance.com/blank-9?partner=BangkokUniversity" }, { university: "Bangkok University", logo: "https://static.wixstatic.com/media/d77f36_5d91110e0e094c799bb3647dbcbaa590~mv2.jpg", programName: "Innovation Management (MBA)", programLink: "https://www.bu.ac.th/en/international-programs/mba-i", applyLink: "https://www.globaleducarealliance.com/blank-9?partner=BangkokUniversity" }, { university: "Siam University", logo: "https://static.wixstatic.com/media/d77f36_69fce6d5825e467a88fc02a01b416cf7~mv2.png", programName: "Bachelor of Business Admin. (BBA)", programLink: "https://inter.siam.edu/international-business-administration/", applyLink: "https://www.globaleducarealliance.com/blank-9?partner=SiamUniversity" }, { university: "Siam University", logo: "https://static.wixstatic.com/media/d77f36_69fce6d5825e467a88fc02a01b416cf7~mv2.png", programName: "Master of Business Admin. (MBA)", programLink: "https://inter.siam.edu/international-masters-in-business-administration/", applyLink: "https://www.globaleducarealliance.com/blank-9?partner=SiamUniversity" }, { university: "Siam University", logo: "https://static.wixstatic.com/media/d77f36_69fce6d5825e467a88fc02a01b416cf7~mv2.png", programName: "Semester Abroad / Exchange", programLink: "https://inter.siam.edu/international-masters-in-business-administration/", applyLink: "https://www.globaleducarealliance.com/blank-9?partner=SiamUniversity" }, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null];
 const canadaContent = [ { university: "Trinity Western University", logo: "https://static.wixstatic.com/media/d77f36_b14379dfcff54ffcad6ed7b604debd6f~mv2.png", programName: "BSN", programLink: "https://www.twu.ca/academics/school-nursing/nursing-bsn", applyLink: "https://www.globaleducarealliance.com/blank-8?partner=TWU" }, { university: "Trinity Western University", logo: "https://static.wixstatic.com/media/d77f36_b14379dfcff54ffcad6ed7b604debd6f~mv2.png", programName: "MSN", programLink: "https://www.twu.ca/academics/school-nursing/nursing-msn", applyLink: "https://www.globaleducarealliance.com/blank-8?partner=TWU" }, { university: "Trinity Western University", logo: "https://static.wixstatic.com/media/d77f36_b14379dfcff54ffcad6ed7b604debd6f~mv2.png", programName: "Biotechnology", programLink: "https://www.twu.ca/academics/faculty-natural-applied-sciences/biotechnology", applyLink: "https://www.globaleducarealliance.com/blank-8?partner=TWU" }, { university: "Trinity Western University", logo: "https://static.wixstatic.com/media/d77f36_b14379dfcff54ffcad6ed7b604debd6f~mv2.png", programName: "Computing Science", programLink: "https://www.twu.ca/academics/faculty-natural-applied-sciences/computing-science", applyLink: "https://www.globaleducarealliance.com/blank-8?partner=TWU" }, { university: "Trinity Western University", logo: "https://static.wixstatic.com/media/d77f36_b14379dfcff54ffcad6ed7b604debd6f~mv2.png", programName: "MA in Leadership", programLink: "https://www.twu.ca/academics/graduate-studies/leadership-ma", applyLink: "https://www.globaleducarealliance.com/blank-8?partner=TWU" }, { university: "Trinity Western University", logo: "https://static.wixstatic.com/media/d77f36_b14379dfcff54ffcad6ed7b604debd6f~mv2.png", programName: "MBA", programLink: "https://www.twu.ca/academics/school-business/master-business-administration", applyLink: "https://www.globaleducarealliance.com/blank-8?partner=TWU" }, { university: "Trinity Western University", logo: "https://static.wixstatic.com/media/d77f36_b14379dfcff54ffcad6ed7b604debd6f~mv2.png", programName: "BBA", programLink: "https://www.twu.ca/academics/school-business/bachelor-business-administration", applyLink: "https://www.globaleducarealliance.com/blank-8?partner=TWU" }, { university: "Wawiwa Tech Training", logo: "https://static.wixstatic.com/media/d77f36_0d83ad97a7e54b2db3f0eb089dbcec1f~mv2.webp", programName: "Cyber Security", programLink: "#", applyLink: "/login" }, { university: "Wawiwa Tech Training", logo: "https://static.wixstatic.com/media/d77f36_0d83ad97a7e54b2db3f0eb089dbcec1f~mv2.webp", programName: "Data Analytics", programLink: "#", applyLink: "/login" }, { university: "Wawiwa Tech Training", logo: "https://static.wixstatic.com/media/d77f36_0d83ad97a7e54b2db3f0eb089dbcec1f~mv2.webp", programName: "Full Stack Dev", programLink: "#", applyLink: "/login" }, { university: "Wawiwa Tech Training", logo: "https://static.wixstatic.com/media/d77f36_0d83ad97a7e54b2db3f0eb089dbcec1f~mv2.webp", programName: "UX/UI Design", programLink: "#", applyLink: "/login" }, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null];
@@ -46,24 +45,31 @@ const countryConfigs = [{"name": "India", "lat": 22, "lon": 78, "color": 0xFF993
 
 
 // ===================================
+// NEW: Middleware to disable caching for specific routes
+// ===================================
+const noCache = (req, res, next) => {
+    res.set({
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+        'Surrogate-Control': 'no-store'
+    });
+    next();
+};
+
+// ===================================
 // AUTHENTICATION ENDPOINTS (SSO FLOW)
 // ===================================
 
-app.post('/api/verify-sso-token', async (req, res) => {
+app.post('/api/verify-sso-token', noCache, async (req, res) => {
     const { token } = req.body;
     if (!token) {
-        console.log("SSO VERIFY: Request received with no token.");
         return res.status(400).json({ error: 'SSO Token is missing.' });
     }
-    console.log(`SSO VERIFY: Received token ${token.substring(0,8)}...`);
-
+    
     try {
-        // Use the live function URL
         const wixVerificationUrl = 'https://www.globaleducarealliance.com/_functions/verifySsoToken';
-        
-        console.log(`SSO VERIFY: Calling Wix function at ${wixVerificationUrl}`);
         const response = await axios.post(wixVerificationUrl, { token });
-        console.log("SSO VERIFY: Response from Wix:", response.data);
 
         if (response.data.verified) {
             const { member } = response.data;
@@ -73,40 +79,34 @@ app.post('/api/verify-sso-token', async (req, res) => {
             req.session.userName = member.name;
             req.session.authMethod = 'wix_sso';
             
-            console.log(`SSO VERIFY SUCCESS: Session created for ${member.email}`);
+            console.log(`SSO Success: Session created for ${member.email}`);
             return res.status(200).json({ isAuthenticated: true });
         } else {
-            console.log('SSO VERIFY FAILED: Wix rejected the SSO token.');
+            console.log('Wix rejected the SSO token.');
             return res.status(401).json({ error: 'Invalid or expired SSO token.' });
         }
     } catch (error) {
-        console.error('SSO VERIFY ERROR: Error calling Wix verification function:', error.response?.data || error.message);
+        console.error('SSO verification error:', error.response?.data || error.message);
         return res.status(500).json({ error: 'Failed to verify SSO session.' });
     }
 });
 
-app.get('/api/auth/status', (req, res) => {
+app.get('/api/auth/status', noCache, (req, res) => {
     if (req.session && req.session.isLoggedIn) {
-        console.log(`STATUS: User ${req.session.userEmail} is authenticated.`);
         return res.json({
             isAuthenticated: true,
-            authMethod: req.session.authMethod || 'wix_sso',
             user: { id: req.session.wixUserId, email: req.session.userEmail, name: req.session.userName }
         });
     }
-    console.log("STATUS: No active session found.");
     res.json({ isAuthenticated: false, user: null });
 });
 
-app.post('/api/auth/logout', (req, res) => {
-    const userEmail = req.session?.userEmail || 'Unknown user';
+app.post('/api/auth/logout', noCache, (req, res) => {
     req.session.destroy((err) => {
         if (err) {
-            console.error(`LOGOUT FAILED for ${userEmail}:`, err);
             return res.status(500).json({ error: 'Logout failed' });
         }
         res.clearCookie('connect.sid');
-        console.log(`LOGOUT SUCCESS: Session for ${userEmail} destroyed.`);
         res.json({ success: true, message: 'Session destroyed.' });
     });
 });
