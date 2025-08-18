@@ -1,14 +1,10 @@
-// =====
-// NEW: Minimal Wix-managed login helpers (Option A)
-// =====
+// Always redirect to Wix (absolute URL), then return to Home.
 function redirectToWix(returnPath) {
-  // Your Wix site base URL:
   const wixBase = 'https://www.globaleducarealliance.com';
-  // Policy: return to Home unless a valid internal path is provided
   const target = (returnPath && returnPath.startsWith('/')) ? returnPath : '/home';
   const encoded = encodeURIComponent(target);
-  // IMPORTANT: Use absolute URL so the browser goes to the Wix domain, not the current origin
-  window.location.assign(`${wixBase}/_members/login?returnUrl=${encoded}`);
+  // Use top window in case this runs inside an iframe/embed
+  window.top.location.assign(`${wixBase}/_members/login?returnUrl=${encoded}`);
 }
 
 async function requireLoginAndGo(returnPath) {
