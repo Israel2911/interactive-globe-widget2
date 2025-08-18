@@ -1,14 +1,11 @@
-// Always navigate to Wix Home and let the Home page open the Wix login dialog.
-// Includes a soft guard param to help the Home page handle one-shot prompting.
 function redirectToWix() {
-  // Force top window in case this script runs inside an embed/iframe
   window.top.location.href = 'https://www.globaleducarealliance.com/home?promptLogin=1';
 }
-
 async function requireLoginAndGo() {
   redirectToWix();
-  return new Promise(() => {}); // halt further JS
+  return new Promise(() => {});
 }
+
 
 // No-op placeholders replacing custom SSO usage in front-end
 async function isLoggedIn() { return false; }
