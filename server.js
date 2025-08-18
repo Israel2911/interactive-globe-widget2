@@ -45,13 +45,11 @@ const noCache = (req, res, next) => {
 // SSO TOKEN CONSUMPTION MIDDLEWARE (Consumes mToken, verifies, sets session, cleans URL)
 // =======
 const SSO_SECRET = process.env.WIX_SSO_SECRET || 'REPLACE_WITH_STRONG_SECRET';
-
 app.use((req, res, next) => {
     try {
         const parsed = url.parse(req.url, true);
         const token = parsed.query && parsed.query.mToken;
         if (!token) return next();
-
         try {
             const decoded = jwt.verify(token, SSO_SECRET, {
                 algorithms: ['HS256'],
@@ -67,7 +65,6 @@ app.use((req, res, next) => {
         } catch (error) {
             console.error('SSO verification error:', error.message);
         }
-
         const cleanQuery = { ...parsed.query };
         delete cleanQuery.mToken;
         const cleanUrl = url.format({ pathname: parsed.pathname, query: cleanQuery });
@@ -89,9 +86,9 @@ const singaporeContent = [ { university: "NUS", logo: "https://static.wixstatic.
 const malaysiaContent = [ { university: "Limkokwing University", logo: "https://static.wixstatic.com/media/d77f36_38c855c3d47448009fc7123812183cc0~mv2.png", programName: "Creative\nTech", programLink: "https://www.limkokwing.net/malaysia/academic/courses", applyLink: "https://www.globaleducarealliance.com/6?partner=Limkokwing" }, { university: "Binary University", logo: "https://static.wixstatic.com/media/d77f36_38969a51e38148f294cade091aa0cbd8~mv2.png", programName: "MyBIG Grant", programLink: "https://binary.edu.my/big_main/", applyLink: "https://www.globaleducarealliance.com/6?partner=Binary" }, { university: "Study in Malaysia Guide", logo: "https://static.wixstatic.com/media/d77f36_e6a24c71b7a14548beca3dafbb8e797b~mv2.jpg", programName: "Student\nGuide", programLink: "#", applyLink: "#" }, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null];
 const countryPrograms = { "India": ["UG", "PG", "Mobility", "Research"], "Europe": ["UG", "PG", "Mobility", "Language", "Research"], "UK": ["UG", "PG", "Mobility"], "Singapore": ["UG", "PG", "Mobility", "Upskilling", "Diploma"], "Malaysia": ["UG", "PG", "Diploma", "Mobility"], "Canada": ["UG", "PG", "Diploma", "Mobility", "Upskilling"], "Thailand": ["UG", "PG", "Diploma", "Mobility"], "USA": ["UG", "PG", "Mobility"] };
 const countryConfigs = [{"name": "India", "lat": 22, "lon": 78, "color": 0xFF9933}, {"name": "Europe", "lat": 48.8566, "lon": 2.3522, "color": 0x0000FF}, {"name": "UK", "lat": 53, "lon": -0.1276, "color": 0x191970}, {"name": "Singapore", "lat": 1.35, "lon": 103.8, "color": 0xff0000}, {"name": "Malaysia", "lat": 4, "lon": 102, "color": 0x0000ff}, {"name": "Thailand", "lat": 13.7563, "lon": 100.5018, "color": 0xffcc00}, {"name": "Canada", "lat": 56.1304, "lon": -106.3468, "color": 0xff0000}, {"name": "USA", "lat": 39.8283, "lon": -98.5795, "color": 0x003366}];
-// =======
+// ===
 // NEW: Middleware to disable caching for specific routes
-// =======
+// ===
 const noCache = (req, res, next) => {
     res.set({
         'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
@@ -101,9 +98,9 @@ const noCache = (req, res, next) => {
     });
     next();
 };
-// =======
+// ===
 // AUTHENTICATION ENDPOINTS (SSO FLOW)
-// =======
+// ===
 app.post('/api/verify-sso-token', noCache, async (req, res) => {
     const { token } = req.body;
     if (!token) {
@@ -111,7 +108,7 @@ app.post('/api/verify-sso-token', noCache, async (req, res) => {
     }
     
     try {
-        const wixVerificationUrl = 'https://www.globaleducarealliance.com/_functions/verifySsoToken';
+        const wixVerificationUrl = 'https://www.globaleducarealliance.com/\_functions/verifySsoToken';
         const response = await axios.post(wixVerificationUrl, { token });
         if (response.data.verified) {
             const { member } = response.data;
@@ -119,7 +116,7 @@ app.post('/api/verify-sso-token', noCache, async (req, res) => {
             req.session.wixUserId = member.id;
             req.session.userEmail = member.email;
             req.session.userName = member.name;
-            req.session.authMethod = 'wix_sso';
+            req.session.authMethod = 'wix\_sso';
             
             console.log(`SSO Success: Session created for ${member.email}`);
             return res.status(200).json({ isAuthenticated: true });
@@ -150,9 +147,9 @@ app.post('/api/auth/logout', noCache, (req, res) => {
         res.json({ success: true, message: 'Session destroyed.' });
     });
 });
-// =======
+// ===
 // DATA & PROTECTED ENDPOINTS
-// =======
+// ===
 function requireAuth(req, res, next) {
     if (req.session && req.session.isLoggedIn) {
         next();
@@ -165,7 +162,7 @@ app.get('/api/student/profile', requireAuth, (req, res) => {
 });
 const upload = multer({ 
     dest: 'uploads/',
-    limits: { fileSize: 10 * 1024 * 1024 },
+    limits: { fileSize: 10 \* 1024 \* 1024 },
     fileFilter: (req, file, cb) => {
         const allowedTypes = /pdf|jpg|jpeg|png|doc|docx/;
         if (allowedTypes.test(file.originalname.toLowerCase())) { return cb(null, true); }
@@ -196,9 +193,9 @@ app.get('/api/carousel/data', (req, res) => {
         { category: "Research", img: "https://static.wixstatic.com/media/d77f36_aa9eb498381d4adc897522e38301ae6f~mv2.jpg", title: "Research", text: "Opportunities & links." }
     ]);
 });
-// =======
+// ===
 // SERVER START
-// =======
+// ===
 app.get('/health', (req, res) => {
     res.json({ status: 'Secure Globe Widget backend running', timestamp: new Date().toISOString() });
 });
