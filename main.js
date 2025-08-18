@@ -1,23 +1,20 @@
-// Always redirect to Wix (absolute URL), then return to Home.
-function redirectToWix(returnPath) {
-  const wixBase = 'https://www.globaleducarealliance.com';
-  const target = (returnPath && returnPath.startsWith('/')) ? returnPath : '/home';
-  const encoded = encodeURIComponent(target);
-  // Use top window in case this runs inside an iframe/embed
-  window.top.location.assign(`${wixBase}/_members/login?returnUrl=${encoded}`);
+// Always navigate to Wix Home, then let the Home page prompt the Wix login dialog.
+function redirectToWix() {
+  // Add a flag that the Home page will detect to open the login modal
+  window.top.location.href = 'https://www.globaleducarealliance.com/home?promptLogin=1';
 }
 
-async function requireLoginAndGo(returnPath) {
-  redirectToWix(returnPath);
+async function requireLoginAndGo() {
+  redirectToWix();
   return new Promise(() => {}); // halt further JS
 }
-
 
 // No-op placeholders replacing custom SSO usage in front-end
 async function isLoggedIn() { return false; }
 async function updateAuthStatus() { /* no-op to keep UI simple */ }
 async function handleCallback() { /* no-op */ }
-async function logout() { window.location.assign('/_members/logout'); }
+async function logout() { window.top.location.href = 'https://www.globaleducarealliance.com/home'; }
+
 
 // =====
 // EMERGENCY FIX REMOVED: redirectToWix previously used for testing links.
