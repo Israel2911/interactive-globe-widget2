@@ -1,7 +1,51 @@
-// =============
-// NEW SECURE SSO AUTHENTICATION LOGIC (Updated - No Duplicates)
-// =============
-// EMERGENCY FIX - Replace redirectToWix to test university links
+// ===== AUTHENTICATION GUARD SYSTEM (TOP OF main.js) =====
+async function checkAuthenticationAndGuard() {
+    try {
+        const response = await fetch('/api/auth/status');
+        const data = await response.json();
+        if (!data.isAuthenticated) {
+            showLoginRequiredOverlay();
+            setTimeout(() => {
+                window.location.href = 'https://www.globaleducarealliance.com/home';
+            }, 3000);
+            return false;
+        }
+        return true;
+    } catch (error) {
+        console.error('Authentication check failed:', error);
+        window.location.href = 'https://www.globaleducarealliance.com/home';
+        return false;
+    }
+}
+
+function showLoginRequiredOverlay() {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white; display: flex; justify-content: center; align-items: center; 
+        z-index: 99999; font-family: Arial, sans-serif;
+    `;
+    overlay.innerHTML = `
+        <div style="text-align: center; padding: 40px;">
+            <div style="font-size: 60px; margin-bottom: 20px;">🔒</div>
+            <h2 style="margin-bottom: 20px; font-size: 28px;">Login Required</h2>
+            <p style="font-size: 18px; margin-bottom: 30px;">Please log in to access university programs and application tools</p>
+            <div style="font-size: 16px; color: #ffd700;">Redirecting to login page...</div>
+            <div style="margin-top: 20px;">
+                <div style="width: 200px; height: 4px; background: rgba(255, 255, 255, 0.3); border-radius: 2px; margin: 0 auto; overflow: hidden;">
+                    <div style="width: 0%; height: 100%; background: #ffd700; animation: progress 3s linear forwards;"></div>
+                </div>
+            </div>
+        </div>
+    `;
+    const style = document.createElement('style');
+    style.textContent = `@keyframes progress { from { width: 0%; } to { width: 100%; } }`;
+    document.head.appendChild(style);
+    document.body.appendChild(overlay);
+}
+
+// ===== AUTHENTICATION & UI HELPER FUNCTIONS =====
 async function redirectToWix() {
     console.log('🚨 redirectToWix called - this should be showInfoPanel!');
     
@@ -261,7 +305,7 @@ async function showInfoPanel(data) {
             <div class="subcard">
                 <div class="subcard-info">
                     <img src="${item.logo}" alt="">
-                    <h4>${item.programName.replace(/\n/g, ' ')}</h4>
+                    <h4>${item.programName.replace(/\\n/g, ' ')}</h4>
                 </div>
                 <div class="subcard-buttons">
                     <button onclick="${infoLinkAction}" class="${infoLinkClass}">University Info</button>
@@ -357,9 +401,85 @@ function addInfoPanelStyles() {
 // Initialize info panel on page load
 document.addEventListener('DOMContentLoaded', addInfoPanelStyles);
 
-// =============
+// ===== MAIN START-UP SEQUENCE =====
+document.addEventListener('DOMContentLoaded', async () => {
+    // 1. Guard: block/redirect unauthenticated users before any UI/logic loads
+    const isAuthenticated = await checkAuthenticationAndGuard();
+    if (!isAuthenticated) return;
+
+    // 2. SSO token handler (for SSO token links from Wix home or members area)
+    const urlParams = new URLSearchParams(window.location.search);
+    const ssoToken = urlParams.get('sso_token');
+    if (ssoToken) {
+        try {
+            const response = await fetch('/api/verify-sso-token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: ssoToken })
+            });
+            if (response.ok) {
+                console.log("SSO Token verified successfully. Session created.");
+                window.history.replaceState({}, document.title, window.location.pathname);
+            } else {
+                console.error("SSO Token verification failed.");
+                alert("Your login session could not be verified. Please try again.");
+            }
+        } catch (error) {
+            console.error("Error during SSO token verification:", error);
+        }
+    }
+
+    // 3. Authenticate with backend again after SSO (optional)
+    await handleCallback();
+
+    // 4. (Your complete globe widget initialization logic continues...)
+    console.log('🚀 Loading Interactive Globe Widget...');
+    
+    // Add auth status indicator to page if it doesn't exist
+    if (!document.getElementById('auth-indicator')) {
+        const indicator = document.createElement('div');
+        indicator.id = 'auth-indicator';
+        indicator.style.cssText = 'position: fixed; top: 10px; right: 10px; z-index: 1000; font-size: 14px; max-width: 300px;';
+        document.body.appendChild(indicator);
+    }
+    updateAuthStatus(); // Show initial auth status
+    
+    try {
+        console.log('1️⃣ Fetching server data...');
+        await fetchDataFromBackend();
+        
+        console.log('2️⃣ Initializing Three.js...');
+        initializeThreeJS();
+        
+        console.log('3️⃣ Setting up event listeners...');
+        setupEventListeners();
+        
+        console.log('4️⃣ Creating globe and cubes...');
+        await createGlobeAndCubes();
+        
+        console.log('5️⃣ Populating carousel...');
+        await populateCarousel();
+        
+        console.log('6️⃣ Starting animation...');
+        animate();
+        
+        const leftBtn = document.getElementById('carouselScrollLeft');
+        const rightBtn = document.getElementById('carouselScrollRight');
+        if (leftBtn) leftBtn.onclick = () => scrollCarousel(-1);
+        if (rightBtn) rightBtn.onclick = () => scrollCarousel(1);
+        
+        updateCanvasSize();
+        
+        console.log('✅ Globe Widget loaded successfully!');
+        
+    } catch (error) {
+        console.error('❌ Error during initialization:', error);
+    }
+});
+
+// =====
 // GLOBE WIDGET LOGIC (Client-Side UI Only)
-// =============
+// =====
 let scene, camera, renderer, controls, globeGroup, transformControls;
 let GLOBE_RADIUS = 1.0;
 let isPanMode = false;
