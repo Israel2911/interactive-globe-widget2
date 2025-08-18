@@ -1,6 +1,7 @@
-// Always navigate to Wix Home, then let the Home page prompt the Wix login dialog.
+// Always navigate to Wix Home and let the Home page open the Wix login dialog.
+// Includes a soft guard param to help the Home page handle one-shot prompting.
 function redirectToWix() {
-  // Add a flag that the Home page will detect to open the login modal
+  // Force top window in case this script runs inside an embed/iframe
   window.top.location.href = 'https://www.globaleducarealliance.com/home?promptLogin=1';
 }
 
@@ -16,6 +17,7 @@ async function handleCallback() { /* no-op */ }
 async function logout() { window.top.location.href = 'https://www.globaleducarealliance.com/home'; }
 
 
+
 // =====
 // EMERGENCY FIX REMOVED: redirectToWix previously used for testing links.
 // We keep all link handling inside the info panel code paths if re-enabled.
@@ -24,13 +26,9 @@ async function logout() { window.top.location.href = 'https://www.globaleducarea
 // =====
 // DASHBOARD / UPLOAD actions — always require login, then go Home
 // =====
-async function openStudentDashboard() {
-  await requireLoginAndGo('/home');
-}
-
-async function uploadDocument() {
-  await requireLoginAndGo('/home');
-}
+// DASHBOARD / UPLOAD actions — always require login, then go Home
+async function openStudentDashboard() { await requireLoginAndGo(); }
+async function uploadDocument() { await requireLoginAndGo(); }
 
 // =====
 // AUTH-DEPENDENT ACTIVATION (UI visual only — still allowed for engagement)
@@ -60,7 +58,6 @@ function activateAllCubes() {
 
 // =====
 // Info panel — fully gated behind Wix login
-// =====
 async function showInfoPanel(data) {
   console.log('🎯 showInfoPanel called with:', data);
   console.log('🔗 University:', data?.university);
@@ -72,10 +69,15 @@ async function showInfoPanel(data) {
     return;
   }
 
-  // Policy: do not display any info-panel content unless logged in.
-  // Redirect to Wix login and return to Home.
-  await requireLoginAndGo('/home');
+  // Do not display any info-panel content unless logged in.
+  await requireLoginAndGo(); // sends to /home?promptLogin=1
   return;
+
+  /* If later you allow showing the panel post-login, remove the return above
+     and keep your builder code here. Ensure Apply buttons still route through
+     the Home + promptLogin flow for non-logged-in users. */
+}
+
 
   // ---------- If later you allow panel post-login, remove the return above and use builder below ----------
   /*
