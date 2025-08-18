@@ -1,50 +1,3 @@
-// ===== AUTHENTICATION GUARD SYSTEM (TOP OF main.js) =====
-async function checkAuthenticationAndGuard() {
-    try {
-        const response = await fetch('/api/auth/status');
-        const data = await response.json();
-        if (!data.isAuthenticated) {
-            showLoginRequiredOverlay();
-            setTimeout(() => {
-                window.location.href = 'https://www.globaleducarealliance.com/home';
-            }, 3000);
-            return false;
-        }
-        return true;
-    } catch (error) {
-        console.error('Authentication check failed:', error);
-        window.location.href = 'https://www.globaleducarealliance.com/home';
-        return false;
-    }
-}
-
-function showLoginRequiredOverlay() {
-    const overlay = document.createElement('div');
-    overlay.style.cssText = `
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white; display: flex; justify-content: center; align-items: center; 
-        z-index: 99999; font-family: Arial, sans-serif;
-    `;
-    overlay.innerHTML = `
-        <div style="text-align: center; padding: 40px;">
-            <div style="font-size: 60px; margin-bottom: 20px;">🔒</div>
-            <h2 style="margin-bottom: 20px; font-size: 28px;">Login Required</h2>
-            <p style="font-size: 18px; margin-bottom: 30px;">Please log in to access university programs and application tools</p>
-            <div style="font-size: 16px; color: #ffd700;">Redirecting to login page...</div>
-            <div style="margin-top: 20px;">
-                <div style="width: 200px; height: 4px; background: rgba(255, 255, 255, 0.3); border-radius: 2px; margin: 0 auto; overflow: hidden;">
-                    <div style="width: 0%; height: 100%; background: #ffd700; animation: progress 3s linear forwards;"></div>
-                </div>
-            </div>
-        </div>
-    `;
-    const style = document.createElement('style');
-    style.textContent = `@keyframes progress { from { width: 0%; } to { width: 100%; } }`;
-    document.head.appendChild(style);
-    document.body.appendChild(overlay);
-}
-
 // ===== AUTHENTICATION & UI HELPER FUNCTIONS =====
 async function redirectToWix() {
     console.log('🚨 redirectToWix called - this should be showInfoPanel!');
@@ -246,35 +199,36 @@ function activateAllCubes() {
     showNotification('🎮 All university programs are now accessible!');
 }
 
-// Info panel - COMPLETE VERSION with both university info and application links
+// NEW: Login-on-demand showInfoPanel
 async function showInfoPanel(data) {
-    console.log('🎯 showInfoPanel called with:', data);
-    console.log('🔗 University:', data?.university);
-    console.log('🔗 Program Link:', data?.programLink);
-    console.log('🔗 Apply Link:', data?.applyLink);
-    
-    // LOGIN CHECK - authenticate to see program details
+    // Step 1: Check authentication only now
     if (!(await isLoggedIn())) {
-        console.log('❌ Not logged in, redirecting...');
-        redirectToWix();
+        // Option 1: If you have Wix environment and `wixUsers` is available (from Velo):
+        if (typeof wixUsers !== 'undefined' && wixUsers.promptLogin) {
+            wixUsers.promptLogin()
+                .then(() => {
+                    // After login, refresh status and try again
+                    updateAuthStatus();
+                    showInfoPanel(data);
+                })
+                .catch(() => {
+                    // User cancelled login; don't show details
+                    alert('Login required to see university program details.');
+                });
+        } else {
+            // If not on Wix, or custom environment:
+            alert('Please log in to see university program details.');
+        }
         return;
     }
     
-    if (!data || data.university === "Unassigned") {
-        console.log('❌ No valid university data');
-        return;
-    }
+    // Step 2: Proceed to show info panel for authenticated users
+    if (!data || data.university === "Unassigned") return;
     
-    // Get all programs for this university from server data
     const uniData = allUniversityContent.filter(item => item && item.university === data.university);
-    if (uniData.length === 0) {
-        console.log('❌ No university content found');
-        return;
-    }
+    if (uniData.length === 0) return;
     
     const mainErasmusLink = uniData[0].erasmusLink;
-    
-    // Create info panel with university details
     document.getElementById('infoPanelMainCard').innerHTML = `
         <div class="main-card-details">
             <img src="${uniData[0].logo}" alt="${data.university}">
@@ -286,21 +240,14 @@ async function showInfoPanel(data) {
     `;
     
     document.getElementById('infoPanelSubcards').innerHTML = '';
-    
-    // Create program cards with BOTH university links AND application forms
     uniData.forEach(item => {
         if (!item) return;
-        
-        // University Info Link (programLink) - Direct university pages
         const infoLinkClass = item.programLink && item.programLink !== '#' ? 'partner-cta info' : 'partner-cta disabled';
-        const infoLinkAction = item.programLink && item.programLink !== '#' ? 
+        const infoLinkAction = item.programLink && item.programLink !== '#' ?
             `window.open('${item.programLink}', '_blank')` : 'void(0);';
-        
-        // Application Form Link (applyLink) - Your Wix forms (authenticated access)
         const applyLinkClass = item.applyLink && item.applyLink !== '#' ? 'partner-cta apply' : 'partner-cta disabled';
-        const applyLinkAction = item.applyLink && item.applyLink !== '#' ? 
+        const applyLinkAction = item.applyLink && item.applyLink !== '#' ?
             `window.open('${item.applyLink}', '_blank')` : 'void(0);';
-        
         const subcardHTML = `
             <div class="subcard">
                 <div class="subcard-info">
@@ -315,10 +262,8 @@ async function showInfoPanel(data) {
         `;
         document.getElementById('infoPanelSubcards').insertAdjacentHTML('beforeend', subcardHTML);
     });
-    
-    // Show the info panel
     document.getElementById('infoPanelOverlay').style.display = 'flex';
-    console.log('✅ Info panel displayed with both university and application links');
+    console.log('✅ Info panel displayed.');
 }
 
 function hideInfoPanel() {
@@ -401,13 +346,12 @@ function addInfoPanelStyles() {
 // Initialize info panel on page load
 document.addEventListener('DOMContentLoaded', addInfoPanelStyles);
 
-// ===== MAIN START-UP SEQUENCE =====
+// ===== MAIN START-UP SEQUENCE (NO AUTH GUARD) =====
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Guard: block/redirect unauthenticated users before any UI/logic loads
-    const isAuthenticated = await checkAuthenticationAndGuard();
-    if (!isAuthenticated) return;
-
-    // 2. SSO token handler (for SSO token links from Wix home or members area)
+    // NO AUTH GUARD - let everyone see the globe
+    console.log('🚀 Loading Interactive Globe Widget for all users...');
+    
+    // Handle SSO Token on page load (existing code)
     const urlParams = new URLSearchParams(window.location.search);
     const ssoToken = urlParams.get('sso_token');
     if (ssoToken) {
@@ -428,12 +372,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.error("Error during SSO token verification:", error);
         }
     }
-
-    // 3. Authenticate with backend again after SSO (optional)
+    
     await handleCallback();
-
-    // 4. (Your complete globe widget initialization logic continues...)
-    console.log('🚀 Loading Interactive Globe Widget...');
     
     // Add auth status indicator to page if it doesn't exist
     if (!document.getElementById('auth-indicator')) {
@@ -478,7 +418,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 // =====
-// GLOBE WIDGET LOGIC (Client-Side UI Only)
+// GLOBE WIDGET LOGIC (Client-Side UI Only) - ALL YOUR EXISTING CODE CONTINUES HERE
 // =====
 let scene, camera, renderer, controls, globeGroup, transformControls;
 let GLOBE_RADIUS = 1.0;
@@ -520,6 +460,8 @@ let globalContentMap = {};
 let carouselData = [];
 let isInteracting = false, hoverTimeout;
 let clickedSubCube = null;
+
+
 
 // Fetch data from server (all data now comes from backend)
 async function fetchCarouselData() {
