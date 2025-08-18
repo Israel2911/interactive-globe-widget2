@@ -56,7 +56,6 @@ function activateAllCubes() {
   showNotification('🎮 All university programs are now accessible!');
 }
 
-// =====
 // Info panel — fully gated behind Wix login
 async function showInfoPanel(data) {
   console.log('🎯 showInfoPanel called with:', data);
@@ -69,80 +68,68 @@ async function showInfoPanel(data) {
     return;
   }
 
-  // Do not display any info-panel content unless logged in.
-  await requireLoginAndGo(); // sends to /home?promptLogin=1
+  // Gate: go to Home and prompt login
+  await requireLoginAndGo();
   return;
-
-  /* If later you allow showing the panel post-login, remove the return above
-     and keep your builder code here. Ensure Apply buttons still route through
-     the Home + promptLogin flow for non-logged-in users. */
 }
 
+// ---------- If later you allow panel post-login, remove the return above and use builder below ----------
+/*
+const uniData = allUniversityContent.filter(item => item && item.university === data.university);
+if (uniData.length === 0) {
+  console.log('❌ No university content found');
+  return;
+}
+const mainErasmusLink = uniData[0].erasmusLink;
 
-  // ---------- If later you allow panel post-login, remove the return above and use builder below ----------
-  /*
-  const uniData = allUniversityContent.filter(item => item && item.university === data.university);
-  if (uniData.length === 0) {
-    console.log('❌ No university content found');
-    return;
-  }
+document.getElementById('infoPanelMainCard').innerHTML = `
+  <div class="main-card-details">
+    <img src="${uniData.logo}" alt="${data.university}">
+    <h3>${data.university}</h3>
+  </div>
+  <div class="main-card-actions">
+    ${mainErasmusLink ? `<a href="${mainErasmusLink}" target="_blank" class="partner-cta erasmus">Erasmus Info</a>` : ''}
+  </div>
+`;
 
-  const mainErasmusLink = uniData[0].erasmusLink;
+document.getElementById('infoPanelSubcards').innerHTML = '';
 
-  document.getElementById('infoPanelMainCard').innerHTML = `
-    <div class="main-card-details">
-      <img src="${uniData.logo}" alt="${data.university}">
-      <h3>${data.university}</h3>
-    </div>
-    <div class="main-card-actions">
-      ${mainErasmusLink ? `<a href="${mainErasmusLink}" target="_blank" class="partner-cta erasmus">Erasmus Info</a>` : ''}
+uniData.forEach(item => {
+  if (!item) return;
+  const infoEnabled = item.programLink && item.programLink !== '#';
+  const applyEnabled = item.applyLink && item.applyLink !== '#';
+
+  const subcardHTML = `
+    <div class="subcard">
+      <div class="subcard-info">
+        <img src="${item.logo}" alt="">
+        <h4>${item.programName.replace(/\n/g, ' ')}</h4>
+      </div>
+      <div class="subcard-buttons">
+        <button class="partner-cta info" ${infoEnabled ? '' : 'disabled'} data-href="${infoEnabled ? item.programLink : ''}">University Info</button>
+        <button class="partner-cta apply" ${applyEnabled ? '' : 'disabled'} data-return="/members/home">Apply Now</button>
+      </div>
     </div>
   `;
+  document.getElementById('infoPanelSubcards').insertAdjacentHTML('beforeend', subcardHTML);
+});
 
-  document.getElementById('infoPanelSubcards').innerHTML = '';
-
-  uniData.forEach(item => {
-    if (!item) return;
-
-    const infoEnabled = item.programLink && item.programLink !== '#';
-    const applyEnabled = item.applyLink && item.applyLink !== '#';
-
-    const subcardHTML = `
-      <div class="subcard">
-        <div class="subcard-info">
-          <img src="${item.logo}" alt="">
-          <h4>${item.programName.replace(/\n/g, ' ')}</h4>
-        </div>
-        <div class="subcard-buttons">
-          <button class="partner-cta info" ${infoEnabled ? '' : 'disabled'} data-href="${infoEnabled ? item.programLink : ''}">University Info</button>
-          <button class="partner-cta apply" ${applyEnabled ? '' : 'disabled'} data-return="/members/home">Apply Now</button>
-        </div>
-      </div>
-    `;
-    document.getElementById('infoPanelSubcards').insertAdjacentHTML('beforeend', subcardHTML);
+const container = document.getElementById('infoPanelSubcards');
+container.querySelectorAll('.partner-cta.info').forEach(btn => {
+  btn.addEventListener('click', e => {
+    const href = e.currentTarget.getAttribute('data-href');
+    if (href) window.open(href, '_blank');
   });
-
-  const container = document.getElementById('infoPanelSubcards');
-
-  container.querySelectorAll('.partner-cta.info').forEach(btn => {
-    btn.addEventListener('click', e => {
-      const href = e.currentTarget.getAttribute('data-href');
-      if (href) window.open(href, '_blank');
-    });
+});
+container.querySelectorAll('.partner-cta.apply').forEach(btn => {
+  btn.addEventListener('click', e => {
+    window.top.location.href = 'https://www.globaleducarealliance.com/home?promptLogin=1';
   });
+});
 
-  container.querySelectorAll('.partner-cta.apply').forEach(btn => {
-    btn.addEventListener('click', e => {
-      const targetPath = e.currentTarget.getAttribute('data-return') || '/members/home';
-      const encoded = encodeURIComponent(targetPath);
-      window.location.assign(`/_members/login?returnUrl=${encoded}`);
-    });
-  });
-
-  document.getElementById('infoPanelOverlay').style.display = 'flex';
-  console.log('✅ Info panel displayed with both university and application links');
-  */
-}
+document.getElementById('infoPanelOverlay').style.display = 'flex';
+console.log('✅ Info panel displayed with both university and application links');
+*/
 
 function hideInfoPanel() {
   document.getElementById('infoPanelOverlay').style.display = 'none';
