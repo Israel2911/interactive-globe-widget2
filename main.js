@@ -2,17 +2,20 @@
 // NEW: Minimal Wix-managed login helpers (Option A)
 // =====
 function redirectToWix(returnPath) {
-  // You requested all roads go to Home after login
+  // Your Wix site base URL:
+  const wixBase = 'https://www.globaleducarealliance.com';
+  // Policy: return to Home unless a valid internal path is provided
   const target = (returnPath && returnPath.startsWith('/')) ? returnPath : '/home';
   const encoded = encodeURIComponent(target);
-  window.location.assign(`/_members/login?returnUrl=${encoded}`);
+  // IMPORTANT: Use absolute URL so the browser goes to the Wix domain, not the current origin
+  window.location.assign(`${wixBase}/_members/login?returnUrl=${encoded}`);
 }
 
 async function requireLoginAndGo(returnPath) {
   redirectToWix(returnPath);
-  // Prevent further execution after navigation
-  return new Promise(() => {});
+  return new Promise(() => {}); // halt further JS
 }
+
 
 // No-op placeholders replacing custom SSO usage in front-end
 async function isLoggedIn() { return false; }
