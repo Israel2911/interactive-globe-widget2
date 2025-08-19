@@ -2,7 +2,7 @@
 //            FINAL AND COMPLETE main.js SCRIPT (Corrected)
 // ====================================================================
 
-// --- 1. NEW HELPER FUNCTION ---
+// --- 1. ADD THIS HELPER FUNCTION ---
 async function checkUserIsAuthenticatedOnRender() {
     try {
         const response = await fetch('/api/auth/status', {
@@ -16,6 +16,7 @@ async function checkUserIsAuthenticatedOnRender() {
         return false;
     }
 }
+
 
 
 // ===
@@ -67,7 +68,7 @@ async function fetchAuthStatus() {
   }
 }
 
-// --- 2. REPLACED showInfoPanel function ---
+// --- 2. REPLACE THE showInfoPanel FUNCTION ---
 async function showInfoPanel(data) {
   if (!data || data.university === 'Unassigned') {
     return;
@@ -89,6 +90,7 @@ async function showInfoPanel(data) {
     }
   }
 }
+
 
 function hideInfoPanel() {
   document.getElementById('infoPanelOverlay').style.display = 'none';
@@ -583,54 +585,82 @@ function closeAllExploded() {
   if (isMalaysiaCubeExploded) toggleFunctionMap['Malaysia']();
 }
 
-// --- 3. REPLACED onCanvasMouseUp function ---
-async function onCanvasMouseUp(event) {
+// --- 3. REPLACE onCanvasMouseUp WITH YOUR CORRECTED ORIGINAL CODE ---
+async function onCanvasMouseUp(event) { // Added 'async' keyword here
   if (transformControls.dragging) return;
   const deltaX = Math.abs(event.clientX - mouseDownPos.x);
   const deltaY = Math.abs(event.clientY - mouseDownPos.y);
   if (deltaX > 5 || deltaY > 5) return;
   if (event.target.closest('.info-panel')) return;
+
   const canvasRect = renderer.domElement.getBoundingClientRect();
   mouse.x = ((event.clientX - canvasRect.left) / canvasRect.width) * 2 - 1;
   mouse.y = -((event.clientY - canvasRect.top) / canvasRect.height) * 2 + 1;
   raycaster.setFromCamera(mouse, camera);
+
   const allClickableObjects = [...Object.values(countryBlocks), ...neuronGroup.children];
   const intersects = raycaster.intersectObjects(allClickableObjects, true);
-  if (intersects.length === 0) {
-    closeAllExploded();
-    return;
-  }
+
+  if (intersects.length === 0) { closeAllExploded(); return; }
+  
   const clickedObject = intersects[0].object;
 
-  let clickedSubCubeLocal = null;
-  let parent = clickedObject;
-  while(parent) {
-      if (parent.userData && parent.userData.isSubCube) {
-          clickedSubCubeLocal = parent;
-          break;
-      }
-      if (parent.userData && parent.userData.neuralName) break;
-      parent = parent.parent;
-  }
-
-  if (clickedSubCubeLocal && clickedSubCubeLocal.userData.university !== "Unassigned") {
-    await showInfoPanel(clickedSubCubeLocal.userData);
-  } else if (clickedObject.userData.countryName) {
+  // COUNTRY BLOCK CLICKED — this logic is now restored
+  if (clickedObject.userData.countryName) {
     const countryName = clickedObject.userData.countryName;
     const correspondingNeuralCube = neuralCubeMap[countryName];
     const toggleFunc = toggleFunctionMap[countryName];
     if (correspondingNeuralCube && toggleFunc) {
-      const anyExploded = Object.values({isEuropeCubeExploded, isNewThailandCubeExploded, isCanadaCubeExploded, isUkCubeExploded, isUsaCubeExploded, isIndiaCubeExploded, isSingaporeCubeExploded, isMalaysiaCubeExploded}).some(state => state);
+      const explosionStateMap = {
+        'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded,
+        'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded,
+        'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded
+      };
+      const anyExploded = Object.values(explosionStateMap).some(state => state);
       closeAllExploded();
       if (typeof TWEEN !== 'undefined') {
         new TWEEN.Tween(correspondingNeuralCube.scale).to({ x: 1.5, y: 1.5, z: 1.5 }, 200).yoyo(true).repeat(1).start();
       }
       setTimeout(() => { toggleFunc(); }, anyExploded ? 810 : 400);
     }
-  } else {
-    closeAllExploded();
+    return;
+  }
+
+  // SUBCUBE or child clicked — this logic is now restored
+  let parent = clickedObject;
+  let neuralName = null;
+  let clickedSubCubeLocal = clickedObject.userData.isSubCube ? clickedObject : null;
+  while (parent) {
+    if (parent.userData.isSubCube) { clickedSubCubeLocal = parent; } // Ensure subcube is found
+    if (parent.userData.neuralName) { neuralName = parent.userData.neuralName; break; }
+    parent = parent.parent;
+  }
+  
+  const explosionStateMap = {
+    'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded,
+    'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded,
+    'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded
+  };
+
+  if (neuralName) {
+    const isExploded = explosionStateMap[neuralName];
+    const toggleFunc = toggleFunctionMap[neuralName];
+    if (isExploded && clickedSubCubeLocal && clickedSubCubeLocal.userData.university !== "Unassigned") {
+        
+      // THE ONLY CHANGE IS HERE: We now call the smart function directly.
+      await showInfoPanel(clickedSubCubeLocal.userData);
+
+    } else {
+      // Just explode/collapse
+      const anyExploded = Object.values(explosionStateMap).some(state => state);
+      closeAllExploded();
+      setTimeout(() => toggleFunc(), anyExploded ? 810 : 0);
+    }
+  } else { 
+    closeAllExploded(); 
   }
 }
+
 // Pan mode wrappers
 function onCanvasMouseDownPan(event) {
   mouseDownPos.set(event.clientX, event.clientY);
