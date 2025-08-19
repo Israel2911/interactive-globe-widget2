@@ -1,19 +1,17 @@
 // ====================================================================
 //            FINAL AND COMPLETE main.js SCRIPT (Corrected)
-// ====================================================================
-
 // --- 1. ADD THIS HELPER FUNCTION ---
 async function checkUserIsAuthenticatedOnRender() {
     try {
         const response = await fetch('/api/auth/status', {
-            credentials: 'include',
-            cache: 'no-store'
+            credentials: 'include', // Ensures cookies are sent with the request
+            cache: 'no-store'       // Prevents the browser from using an old result
         });
         const data = await response.json();
-        return data.isAuthenticated;
+        return data.isAuthenticated; // Will be true or false
     } catch (error) {
         console.error('Auth status check failed:', error);
-        return false;
+        return false; // Safely assume not logged in if the check fails
     }
 }
 
@@ -68,26 +66,17 @@ async function fetchAuthStatus() {
   }
 }
 
-// --- 2. REPLACE THE showInfoPanel FUNCTION ---
-async function showInfoPanel(data) {
+// --- 2. REPLACE your showInfoPanel function with this ---
+function showInfoPanel(data) {
+  // This function now only runs if the user is already confirmed to be authenticated.
   if (!data || data.university === 'Unassigned') {
     return;
   }
   
-  const isAuthenticated = await checkUserIsAuthenticatedOnRender();
-
-  if (isAuthenticated) {
-    if (data.programLink && data.programLink !== '#') {
-        window.open(data.programLink, '_blank');
-    } else if (data.applyLink && data.applyLink !== '#') {
-        window.open(data.applyLink, '_blank');
-    }
-  } else {
-    if (window.parent && typeof window.parent.handleSubcubeClick === 'function') {
-        window.parent.handleSubcubeClick(data);
-    } else {
-        window.open('https://www.globaleducarealliance.com/home?promptLogin=1', '_blank');
-    }
+  if (data.programLink && data.programLink !== '#') {
+    window.open(data.programLink, '_blank');
+  } else if (data.applyLink && data.applyLink !== '#') {
+    window.open(data.applyLink, '_blank');
   }
 }
 
@@ -585,8 +574,8 @@ function closeAllExploded() {
   if (isMalaysiaCubeExploded) toggleFunctionMap['Malaysia']();
 }
 
-// --- 3. REPLACE onCanvasMouseUp WITH YOUR CORRECTED ORIGINAL CODE ---
-async function onCanvasMouseUp(event) { // Added 'async' keyword here
+// --- 3. REPLACE onCanvasMouseUp WITH THIS CORRECTED VERSION ---
+async function onCanvasMouseUp(event) {
   if (transformControls.dragging) return;
   const deltaX = Math.abs(event.clientX - mouseDownPos.x);
   const deltaY = Math.abs(event.clientY - mouseDownPos.y);
@@ -605,7 +594,7 @@ async function onCanvasMouseUp(event) { // Added 'async' keyword here
   
   const clickedObject = intersects[0].object;
 
-  // COUNTRY BLOCK CLICKED — this logic is now restored
+  // This part of your original logic for exploding country blocks is preserved
   if (clickedObject.userData.countryName) {
     const countryName = clickedObject.userData.countryName;
     const correspondingNeuralCube = neuralCubeMap[countryName];
@@ -626,12 +615,12 @@ async function onCanvasMouseUp(event) { // Added 'async' keyword here
     return;
   }
 
-  // SUBCUBE or child clicked — this logic is now restored
+  // This part of your original logic for handling sub-cube clicks is preserved
   let parent = clickedObject;
   let neuralName = null;
   let clickedSubCubeLocal = clickedObject.userData.isSubCube ? clickedObject : null;
   while (parent) {
-    if (parent.userData.isSubCube) { clickedSubCubeLocal = parent; } // Ensure subcube is found
+    if (parent.userData.isSubCube) { clickedSubCubeLocal = parent; }
     if (parent.userData.neuralName) { neuralName = parent.userData.neuralName; break; }
     parent = parent.parent;
   }
@@ -647,11 +636,22 @@ async function onCanvasMouseUp(event) { // Added 'async' keyword here
     const toggleFunc = toggleFunctionMap[neuralName];
     if (isExploded && clickedSubCubeLocal && clickedSubCubeLocal.userData.university !== "Unassigned") {
         
-      // THE ONLY CHANGE IS HERE: We now call the smart function directly.
-      await showInfoPanel(clickedSubCubeLocal.userData);
+      // **THE ONLY CHANGE IS HERE: We check auth LIVE**
+      const isAuthenticated = await checkUserIsAuthenticatedOnRender();
+      if (isAuthenticated) {
+        // If they are logged in, call the simple display function
+        showInfoPanel(clickedSubCubeLocal.userData);
+      } else {
+        // If not logged in, trigger the Wix parent page to handle the login
+        if (window.parent && typeof window.parent.handleSubcubeClick === 'function') {
+            window.parent.handleSubcubeClick(clickedSubCubeLocal.userData);
+        } else {
+            window.open('https://www.globaleducarealliance.com/home?promptLogin=1', '_blank');
+        }
+      }
 
     } else {
-      // Just explode/collapse
+      // Logic for exploding/collapsing the cube is preserved
       const anyExploded = Object.values(explosionStateMap).some(state => state);
       closeAllExploded();
       setTimeout(() => toggleFunc(), anyExploded ? 810 : 0);
@@ -660,6 +660,7 @@ async function onCanvasMouseUp(event) { // Added 'async' keyword here
     closeAllExploded(); 
   }
 }
+
 
 // Pan mode wrappers
 function onCanvasMouseDownPan(event) {
