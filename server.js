@@ -5,8 +5,8 @@ const cookieParser = require('cookie-parser');
 const multer = require('multer');
 const url = require('url');
 const jwt = require('jsonwebtoken');
-const cors = require('cors');  // NEW: For Wix cross-origin requests
-const fs = require('fs');  // NEW: For reading secrets from Render Secret Files
+const cors = require('cors');
+const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -94,13 +94,15 @@ app.use((req, res, next) => {
 // NEW: Token Generation Endpoint (using Wix API key and account ID)
 // ===
 app.post('/api/generate-token', noCache, async (req, res) => {
+  console.log('Token generation endpoint hit with body:', req.body);  // Log incoming request
   const { email } = req.body; // Sent from Wix frontend (current user's email)
   if (!email) {
+    console.error('Missing email in request');
     return res.status(400).json({ error: 'Email required for token generation' });
   }
   try {
-    // Call Wix Members API to generate a session token (example endpoint)
-    const wixUrl = 'https://www.wixapis.com/members/v1/auth/session-tokens';  // Corrected based on Wix docs
+    // Corrected Wix Members API endpoint for session tokens
+    const wixUrl = 'https://www.wixapis.com/members/v1/auth/session-tokens';  // Corrected endpoint
     const response = await axios.post(wixUrl, { email }, {
       headers: {
         'Authorization': `Bearer ${wixApiKey}`,
@@ -235,4 +237,3 @@ app.get('/health', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Secure server running on port ${PORT}`);
 });
-
