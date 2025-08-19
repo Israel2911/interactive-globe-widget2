@@ -238,4 +238,4 @@ app.get('/health', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Secure server running on port ${PORT}`);
 });
-</query>
+
