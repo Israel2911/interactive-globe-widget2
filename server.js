@@ -7,21 +7,20 @@ const url = require('url');
 const jwt = require('jsonwebtoken');
 const app = express();
 const PORT = process.env.PORT || 3001;
-
 // ===
 // MIDDLEWARE SETUP
 // ===
 app.use(express.json());
 app.use(cookieParser());
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'a-new-super-strong-secret-for-sso',
+    secret: process.env.SESSION\_SECRET || 'a-new-super-strong-secret-for-sso',
     resave: false,
     saveUninitialized: true,
     cookie: {
-        secure: process.env.NODE_ENV === 'production',
+        secure: process.env.NODE\_ENV === 'production',
         httpOnly: true,
         sameSite: 'lax',
-        maxAge: 7 * 24 * 60 * 60 * 1000
+        maxAge: 7 \* 24 \* 60 \* 60 \* 1000
     }
 }));
 app.use(express.static('.', {
@@ -30,7 +29,6 @@ app.use(express.static('.', {
         res.setHeader('Cache-Control', 'no-cache');
     }
 }));
-
 // ===
 // NEW: Middleware to disable caching for specific routes
 // ===
@@ -43,18 +41,17 @@ const noCache = (req, res, next) => {
     });
     next();
 };
-
 // ===
 // SSO TOKEN CONSUMPTION MIDDLEWARE (Consumes mToken, verifies, sets session, cleans URL)
 // ===
-const SSO_SECRET = process.env.WIX_SSO_SECRET || 'REPLACE_WITH_STRONG_SECRET';
+const SSO\_SECRET = process.env.WIX\_SSO\_SECRET || 'REPLACE\_WITH\_STRONG\_SECRET';
 app.use((req, res, next) => {
   try {
     const parsed = url.parse(req.url, true);
     const token = parsed.query?.mToken;
     if (token) {
       try {
-        const decoded = jwt.verify(token, SSO_SECRET, {
+        const decoded = jwt.verify(token, SSO\_SECRET, {
           algorithms: ['HS256'],
           audience: 'gea-render',
           issuer: 'gea-wix'
@@ -63,7 +60,7 @@ app.use((req, res, next) => {
         req.session.wixUserId = decoded.sub;
         req.session.userEmail = decoded.email || null;
         req.session.userName = decoded.name || null;
-        req.session.authMethod = 'wix_sso';
+        req.session.authMethod = 'wix\_sso';
         console.log(`SSO session set for ${req.session.userEmail || req.session.wixUserId}`);
       } catch (e) {
         console.error('JWT verify failed:', e.message);
@@ -79,44 +76,19 @@ app.use((req, res, next) => {
     next();
   }
 });
-
 // ===
 // DATA ARRAYS
 // ===
-const europeContent = [ { university: "University of Passau", logo: "https://static.wixstatic.com/shapes/d77f36_467b1d2eed4042eab43fdff25124915b.svg", erasmusLink: "https://www.uni-passau.de/en/incoming-exchange-students", programName: "Degree-Seeking", programLink: "https://www.uni-passau.de/en/international/coming-to-passau/coming-to-passau-as-degree-seeking-student", applyLink: "https://www.globaleducarealliance.com/6?partner=Passau", researchLink: "https://www.uni-passau.de/en/international/going-abroad/research-and-teaching-sta" }, { university: "University of Passau", logo: "https://static.wixstatic.com/shapes/d77f36_467b1d2eed4042eab43fdff25124915b.svg", erasmusLink: "https://www.uni-passau.de/en/incoming-exchange-students", programName: "Exchange", programLink: "https://www.uni-passau.de/en/incoming-exchange-students", applyLink: "https://www.globaleducarealliance.com/6?partner=Passau", researchLink: "https://www.uni-passau.de/en/international/going-abroad/research-and-teaching-sta" }, null, null, { university: "ICES", logo: "https://static.wixstatic.com/media/d77f36_c11cec0bd94f4ab7a1b611cecb9e90cb~mv2.png", erasmusLink: "https://ices.fr/linternational/erasmus/", programName: "Full Degree", programLink: "https://ices-university.com/studies/", applyLink: "https://www.globaleducarealliance.com/6?partner=ICES" }, { university: "ICES", logo: "https://static.wixstatic.com/media/d77f36_c11cec0bd94f4ab7a1b611cecb9e90cb~mv2.png", erasmusLink: "https://ices.fr/linternational/erasmus/", programName: "Mobility", programLink: "https://ices-university.com/mobility/incoming/", applyLink: "https://www.globaleducarealliance.com/6?partner=ICES" }, null, null, { university: "Université Catholique de Lille", logo: "https://static.wixstatic.com/media/d77f36_009f964ce876419f9391e6a604f9257c~mv2.png", erasmusLink: "https://www.univ-catholille.fr/en/exchange-programs-academic-calendars", programName: "Exchange", programLink: "https://www.univ-catholille.fr/en/exchange-programs-academic-calendars", applyLink: "https://www.globaleducarealliance.com/6?partner=Lille", researchLink: "https://www.univ-catholille.fr/en/research-presentation/" }, { university: "Université Catholique de Lille", logo: "https://static.wixstatic.com/media/d77f36_009f964ce876419f9391e6a604f9257c~mv2.png", erasmusLink: "https://www.univ-catholille.fr/en/exchange-programs-academic-calendars", programName: "Summer Program", programLink: "https://www.univ-catholille.fr/en/lille-programs/lille-european-summer-program/", applyLink: "https://www.globaleducarealliance.com/6?partner=Lille", researchLink: "https://www.univ-catholille.fr/en/research-presentation/" }, null, null, { university: "IRCOM", logo: "https://static.wixstatic.com/media/d77f36_592f23b64ee44211abcb87444198e26a~mv2.jpg", erasmusLink: "https://www.ircom.fr/partir/", programName: "Master\nHumanitarian", programLink: "https://www.ircom.fr/formations/master-humanitaire/", applyLink: "https://www.globaleducarealliance.com/6?partner=IRCOM", researchLink: "https://www.ircom.fr/laborem/" }, { university: "IRCOM", logo: "https://static.wixstatic.com/media/d77f36_592f23b64ee44211abcb87444198e26a~mv2.jpg", erasmusLink: "https://www.ircom.fr/partir/", programName: "Mobility", programLink: "https://www.ircom.fr/partir/", applyLink: "https://www.globaleducarealliance.com/6?partner=IRCOM", researchLink: "https://www.ircom.fr/laborem/" }, null, null, { university: "KATHO-NRW", logo: "https://static.wixstatic.com/shapes/d77f36_b6a110be4758449f8537733a427f2dba.svg", erasmusLink: "https://katho-nrw.de/en/international/erasmus", programName: "Int'l Studies", programLink: "https://katho-nrw.de/en/international/international-studies", applyLink: "https://www.globaleducarealliance.com/6?partner=KATHO-NRW", researchLink: "https://katho-nrw.de/en/international/international-research" }, { university: "KATHO-NRW", logo: "https://static.wixstatic.com/shapes/d77f36_b6a110be4758449f8537733a427f2dba.svg", erasmusLink: "https://katho-nrw.de/en/international/erasmus", programName: "Study Abroad", programLink: "https://katho-nrw.de/en/international/international-studies/students-at-the-catholic-university-of-applied-sciences-studying-abroad", applyLink: "https://www.globaleducarealliance.com/6?partner=KATHO-NRW", researchLink: "https://www.univ-catholille.fr/en/research-presentation/" }, null, null, { university: "TSI", logo: "https://static.wixstatic.com/media/d77f36_1992247272bb4d55a3cac5060abec418~mv2.jpeg", erasmusLink: "https://tsi.lv/future-students/international/", programName: "Int'l Students", programLink: "https://tsi.lv/future-students/international/", applyLink: "https://www.globaleducarealliance.com/6?partner=TSI" }, { university: "TSI", logo: "https://static.wixstatic.com/media/d77f36_1992247272bb4d55a3cac5060abec418~mv2.jpeg", erasmusLink: "https://tsi.lv/future-students/international/", programName: "Innovation", programLink: "https://tsi.lv/research/innovation-knowledge-transfer/", applyLink: "https://www.globaleducarealliance.com/6?partner=TSI" }, null, null, { university: "INSEEC", logo: "https://static.wixstatic.com/media/d77f36_66d4c88c4ebb4b7da6cacaed57178165~mv2.webp", erasmusLink: "https://www.inseec.com/en/erasmus/", programName: "Exchanges", programLink: "https://www.inseec.com/en/academic-exchanges/", applyLink: "https://www.globaleducarealliance.com/6?partner=INSEEC" }, null, null];
-
-// ===
-// NEW: Token Generation Endpoint (consolidated on Render)
-// ===
-app.post('/api/generate-token', noCache, async (req, res) => {
-  const { email } = req.body; // Sent from Wix frontend (current user's email)
-
-  if (!email) {
-    return res.status(400).json({ error: 'Email required for token generation' });
-  }
-
-  try {
-    // Optional: Verify with Wix if needed (e.g., check if email is valid member)
-    // const wixVerifyUrl = 'https://www.globaleducarealliance.com/_functions/verifyMember'; // If you have this
-    // await axios.post(wixVerifyUrl, { email });
-
-    const payload = {
-      sub: 'user-id-placeholder', // Replace with actual user ID from Wix if sent
-      email: email,
-      iss: 'gea-render', // Updated issuer to Render
-      aud: 'gea-globe',
-      exp: Math.floor(Date.now() / 1000) + (60 * 5) // Expires in 5 minutes
-    };
-
-    const token = jwt.sign(payload, SSO_SECRET, { algorithm: 'HS256' });
-
-    return res.json({ token });
-  } catch (error) {
-    console.error('Token generation error:', error.message);
-    return res.status(500).json({ error: 'Failed to generate token' });
-  }
-});
-
+const europeContent = [ { university: "University of Passau", logo: "https://static.wixstatic.com/shapes/d77f36\_467b1d2eed4042eab43fdff25124915b.svg", erasmusLink: "https://www.uni-passau.de/en/incoming-exchange-students", programName: "Degree-Seeking", programLink: "https://www.uni-passau.de/en/international/coming-to-passau/coming-to-passau-as-degree-seeking-student", applyLink: "https://www.globaleducarealliance.com/6?partner=Passau", researchLink: "https://www.uni-passau.de/en/international/going-abroad/research-and-teaching-sta" }, { university: "University of Passau", logo: "https://static.wixstatic.com/shapes/d77f36\_467b1d2eed4042eab43fdff25124915b.svg", erasmusLink: "https://www.uni-passau.de/en/incoming-exchange-students", programName: "Exchange", programLink: "https://www.uni-passau.de/en/incoming-exchange-students", applyLink: "https://www.globaleducarealliance.com/6?partner=Passau", researchLink: "https://www.uni-passau.de/en/international/going-abroad/research-and-teaching-sta" }, null, null, { university: "ICES", logo: "https://static.wixstatic.com/media/d77f36\_c11cec0bd94f4ab7a1b611cecb9e90cb\~mv2.png", erasmusLink: "https://ices.fr/linternational/erasmus/", programName: "Full Degree", programLink: "https://ices-university.com/studies/", applyLink: "https://www.globaleducarealliance.com/6?partner=ICES" }, { university: "ICES", logo: "https://static.wixstatic.com/media/d77f36\_c11cec0bd94f4ab7a1b611cecb9e90cb\~mv2.png", erasmusLink: "https://ices.fr/linternational/erasmus/", programName: "Mobility", programLink: "https://ices-university.com/mobility/incoming/", applyLink: "https://www.globaleducarealliance.com/6?partner=ICES" }, null, null, { university: "Université Catholique de Lille", logo: "https://static.wixstatic.com/media/d77f36\_009f964ce876419f9391e6a604f9257c\~mv2.png", erasmusLink: "https://www.univ-catholille.fr/en/exchange-programs-academic-calendars", programName: "Exchange", programLink: "https://www.univ-catholille.fr/en/exchange-programs-academic-calendars", applyLink: "https://www.globaleducarealliance.com/6?partner=Lille", researchLink: "https://www.univ-catholille.fr/en/research-presentation/" }, { university: "Université Catholique de Lille", logo: "https://static.wixstatic.com/media/d77f36\_009f964ce876419f9391e6a604f9257c\~mv2.png", erasmusLink: "https://www.univ-catholille.fr/en/exchange-programs-academic-calendars", programName: "Summer Program", programLink: "https://www.univ-catholille.fr/en/lille-programs/lille-european-summer-program/", applyLink: "https://www.globaleducarealliance.com/6?partner=Lille", researchLink: "https://www.univ-catholille.fr/en/research-presentation/" }, null, null, { university: "IRCOM", logo: "https://static.wixstatic.com/media/d77f36\_592f23b64ee44211abcb87444198e26a\~mv2.jpg", erasmusLink: "https://www.ircom.fr/partir/", programName: "Master\\nHumanitarian", programLink: "https://www.ircom.fr/formations/master-humanitaire/", applyLink: "https://www.globaleducarealliance.com/6?partner=IRCOM", researchLink: "https://www.ircom.fr/laborem/" }, { university: "IRCOM", logo: "https://static.wixstatic.com/media/d77f36\_592f23b64ee44211abcb87444198e26a\~mv2.jpg", erasmusLink: "https://www.ircom.fr/partir/", programName: "Mobility", programLink: "https://www.ircom.fr/partir/", applyLink: "https://www.globaleducarealliance.com/6?partner=IRCOM", researchLink: "https://www.ircom.fr/laborem/" }, null, null, { university: "KATHO-NRW", logo: "https://static.wixstatic.com/shapes/d77f36\_b6a110be4758449f8537733a427f2dba.svg", erasmusLink: "https://katho-nrw.de/en/international/erasmus", programName: "Int'l Studies", programLink: "https://katho-nrw.de/en/international/international-studies", applyLink: "https://www.globaleducarealliance.com/6?partner=KATHO-NRW", researchLink: "https://katho-nrw.de/en/international/international-research" }, { university: "KATHO-NRW", logo: "https://static.wixstatic.com/shapes/d77f36\_b6a110be4758449f8537733a427f2dba.svg", erasmusLink: "https://katho-nrw.de/en/international/erasmus", programName: "Study Abroad", programLink: "https://katho-nrw.de/en/international/international-studies/students-at-the-catholic-university-of-applied-sciences-studying-abroad", applyLink: "https://www.globaleducarealliance.com/6?partner=KATHO-NRW", researchLink: "https://www.univ-catholille.fr/en/research-presentation/" }, null, null, { university: "TSI", logo: "https://static.wixstatic.com/media/d77f36\_1992247272bb4d55a3cac5060abec418\~mv2.jpeg", erasmusLink: "https://tsi.lv/future-students/international/", programName: "Int'l Students", programLink: "https://tsi.lv/future-students/international/", applyLink: "https://www.globaleducarealliance.com/6?partner=TSI" }, { university: "TSI", logo: "https://static.wixstatic.com/media/d77f36\_1992247272bb4d55a3cac5060abec418\~mv2.jpeg", erasmusLink: "https://tsi.lv/future-students/international/", programName: "Innovation", programLink: "https://tsi.lv/research/innovation-knowledge-transfer/", applyLink: "https://www.globaleducarealliance.com/6?partner=TSI" }, null, null, { university: "INSEEC", logo: "https://static.wixstatic.com/media/d77f36\_66d4c88c4ebb4b7da6cacaed57178165\~mv2.webp", erasmusLink: "https://www.inseec.com/en/erasmus/", programName: "Exchanges", programLink: "https://www.inseec.com/en/academic-exchanges/", applyLink: "https://www.globaleducarealliance.com/6?partner=INSEEC" }, null, null];
+const newThailandContent = [ { university: "Assumption University", logo: "https://static.wixstatic.com/media/d77f36\_7dd03d8eefa54bc8a73c18f0a7f35230\~mv2.png", programName: "Undergraduate Business (BBA)", programLink: "https://simba.au.edu/", applyLink: "https://www.globaleducarealliance.com/blank-9?partner=AssumptionUniversity" }, { university: "Assumption University", logo: "https://static.wixstatic.com/media/d77f36\_7dd03d8eefa54bc8a73c18f0a7f35230\~mv2.png", programName: "Master of Business Administration (MBA)", programLink: "https://simba.au.edu/", applyLink: "https://www.globaleducarealliance.com/blank-9?partner=AssumptionUniversity" }, { university: "Assumption University", logo: "https://static.wixstatic.com/media/d77f36\_7dd03d8eefa54bc8a73c18f0a7f35230\~mv2.png", programName: "Study Abroad / Exchange", programLink: "https://oia.au.edu/comingtoau", applyLink: "https://www.globaleducarealliance.com/blank-9?partner=AssumptionUniversity" }, { university: "Bangkok University", logo: "https://static.wixstatic.com/media/d77f36\_5d91110e0e094c799bb3647dbcbaa590\~mv2.jpg", programName: "Innovative Media Production", programLink: "https://www.bu.ac.th/en/international-programs/innovative-media-production", applyLink: "https://www.globaleducarealliance.com/blank-9?partner=BangkokUniversity" }, { university: "Bangkok University", logo: "https://static.wixstatic.com/media/d77f36\_5d91110e0e094c799bb3647dbcbaa590\~mv2.jpg", programName: "Media & Communication", programLink: "https://www.bu.ac.th/en/international-programs/media-communication", applyLink: "https://www.globaleducarealliance.com/blank-9?partner=BangkokUniversity" }, { university: "Bangkok University", logo: "https://static.wixstatic.com/media/d77f36\_5d91110e0e094c799bb3647dbcbaa590\~mv2.jpg", programName: "Innovation Management (MBA)", programLink: "https://www.bu.ac.th/en/international-programs/mba-i", applyLink: "https://www.globaleducarealliance.com/blank-9?partner=BangkokUniversity" }, { university: "Siam University", logo: "https://static.wixstatic.com/media/d77f36\_69fce6d5825e467a88fc02a01b416cf7\~mv2.png", programName: "Bachelor of Business Admin. (BBA)", programLink: "https://inter.siam.edu/international-business-administration/", applyLink: "https://www.globaleducarealliance.com/blank-9?partner=SiamUniversity" }, { university: "Siam University", logo: "https://static.wixstatic.com/media/d77f36\_69fce6d5825e467a88fc02a01b416cf7\~mv2.png", programName: "Master of Business Admin. (MBA)", programLink: "https://inter.siam.edu/international-masters-in-business-administration/", applyLink: "https://www.globaleducarealliance.com/blank-9?partner=SiamUniversity" }, { university: "Siam University", logo: "https://static.wixstatic.com/media/d77f36\_69fce6d5825e467a88fc02a01b416cf7\~mv2.png", programName: "Semester Abroad / Exchange", programLink: "https://inter.siam.edu/international-masters-in-business-administration/", applyLink: "https://www.globaleducarealliance.com/blank-9?partner=SiamUniversity" }, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null];
+const canadaContent = [ { university: "Trinity Western University", logo: "https://static.wixstatic.com/media/d77f36\_b14379dfcff54ffcad6ed7b604debd6f\~mv2.png", programName: "BSN", programLink: "https://www.twu.ca/academics/school-nursing/nursing-bsn", applyLink: "https://www.globaleducarealliance.com/blank-8?partner=TWU" }, { university: "Trinity Western University", logo: "https://static.wixstatic.com/media/d77f36\_b14379dfcff54ffcad6ed7b604debd6f\~mv2.png", programName: "MSN", programLink: "https://www.twu.ca/academics/school-nursing/nursing-msn", applyLink: "https://www.globaleducarealliance.com/blank-8?partner=TWU" }, { university: "Trinity Western University", logo: "https://static.wixstatic.com/media/d77f36\_b14379dfcff54ffcad6ed7b604debd6f\~mv2.png", programName: "Biotechnology", programLink: "https://www.twu.ca/academics/faculty-natural-applied-sciences/biotechnology", applyLink: "https://www.globaleducarealliance.com/blank-8?partner=TWU" }, { university: "Trinity Western University", logo: "https://static.wixstatic.com/media/d77f36\_b14379dfcff54ffcad6ed7b604debd6f\~mv2.png", programName: "Computing Science", programLink: "https://www.twu.ca/academics/faculty-natural-applied-sciences/computing-science", applyLink: "https://www.globaleducarealliance.com/blank-8?partner=TWU" }, { university: "Trinity Western University", logo: "https://static.wixstatic.com/media/d77f36\_b14379dfcff54ffcad6ed7b604debd6f\~mv2.png", programName: "MA in Leadership", programLink: "https://www.twu.ca/academics/graduate-studies/leadership-ma", applyLink: "https://www.globaleducarealliance.com/blank-8?partner=TWU" }, { university: "Trinity Western University", logo: "https://static.wixstatic.com/media/d77f36\_b14379dfcff54ffcad6ed7b604debd6f\~mv2.png", programName: "MBA", programLink: "https://www.twu.ca/academics/school-business/master-business-administration", applyLink: "https://www.globaleducarealliance.com/blank-8?partner=TWU" }, { university: "Trinity Western University", logo: "https://static.wixstatic.com/media/d77f36\_b14379dfcff54ffcad6ed7b604debd6f\~mv2.png", programName: "BBA", programLink: "https://www.twu.ca/academics/school-business/bachelor-business-administration", applyLink: "https://www.globaleducarealliance.com/blank-8?partner=TWU" }, { university: "Wawiwa Tech Training", logo: "https://static.wixstatic.com/media/d77f36\_0d83ad97a7e54b2db3f0eb089dbcec1f\~mv2.webp", programName: "Cyber Security", programLink: "#", applyLink: "/login" }, { university: "Wawiwa Tech Training", logo: "https://static.wixstatic.com/media/d77f36\_0d83ad97a7e54b2db3f0eb089dbcec1f\~mv2.webp", programName: "Data Analytics", programLink: "#", applyLink: "/login" }, { university: "Wawiwa Tech Training", logo: "https://static.wixstatic.com/media/d77f36\_0d83ad97a7e54b2db3f0eb089dbcec1f\~mv2.webp", programName: "Full Stack Dev", programLink: "#", applyLink: "/login" }, { university: "Wawiwa Tech Training", logo: "https://static.wixstatic.com/media/d77f36\_0d83ad97a7e54b2db3f0eb089dbcec1f\~mv2.webp", programName: "UX/UI Design", programLink: "#", applyLink: "/login" }, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null];
+const ukContent = [ { university: "Cardiff University", logo: "https://static.wixstatic.com/media/d77f36\_b277c95008c942e6877fff8631e8bc3a\~mv2.avif", programName: "Business & Management", programLink: "https://www.cardiff.ac.uk/study/postgraduate/taught/courses", applyLink: "https://www.globaleducarealliance.com/6?partner=Cardiff" }, { university: "Cardiff University", logo: "https://static.wixstatic.com/media/d77f36\_b277c95008c942e6877fff8631e8bc3a\~mv2.avif", programName: "Healthcare & Nursing", programLink: "https://www.cardiff.ac.uk/study/postgraduate/taught/courses", applyLink: "https://www.globaleducarealliance.com/6?partner=Cardiff" }, { university: "Cardiff University", logo: "https://static.wixstatic.com/media/d77f36\_b277c95008c942e6877fff8631e8bc3a\~mv2.avif", programName: "Public Policy", programLink: "https://www.cardiff.ac.uk/study/postgraduate/taught/courses", applyLink: "https://www.globaleducarealliance.com/6?partner=Cardiff" }, { university: "Liverpool Hope University", logo: "https://static.wixstatic.com/media/d77f36\_a723456d47c74ab5a85d81c4e7030ff7\~mv2.jpg", programName: "Education", programLink: "https://www.hope.ac.uk/postgraduate/postgraduatecourses/", applyLink: "https://www.globaleducarealliance.com/6?partner=LiverpoolHope" }, { university: "Liverpool Hope University", logo: "https://static.wixstatic.com/media/d77f36\_a723456d47c74ab5a85d81c4e7030ff7\~mv2.jpg", programName: "Business", programLink: "https://www.hope.ac.uk/postgraduate/postgraduatecourses/", applyLink: "https://www.globaleducarealliance.com/6?partner=LiverpoolHope" }, { university: "Nottingham Trent University", logo: "https://static.wixstatic.com/media/d77f36\_86cb424c04934227905daf03395fc3b1\~mv2.png", programName: "Global\\nPartnerships", programLink: "https://www.ntu.ac.uk/", applyLink: "https://www.globaleducarealliance.com/6?partner=NTU" }, { university: "University of Exeter", logo: "https://static.wixstatic.com/shapes/d77f36\_ae3db739ffe74de88cd658a3878c5c9c.svg", programName: "Medicine", programLink: "https://www.exeter.ac.uk/undergraduate/courses/medicine/", applyLink: "https://www.globaleducarealliance.com/6?partner=Exeter" }, { university: "University of Exeter", logo: "https://static.wixstatic.com/shapes/d77f36\_ae3db739ffe74de88cd658a3878c5c9c.svg", programName: "Law", programLink: "https://www.exeter.ac.uk/undergraduate/courses/law/", applyLink: "https://www.globaleducarealliance.com/6?partner=Exeter" }, { university: "UK Students Abroad", logo: "https://static.wixstatic.com/media/d77f36\_0be7efbfceee4b359a597935c2851fd3\~mv2.jpg", programName: "Study in SG", programLink: "https://www.globaleducarealliance.com/blank-16", applyLink: "https://www.globaleducarealliance.com/blank-26" }, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null];
+const usaContent = [ { university: "John Cabot University", logo: "https://static.wixstatic.com/media/d77f36\_4711ccd9b626480b929186e41e64ee28\~mv2.png", programName: "Degree\\nPrograms", programLink: "https://www.jcu.edu/program-finder", applyLink: "https://www.globaleducarealliance.com/6?partner=JohnCabotUniversity" }, { university: "John Cabot University", logo: "https://static.wixstatic.com/media/d77f36\_4711ccd9b626480b929186e41e64ee28\~mv2.png", programName: "Study Abroad", programLink: "https://www.jcu.edu/academics/global-experiences", applyLink: "https://www.globaleducarealliance.com/6?partner=JohnCabotUniversity" }, { university: "St. Mary's University", logo: "https://static.wixstatic.com/media/d77f36\_8fda624fd9634997a589119b22051ac8\~mv2.png", programName: "STEM\\nPrograms", programLink: "https://www.stmarytx.edu/academics/programs/computer-science/", applyLink: "https://www.globaleducarealliance.com/6?partner=StMarysUniversity" }, { university: "St. Mary's University", logo: "https://static.wixstatic.com/media/d77f36\_8fda624fd9634997a589119b22051ac8\~mv2.png", programName: "Int'l Services", programLink: "https://www.stmarytx.edu/campuslife/international/", applyLink: "https://www.globaleducarealliance.com/6?partner=StMarysUniversity" }, { university: "California Baptist University", logo: "https://static.wixstatic.com/shapes/d77f36\_efa51305eeef47e2b02a13e35d17e251.svg", programName: "STEM\\nDegrees", programLink: "https://calbaptist.edu/admissions-aid/international/stem", applyLink: "https://www.globaleducarealliance.com/6?partner=CaliforniaBaptistUniversity" }, { university: "California Baptist University", logo: "https://static.wixstatic.com/shapes/d77f36\_efa51305eeef47e2b02a13e35d17e251.svg", programName: "Int'l Exchange", programLink: "https://calbaptist.edu/admissions-aid/international/international-programs/", applyLink: "https://www.globaleducarealliance.com/6?partner=CaliforniaBaptistUniversity" }, { university: "LeTourneau University", logo: "https://static.wixstatic.com/media/d77f36\_2f89b58cab8349eabfafae4ee16e68a2\~mv2.png", programName: "Aviation", programLink: "https://www.letu.edu/academics/aviation/index.html", applyLink: "https://www.globaleducarealliance.com/6?partner=LeTourneauUniversity" }, { university: "LeTourneau University", logo: "https://static.wixstatic.com/media/d77f36\_2f89b58cab8349eabfafae4ee16e68a2\~mv2.png", programName: "Engineering", programLink: "https://www.letu.edu/academics/engineering/index.html", applyLink: "https://www.globaleducarealliance.com/6?partner=LeTourneauUniversity" }, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null];
+const indiaContent = [ { university: "Asia College of Journalism", logo: "https://static.wixstatic.com/media/d77f36\_2cd674a2255f4d3f83d8b00721d6f477\~mv2.png", programName: "Journalism", programLink: "https://www.asianmedia.org.in/bloomberg/", applyLink: "https://www.globaleducarealliance.com/6?partner=ACJ" }, { university: "Women's Christian College", logo: "https://static.wixstatic.com/media/d77f36\_2c637647ae7145749c1a7d3f74ec6f2e\~mv2.jpg", programName: "Academic\\nPrograms", programLink: "https://wcc.edu.in/programmes-offered/", applyLink: "https://www.globaleducarealliance.com/6?partner=WCC" }, { university: "Stella Maris College", logo: "https://static.wixstatic.com/media/d77f36\_e7d55cc621e54077b0205581f5323175\~mv2.png", programName: "PG Prospectus", programLink: "https://stellamariscollege.edu.in/assets/documents/StellaMarisCollegeProspectus-PG\_2025-2026.pdf", applyLink: "https://www.globaleducarealliance.com/6?partner=StellaMaris" }, { university: "Stella Maris College", logo: "https://static.wixstatic.com/media/d77f36\_e7d55cc621e54077b0205581f5323175\~mv2.png", programName: "Exchange", programLink: "https://networkdemo.in/educationwp/", applyLink: "https://www.globaleducarealliance.com/6?partner=StellaMaris" }, { university: "Symbiosis International University", logo: "https://static.wixstatic.com/media/d77f36\_f89cf22ecc514a78b0dd8b34c656d4d9\~mv2.png", programName: "Int'l\\nAdmissions", programLink: "https://scie.ac.in/", applyLink: "https://www.globaleducarealliance.com/6?partner=Symbiosis" }, { university: "Fergusson College", logo: "https://static.wixstatic.com/media/d77f36\_60066c9c2c0242d39e0107a2f25eb185\~mv2.png", programName: "Nursing", programLink: "https://desnursingcollege.edu.in/index.php", applyLink: "https://www.globaleducarealliance.com/6?partner=Fergusson" }, { university: "Bishop Heber College", logo: "https://static.wixstatic.com/media/d77f36\_21e0208f1bc248e5953eff9a0410bad8\~mv2.jpeg", programName: "Int'l\\nAdmissions", programLink: "https://bhc.edu.in/bhc/int\_admisssion.php", applyLink: "https://www.globaleducarealliance.com/6?partner=BishopHeber" }, { university: "St. Stephen's College", logo: "https://static.wixstatic.com/media/d77f36\_e4e8e1e417874b01b46adf1aadc894be\~mv2.png", programName: "Courses\\nOffered", programLink: "https://www.ststephens.edu/courses-offered/", applyLink: "https://www.globaleducarealliance.com/6?partner=StStephens" }, { university: "Christ University", logo: "https://static.wixstatic.com/media/d77f36\_88239521c71f4ad8bcb8e986e7b14ac7\~mv2.webp", programName: "Int'l\\nAdmissions", programLink: "https://christuniversity.in/international-student-category", applyLink: "https://www.globaleducarealliance.com/6?partner=ChristUniversity" }, { university: "Christ University", logo: "https://static.wixstatic.com/media/d77f36\_88239521c71f4ad8bcb8e986e7b14ac7\~mv2.webp", programName: "Study Abroad", programLink: "https://christuniversity.in/international-relations", applyLink: "https://www.globaleducarealliance.com/6?partner=ChristUniversity" }, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null];
+const singaporeContent = [ { university: "NUS", logo: "https://static.wixstatic.com/media/d77f36\_80b489ce45dd4d2494ec43dce3d88a7b\~mv2.jpg", programName: "Business\\nSchool", programLink: "https://bschool.nus.edu.sg/", applyLink: "https://www.globaleducarealliance.com/6?partner=NUS" }, { university: "NUS", logo: "https://static.wixstatic.com/media/d77f36\_80b489ce45dd4d2494ec43dce3d88a7b\~mv2.jpg", programName: "Nursing &\\nMedicine", programLink: "https://medicine.nus.edu.sg/our-programmes/", applyLink: "https://www.globaleducarealliance.com/6?partner=NUS" }, { university: "NUS", logo: "https://static.wixstatic.com/media/d77f36\_80b489ce45dd4d2494ec43dce3d88a7b\~mv2.jpg", programName: "Public Policy", programLink: "https://lkyspp.nus.edu.sg/", applyLink: "https://www.globaleducarealliance.com/6?partner=NUS" }, { university: "SIM", logo: "https://static.wixstatic.com/media/d77f36\_f2d0805ccb934e8da2019aaf23b16e6f\~mv2.avif", programName: "IT &\\nCompSci", programLink: "https://www.sim.edu.sg/degrees-diplomas/programmes/disciplines/it-computer-science", applyLink: "https://www.globaleducarealliance.com/6?partner=SIM" }, { university: "SIM", logo: "https://static.wixstatic.com/media/d77f36\_f2d0805ccb934e8da2019aaf23b16e6f\~mv2.avif", programName: "Nursing", programLink: "https://www.sim.edu.sg/degrees-diplomas/programmes/disciplines/nursing", applyLink: "https://www.globaleducarealliance.com/6?partner=SIM" }, { university: "Nanyang Institute of Management", logo: "https://static.wixstatic.com/media/d77f36\_e219748ff80a417ea92e264199b7dfe3\~mv2.png", programName: "Business", programLink: "https://nanyang.edu.sg/course/school-of-business/", applyLink: "https://www.globaleducarealliance.com/6?partner=NIM" }, { university: "Nanyang Institute of Management", logo: "https://static.wixstatic.com/media/d77f36\_e219748ff80a417ea92e264199b7dfe3\~mv2.png", programName: "Hospitality", programLink: "https://nanyang.edu.sg/course/school-of-business/", applyLink: "https://www.globaleducarealliance.com/6?partner=NIM" }, { university: "Nanyang Institute of Management", logo: "https://static.wixstatic.com/media/d77f36\_e219748ff80a417ea92e264199b7dfe3\~mv2.png", programName: "Digital Media\\nDiploma", programLink: "https://nanyang.edu.sg/courses/advanced-diploma-in-digital-media-design-and-communication/", applyLink: "https://www.globaleducarealliance.com/6?partner=NIM" }, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null];
+const malaysiaContent = [ { university: "Limkokwing University", logo: "https://static.wixstatic.com/media/d77f36\_38c855c3d47448009fc7123812183cc0\~mv2.png", programName: "Creative\\nTech", programLink: "https://www.limkokwing.net/malaysia/academic/courses", applyLink: "https://www.globaleducarealliance.com/6?partner=Limkokwing" }, { university: "Binary University", logo: "https://static.wixstatic.com/media/d77f36\_38969a51e38148f294cade091aa0cbd8\~mv2.png", programName: "MyBIG Grant", programLink: "https://binary.edu.my/big\_main/", applyLink: "https://www.globaleducarealliance.com/6?partner=Binary" }, { university: "Study in Malaysia Guide", logo: "https://static.wixstatic.com/media/d77f36\_e6a24c71b7a14548beca3dafbb8e797b\~mv2.jpg", programName: "Student\\nGuide", programLink: "#", applyLink: "#" }, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null];
+const countryPrograms = { "India": ["UG", "PG", "Mobility", "Research"], "Europe": ["UG", "PG", "Mobility", "Language", "Research"], "UK": ["UG", "PG", "Mobility"], "Singapore": ["UG", "PG", "Mobility", "Upskilling", "Diploma"], "Malaysia": ["UG", "PG", "Diploma", "Mobility"], "Canada": ["UG", "PG", "Diploma", "Mobility", "Upskilling"], "Thailand": ["UG", "PG", "Diploma", "Mobility"], "USA": ["UG", "PG", "Mobility"] };
+const countryConfigs = [{"name": "India", "lat": 22, "lon": 78, "color": 0xFF9933}, {"name": "Europe", "lat": 48.8566, "lon": 2.3522, "color": 0x0000FF}, {"name": "UK", "lat": 53, "lon": -0.1276, "color": 0x191970}, {"name": "Singapore", "lat": 1.35, "lon": 103.8, "color": 0xff0000}, {"name": "Malaysia", "lat": 4, "lon": 102, "color": 0x0000ff}, {"name": "Thailand", "lat": 13.7563, "lon": 100.5018, "color": 0xffcc00}, {"name": "Canada", "lat": 56.1304, "lon": -106.3468, "color": 0xff0000}, {"name": "USA", "lat": 39.8283, "lon": -98.5795, "color": 0x003366}];
 // ===
 // AUTHENTICATION ENDPOINTS (SSO FLOW)
 // ===
@@ -181,7 +153,7 @@ app.get('/api/student/profile', requireAuth, (req, res) => {
 });
 const upload = multer({ 
     dest: 'uploads/',
-    limits: { fileSize: 10 * 1024 * 1024 },
+    limits: { fileSize: 10 \* 1024 \* 1024 },
     fileFilter: (req, file, cb) => {
         const allowedTypes = /pdf|jpg|jpeg|png|doc|docx/;
         if (allowedTypes.test(file.originalname.toLowerCase())) { return cb(null, true); }
@@ -204,12 +176,12 @@ app.get('/api/globe-data', (req, res) => {
 });
 app.get('/api/carousel/data', (req, res) => {
     res.json([
-        { category: "UG", img: "https://static.wixstatic.com/media/d77f36_deddd99f45db4a55953835f5d3926246~mv2.png", title: "Undergraduate", text: "Bachelor-level opportunities." },
-        { category: "PG", img: "https://static.wixstatic.com/media/d77f36_ae2a1e8b47514fb6b0a995be456a9eec~mv2.png", title: "Postgraduate", text: "Master's & advanced programs." },
-        { category: "Diploma", img: "https://static.wixstatic.com/media/d77f36_e8f60f4350304ee79afab3978a44e307~mv2.png", title: "Diploma", text: "Professional & foundation." },
-        { category: "Mobility", img: "https://static.wixstatic.com/media/d77f36_1118d15eee5a45f2a609c762d077857e~mv2.png", title: "Semester Abroad", text: "Exchange & mobility." },
-        { category: "Upskilling", img: "https://static.wixstatic.com/media/d77f36_d8d9655ba23f4849abba7d09ddb12092~mv2.png", title: "Upskilling", text: "Short-term training." },
-        { category: "Research", img: "https://static.wixstatic.com/media/d77f36_aa9eb498381d4adc897522e38301ae6f~mv2.jpg", title: "Research", text: "Opportunities & links." }
+        { category: "UG", img: "https://static.wixstatic.com/media/d77f36\_deddd99f45db4a55953835f5d3926246\~mv2.png", title: "Undergraduate", text: "Bachelor-level opportunities." },
+        { category: "PG", img: "https://static.wixstatic.com/media/d77f36\_ae2a1e8b47514fb6b0a995be456a9eec\~mv2.png", title: "Postgraduate", text: "Master's & advanced programs." },
+        { category: "Diploma", img: "https://static.wixstatic.com/media/d77f36\_e8f60f4350304ee79afab3978a44e307\~mv2.png", title: "Diploma", text: "Professional & foundation." },
+        { category: "Mobility", img: "https://static.wixstatic.com/media/d77f36\_1118d15eee5a45f2a609c762d077857e\~mv2.png", title: "Semester Abroad", text: "Exchange & mobility." },
+        { category: "Upskilling", img: "https://static.wixstatic.com/media/d77f36\_d8d9655ba23f4849abba7d09ddb12092\~mv2.png", title: "Upskilling", text: "Short-term training." },
+        { category: "Research", img: "https://static.wixstatic.com/media/d77f36\_aa9eb498381d4adc897522e38301ae6f\~mv2.jpg", title: "Research", text: "Opportunities & links." }
     ]);
 });
 // == SERVER START ==
@@ -218,4 +190,72 @@ app.get('/health', (req, res) => {
 });
 app.listen(PORT, () => {
     console.log(`Secure server running on port ${PORT}`);
-});
+}); and **import** { ok, badRequest, unauthorized } **from** 'wix-http-functions';
+**import** { currentMember } **from** 'wix-members-backend';
+**import** jwt **from** 'jsonwebtoken';
+
+
+**const** SSO\_SECRET = process.env.WIX\_SSO\_SECRET || 'REPLACE\_WITH\_STRONG\_SECRET';
+
+
+**export** **async** **function** post\_issueSsoToken(request) {
+  console.log('Request received:', request.headers, request.body); // Log incoming request details
+
+
+  **try** {
+    // Safely parse body to avoid Wix 400 errors (even if empty or unused)
+    **let** bodyData = {};
+    **try** {
+      bodyData = **await** request.body.json();
+      console.log('Parsed body:', bodyData); // Log for debugging
+    } **catch** (parseError) {
+      console.error('Body parse error:', parseError.message); // Log if parsing fails, but continue
+    }
+
+
+    **const** member = **await** currentMember.getMember();
+    console.log('Current member:', member); // Log member details to check if logged in
+
+
+    **if** (!member || !member.\_id) {
+      console.log('No member found - rejecting with 401');
+      **return** unauthorized({ body: { error: 'Not logged in' } });
+    }
+
+
+    **const** email = member.loginEmail ||
+      (member.contact && member.contact.emails && member.contact.emails[0]) ||
+      **undefined**;
+
+
+    **const** payload = {
+      sub: member.\_id,
+      email: email,
+      iss: 'gea-wix',
+      aud: 'gea-render'
+    };
+
+
+    // Add try-catch for JWT signing
+    **let** token;
+    **try** {
+      token = jwt.sign(payload, SSO\_SECRET, {
+        algorithm: 'HS256',
+        expiresIn: '5m'
+      });
+    } **catch** (signError) {
+      console.error('JWT signing failed:', signError.message);
+      **return** badRequest({ body: { error: 'Token signing failed' } });
+    }
+
+
+    console.log('Token generated successfully');
+    **return** ok({
+      headers: { 'Content-Type': 'application/json' }, // Standard header case
+      body: { token: token }
+    });
+  } **catch** (e) {
+    console.error('Error in issueSsoToken:', e.message); // Log any errors
+    **return** badRequest({ body: { error: 'Failed to issue token' } });
+  }
+}
