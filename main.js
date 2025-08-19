@@ -1,17 +1,15 @@
-// ====================================================================
-//            FINAL AND COMPLETE main.js SCRIPT (Corrected)
 // --- 1. ADD THIS HELPER FUNCTION ---
 async function checkUserIsAuthenticatedOnRender() {
     try {
         const response = await fetch('/api/auth/status', {
-            credentials: 'include', // Ensures cookies are sent with the request
-            cache: 'no-store'       // Prevents the browser from using an old result
+            credentials: 'include', // Sends the session cookie to your server
+            cache: 'no-store'       // Ensures a fresh, non-cached check
         });
         const data = await response.json();
-        return data.isAuthenticated; // Will be true or false
+        return data.isAuthenticated; // Returns true or false from the server
     } catch (error) {
         console.error('Auth status check failed:', error);
-        return false; // Safely assume not logged in if the check fails
+        return false;
     }
 }
 
@@ -66,9 +64,8 @@ async function fetchAuthStatus() {
   }
 }
 
-// --- 2. REPLACE your showInfoPanel function with this ---
+// --- 2. REPLACE THE showInfoPanel FUNCTION ---
 function showInfoPanel(data) {
-  // This function now only runs if the user is already confirmed to be authenticated.
   if (!data || data.university === 'Unassigned') {
     return;
   }
@@ -79,6 +76,7 @@ function showInfoPanel(data) {
     window.open(data.applyLink, '_blank');
   }
 }
+
 
 
 function hideInfoPanel() {
@@ -574,9 +572,10 @@ function closeAllExploded() {
   if (isMalaysiaCubeExploded) toggleFunctionMap['Malaysia']();
 }
 
-// --- 3. REPLACE onCanvasMouseUp WITH THIS CORRECTED VERSION ---
+// --- REPLACE your entire onCanvasMouseUp function with this corrected version ---
 async function onCanvasMouseUp(event) {
   if (transformControls.dragging) return;
+  
   const deltaX = Math.abs(event.clientX - mouseDownPos.x);
   const deltaY = Math.abs(event.clientY - mouseDownPos.y);
   if (deltaX > 5 || deltaY > 5) return;
@@ -585,16 +584,19 @@ async function onCanvasMouseUp(event) {
   const canvasRect = renderer.domElement.getBoundingClientRect();
   mouse.x = ((event.clientX - canvasRect.left) / canvasRect.width) * 2 - 1;
   mouse.y = -((event.clientY - canvasRect.top) / canvasRect.height) * 2 + 1;
+  
   raycaster.setFromCamera(mouse, camera);
-
   const allClickableObjects = [...Object.values(countryBlocks), ...neuronGroup.children];
   const intersects = raycaster.intersectObjects(allClickableObjects, true);
 
-  if (intersects.length === 0) { closeAllExploded(); return; }
+  if (intersects.length === 0) {
+    closeAllExploded();
+    return;
+  }
   
   const clickedObject = intersects[0].object;
 
-  // This part of your original logic for exploding country blocks is preserved
+  // Your original logic for exploding country blocks is preserved.
   if (clickedObject.userData.countryName) {
     const countryName = clickedObject.userData.countryName;
     const correspondingNeuralCube = neuralCubeMap[countryName];
@@ -615,7 +617,7 @@ async function onCanvasMouseUp(event) {
     return;
   }
 
-  // This part of your original logic for handling sub-cube clicks is preserved
+  // Your original logic for finding the correct sub-cube is preserved.
   let parent = clickedObject;
   let neuralName = null;
   let clickedSubCubeLocal = clickedObject.userData.isSubCube ? clickedObject : null;
@@ -634,24 +636,25 @@ async function onCanvasMouseUp(event) {
   if (neuralName) {
     const isExploded = explosionStateMap[neuralName];
     const toggleFunc = toggleFunctionMap[neuralName];
+    
     if (isExploded && clickedSubCubeLocal && clickedSubCubeLocal.userData.university !== "Unassigned") {
-        
-      // **THE ONLY CHANGE IS HERE: We check auth LIVE**
+      // **THE ONLY CHANGE TO YOUR ORIGINAL FUNCTION IS HERE**
+      // We perform the live check instead of using a stale variable.
       const isAuthenticated = await checkUserIsAuthenticatedOnRender();
+      
       if (isAuthenticated) {
-        // If they are logged in, call the simple display function
+        // If the server says TRUE, we open the link.
         showInfoPanel(clickedSubCubeLocal.userData);
       } else {
-        // If not logged in, trigger the Wix parent page to handle the login
+        // If the server says FALSE, we trigger the login flow.
         if (window.parent && typeof window.parent.handleSubcubeClick === 'function') {
             window.parent.handleSubcubeClick(clickedSubCubeLocal.userData);
         } else {
             window.open('https://www.globaleducarealliance.com/home?promptLogin=1', '_blank');
         }
       }
-
     } else {
-      // Logic for exploding/collapsing the cube is preserved
+      // Your original logic for just exploding/collapsing the cube is preserved.
       const anyExploded = Object.values(explosionStateMap).some(state => state);
       closeAllExploded();
       setTimeout(() => toggleFunc(), anyExploded ? 810 : 0);
