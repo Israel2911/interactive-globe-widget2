@@ -55,29 +55,38 @@ const noCache = (req, res, next) => {
 };
 
 // ===
-// SSO TOKEN CONSUMPTION MIDDLEWARE (Consumes mToken, verifies, sets session, cleans URL)
+// ===
+// CORRECTED SSO TOKEN MIDDLEWARE
 // ===
 const SSO_SECRET = process.env.WIX_SSO_SECRET || 'REPLACE_WITH_STRONG_SECRET';
+
 app.use((req, res, next) => {
   try {
+    console.log('🔍 Checking for mToken in URL...'); // Add this
     const parsed = url.parse(req.url, true);
     const token = parsed.query?.mToken;
+    
     if (token) {
+      console.log('🎯 Processing token:', token.substring(0, 50) + '...'); // Add this
       try {
         const decoded = jwt.verify(token, SSO_SECRET, {
-          algorithms: ['HS256'],
+          algorithms: ['RS256'], // ✅ CHANGED TO RS256
           audience: 'gea-render',
           issuer: 'gea-wix'
         });
+        
         req.session.isLoggedIn = true;
         req.session.wixUserId = decoded.sub;
         req.session.userEmail = decoded.email || null;
         req.session.userName = decoded.name || null;
         req.session.authMethod = 'wix_sso';
-        console.log(`SSO session set for ${req.session.userEmail || req.session.wixUserId}`);
+        
+        console.log(`✅ SSO session set for ${req.session.userEmail || req.session.wixUserId}`);
+        
       } catch (e) {
-        console.error('JWT verify failed:', e.message);
+        console.error('❌ JWT verify failed:', e.message);
       }
+      
       const cleanQuery = { ...parsed.query };
       delete cleanQuery.mToken;
       const cleanUrl = url.format({ pathname: parsed.pathname, query: cleanQuery });
@@ -85,10 +94,11 @@ app.use((req, res, next) => {
     }
     next();
   } catch (e) {
-    console.error('mToken middleware error:', e.message);
+    console.error('❌ mToken middleware error:', e.message);
     next();
   }
 });
+
 
 // ===
 // NEW: Token Generation Endpoint (using Wix API key and account ID)
