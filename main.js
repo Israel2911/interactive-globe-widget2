@@ -1102,12 +1102,19 @@ function showNotification(message, isSuccess = true) {
 }
 
 // ===
-// STARTUP SEQUENCE — no custom SSO in browser
-// ===
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('🚀 Loading Interactive Globe Widget...');
   try {
+    console.log('🔍 Initial auth status check...');
     await fetchAuthStatus();
+    
+    // Force immediate activation if already authenticated
+    if (authStatus.isAuthenticated) {
+      console.log('✅ User already authenticated - activating cubes immediately!');
+      activateAllCubes();
+      showNotification('🎮 University programs ready!', true);
+    }
+    
     console.log('1️⃣ Fetching server data...');
     await fetchDataFromBackend();
     console.log('2️⃣ Initializing Three.js...');
@@ -1121,7 +1128,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log('6️⃣ Starting animation...');
     animate();
     console.log('7️⃣ Starting auth monitoring...');
-    startAuthStatusPolling(); // ← ADD THIS LINE
+    startAuthStatusPolling();
+    
     const leftBtn = document.getElementById('carouselScrollLeft');
     const rightBtn = document.getElementById('carouselScrollRight');
     if (leftBtn) leftBtn.onclick = () => scrollCarousel(-1);
@@ -1132,4 +1140,3 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.error('❌ Error during initialization:', error);
   }
 });
-
