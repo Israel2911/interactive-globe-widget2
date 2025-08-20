@@ -1,21 +1,20 @@
 function redirectToWix() { /* no-op on external globe */ }
 async function requireLoginAndGo() { return; }
-
 // No-op placeholders replacing custom SSO usage in front-end
 async function isLoggedIn() { return false; }
 async function updateAuthStatus() { /* no-op to keep UI simple */ }
 async function handleCallback() { /* no-op */ }
 async function logout() { window.top.location.href = 'https://www.globaleducarealliance.com/home'; }
 
-// =======
+// ===
 // DASHBOARD / UPLOAD actions — always require login, then go Home
-// =======
+// ===
 async function openStudentDashboard() { await requireLoginAndGo(); }
 async function uploadDocument() { await requireLoginAndGo(); }
 
-// =======
+// ===
 // AUTH-DEPENDENT ACTIVATION (UI visual only — still allowed for engagement)
-// =======
+// ===
 function activateAllCubes() {
   console.log('🎮 Activating all university cubes for authenticated member');
   Object.entries(countryBlocks).forEach(([country, group]) => {
@@ -38,7 +37,6 @@ function activateAllCubes() {
 
 // Info panel — fully gated behind server auth status
 let authStatus = { isAuthenticated: false, user: null };
-
 async function fetchAuthStatus() {
   try {
     const res = await fetch('/api/auth/status', { credentials: 'include', cache: 'no-store' });
@@ -47,6 +45,29 @@ async function fetchAuthStatus() {
   } catch (e) {
     authStatus = { isAuthenticated: false, user: null };
   }
+}
+
+// ===
+// AUTH STATUS POLLING - NEW ADDITION
+// ===
+function startAuthStatusPolling() {
+  setInterval(async () => {
+    const oldStatus = authStatus.isAuthenticated;
+    await fetchAuthStatus();
+    
+    // Check if user just logged in
+    if (!oldStatus && authStatus.isAuthenticated) {
+      console.log('🎉 User authentication detected - activating cubes!');
+      activateAllCubes();
+      showNotification('🎮 University programs unlocked!', true);
+    }
+    
+    // Optional: Check if user logged out
+    if (oldStatus && !authStatus.isAuthenticated) {
+      console.log('👋 User logged out');
+      showNotification('Logged out successfully', false);
+    }
+  }, 3000); // Check every 3 seconds
 }
 
 async function showInfoPanel(data) {
@@ -63,7 +84,6 @@ async function showInfoPanel(data) {
     return;
   }
   // Proceed to build/show your panel or handle the click as intended.
-
   // Example: if you have builder code, enable it now:
   // document.getElementById('infoPanelOverlay').style.display = 'flex';
   // ... populate panel UI from data/uniData ...
@@ -198,6 +218,7 @@ function addInfoPanelStyles() {
 
 // Initialize info panel scaffolding on load (safe to keep)
 document.addEventListener('DOMContentLoaded', addInfoPanelStyles);
+
 
 // =======
 // GLOBE WIDGET LOGIC (Client-Side UI Only) — unchanged foundation
@@ -1080,9 +1101,9 @@ function showNotification(message, isSuccess = true) {
   setTimeout(() => div.remove(), 5000);
 }
 
-// =======
+// ===
 // STARTUP SEQUENCE — no custom SSO in browser
-// =======
+// ===
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('🚀 Loading Interactive Globe Widget...');
   try {
@@ -1099,6 +1120,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     await populateCarousel();
     console.log('6️⃣ Starting animation...');
     animate();
+    console.log('7️⃣ Starting auth monitoring...');
+    startAuthStatusPolling(); // ← ADD THIS LINE
     const leftBtn = document.getElementById('carouselScrollLeft');
     const rightBtn = document.getElementById('carouselScrollRight');
     if (leftBtn) leftBtn.onclick = () => scrollCarousel(-1);
@@ -1109,3 +1132,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.error('❌ Error during initialization:', error);
   }
 });
+
