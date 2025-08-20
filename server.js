@@ -69,7 +69,90 @@ const noCache = (req, res, next) => {
 };
 
 // ===
-// FIXED EMAIL-BASED AUTHENTICATION MIDDLEWARE
+// NEW: Temporary session storage for secure authentication
+// ===
+const tempSessions = {};
+
+// ===
+// NEW: Session creation endpoint (server-to-server only)
+// ===
+app.post('/api/create-session', express.json(), (req, res) => {
+    try {
+        // Verify request is from your Wix backend
+        const authHeader = req.headers.authorization;
+        if (!authHeader || authHeader !== `Bearer ${process.env.BACKEND_SECRET}`) {
+            return res.status(401).json({ success: false, error: 'Unauthorized' });
+        }
+        
+        const { userEmail, source, timestamp } = req.body;
+        
+        if (!userEmail || source !== 'wix-backend') {
+            return res.status(400).json({ success: false, error: 'Invalid request' });
+        }
+        
+        // Create opaque session ID (no email visible)
+        const sessionId = 'gs_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        
+        // Store session temporarily with EMAIL (secure server-side only)
+        tempSessions[sessionId] = {
+            email: userEmail,
+            createdAt: timestamp,
+            expiresAt: Date.now() + (5 * 60 * 1000) // 5 minutes
+        };
+        
+        console.log('✅ Session created for user (email hidden in logs)');
+        
+        res.json({ 
+            success: true, 
+            sessionId: sessionId // Only opaque ID returned
+        });
+        
+    } catch (error) {
+        console.error('❌ Session creation error:', error);
+        res.status(500).json({ success: false, error: 'Server error' });
+    }
+});
+
+// ===
+// UPDATED: Handle session ID instead of email in URL
+// ===
+app.use((req, res, next) => {
+    const parsed = url.parse(req.url, true);
+    const sessionId = parsed.query?.sid; // 'sid' instead of 'userEmail'
+    
+    if (sessionId && tempSessions[sessionId]) {
+        const sessionData = tempSessions[sessionId];
+        
+        // Check if session is still valid
+        if (sessionData.expiresAt > Date.now()) {
+            console.log('✅ Valid session ID found, creating permanent session');
+            
+            // Create permanent session with EMAIL (server-side only)
+            req.session.isLoggedIn = true;
+            req.session.userEmail = sessionData.email; // Email stays server-side
+            req.session.wixUserId = 'user-' + Date.now();
+            req.session.userName = sessionData.email.split('@')[0];
+            req.session.authMethod = 'secure_email_auth';
+            
+            // Clean up temporary session
+            delete tempSessions[sessionId];
+            
+            console.log('✅ Permanent session created for authenticated user');
+            
+            // Redirect to clean URL (no session ID visible)
+            return res.redirect('/');
+        } else {
+            // Session expired
+            delete tempSessions[sessionId];
+            console.log('⏰ Session expired, cleaning up');
+        }
+    }
+    
+    next();
+});
+
+// ===
+// FIXED EMAIL-BASED AUTHENTICATION MIDDLEWARE (for backwards compatibility)
 // ===
 app.use((req, res, next) => {
   try {
