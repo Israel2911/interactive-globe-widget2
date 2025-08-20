@@ -35,8 +35,28 @@ function activateAllCubes() {
   showNotification('🎮 All university programs are now accessible!');
 }
 
+function deactivateAllCubes() {
+  console.log('🔒 Deactivating all university cubes - user logged out');
+  Object.entries(countryBlocks).forEach(([country, group]) => {
+    group.userData.isClickable = false;
+    group.material.opacity = 0.5;
+    group.material.emissiveIntensity = 0.3;
+  });
+  [europeSubCubes, newThailandSubCubes, canadaSubCubes, ukSubCubes, 
+   usaSubCubes, indiaSubCubes, singaporeSubCubes, malaysiaSubCubes].forEach(subCubeArray => {
+      subCubeArray.forEach(subCube => {
+        if (subCube && subCube.userData) {
+          subCube.userData.isClickable = false;
+          subCube.material.opacity = 0.5;
+          subCube.material.emissiveIntensity = 0.3;
+        }
+      });
+  });
+  showNotification('🔒 Please log in to access university programs');
+}
+
 // ===
-// SAFE FETCH WRAPPER - NEW ADDITION
+// SAFE FETCH WRAPPER - EXISTING
 // ===
 async function safeFetch(url, options = {}) {
   try {
@@ -68,8 +88,11 @@ async function safeFetch(url, options = {}) {
 let authStatus = { isAuthenticated: false, user: null };
 
 // ===
-// IMPROVED FETCH AUTH STATUS WITH ERROR HANDLING
+// REPLACED: SMART AUTH STATUS POLLING SYSTEM
 // ===
+let pollTimer = null;
+let isAuthenticated = false;
+
 async function fetchAuthStatus() {
   try {
     console.log('🔍 Fetching auth status...');
@@ -83,45 +106,74 @@ async function fetchAuthStatus() {
     
     if (!res.ok) {
       console.error(`❌ Auth status fetch failed: ${res.status} ${res.statusText}`);
-      authStatus = { isAuthenticated: false, user: null };
-      return;
+      return { isAuthenticated: false, user: null };
     }
     
     const data = await res.json();
-    authStatus = { isAuthenticated: !!data.isAuthenticated, user: data.user || null };
-    console.log('✅ Auth status updated:', authStatus);
+    console.log('✅ Auth status updated:', data);
+    return data;
     
   } catch (e) {
     console.error('❌ Auth status fetch error:', e);
-    authStatus = { isAuthenticated: false, user: null };
+    return { isAuthenticated: false, user: null };
   }
 }
 
-// ===
-// AUTH STATUS POLLING - IMPROVED WITH SAFER FETCH
-// ===
-function startAuthStatusPolling() {
-  setInterval(async () => {
-    const oldStatus = authStatus.isAuthenticated;
-    await fetchAuthStatus();
+function startAuthPolling() {
+    if (pollTimer) clearTimeout(pollTimer);
     
-    // Check if user just logged in
-    if (!oldStatus && authStatus.isAuthenticated) {
-      console.log('🎉 User authentication detected - activating cubes!');
-      activateAllCubes();
-      showNotification('🎮 University programs unlocked!', true);
+    function poll() {
+        fetchAuthStatus()
+            .then(data => {
+                authStatus = { isAuthenticated: !!data.isAuthenticated, user: data.user || null };
+                
+                if (data.isAuthenticated && !isAuthenticated) {
+                    // Just became authenticated
+                    isAuthenticated = true;
+                    console.log('🎉 Authentication successful!');
+                    activateAllCubes();
+                    showNotification('🎮 University programs unlocked!', true);
+                    
+                    // Stop frequent polling - user is logged in
+                    stopAuthPolling();
+                    
+                    // Check once every 5 minutes to detect logout
+                    setTimeout(startAuthPolling, 5 * 60 * 1000);
+                    
+                } else if (!data.isAuthenticated && isAuthenticated) {
+                    // User logged out
+                    isAuthenticated = false;
+                    deactivateAllCubes();
+                    console.log('🔒 User logged out');
+                    showNotification('Logged out successfully', false);
+                    
+                    // Resume active polling
+                    pollTimer = setTimeout(poll, 3000);
+                    
+                } else if (!data.isAuthenticated) {
+                    // Still not authenticated - keep polling
+                    pollTimer = setTimeout(poll, 3000);
+                }
+            })
+            .catch(error => {
+                console.error('Auth check failed:', error);
+                pollTimer = setTimeout(poll, 5000);
+            });
     }
     
-    // Optional: Check if user logged out
-    if (oldStatus && !authStatus.isAuthenticated) {
-      console.log('👋 User logged out');
-      showNotification('Logged out successfully', false);
+    poll(); // Start immediately
+}
+
+function stopAuthPolling() {
+    if (pollTimer) {
+        clearTimeout(pollTimer);
+        pollTimer = null;
     }
-  }, 3000); // Check every 3 seconds
 }
 
 // ===
 // IMPROVED SHOW INFO PANEL WITH SAFER AUTHENTICATION CHECK
+// ===
 async function showInfoPanel(data) {
   console.log('🎯 showInfoPanel called with:', data);
   console.log('🔗 University:', data?.university);
@@ -132,10 +184,15 @@ async function showInfoPanel(data) {
     console.log('❌ No valid university data');
     return;
   }
-
-  // REMOVED: Redundant auth check - already checked in onCanvasMouseUp
-  console.log('✅ User authenticated, opening program link');
   
+  // Check current auth status
+  if (!authStatus.isAuthenticated) {
+    console.log('❌ User not authenticated');
+    showNotification('Please log in to access this program', false);
+    return;
+  }
+  
+  console.log('✅ User authenticated, opening program link');
   // Open the university/program link directly
   const linkToOpen = data.programLink || data.applyLink;
   if (linkToOpen && linkToOpen !== '#') {
