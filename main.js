@@ -1102,17 +1102,31 @@ function showNotification(message, isSuccess = true) {
 }
 
 // ===
+// STARTUP SEQUENCE — no custom SSO in browser
+// ===
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('🚀 Loading Interactive Globe Widget...');
   try {
-    console.log('🔍 Initial auth status check...');
+    // Check if user just returned from Wix login with token
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasToken = urlParams.get('mToken');
+    
+    if (hasToken) {
+      console.log('🎉 Detected mToken - user returned from successful login!');
+      // Wait a moment for your middleware to process the token
+      await new Promise(resolve => setTimeout(resolve, 1500));
+    }
+    
+    console.log('🔍 Checking authentication status...');
     await fetchAuthStatus();
     
     // Force immediate activation if already authenticated
     if (authStatus.isAuthenticated) {
-      console.log('✅ User already authenticated - activating cubes immediately!');
-      activateAllCubes();
-      showNotification('🎮 University programs ready!', true);
+      console.log('✅ User is authenticated - activating cubes immediately!');
+      setTimeout(() => {
+        activateAllCubes();
+        showNotification('🎮 University programs ready!', true);
+      }, 1000); // Small delay to ensure cubes are created first
     }
     
     console.log('1️⃣ Fetching server data...');
