@@ -70,23 +70,21 @@ async function fetchAuthStatus() {
   }
 }
 
-// --- 2. YOUR showInfoPanel IS CORRECTED AND SIMPLIFIED ---
-// Its only job now is to open the correct link for an authenticated user.
 function showInfoPanel(data) {
   if (!data) return;
-  
   const linkToOpen = data.programLink || data.applyLink;
   if (linkToOpen && linkToOpen !== '#') {
     console.log(`Opening authenticated link: ${linkToOpen}`);
     window.open(linkToOpen, '_blank');
   }
-}
-  // Proceed to build/show your panel or handle the click as intended.
+}  // <-- This brace ends the function correctly
 
+  // Proceed to build/show your panel or handle the click as intended.
   // Example: if you have builder code, enable it now:
   // document.getElementById('infoPanelOverlay').style.display = 'flex';
   // ... populate panel UI from data/uniData ...
-}
+}  // <-- THIS EXTRA BRACE CAUSES A SYNTAX ERROR
+
 
 // ---------- If later you allow panel post-login, remove the return above and use builder below ----------
 /*
