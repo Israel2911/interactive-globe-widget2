@@ -122,7 +122,6 @@ function startAuthStatusPolling() {
 
 // ===
 // IMPROVED SHOW INFO PANEL WITH SAFER AUTHENTICATION CHECK
-// ===
 async function showInfoPanel(data) {
   console.log('🎯 showInfoPanel called with:', data);
   console.log('🔗 University:', data?.university);
@@ -133,16 +132,8 @@ async function showInfoPanel(data) {
     console.log('❌ No valid university data');
     return;
   }
-  
-  // Use the safer fetch method to double-check auth status
-  const authResponse = await safeFetch('/api/auth/status');
-  
-  if (!authResponse || !authResponse.isAuthenticated) {
-    console.log('🔒 User not authenticated, redirecting to login');
-    window.open('https://www.globaleducarealliance.com/home?promptLogin=1', '_blank');
-    return;
-  }
-  
+
+  // REMOVED: Redundant auth check - already checked in onCanvasMouseUp
   console.log('✅ User authenticated, opening program link');
   
   // Open the university/program link directly
@@ -155,6 +146,7 @@ async function showInfoPanel(data) {
     showNotification('No link available for this program', false);
   }
 }
+
 
 // ---------- If later you allow panel post-login, remove the return above and use builder below ----------
 /*
@@ -1170,31 +1162,15 @@ function showNotification(message, isSuccess = true) {
 }
 
 // ===
-// STARTUP SEQUENCE — no custom SSO in browser
-// ===
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('🚀 Loading Interactive Globe Widget...');
   try {
-    // Check if user just returned from Wix login with token
-    const urlParams = new URLSearchParams(window.location.search);
-    const hasToken = urlParams.get('mToken');
-    
-    if (hasToken) {
-      console.log('🎉 Detected mToken - user returned from successful login!');
-      // Wait a moment for your middleware to process the token
-      await new Promise(resolve => setTimeout(resolve, 1500));
-    }
-    
     console.log('🔍 Checking authentication status...');
     await fetchAuthStatus();
     
-    // Force immediate activation if already authenticated
+    // IMPORTANT: Initialize immediately if authenticated
     if (authStatus.isAuthenticated) {
-      console.log('✅ User is authenticated - activating cubes immediately!');
-      setTimeout(() => {
-        activateAllCubes();
-        showNotification('🎮 University programs ready!', true);
-      }, 1000); // Small delay to ensure cubes are created first
+      console.log('✅ User is already authenticated on load!');
     }
     
     console.log('1️⃣ Fetching server data...');
@@ -1205,6 +1181,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupEventListeners();
     console.log('4️⃣ Creating globe and cubes...');
     await createGlobeAndCubes();
+    
+    // CRITICAL: Activate cubes AFTER they're created
+    if (authStatus.isAuthenticated) {
+      console.log('🎮 Activating cubes for authenticated user!');
+      setTimeout(() => {
+        activateAllCubes();
+        showNotification('🎮 University programs unlocked!', true);
+      }, 500); // Small delay to ensure cubes are fully initialized
+    }
+    
     console.log('5️⃣ Populating carousel...');
     await populateCarousel();
     console.log('6️⃣ Starting animation...');
@@ -1222,3 +1208,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.error('❌ Error during initialization:', error);
   }
 });
+
