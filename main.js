@@ -35,20 +35,70 @@ function activateAllCubes() {
   showNotification('🎮 All university programs are now accessible!');
 }
 
+// ===
+// SAFE FETCH WRAPPER - NEW ADDITION
+// ===
+async function safeFetch(url, options = {}) {
+  try {
+    console.log(`🌐 Fetching: ${url}`);
+    const response = await fetch(url, {
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      ...options
+    });
+    
+    if (!response.ok) {
+      console.error(`❌ HTTP Error ${response.status}: ${response.statusText} for ${url}`);
+      return null;
+    }
+    
+    const data = await response.json();
+    console.log(`✅ Success fetching: ${url}`);
+    return data;
+    
+  } catch (error) {
+    console.error(`❌ Network Error fetching ${url}:`, error);
+    return null;
+  }
+}
+
 // Info panel — fully gated behind server auth status
 let authStatus = { isAuthenticated: false, user: null };
+
+// ===
+// IMPROVED FETCH AUTH STATUS WITH ERROR HANDLING
+// ===
 async function fetchAuthStatus() {
   try {
-    const res = await fetch('/api/auth/status', { credentials: 'include', cache: 'no-store' });
+    console.log('🔍 Fetching auth status...');
+    const res = await fetch('/api/auth/status', { 
+      credentials: 'include', 
+      cache: 'no-store',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!res.ok) {
+      console.error(`❌ Auth status fetch failed: ${res.status} ${res.statusText}`);
+      authStatus = { isAuthenticated: false, user: null };
+      return;
+    }
+    
     const data = await res.json();
     authStatus = { isAuthenticated: !!data.isAuthenticated, user: data.user || null };
+    console.log('✅ Auth status updated:', authStatus);
+    
   } catch (e) {
+    console.error('❌ Auth status fetch error:', e);
     authStatus = { isAuthenticated: false, user: null };
   }
 }
 
 // ===
-// AUTH STATUS POLLING - NEW ADDITION
+// AUTH STATUS POLLING - IMPROVED WITH SAFER FETCH
 // ===
 function startAuthStatusPolling() {
   setInterval(async () => {
@@ -70,23 +120,40 @@ function startAuthStatusPolling() {
   }, 3000); // Check every 3 seconds
 }
 
+// ===
+// IMPROVED SHOW INFO PANEL WITH SAFER AUTHENTICATION CHECK
+// ===
 async function showInfoPanel(data) {
   console.log('🎯 showInfoPanel called with:', data);
   console.log('🔗 University:', data?.university);
   console.log('🔗 Program Link:', data?.programLink);
   console.log('🔗 Apply Link:', data?.applyLink);
+  
   if (!data || data.university === 'Unassigned') {
     console.log('❌ No valid university data');
     return;
   }
-  if (!authStatus.isAuthenticated) {
+  
+  // Use the safer fetch method to double-check auth status
+  const authResponse = await safeFetch('/api/auth/status');
+  
+  if (!authResponse || !authResponse.isAuthenticated) {
+    console.log('🔒 User not authenticated, redirecting to login');
     window.open('https://www.globaleducarealliance.com/home?promptLogin=1', '_blank');
     return;
   }
-  // Proceed to build/show your panel or handle the click as intended.
-  // Example: if you have builder code, enable it now:
-  // document.getElementById('infoPanelOverlay').style.display = 'flex';
-  // ... populate panel UI from data/uniData ...
+  
+  console.log('✅ User authenticated, opening program link');
+  
+  // Open the university/program link directly
+  const linkToOpen = data.programLink || data.applyLink;
+  if (linkToOpen && linkToOpen !== '#') {
+    console.log(`🔗 Opening link: ${linkToOpen}`);
+    window.open(linkToOpen, '_blank');
+  } else {
+    console.log('❌ No valid link found for this program');
+    showNotification('No link available for this program', false);
+  }
 }
 
 // ---------- If later you allow panel post-login, remove the return above and use builder below ----------
@@ -218,6 +285,7 @@ function addInfoPanelStyles() {
 
 // Initialize info panel scaffolding on load (safe to keep)
 document.addEventListener('DOMContentLoaded', addInfoPanelStyles);
+
 
 
 // =======
