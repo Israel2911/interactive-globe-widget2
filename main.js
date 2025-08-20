@@ -77,13 +77,11 @@ function showInfoPanel(data) {
     console.log(`Opening authenticated link: ${linkToOpen}`);
     window.open(linkToOpen, '_blank');
   }
-}  // <-- This brace ends the function correctly
-
-  // Proceed to build/show your panel or handle the click as intended.
-  // Example: if you have builder code, enable it now:
-  // document.getElementById('infoPanelOverlay').style.display = 'flex';
-  // ... populate panel UI from data/uniData ...
-}  // <-- THIS EXTRA BRACE CAUSES A SYNTAX ERROR
+}
+// ---------- If later you allow panel post-login, remove the return above and use builder below ----------
+/* 
+  ... (rest of your commented code)
+*/
 
 
 // ---------- If later you allow panel post-login, remove the return above and use builder below ----------
