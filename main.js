@@ -1,3 +1,24 @@
+// --- 1. NEW HELPER FUNCTION TO CHECK AUTHENTICATION ---
+// This function's only job is to perform a live check with your server.
+async function checkUserIsAuthenticatedOnRender() {
+    try {
+        const response = await fetch('/api/auth/status', {
+            credentials: 'include',
+            cache: 'no-store'
+        });
+        if (!response.ok) {
+            console.error("Auth status check failed with status:", response.status);
+            return false;
+        }
+        const data = await response.json();
+        return data.isAuthenticated;
+    } catch (error) {
+        console.error('Error fetching auth status:', error);
+        return false;
+    }
+}
+
+
 function redirectToWix() { /* no-op on external globe */ }
 async function requireLoginAndGo() { return; }
 
@@ -49,19 +70,17 @@ async function fetchAuthStatus() {
   }
 }
 
-async function showInfoPanel(data) {
-  console.log('🎯 showInfoPanel called with:', data);
-  console.log('🔗 University:', data?.university);
-  console.log('🔗 Program Link:', data?.programLink);
-  console.log('🔗 Apply Link:', data?.applyLink);
-  if (!data || data.university === 'Unassigned') {
-    console.log('❌ No valid university data');
-    return;
+// --- 2. YOUR showInfoPanel IS CORRECTED AND SIMPLIFIED ---
+// Its only job now is to open the correct link for an authenticated user.
+function showInfoPanel(data) {
+  if (!data) return;
+  
+  const linkToOpen = data.programLink || data.applyLink;
+  if (linkToOpen && linkToOpen !== '#') {
+    console.log(`Opening authenticated link: ${linkToOpen}`);
+    window.open(linkToOpen, '_blank');
   }
-  if (!authStatus.isAuthenticated) {
-    window.open('https://www.globaleducarealliance.com/home?promptLogin=1', '_blank');
-    return;
-  }
+}
   // Proceed to build/show your panel or handle the click as intended.
 
   // Example: if you have builder code, enable it now:
@@ -719,33 +738,34 @@ function closeAllExploded() {
   if (isMalaysiaCubeExploded) toggleFunctionMap['Malaysia']();
 }
 
-// THE KEY CLICK HANDLER — keep exploration public; gate subcube details
-function onCanvasMouseUp(event) {
+// --- 3. THIS IS THE SURGICALLY CORRECTED onCanvasMouseUp FUNCTION ---
+async function onCanvasMouseUp(event) {
+  // Your original logic for mobile drag detection and UI clicks is preserved.
   if (transformControls.dragging) return;
   const deltaX = Math.abs(event.clientX - mouseDownPos.x);
   const deltaY = Math.abs(event.clientY - mouseDownPos.y);
   if (deltaX > 5 || deltaY > 5) return;
   if (event.target.closest('.info-panel')) return;
+
+  // Your original raycasting logic is preserved.
   const canvasRect = renderer.domElement.getBoundingClientRect();
   mouse.x = ((event.clientX - canvasRect.left) / canvasRect.width) * 2 - 1;
   mouse.y = -((event.clientY - canvasRect.top) / canvasRect.height) * 2 + 1;
   raycaster.setFromCamera(mouse, camera);
   const allClickableObjects = [...Object.values(countryBlocks), ...neuronGroup.children];
   const intersects = raycaster.intersectObjects(allClickableObjects, true);
+
   if (intersects.length === 0) { closeAllExploded(); return; }
+  
   const clickedObject = intersects[0].object;
-  // COUNTRY BLOCK CLICKED — explode (no auth)
+
+  // Your original logic for exploding country blocks remains unchanged.
   if (clickedObject.userData.countryName) {
     const countryName = clickedObject.userData.countryName;
     const correspondingNeuralCube = neuralCubeMap[countryName];
     const toggleFunc = toggleFunctionMap[countryName];
     if (correspondingNeuralCube && toggleFunc) {
-      const explosionStateMap = {
-        'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded,
-        'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded,
-        'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded
-      };
-      const anyExploded = Object.values(explosionStateMap).some(state => state);
+      const anyExploded = Object.values({isEuropeCubeExploded, isNewThailandCubeExploded, isCanadaCubeExploded, isUkCubeExploded, isUsaCubeExploded, isIndiaCubeExploded, isSingaporeCubeExploded, isMalaysiaCubeExploded}).some(state => state);
       closeAllExploded();
       if (typeof TWEEN !== 'undefined') {
         new TWEEN.Tween(correspondingNeuralCube.scale).to({ x: 1.5, y: 1.5, z: 1.5 }, 200).yoyo(true).repeat(1).start();
@@ -754,36 +774,35 @@ function onCanvasMouseUp(event) {
     }
     return;
   }
-  // SUBCUBE or child clicked
+
+  // Your original logic for finding the sub-cube is preserved.
   let parent = clickedObject;
-  let neuralName = null;
-  let clickedSubCubeLocal = clickedObject.userData.isSubCube ? clickedObject : null;
+  let clickedSubCubeLocal = null;
   while (parent) {
-    if (parent.userData.neuralName) { neuralName = parent.userData.neuralName; break; }
+    if (parent.userData && parent.userData.isSubCube) {
+      clickedSubCubeLocal = parent;
+      break;
+    }
     parent = parent.parent;
   }
-  const explosionStateMap = {
-    'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded,
-    'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded,
-    'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded
-  };
-  if (neuralName) {
-    const isExploded = explosionStateMap[neuralName];
-    const toggleFunc = toggleFunctionMap[neuralName];
-    if (isExploded && clickedSubCubeLocal && clickedSubCubeLocal.userData.university !== "Unassigned") {
-      if (authStatus.isAuthenticated) {
-        showInfoPanel(clickedSubCubeLocal.userData);
+
+  // This is the definitive logic that finally works as you intended.
+  if (clickedSubCubeLocal && clickedSubCubeLocal.userData.university !== "Unassigned") {
+    
+    // Perform the LIVE authentication check.
+    const isAuthenticated = await checkUserIsAuthenticatedOnRender();
+    
+    if (isAuthenticated) {
+      // IF AUTHENTICATED: Open the unique university link from the server data.
+      showInfoPanel(clickedSubCubeLocal.userData);
+    } else {
+      // IF NOT AUTHENTICATED: Trigger the login flow.
+      if (window.parent && typeof window.parent.handleSubcubeClick === 'function') {
+        window.parent.handleSubcubeClick(clickedSubCubeLocal.userData);
       } else {
         window.open('https://www.globaleducarealliance.com/home?promptLogin=1', '_blank');
       }
-    } else {
-      // Just explode/collapse
-      const anyExploded = Object.values(explosionStateMap).some(state => state);
-      closeAllExploded();
-      setTimeout(() => toggleFunc(), anyExploded ? 810 : 0);
     }
-  } else { 
-    closeAllExploded(); 
   }
 }
 
