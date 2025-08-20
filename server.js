@@ -28,13 +28,13 @@ app.use(cors({
 }));
 
 // ===
-// MIDDLEWARE SETUP
+// MIDDLEWARE SETUP (CORRECT ORDER!)
 // ===
 app.use(express.json());
 app.use(cookieParser());
 
 // ===
-// FIXED SESSION CONFIGURATION
+// FIXED SESSION CONFIGURATION (BEFORE EMAIL MIDDLEWARE!)
 // ===
 app.use(session({
     secret: process.env.SESSION_SECRET || 'a-new-super-strong-secret-for-sso',
@@ -48,28 +48,8 @@ app.use(session({
     }
 }));
 
-app.use(express.static('.', {
-    setHeaders: (res, path) => {
-        if (path.endsWith('.js')) { res.setHeader('Content-Type', 'application/javascript'); }
-        res.setHeader('Cache-Control', 'no-cache');
-    }
-}));
-
 // ===
-// Middleware to disable caching for specific routes
-// ===
-const noCache = (req, res, next) => {
-    res.set({
-        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0',
-        'Surrogate-Control': 'no-store'
-    });
-    next();
-};
-
-// ===
-// EMAIL-BASED AUTHENTICATION MIDDLEWARE (MAIN APPROACH)
+// EMAIL-BASED AUTHENTICATION MIDDLEWARE (BEFORE STATIC FILES!)
 // ===
 app.use((req, res, next) => {
   try {
@@ -134,6 +114,29 @@ app.use((req, res, next) => {
     next();
   }
 });
+
+// ===
+// STATIC FILES MIDDLEWARE (AFTER EMAIL PROCESSING!)
+// ===
+app.use(express.static('.', {
+    setHeaders: (res, path) => {
+        if (path.endsWith('.js')) { res.setHeader('Content-Type', 'application/javascript'); }
+        res.setHeader('Cache-Control', 'no-cache');
+    }
+}));
+
+// ===
+// Middleware to disable caching for specific routes
+// ===
+const noCache = (req, res, next) => {
+    res.set({
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+        'Surrogate-Control': 'no-store'
+    });
+    next();
+};
 
 // ===
 // DATA ARRAYS (keeping all your existing data)
