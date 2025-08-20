@@ -14,20 +14,34 @@ const PORT = process.env.PORT || 3001;
 const wixAccountId = fs.readFileSync('/etc/secrets/WIX_ACCOUNT_ID', 'utf-8').trim();
 const wixApiKey = fs.readFileSync('/etc/secrets/WIX_API_KEY', 'utf-8').trim();
 
-// Enable CORS for your Wix site (adjust origin)
-app.use(cors({ origin: 'https://www.globaleducarealliance.com', credentials: true }));
+// ===
+// CRITICAL FIX: Trust proxy for Render.com deployment
+// ===
+app.set('trust proxy', 1);
+
+// ===
+// UPDATED CORS - Enable credentials for cookies
+// ===
+app.use(cors({ 
+    origin: 'https://www.globaleducarealliance.com', 
+    credentials: true 
+}));
 
 // ===
 // MIDDLEWARE SETUP
 // ===
 app.use(express.json());
 app.use(cookieParser());
+
+// ===
+// FIXED SESSION CONFIGURATION
+// ===
 app.use(session({
     secret: process.env.SESSION_SECRET || 'a-new-super-strong-secret-for-sso',
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false, // Changed to false
     cookie: {
-        secure: process.env.NODE_ENV === 'production',
+        secure: false, // Critical: false for HTTP development
         httpOnly: true,
         sameSite: 'lax',
         maxAge: 7 * 24 * 60 * 60 * 1000
@@ -55,11 +69,13 @@ const noCache = (req, res, next) => {
 };
 
 // ===
-// EMAIL-BASED AUTHENTICATION MIDDLEWARE (UPDATED)
+// FIXED EMAIL-BASED AUTHENTICATION MIDDLEWARE
 // ===
 app.use((req, res, next) => {
   try {
     console.log('📧 Checking for userEmail in URL...');
+    console.log('🔍 Current session ID:', req.sessionID);
+    console.log('🔍 Session before processing:', req.session);
     
     // Skip if we've already processed authentication for this request
     if (req.authProcessed) {
@@ -82,21 +98,33 @@ app.use((req, res, next) => {
       req.session.userName = email.split('@')[0]; // Use part before @ as name
       req.session.authMethod = 'email_auth';
       
+      console.log('💾 Session AFTER setting:', req.session);
       console.log(`✅ Session created for ${req.session.userEmail}`);
       
-      // Create clean URL without userEmail
-      const cleanQuery = { ...parsed.query };
-      delete cleanQuery.userEmail;
-      const cleanUrl = url.format({ pathname: parsed.pathname, query: cleanQuery });
-      
-      // Only redirect if the clean URL is different from current URL
-      if (req.originalUrl !== cleanUrl) {
-        console.log('🔄 Redirecting to clean URL:', cleanUrl);
-        return res.redirect(cleanUrl || '/');
-      } else {
-        console.log('✅ Already on clean URL, continuing...');
-        return next();
-      }
+      // CRITICAL: Force session save before redirect
+      req.session.save((err) => {
+        if (err) {
+          console.error('❌ Session save error:', err);
+          return next();
+        } else {
+          console.log('💾 Session saved successfully');
+        }
+        
+        // Create clean URL without userEmail
+        const cleanQuery = { ...parsed.query };
+        delete cleanQuery.userEmail;
+        const cleanUrl = url.format({ pathname: parsed.pathname, query: cleanQuery });
+        
+        // Only redirect if the clean URL is different from current URL
+        if (req.originalUrl !== cleanUrl) {
+          console.log('🔄 Redirecting to clean URL:', cleanUrl);
+          return res.redirect(cleanUrl || '/');
+        } else {
+          console.log('✅ Already on clean URL, continuing...');
+          return next();
+        }
+      });
+      return; // Important: return here to prevent double response
     }
     
     // No email found, continue normally
@@ -108,36 +136,7 @@ app.use((req, res, next) => {
 });
 
 // ===
-// NEW: Token Generation Endpoint (using Wix API key and account ID)
-// ===
-app.post('/api/generate-token', noCache, async (req, res) => {
-  console.log('Token generation endpoint hit with body:', req.body);  // Log incoming request
-  const { email } = req.body; // Sent from Wix frontend (current user's email)
-  if (!email) {
-    console.error('Missing email in request');
-    return res.status(400).json({ error: 'Email required for token generation' });
-  }
-  try {
-    // Corrected Wix Members API endpoint for session tokens
-    const wixUrl = 'https://www.wixapis.com/members/v1/auth/session-tokens';  // Corrected endpoint
-    const response = await axios.post(wixUrl, { email }, {
-      headers: {
-        'Authorization': `Bearer ${wixApiKey}`,
-        'wix-account-id': wixAccountId,
-        'Content-Type': 'application/json'
-      }
-    });
-    const token = response.data.token;  // Assuming Wix returns a token field
-    console.log('Token generated successfully for:', email);
-    return res.json({ token });
-  } catch (error) {
-    console.error('Token generation error:', error.response?.data || error.message);
-    return res.status(500).json({ error: 'Failed to generate token' });
-  }
-});
-
-// ===
-// DATA ARRAYS
+// DATA ARRAYS (keeping all your existing data)
 // ===
 const europeContent = [ { university: "University of Passau", logo: "https://static.wixstatic.com/shapes/d77f36_467b1d2eed4042eab43fdff25124915b.svg", erasmusLink: "https://www.uni-passau.de/en/incoming-exchange-students", programName: "Degree-Seeking", programLink: "https://www.uni-passau.de/en/international/coming-to-passau/coming-to-passau-as-degree-seeking-student", applyLink: "https://www.globaleducarealliance.com/6?partner=Passau", researchLink: "https://www.uni-passau.de/en/international/going-abroad/research-and-teaching-sta" }, { university: "University of Passau", logo: "https://static.wixstatic.com/shapes/d77f36_467b1d2eed4042eab43fdff25124915b.svg", erasmusLink: "https://www.uni-passau.de/en/incoming-exchange-students", programName: "Exchange", programLink: "https://www.uni-passau.de/en/incoming-exchange-students", applyLink: "https://www.globaleducarealliance.com/6?partner=Passau", researchLink: "https://www.uni-passau.de/en/international/going-abroad/research-and-teaching-sta" }, null, null, { university: "ICES", logo: "https://static.wixstatic.com/media/d77f36_c11cec0bd94f4ab7a1b611cecb9e90cb~mv2.png", erasmusLink: "https://ices.fr/linternational/erasmus/", programName: "Full Degree", programLink: "https://ices-university.com/studies/", applyLink: "https://www.globaleducarealliance.com/6?partner=ICES" }, { university: "ICES", logo: "https://static.wixstatic.com/media/d77f36_c11cec0bd94f4ab7a1b611cecb9e90cb~mv2.png", erasmusLink: "https://ices.fr/linternational/erasmus/", programName: "Mobility", programLink: "https://ices-university.com/mobility/incoming/", applyLink: "https://www.globaleducarealliance.com/6?partner=ICES" }, null, null, { university: "Université Catholique de Lille", logo: "https://static.wixstatic.com/media/d77f36_009f964ce876419f9391e6a604f9257c~mv2.png", erasmusLink: "https://www.univ-catholille.fr/en/exchange-programs-academic-calendars", programName: "Exchange", programLink: "https://www.univ-catholille.fr/en/exchange-programs-academic-calendars", applyLink: "https://www.globaleducarealliance.com/6?partner=Lille", researchLink: "https://www.univ-catholille.fr/en/research-presentation/" }, { university: "Université Catholique de Lille", logo: "https://static.wixstatic.com/media/d77f36_009f964ce876419f9391e6a604f9257c~mv2.png", erasmusLink: "https://www.univ-catholille.fr/en/exchange-programs-academic-calendars", programName: "Summer Program", programLink: "https://www.univ-catholille.fr/en/lille-programs/lille-european-summer-program/", applyLink: "https://www.globaleducarealliance.com/6?partner=Lille", researchLink: "https://www.univ-catholille.fr/en/research-presentation/" }, null, null, { university: "IRCOM", logo: "https://static.wixstatic.com/media/d77f36_592f23b64ee44211abcb87444198e26a~mv2.jpg", erasmusLink: "https://www.ircom.fr/partir/", programName: "Master\nHumanitarian", programLink: "https://www.ircom.fr/formations/master-humanitaire/", applyLink: "https://www.globaleducarealliance.com/6?partner=IRCOM", researchLink: "https://www.ircom.fr/laborem/" }, { university: "IRCOM", logo: "https://static.wixstatic.com/media/d77f36_592f23b64ee44211abcb87444198e26a~mv2.jpg", erasmusLink: "https://www.ircom.fr/partir/", programName: "Mobility", programLink: "https://www.ircom.fr/partir/", applyLink: "https://www.globaleducarealliance.com/6?partner=IRCOM", researchLink: "https://www.ircom.fr/laborem/" }, null, null, { university: "KATHO-NRW", logo: "https://static.wixstatic.com/shapes/d77f36_b6a110be4758449f8537733a427f2dba.svg", erasmusLink: "https://katho-nrw.de/en/international/erasmus", programName: "Int'l Studies", programLink: "https://katho-nrw.de/en/international/international-studies", applyLink: "https://www.globaleducarealliance.com/6?partner=KATHO-NRW", researchLink: "https://katho-nrw.de/en/international/international-research" }, { university: "KATHO-NRW", logo: "https://static.wixstatic.com/shapes/d77f36_b6a110be4758449f8537733a427f2dba.svg", erasmusLink: "https://katho-nrw.de/en/international/erasmus", programName: "Study Abroad", programLink: "https://katho-nrw.de/en/international/international-studies/students-at-the-catholic-university-of-applied-sciences-studying-abroad", applyLink: "https://www.globaleducarealliance.com/6?partner=KATHO-NRW", researchLink: "https://www.univ-catholille.fr/en/research-presentation/" }, null, null, { university: "TSI", logo: "https://static.wixstatic.com/media/d77f36_1992247272bb4d55a3cac5060abec418~mv2.jpeg", erasmusLink: "https://tsi.lv/future-students/international/", programName: "Int'l Students", programLink: "https://tsi.lv/future-students/international/", applyLink: "https://www.globaleducarealliance.com/6?partner=TSI" }, { university: "TSI", logo: "https://static.wixstatic.com/media/d77f36_1992247272bb4d55a3cac5060abec418~mv2.jpeg", erasmusLink: "https://tsi.lv/future-students/international/", programName: "Innovation", programLink: "https://tsi.lv/research/innovation-knowledge-transfer/", applyLink: "https://www.globaleducarealliance.com/6?partner=TSI" }, null, null, { university: "INSEEC", logo: "https://static.wixstatic.com/media/d77f36_66d4c88c4ebb4b7da6cacaed57178165~mv2.webp", erasmusLink: "https://www.inseec.com/en/erasmus/", programName: "Exchanges", programLink: "https://www.inseec.com/en/academic-exchanges/", applyLink: "https://www.globaleducarealliance.com/6?partner=INSEEC" }, null, null];
 
@@ -160,7 +159,7 @@ const countryPrograms = { "India": ["UG", "PG", "Mobility", "Research"], "Europe
 const countryConfigs = [{"name": "India", "lat": 22, "lon": 78, "color": 0xFF9933}, {"name": "Europe", "lat": 48.8566, "lon": 2.3522, "color": 0x0000FF}, {"name": "UK", "lat": 53, "lon": -0.1276, "color": 0x191970}, {"name": "Singapore", "lat": 1.35, "lon": 103.8, "color": 0xff0000}, {"name": "Malaysia", "lat": 4, "lon": 102, "color": 0x0000ff}, {"name": "Thailand", "lat": 13.7563, "lon": 100.5018, "color": 0xffcc00}, {"name": "Canada", "lat": 56.1304, "lon": -106.3468, "color": 0xff0000}, {"name": "USA", "lat": 39.8283, "lon": -98.5795, "color": 0x003366}];
 
 // ===
-// AUTHENTICATION ENDPOINTS (SSO FLOW)
+// AUTHENTICATION ENDPOINTS (SSO FLOW) - Keep existing endpoints
 // ===
 app.post('/api/verify-sso-token', noCache, async (req, res) => {
     const { token } = req.body;
@@ -191,8 +190,11 @@ app.post('/api/verify-sso-token', noCache, async (req, res) => {
     }
 });
 
-// UPDATED: Auth status endpoint with debug logs
+// ===
+// UPDATED: Auth status endpoint with enhanced debug logs
+// ===
 app.get('/api/auth/status', noCache, (req, res) => {
+    console.log('📊 Auth status check - Session ID:', req.sessionID);
     console.log('📊 Auth status check - Session:', req.session);
     console.log('📊 isLoggedIn:', req.session?.isLoggedIn);
     console.log('📊 userEmail:', req.session?.userEmail);
@@ -221,7 +223,7 @@ app.post('/api/auth/logout', noCache, (req, res) => {
 });
 
 // ===
-// DATA & PROTECTED ENDPOINTS
+// DATA & PROTECTED ENDPOINTS - Keep all your existing endpoints
 // ===
 function requireAuth(req, res, next) {
     if (req.session && req.session.isLoggedIn) {
@@ -279,5 +281,5 @@ app.get('/health', (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`Secure server running on port ${PORT}`);
+    console.log(`🚀 Secure server running on port ${PORT}`);
 });
