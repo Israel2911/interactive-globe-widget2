@@ -1150,18 +1150,22 @@ window.addEventListener('load', () => {
   }, 2000);
 });
 // Notification helpers
+// Centered notification helper
 function showNotification(message, isSuccess = true) {
   const div = document.createElement('div');
-  const bgColor = isSuccess ? '#4CAF50' : '#ff4444';
   const icon = isSuccess ? '✅' : '❌';
+  const cssClass = isSuccess ? 'notification' : 'notification error';
+  
   div.innerHTML = `
-    <div style="position: fixed; top: 20px; right: 20px; background: ${bgColor}; color: white; padding: 15px; border-radius: 8px; z-index: 3000; cursor: pointer;" onclick="this.remove()">
+    <div class="${cssClass}" onclick="this.remove()">
       ${icon} ${message}
     </div>
   `;
+  
   document.body.appendChild(div);
   setTimeout(() => div.remove(), 5000);
 }
+
 
 // ===
 document.addEventListener('DOMContentLoaded', async () => {
