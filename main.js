@@ -98,6 +98,7 @@ async function fetchAuthStatus() {
 }
 
 // ===
+// ===
 // AUTH STATUS POLLING - IMPROVED WITH SAFER FETCH
 // ===
 function startAuthStatusPolling() {
@@ -108,8 +109,8 @@ function startAuthStatusPolling() {
     // Check if user just logged in
     if (!oldStatus && authStatus.isAuthenticated) {
       console.log('🎉 User authentication detected - activating cubes!');
-      activateAllCubes();
-      showNotification('Congratulations! All university programs are now available.', true);
+      activateAllCubes(); // This already shows the notification
+      // REMOVED: showNotification('Congratulations! All university programs are now available.', true);
     }
     
     // Optional: Check if user logged out
@@ -119,6 +120,7 @@ function startAuthStatusPolling() {
     }
   }, 3000); // Check every 3 seconds
 }
+
 
 // ===
 // IMPROVED SHOW INFO PANEL WITH SAFER AUTHENTICATION CHECK
