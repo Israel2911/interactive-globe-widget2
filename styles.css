@@ -160,12 +160,14 @@ body {
 .carousel-container {
   flex: 1;
   display: flex;
-  justify-content: center;
-  align-items: center;
+  justify-content: flex-start;    /* Changed from center */
+  align-items: stretch;           /* Changed from center */
   overflow-x: auto;
+  overflow-y: hidden;             /* Added */
   gap: 8px;
   padding: 8px 12px;
   scroll-behavior: smooth;
+  box-sizing: border-box;         /* Added */
 }
 
 .carousel-arrow {
@@ -180,10 +182,12 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;    /* Changed from center */
   background: #192039;
   border-radius: 8px;
   min-width: 160px;
+  width: 160px;                   /* Added explicit width */
+  max-width: 160px;               /* Added max-width */
   height: 120px;
   text-decoration: none;
   color: #ececec;
@@ -191,7 +195,10 @@ body {
   transition: all 0.2s;
   cursor: pointer;
   flex-shrink: 0;
+  box-sizing: border-box;         /* Added */
+  overflow: hidden;               /* Added */
 }
+
 
 .carousel-card:hover {
   background: #253a5a;
@@ -206,10 +213,15 @@ body {
 
 .carousel-card img {
   width: 100%;
-  height: 70%;
+  height: 84px;                   /* Changed from 70% to fixed pixels */
+  min-height: 84px;               /* Added */
+  max-height: 84px;               /* Added */
   object-fit: cover;
   border-radius: 8px 8px 0 0;
+  display: block;                 /* Added */
+  flex-shrink: 0;                 /* Added */
 }
+
 
 .carousel-card-content {
   display: flex;
@@ -218,8 +230,12 @@ body {
   align-items: center;
   text-align: center;
   width: 100%;
-  height: 30%;
+  height: 36px;                   /* Changed from 30% to fixed pixels */
+  min-height: 36px;               /* Added */
+  max-height: 36px;               /* Added */
   padding: 4px 6px;
+  box-sizing: border-box;         /* Added */
+  overflow: hidden;               /* Added */
 }
 
 .carousel-card-title {
