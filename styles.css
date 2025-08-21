@@ -186,7 +186,7 @@ body {
   min-width: 160px;
   width: 160px;                   /* Added explicit width */
   max-width: 160px;               /* Added max-width */
-  height: 120px;
+  height: 130px;
   text-decoration: none;
   color: #ececec;
   border: 2px solid transparent;
