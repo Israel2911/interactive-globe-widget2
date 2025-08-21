@@ -472,6 +472,7 @@ document.addEventListener('DOMContentLoaded', addInfoPanelStyles);
 
 
 
+
 // =======
 // GLOBE WIDGET LOGIC (Client-Side UI Only) — unchanged foundation
 // =======
