@@ -226,6 +226,63 @@ function hideInfoPanel() {
   document.getElementById('infoPanelOverlay').style.display = 'none';
 }
 
+// ===================================
+// SAFARI CAROUSEL FIX
+// ===================================
+function applySafariFixes() {
+  // Detect Safari browsers specifically
+  function isSafari() {
+    const ua = navigator.userAgent.toLowerCase();
+    return ua.indexOf('safari') !== -1 && ua.indexOf('chrome') === -1;
+  }
+
+  // Apply Safari-specific fixes
+  if (isSafari()) {
+    console.log('🍎 Safari detected - applying carousel fixes');
+    document.documentElement.classList.add('safari-browser');
+    
+    // Force hardware acceleration on carousel elements
+    setTimeout(() => {
+      const cards = document.querySelectorAll('.carousel-card');
+      const containers = document.querySelectorAll('.carousel-container');
+      const images = document.querySelectorAll('.carousel-card img');
+      
+      // Fix carousel cards
+      cards.forEach(card => {
+        card.style.webkitTransform = 'translate3d(0,0,0)';
+        card.style.transform = 'translate3d(0,0,0)';
+        card.style.webkitBackfaceVisibility = 'hidden';
+        card.style.backfaceVisibility = 'hidden';
+        card.style.willChange = 'transform';
+      });
+      
+      // Fix carousel containers  
+      containers.forEach(container => {
+        container.style.webkitTransform = 'translateZ(0)';
+        container.style.transform = 'translateZ(0)';
+        container.style.webkitOverflowScrolling = 'touch';
+      });
+      
+      // Fix carousel images
+      images.forEach(img => {
+        img.style.webkitTransform = 'translateZ(0)';
+        img.style.transform = 'translateZ(0)';
+        img.style.webkitBackfaceVisibility = 'hidden';
+        img.style.backfaceVisibility = 'hidden';
+        img.style.imageRendering = '-webkit-optimize-contrast';
+      });
+      
+      console.log('✅ Safari carousel fixes applied');
+    }, 100);
+  }
+}
+
+// Apply Safari fixes when DOM is ready
+document.addEventListener('DOMContentLoaded', applySafariFixes);
+
+// Also apply fixes after carousel is populated (fallback)
+setTimeout(applySafariFixes, 1000);
+
 // Add info panel styles and HTML (kept in case you re-enable the panel)
 function addInfoPanelStyles() {
   const style = document.createElement('style');
@@ -281,6 +338,29 @@ function addInfoPanelStyles() {
       width: 60px;
       height: 60px;
       margin-right: 15px;
+    }
+    
+    /* Safari-specific CSS fixes */
+    .safari-browser .carousel-card {
+      -webkit-transform: translate3d(0, 0, 0) !important;
+      transform: translate3d(0, 0, 0) !important;
+      -webkit-backface-visibility: hidden !important;
+      backface-visibility: hidden !important;
+      will-change: transform !important;
+    }
+
+    .safari-browser .carousel-card img {
+      -webkit-transform: translateZ(0) !important;
+      transform: translateZ(0) !important;
+      image-rendering: -webkit-optimize-contrast !important;
+      -webkit-backface-visibility: hidden !important;
+      backface-visibility: hidden !important;
+    }
+
+    .safari-browser .carousel-container {
+      -webkit-overflow-scrolling: touch !important;
+      -webkit-transform: translateZ(0) !important;
+      transform: translateZ(0) !important;
     }
   `;
   document.head.appendChild(style);
