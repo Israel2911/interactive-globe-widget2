@@ -1188,8 +1188,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (authStatus.isAuthenticated) {
       console.log('🎮 Activating cubes for authenticated user!');
       setTimeout(() => {
-        activateAllCubes();
-        showNotification('🎮 University programs unlocked!', true);
+        activateAllCubes(); // This already shows the notification
+        // REMOVED: showNotification('🎮 University programs unlocked!', true);
       }, 500); // Small delay to ensure cubes are fully initialized
     }
     
@@ -1210,3 +1210,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.error('❌ Error during initialization:', error);
   }
 });
+
