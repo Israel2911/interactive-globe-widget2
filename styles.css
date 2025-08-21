@@ -392,14 +392,24 @@ body {
   .trust-indicators { grid-template-columns: 1fr; margin: 10px; }
   .privacy-assurance, .login-explanation { margin: 10px; padding: 15px; }
   
-  /* Existing carousel mobile styles */
-  .carousel-container { padding: 4px 8px; gap: 6px; }
+/* Existing carousel mobile styles */
+.carousel-container { 
+  padding: 4px 12px; 
+  gap: 6px; 
+  justify-content: center; 
+}
+.carousel-arrow { 
+  font-size: 1.2em; 
+  margin: 0 10px; 
+}
+
   .carousel-card { min-width: 140px; max-width: 140px; height: 130px; padding: 0; }
+ 
   .carousel-card img { height: 65%; }
   .carousel-card-content { height: 35%; padding: 2px 4px; }
   .carousel-card-title { font-size: 0.7em; }
   .carousel-card-text { font-size: 0.6em; }
-  .carousel-arrow { font-size: 1.2em; margin: 0 4px; }
+  
   
   /* Enhanced control buttons with icons */
   .control-buttons button { width: 36px; height: 36px; padding: 0; font-size: 0; position: relative; background: #22356a; border-radius: 6px; overflow: hidden; }
