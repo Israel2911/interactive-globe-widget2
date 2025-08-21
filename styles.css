@@ -451,47 +451,10 @@ body {
   #arcToggleBtn::before { width: 24px; height: 12px; }
 }
 /* ===================================
-   SAFARI-ONLY CAROUSEL FIXES
-   (Add to end of styles.css)
+   SAFARI-ONLY CAROUSEL FIXES (JS-Targeted Only)
 =================================== */
 
-/* Safari detection via CSS feature queries */
-@supports (-webkit-appearance: none) {
-  .carousel-card {
-    -webkit-transform: translate3d(0, 0, 0) !important;
-    transform: translate3d(0, 0, 0) !important;
-    -webkit-backface-visibility: hidden !important;
-    backface-visibility: hidden !important;
-    will-change: transform !important;
-    -webkit-font-smoothing: antialiased !important;
-  }
-  
-  .carousel-card:hover {
-    -webkit-transform: translate3d(0, -2px, 0) !important;
-    transform: translate3d(0, -2px, 0) !important;
-  }
-  
-  .carousel-card img {
-    -webkit-transform: translateZ(0) !important;
-    transform: translateZ(0) !important;
-    -webkit-backface-visibility: hidden !important;
-    backface-visibility: hidden !important;
-    image-rendering: -webkit-optimize-contrast !important;
-    max-width: 100% !important;
-    height: auto !important;
-    object-fit: cover !important;
-  }
-  
-  .carousel-container {
-    -webkit-overflow-scrolling: touch !important;
-    -webkit-transform: translateZ(0) !important;
-    transform: translateZ(0) !important;
-    -webkit-perspective: 1000px !important;
-    perspective: 1000px !important;
-  }
-}
-
-/* JavaScript-detected Safari class targeting */
+/* ONLY JavaScript-detected Safari class targeting */
 .safari-browser .carousel-card {
   -webkit-transform: translate3d(0, 0, 0) !important;
   transform: translate3d(0, 0, 0) !important;
@@ -525,24 +488,3 @@ body {
   perspective: 1000px !important;
 }
 
-/* Device-specific Safari targeting for iPad/Mac */
-@media screen and (-webkit-min-device-pixel-ratio: 1) {
-  .carousel-card {
-    -webkit-transform: translate3d(0, 0, 0) !important;
-    transform: translate3d(0, 0, 0) !important;
-    -webkit-backface-visibility: hidden !important;
-    backface-visibility: hidden !important;
-  }
-  
-  .carousel-card img {
-    -webkit-transform: translateZ(0) !important;
-    transform: translateZ(0) !important;
-    image-rendering: -webkit-optimize-contrast !important;
-  }
-  
-  .carousel-container {
-    -webkit-overflow-scrolling: touch !important;
-    -webkit-transform: translateZ(0) !important;
-    transform: translateZ(0) !important;
-  }
-}
