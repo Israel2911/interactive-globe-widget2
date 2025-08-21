@@ -450,19 +450,28 @@ body {
   .control-buttons button::before { font-size: 1rem; }
   #arcToggleBtn::before { width: 24px; height: 12px; }
 }
-/* ===================================
-   iOS-ONLY CAROUSEL FIXES 
-   (iPad/iPhone Safari + Chrome - NO desktop changes)
-=================================== */
+/* =======
+   SAFARI/iOS CAROUSEL FIXES - DIRECT TARGETING
+======= */
 
-/* Target ONLY iOS devices using device-specific media queries */
-@media screen and (max-device-width: 1024px) and (-webkit-min-device-pixel-ratio: 1) {
+/* Direct Safari targeting - all versions */
+_::-webkit-full-page-media, _:future, :root .carousel-card {
+  -webkit-transform: translateZ(0) !important;
+  transform: translateZ(0) !important;
+  -webkit-backface-visibility: hidden !important;
+  backface-visibility: hidden !important;
+  will-change: transform !important;
+}
+
+/* iOS/iPadOS specific targeting */
+@media only screen and (max-device-width: 1366px) and (-webkit-min-device-pixel-ratio: 1) {
   .carousel-card {
     -webkit-transform: translateZ(0) !important;
     transform: translateZ(0) !important;
     -webkit-backface-visibility: hidden !important;
     backface-visibility: hidden !important;
     will-change: transform !important;
+    -webkit-font-smoothing: antialiased !important;
   }
   
   .carousel-card img {
@@ -470,39 +479,48 @@ body {
     transform: translateZ(0) !important;
     -webkit-backface-visibility: hidden !important;
     backface-visibility: hidden !important;
-    max-width: 100% !important;
-    height: auto !important;
+    image-rendering: -webkit-optimize-contrast !important;
   }
   
   .carousel-container {
     -webkit-overflow-scrolling: touch !important;
     -webkit-transform: translateZ(0) !important;
     transform: translateZ(0) !important;
-    touch-action: pan-x pan-y !important;
+    -webkit-perspective: 1000px !important;
+    perspective: 1000px !important;
   }
 }
 
-/* iPad specific (both orientations) */
-@media screen and (min-device-width: 768px) and (max-device-width: 1024px) and (-webkit-min-device-pixel-ratio: 1) {
+/* Force GPU acceleration on all WebKit mobile */
+@media screen and (max-width: 1024px) {
+  .carousel-card {
+    transform: translate3d(0, 0, 0) !important;
+    -webkit-transform: translate3d(0, 0, 0) !important;
+    backface-visibility: hidden !important;
+    -webkit-backface-visibility: hidden !important;
+  }
+  
+  .carousel-container {
+    transform: translate3d(0, 0, 0) !important;
+    -webkit-transform: translate3d(0, 0, 0) !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+}
+
+/* iPad Pro and larger tablets */
+@media screen and (min-device-width: 768px) and (max-device-width: 1024px) {
   .carousel-card {
     min-width: 160px !important;
     flex: 0 0 auto !important;
-  }
-  
-  .carousel-container {
-    gap: 10px !important;
-    padding: 8px 15px !important;
+    transform: translate3d(0, 0, 0) scale(1) !important;
+    -webkit-transform: translate3d(0, 0, 0) scale(1) !important;
   }
 }
 
-/* iPhone specific */
-@media screen and (max-device-width: 767px) and (-webkit-min-device-pixel-ratio: 1) {
+/* Alternative WebKit detection */
+@supports (-webkit-appearance: none) and (not (display: grid)) {
   .carousel-card {
-    -webkit-tap-highlight-color: transparent !important;
-    touch-action: manipulation !important;
-  }
-  
-  .carousel-container {
-    scroll-snap-type: x mandatory !important;
+    -webkit-transform: translateZ(0) !important;
+    transform: translateZ(0) !important;
   }
 }
