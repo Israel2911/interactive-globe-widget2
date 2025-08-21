@@ -160,14 +160,12 @@ body {
 .carousel-container {
   flex: 1;
   display: flex;
-  justify-content: flex-start;    /* Changed from center */
-  align-items: stretch;           /* Changed from center */
+  justify-content: center;
+  align-items: center;
   overflow-x: auto;
-  overflow-y: hidden;             /* Added */
   gap: 8px;
   padding: 8px 12px;
   scroll-behavior: smooth;
-  box-sizing: border-box;         /* Added */
 }
 
 .carousel-arrow {
