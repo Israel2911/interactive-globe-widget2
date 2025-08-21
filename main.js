@@ -101,23 +101,45 @@ async function fetchAuthStatus() {
 // AUTH STATUS POLLING - IMPROVED WITH SAFER FETCH
 // ===
 function startAuthStatusPolling() {
-  setInterval(async () => {
+  // SMART POLLING - stops when authenticated
+  let pollTimer = null;
+  let wasAuthenticated = false;
+  
+  function poll() {
     const oldStatus = authStatus.isAuthenticated;
-    await fetchAuthStatus();
     
-    // Check if user just logged in
-    if (!oldStatus && authStatus.isAuthenticated) {
-      console.log('🎉 User authentication detected - activating cubes!');
-      activateAllCubes();
-      showNotification('🎮 University programs unlocked!', true);
-    }
-    
-    // Optional: Check if user logged out
-    if (oldStatus && !authStatus.isAuthenticated) {
-      console.log('👋 User logged out');
-      showNotification('Logged out successfully', false);
-    }
-  }, 3000); // Check every 3 seconds
+    fetchAuthStatus().then(() => {
+      // Check if user just logged in
+      if (!oldStatus && authStatus.isAuthenticated) {
+        console.log('🎉 User authentication detected - activating cubes!');
+        activateAllCubes();
+        showNotification('🎮 University programs unlocked!', true);
+        wasAuthenticated = true;
+        
+        // Stop frequent polling - check every 5 minutes instead
+        pollTimer = setTimeout(poll, 5 * 60 * 1000);
+      }
+      // Check if user logged out
+      else if (oldStatus && !authStatus.isAuthenticated) {
+        console.log('👋 User logged out');
+        showNotification('Logged out successfully', false);
+        wasAuthenticated = false;
+        
+        // Resume frequent polling
+        pollTimer = setTimeout(poll, 3000);
+      }
+      // Still not authenticated - keep polling every 3 seconds
+      else if (!authStatus.isAuthenticated) {
+        pollTimer = setTimeout(poll, 3000);
+      }
+      // Still authenticated - keep checking every 5 minutes
+      else if (authStatus.isAuthenticated) {
+        pollTimer = setTimeout(poll, 5 * 60 * 1000);
+      }
+    });
+  }
+  
+  poll(); // Start immediately
 }
 
 // ===
