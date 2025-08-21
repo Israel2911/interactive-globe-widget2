@@ -778,7 +778,9 @@ function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
   const offsetEnd = end.clone().normalize().multiplyScalar(globeRadius + arcOffset);
   const mid = offsetStart.clone().add(offsetEnd).multiplyScalar(0.5).normalize().multiplyScalar(globeRadius + arcOffset + arcElevation);
   const curve = new THREE.QuadraticBezierCurve3(offsetStart, mid, offsetEnd);
-  const geometry = new THREE.TubeGeometry(curve, 64, 0.005, 8, false);
+  // Elegant smooth arcs:
+const geometry = new THREE.TubeGeometry(curve, 256, 0.002, 32, false);
+
   const vertexShader = `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
   const fragmentShader = `varying vec2 vUv; uniform float time; uniform vec3 color; void main() { float stripe1 = step(0.1, fract(vUv.x * 4.0 + time * 0.2)) - step(0.2, fract(vUv.x * 4.0 + time * 0.2)); float stripe2 = step(0.1, fract(vUv.x * 4.0 - time * 0.2)) - step(0.2, fract(vUv.x * 4.0 - time * 0.2)); float combinedStripes = max(stripe1, stripe2); float glow = (1.0 - abs(vUv.y - 0.5) * 2.0); if (combinedStripes > 0.0) { gl_FragColor = vec4(color, combinedStripes * glow); } else { discard; } }`;
   const material = new THREE.ShaderMaterial({
