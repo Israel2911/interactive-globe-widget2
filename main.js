@@ -32,7 +32,7 @@ function activateAllCubes() {
         }
       });
   });
-  showNotification('🎮 All university programs are now accessible!');
+  showNotification('Success! You now have access to all university programs.');
 }
 
 // ===
