@@ -4,6 +4,7 @@ body {
   background: #101924;
   color: #ececec;
 }
+
 /* Header and Footer */
 .header-ui-bar {
   background: transparent;
@@ -12,6 +13,7 @@ body {
   text-align: center;
   font-weight: 500;
 }
+
 .footer-ui-bar {
   background: #003366;
   position: fixed;
@@ -23,6 +25,7 @@ body {
   padding: 8px 0;
   z-index: 5;
 }
+
 /* Security & Trust Indicators - NEW */
 .security-indicators {
   display: flex;
@@ -33,6 +36,7 @@ body {
   backdrop-filter: blur(10px);
   flex-wrap: wrap;
 }
+
 .security-badge {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
@@ -42,7 +46,9 @@ body {
   font-weight: bold;
   transition: transform 0.3s ease;
 }
+
 .security-badge:hover { transform: translateY(-2px); }
+
 /* Trust & Privacy Sections - NEW */
 .trust-indicators, .privacy-assurance {
   margin: 20px;
@@ -52,26 +58,33 @@ body {
   backdrop-filter: blur(5px);
   display: none;
 }
+
 .trust-indicators.active, .privacy-assurance.active { display: grid; }
+
 .trust-indicators { 
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 15px;
 }
+
 .trust-item {
   text-align: center;
   padding: 15px;
   background: rgba(255,255,255,0.1);
   border-radius: 8px;
 }
+
 .trust-item h4 { color: #4CAF50; margin: 0 0 10px 0; }
 .trust-item p { color: #ddd; margin: 0; font-size: 14px; }
+
 .privacy-assurance { 
   background: rgba(0,50,100,0.8); 
   color: white; 
   display: none;
 }
+
 .privacy-assurance.active { display: block; }
 .privacy-assurance h2 { text-align: center; color: #4CAF50; }
+
 .security-section {
   margin-bottom: 15px;
   padding: 15px;
@@ -79,6 +92,7 @@ body {
   border-radius: 8px;
   border-left: 4px solid #4CAF50;
 }
+
 .security-section h3 { margin-top: 0; color: #87CEEB; }
 .security-section ul { list-style: none; padding-left: 0; }
 .security-section li { 
@@ -86,6 +100,7 @@ body {
   padding: 3px 0; 
   border-bottom: 1px solid rgba(255,255,255,0.1); 
 }
+
 /* Login Explanation - NEW */
 .login-explanation {
   margin: 20px;
@@ -95,7 +110,9 @@ body {
   color: white;
   text-align: center;
 }
+
 .login-explanation h3 { color: #FFD700; margin-top: 0; }
+
 /* Dashboard - NEW */
 .dashboard-container {
   position: fixed;
@@ -110,6 +127,7 @@ body {
   color: white;
   backdrop-filter: blur(20px);
 }
+
 .dashboard-header {
   display: flex;
   justify-content: space-between;
@@ -118,6 +136,7 @@ body {
   padding-bottom: 10px;
   border-bottom: 1px solid rgba(255,255,255,0.3);
 }
+
 .dashboard-header button {
   background: #ff4444;
   color: white;
@@ -126,6 +145,7 @@ body {
   border-radius: 5px;
   cursor: pointer;
 }
+
 /* Carousel Styles */
 .carousel-wrapper {
   display: flex;
@@ -136,6 +156,7 @@ body {
   padding: 0 10px;
   box-sizing: border-box;
 }
+
 .carousel-container {
   flex: 1;
   display: flex;
@@ -146,6 +167,7 @@ body {
   padding: 8px 12px;
   scroll-behavior: smooth;
 }
+
 .carousel-arrow {
   font-size: 1.5em;
   color: #ffa500;
@@ -153,6 +175,7 @@ body {
   user-select: none;
   margin: 0 8px;
 }
+
 .carousel-card {
   display: flex;
   flex-direction: column;
@@ -169,21 +192,25 @@ body {
   cursor: pointer;
   flex-shrink: 0;
 }
+
 .carousel-card:hover {
   background: #253a5a;
   border-color: #ffa500;
   transform: translateY(-2px);
 }
+
 .carousel-card.selected {
   background: #ffa500;
   color: #222;
 }
+
 .carousel-card img {
   width: 100%;
   height: 70%;
   object-fit: cover;
   border-radius: 8px 8px 0 0;
 }
+
 .carousel-card-content {
   display: flex;
   flex-direction: column;
@@ -194,14 +221,17 @@ body {
   height: 30%;
   padding: 4px 6px;
 }
+
 .carousel-card-title {
   font-size: 0.8em;
   font-weight: 600;
 }
+
 .carousel-card-text {
   font-size: 0.65em;
   opacity: 0.85;
 }
+
 /* Desktop Controls */
 .left-controls-stack {
   position: fixed;
@@ -213,6 +243,7 @@ body {
   gap: 8px;
   align-items: flex-start;
 }
+
 .navigation-controls {
   background: #252f39ea;
   border-radius: 12px;
@@ -220,11 +251,13 @@ body {
   margin-bottom: 12px;
   box-shadow: 0 1px 4px rgba(0,0,0,.12);
 }
+
 .nav-row {
   display: flex;
   gap: 8px;
   margin: 4px 0;
 }
+
 .nav-btn {
   width: 34px;
   height: 34px;
@@ -238,16 +271,19 @@ body {
   cursor: pointer;
   border: none;
 }
+
 .nav-btn:hover {
   background: #ffa500;
   color: #222;
 }
+
 .nav-btn.active, button[data-active="true"] {
   background: #ffa500 !important;
   color: #222 !important;
   box-shadow: 0 0 8px rgba(255,165,0,0.6);
   transform: scale(1.05);
 }
+
 .control-buttons {
   position: fixed;
   bottom: 50px;
@@ -257,6 +293,7 @@ body {
   gap: 6px;
   z-index: 10;
 }
+
 .control-buttons button {
   background: #22356a;
   color: #eee;
@@ -267,18 +304,22 @@ body {
   cursor: pointer;
   white-space: nowrap;
 }
+
 .control-buttons button:hover {
   background: #ffa500;
   color: #222;
 }
+
 /* Hide "Globe is active" text and style button */
 #scrollLockInstruction {
   display: none !important;
 }
+
 .scroll-lock-ui {
   display: flex;
   align-items: center;
 }
+
 #scrollLockBtn {
   background: #ffa500;
   color: #222;
@@ -289,6 +330,7 @@ body {
   padding: 5px 18px;
   margin: 0;
 }
+
 /* Globe, Info Panel, and other styles */
 #globe-canvas {
   position: absolute;
@@ -298,6 +340,7 @@ body {
   height: calc(100vh - 120px);
   z-index: 2;
 }
+
 .info-panel-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
@@ -307,6 +350,7 @@ body {
   justify-content: center;
   z-index: 99;
 }
+
 .info-panel {
   background: #22356a;
   border-radius: 16px;
@@ -314,20 +358,24 @@ body {
   min-width: 380px;
   position: relative;
 }
+
 .apply-cube {
   box-shadow: 0 0 24px 6px #ffa500;
   border: 3px solid #ffa500;
 }
+
 .placeholder-cube {
   background: linear-gradient(120deg, #2a2a2a 64%, #444444 100%);
   border: 2px solid #444;
 }
+
 /* = MOBILE: GENERAL SHARED STYLES (< 768px) = */
 @media (max-width: 768px) {
   /* Security indicators mobile adaptation - NEW */
   .security-indicators { flex-direction: column; align-items: center; }
   .trust-indicators { grid-template-columns: 1fr; margin: 10px; }
   .privacy-assurance, .login-explanation { margin: 10px; padding: 15px; }
+  
   /* Existing carousel mobile styles */
   .carousel-container { padding: 4px 8px; gap: 6px; }
   .carousel-card { min-width: 140px; max-width: 140px; height: 100px; padding: 0; }
@@ -336,6 +384,7 @@ body {
   .carousel-card-title { font-size: 0.7em; }
   .carousel-card-text { font-size: 0.6em; }
   .carousel-arrow { font-size: 1.2em; margin: 0 4px; }
+  
   /* Enhanced control buttons with icons */
   .control-buttons button { width: 36px; height: 36px; padding: 0; font-size: 0; position: relative; background: #22356a; border-radius: 6px; overflow: hidden; }
   .control-buttons button:hover { background: #ffa500; }
@@ -345,11 +394,14 @@ body {
   #toggleNodesButton::before { content: '⚛️'; }
   #toggleMeshButton::before { content: '🌐'; }
   #pauseCubesButton::before { content: '🧊'; }
+  
   /* Rainbow arc button */
   #arcToggleBtn::before { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 28px; height: 14px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 14'%3E%3Cpath d='M2,12 A12,12 0 0,1 26,12' fill='none' stroke='%23ff0000' stroke-width='1.5'/%3E%3Cpath d='M4,12 A10,10 0 0,1 24,12' fill='none' stroke='%23ffa500' stroke-width='1.5'/%3E%3Cpath d='M6,12 A8,8 0 0,1 22,12' fill='none' stroke='%23ffff00' stroke-width='1.5'/%3E%3Cpath d='M8,12 A6,6 0 0,1 20,12' fill='none' stroke='%23008000' stroke-width='1.5'/%3E%3Cpath d='M10,12 A4,4 0 0,1 18,12' fill='none' stroke='%230000ff' stroke-width='1.5'/%3E%3Cpath d='M12,12 A2,2 0 0,1 16,12' fill='none' stroke='%234b0082' stroke-width='1.5'/%3E%3Cpath d='M13.5,12 A0.5,0.5 0 0,1 14.5,12' fill='none' stroke='%23ee82ee' stroke-width='1.5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-size: contain; filter: drop-shadow(0 0 3px rgba(255,0,0,0.8)) drop-shadow(0 0 2px rgba(238,130,238,0.8)); }
+  
   .nav-btn { width: 34px; height: 34px; font-size: 1.1em; border-radius: 6px; }
   #scrollLockBtn { width: 90px !important; height: 34px !important; padding: 0 8px !important; font-size: 0.75em !important; border-radius: 6px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; }
 }
+
 /* = MOBILE: PORTRAIT ONLY = */
 @media (max-width: 768px) and (orientation: portrait) {
   .control-buttons {
@@ -362,6 +414,7 @@ body {
   .scroll-lock-ui { order: 2; }
   #globe-canvas { height: calc(100vh - 175px); }
 }
+
 /* = MOBILE: LANDSCAPE ONLY - DEFINITIVE SPLIT LAYOUT = */
 @media (max-width: 926px) and (orientation: landscape) {
   .carousel-card { min-width: 120px; height: 80px; }
@@ -385,6 +438,7 @@ body {
     background: rgba(37, 47, 57, 0.3); backdrop-filter: blur(5px); border-radius: 8px; padding: 6px;
   }
 }
+
 /* = VERY SMALL MOBILE (<480px) = */
 @media (max-width: 480px) {
   .carousel-card { min-width: 120px; height: 90px; }
@@ -396,19 +450,19 @@ body {
   .control-buttons button::before { font-size: 1rem; }
   #arcToggleBtn::before { width: 24px; height: 12px; }
 }
-
 /* ===================================
-   SAFARI/iOS CAROUSEL FIXES 
-   (Targets Safari Mac/iOS + Chrome iOS/iPad)
+   iOS-ONLY CAROUSEL FIXES 
+   (iPad/iPhone Safari + Chrome - NO desktop changes)
 =================================== */
-@supports (-webkit-touch-callout: none) or (-webkit-appearance: none) {
+
+/* Target ONLY iOS devices using device-specific media queries */
+@media screen and (max-device-width: 1024px) and (-webkit-min-device-pixel-ratio: 1) {
   .carousel-card {
     -webkit-transform: translateZ(0) !important;
     transform: translateZ(0) !important;
     -webkit-backface-visibility: hidden !important;
     backface-visibility: hidden !important;
     will-change: transform !important;
-    -webkit-font-smoothing: antialiased !important;
   }
   
   .carousel-card img {
@@ -416,7 +470,6 @@ body {
     transform: translateZ(0) !important;
     -webkit-backface-visibility: hidden !important;
     backface-visibility: hidden !important;
-    image-rendering: -webkit-optimize-contrast !important;
     max-width: 100% !important;
     height: auto !important;
   }
@@ -425,65 +478,31 @@ body {
     -webkit-overflow-scrolling: touch !important;
     -webkit-transform: translateZ(0) !important;
     transform: translateZ(0) !important;
-    -webkit-perspective: 1000px !important;
-    perspective: 1000px !important;
     touch-action: pan-x pan-y !important;
-    -webkit-touch-callout: none !important;
-  }
-  
-  .carousel-wrapper {
-    -webkit-transform: translateZ(0) !important;
-    transform: translateZ(0) !important;
   }
 }
 
-/* iPad specific media queries (covers both Safari + Chrome) */
-@media screen and (min-device-width: 768px) and (max-device-width: 1024px) {
+/* iPad specific (both orientations) */
+@media screen and (min-device-width: 768px) and (max-device-width: 1024px) and (-webkit-min-device-pixel-ratio: 1) {
   .carousel-card {
     min-width: 160px !important;
     flex: 0 0 auto !important;
-    margin-right: 8px !important;
-    -webkit-transform: translateZ(0) scale(1) !important;
-    transform: translateZ(0) scale(1) !important;
   }
   
   .carousel-container {
     gap: 10px !important;
     padding: 8px 15px !important;
-    scroll-behavior: smooth !important;
-    -webkit-overflow-scrolling: touch !important;
   }
 }
 
-/* iPad landscape specific */
-@media screen and (min-device-width: 768px) and (max-device-width: 1024px) and (orientation: landscape) {
-  .carousel-card {
-    min-width: 140px !important;
-    height: 110px !important;
-  }
-}
-
-/* iPhone/smaller iOS devices */
-@media screen and (max-device-width: 767px) {
+/* iPhone specific */
+@media screen and (max-device-width: 767px) and (-webkit-min-device-pixel-ratio: 1) {
   .carousel-card {
     -webkit-tap-highlight-color: transparent !important;
     touch-action: manipulation !important;
   }
   
   .carousel-container {
-    -webkit-overflow-scrolling: touch !important;
     scroll-snap-type: x mandatory !important;
-  }
-  
-  .carousel-card {
-    scroll-snap-align: start !important;
-  }
-}
-
-/* Alternative detection for older iOS versions */
-@media screen and (-webkit-min-device-pixel-ratio: 1) {
-  .carousel-card {
-    -webkit-transform: translateZ(0) !important;
-    transform: translateZ(0) !important;
   }
 }
