@@ -101,45 +101,23 @@ async function fetchAuthStatus() {
 // AUTH STATUS POLLING - IMPROVED WITH SAFER FETCH
 // ===
 function startAuthStatusPolling() {
-  // SMART POLLING - stops when authenticated
-  let pollTimer = null;
-  let wasAuthenticated = false;
-  
-  function poll() {
+  setInterval(async () => {
     const oldStatus = authStatus.isAuthenticated;
+    await fetchAuthStatus();
     
-    fetchAuthStatus().then(() => {
-      // Check if user just logged in
-      if (!oldStatus && authStatus.isAuthenticated) {
-        console.log('🎉 User authentication detected - activating cubes!');
-        activateAllCubes();
-        showNotification('🎮 University programs unlocked!', true);
-        wasAuthenticated = true;
-        
-        // Stop frequent polling - check every 5 minutes instead
-        pollTimer = setTimeout(poll, 5 * 60 * 1000);
-      }
-      // Check if user logged out
-      else if (oldStatus && !authStatus.isAuthenticated) {
-        console.log('👋 User logged out');
-        showNotification('Logged out successfully', false);
-        wasAuthenticated = false;
-        
-        // Resume frequent polling
-        pollTimer = setTimeout(poll, 3000);
-      }
-      // Still not authenticated - keep polling every 3 seconds
-      else if (!authStatus.isAuthenticated) {
-        pollTimer = setTimeout(poll, 3000);
-      }
-      // Still authenticated - keep checking every 5 minutes
-      else if (authStatus.isAuthenticated) {
-        pollTimer = setTimeout(poll, 5 * 60 * 1000);
-      }
-    });
-  }
-  
-  poll(); // Start immediately
+    // Check if user just logged in
+    if (!oldStatus && authStatus.isAuthenticated) {
+      console.log('🎉 User authentication detected - activating cubes!');
+      activateAllCubes();
+      showNotification('🎮 University programs unlocked!', true);
+    }
+    
+    // Optional: Check if user logged out
+    if (oldStatus && !authStatus.isAuthenticated) {
+      console.log('👋 User logged out');
+      showNotification('Logged out successfully', false);
+    }
+  }, 3000); // Check every 3 seconds
 }
 
 // ===
@@ -226,153 +204,6 @@ function hideInfoPanel() {
   document.getElementById('infoPanelOverlay').style.display = 'none';
 }
 
-// ===================================
-// ENHANCED SAFARI CAROUSEL FIX
-// ===================================
-function applySafariFixes() {
-  // Detect Safari browsers specifically
-  function isSafari() {
-    const ua = navigator.userAgent.toLowerCase();
-    return ua.indexOf('safari') !== -1 && ua.indexOf('chrome') === -1; // Fixed: !== and ===
-  }
-  
-  // Apply Safari-specific fixes
-  if (isSafari()) {
-    console.log('🍎 Enhanced Safari detected - applying carousel fixes');
-    document.documentElement.classList.add('safari-browser');
-    
-    // Immediate style injection for Safari
-    const safariStyle = document.createElement('style');
-    safariStyle.textContent = `
-      /* Safari-specific carousel fixes */
-      .safari-browser .carousel-card {
-        -webkit-transform: translate3d(0, 0, 0) !important;
-        transform: translate3d(0, 0, 0) !important;
-        -webkit-backface-visibility: hidden !important;
-        backface-visibility: hidden !important;
-        will-change: transform !important;
-        -webkit-font-smoothing: antialiased !important;
-      }
-      
-      .safari-browser .carousel-card:hover {
-        -webkit-transform: translate3d(0, -2px, 0) !important;
-        transform: translate3d(0, -2px, 0) !important;
-        background: #253a5a;
-        border-color: #ffa500;
-      }
-      
-      .safari-browser .carousel-card img {
-        -webkit-transform: translateZ(0) !important;
-        transform: translateZ(0) !important;
-        -webkit-backface-visibility: hidden !important;
-        backface-visibility: hidden !important;
-        image-rendering: -webkit-optimize-contrast !important;
-        max-width: 100% !important;
-        height: auto !important;
-        object-fit: cover !important;
-      }
-      
-      .safari-browser .carousel-container {
-        -webkit-overflow-scrolling: touch !important;
-        -webkit-transform: translateZ(0) !important;
-        transform: translateZ(0) !important;
-        -webkit-perspective: 1000px !important;
-        perspective: 1000px !important;
-      }
-    `;
-    document.head.appendChild(safariStyle);
-    
-    // Force hardware acceleration on carousel elements
-    setTimeout(() => {
-      const cards = document.querySelectorAll('.carousel-card');
-      const containers = document.querySelectorAll('.carousel-container');
-      const images = document.querySelectorAll('.carousel-card img');
-      
-      // Fix carousel cards
-      cards.forEach(card => {
-        card.style.webkitTransform = 'translate3d(0,0,0)';
-        card.style.transform = 'translate3d(0,0,0)';
-        card.style.webkitBackfaceVisibility = 'hidden';
-        card.style.backfaceVisibility = 'hidden';
-        card.style.willChange = 'transform';
-        card.style.webkitFontSmoothing = 'antialiased';
-      });
-      
-      // Fix carousel containers  
-      containers.forEach(container => {
-        container.style.webkitTransform = 'translateZ(0)';
-        container.style.transform = 'translateZ(0)';
-        container.style.webkitOverflowScrolling = 'touch';
-      });
-      
-      // Fix carousel images
-      images.forEach(img => {
-        img.style.webkitTransform = 'translateZ(0)';
-        img.style.transform = 'translateZ(0)';
-        img.style.webkitBackfaceVisibility = 'hidden';
-        img.style.backfaceVisibility = 'hidden';
-        img.style.imageRendering = '-webkit-optimize-contrast';
-        img.style.maxWidth = '100%';
-        img.style.height = 'auto';
-        img.style.objectFit = 'cover';
-      });
-      
-      console.log('✅ Enhanced Safari carousel fixes applied');
-    }, 100);
-  }
-}
-
-// ===================================
-// MINIMAL SAFARI DETECTION + FIXES (Additional Safety Net)
-// ===================================
-function applySafariCarouselFix() {
-  // Simple Safari detection - Fixed regex
-  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-  
-  if (isSafari) {
-    console.log('🍎 Applying minimal Safari carousel fixes');
-    
-    // Add Safari class for CSS targeting
-    document.documentElement.classList.add('safari-browser');
-    
-    // Direct style application - most reliable method
-    const style = document.createElement('style');
-    style.textContent = `
-      .carousel-card {
-        -webkit-transform: translate3d(0, 0, 0) !important;
-        transform: translate3d(0, 0, 0) !important;
-        -webkit-backface-visibility: hidden !important;
-        backface-visibility: hidden !important;
-        will-change: transform !important;
-      }
-      
-      .carousel-card img {
-        -webkit-transform: translateZ(0) !important;
-        transform: translateZ(0) !important;
-        -webkit-backface-visibility: hidden !important;
-        backface-visibility: hidden !important;
-        image-rendering: -webkit-optimize-contrast !important;
-      }
-      
-      .carousel-container {
-        -webkit-overflow-scrolling: touch !important;
-        -webkit-transform: translateZ(0) !important;
-        transform: translateZ(0) !important;
-      }
-    `;
-    document.head.appendChild(style);
-  }
-}
-
-// Apply Safari fixes when DOM is ready
-document.addEventListener('DOMContentLoaded', applySafariFixes);
-document.addEventListener('DOMContentLoaded', applySafariCarouselFix);
-
-// Also apply fixes after carousel is populated (fallbacks)
-setTimeout(applySafariFixes, 500);
-setTimeout(applySafariCarouselFix, 1000);
-setTimeout(applySafariFixes, 1500); // Extra fallback
-
 // Add info panel styles and HTML (kept in case you re-enable the panel)
 function addInfoPanelStyles() {
   const style = document.createElement('style');
@@ -429,30 +260,8 @@ function addInfoPanelStyles() {
       height: 60px;
       margin-right: 15px;
     }
-    
-    /* Safari-specific CSS fixes */
-    .safari-browser .carousel-card {
-      -webkit-transform: translate3d(0, 0, 0) !important;
-      transform: translate3d(0, 0, 0) !important;
-      -webkit-backface-visibility: hidden !important;
-      backface-visibility: hidden !important;
-      will-change: transform !important;
-    }
-    .safari-browser .carousel-card img {
-      -webkit-transform: translateZ(0) !important;
-      transform: translateZ(0) !important;
-      image-rendering: -webkit-optimize-contrast !important;
-      -webkit-backface-visibility: hidden !important;
-      backface-visibility: hidden !important;
-    }
-    .safari-browser .carousel-container {
-      -webkit-overflow-scrolling: touch !important;
-      -webkit-transform: translateZ(0) !important;
-      transform: translateZ(0) !important;
-    }
   `;
   document.head.appendChild(style);
-  
   const overlay = document.createElement('div');
   overlay.id = 'infoPanelOverlay';
   overlay.onclick = hideInfoPanel;
@@ -468,8 +277,6 @@ function addInfoPanelStyles() {
 
 // Initialize info panel scaffolding on load (safe to keep)
 document.addEventListener('DOMContentLoaded', addInfoPanelStyles);
-
-
 
 
 
