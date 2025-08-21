@@ -3,29 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <title>Interactive Globe Widget</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="format-detection" content="telephone=no">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-touch-fullscreen" content="yes">
-  <link rel="preload" href="styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="styles.css"></noscript>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
  <div class="header-ui-bar">
   <div class="carousel-wrapper">
     <div class="carousel-arrow left" onclick="scrollCarousel(-1)">❮</div>
-    <div class="carousel-container" id="carouselContainer" 
-         style="touch-action: pan-x pan-y; -webkit-overflow-scrolling: touch;">
+    <div class="carousel-container" id="carouselContainer">
       <!-- Cards will be populated by JavaScript -->
     </div>
     <div class="carousel-arrow right" onclick="scrollCarousel(1)">❯</div>
   </div>
 </div>
-
-  <!-- Your existing content unchanged -->
+  <!-- Authentication Status Indicator -->
   <div id="auth-indicator" style="position: fixed; top: 10px; right: 10px; z-index: 1000; font-size: 14px; max-width: 300px;"></div>
-  
   <div class="left-controls-stack">
     <div class="navigation-controls">
       <div class="nav-row"><div class="nav-btn" id="btn-up">↑</div></div>
@@ -39,7 +31,6 @@
         <button id="scrollLockBtn">Unlock Scroll</button>
     </div>
   </div>
-  
   <div class="control-buttons">
     <button id="toggleNodesButton">Hide Neural Nodes</button>
     <button id="pauseButton">Pause Rotation</button>
@@ -47,7 +38,7 @@
     <button id="toggleMeshButton">Hide Globe Mesh</button>
     <button id="arcToggleBtn">Hide Arcs</button>
   </div>
-  
+  <!-- Updated Info Panel with proper styling -->
   <div class="info-panel-overlay" id="infoPanelOverlay" onclick="hideInfoPanel()">
     <div class="info-panel" id="infoPanel" onclick="event.stopPropagation()">
       <button class="info-panel-close" onclick="hideInfoPanel()">×</button>
@@ -55,12 +46,10 @@
       <div class="subcard-grid" id="infoPanelSubcards"></div>
     </div>
   </div>
-  
   <div class="footer-ui-bar">
     <span>© 2025 Interactive Program Globe | Global Education Alliance</span>
   </div>
-
-  <!-- Scripts moved to bottom for better Safari performance -->
+  <!-- JS Libraries for Globe and Interactions -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/TransformControls.js"></script>
@@ -68,6 +57,7 @@
   <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/geometries/TextGeometry.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/simplex-noise/2.4.0/simplex-noise.min.js"></script>
+  <!-- Your main JS rendering logic -->
   <script src="main.js"></script>
 </body>
 </html>
