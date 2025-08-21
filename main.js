@@ -227,7 +227,7 @@ function hideInfoPanel() {
 }
 
 // ===================================
-// SAFARI CAROUSEL FIX
+// ENHANCED SAFARI CAROUSEL FIX
 // ===================================
 function applySafariFixes() {
   // Detect Safari browsers specifically
@@ -238,8 +238,49 @@ function applySafariFixes() {
   
   // Apply Safari-specific fixes
   if (isSafari()) {
-    console.log('🍎 Safari detected - applying carousel fixes');
+    console.log('🍎 Enhanced Safari detected - applying carousel fixes');
     document.documentElement.classList.add('safari-browser');
+    
+    // Immediate style injection for Safari
+    const safariStyle = document.createElement('style');
+    safariStyle.textContent = `
+      /* Safari-specific carousel fixes */
+      .safari-browser .carousel-card {
+        -webkit-transform: translate3d(0, 0, 0) !important;
+        transform: translate3d(0, 0, 0) !important;
+        -webkit-backface-visibility: hidden !important;
+        backface-visibility: hidden !important;
+        will-change: transform !important;
+        -webkit-font-smoothing: antialiased !important;
+      }
+      
+      .safari-browser .carousel-card:hover {
+        -webkit-transform: translate3d(0, -2px, 0) !important;
+        transform: translate3d(0, -2px, 0) !important;
+        background: #253a5a;
+        border-color: #ffa500;
+      }
+      
+      .safari-browser .carousel-card img {
+        -webkit-transform: translateZ(0) !important;
+        transform: translateZ(0) !important;
+        -webkit-backface-visibility: hidden !important;
+        backface-visibility: hidden !important;
+        image-rendering: -webkit-optimize-contrast !important;
+        max-width: 100% !important;
+        height: auto !important;
+        object-fit: cover !important;
+      }
+      
+      .safari-browser .carousel-container {
+        -webkit-overflow-scrolling: touch !important;
+        -webkit-transform: translateZ(0) !important;
+        transform: translateZ(0) !important;
+        -webkit-perspective: 1000px !important;
+        perspective: 1000px !important;
+      }
+    `;
+    document.head.appendChild(safariStyle);
     
     // Force hardware acceleration on carousel elements
     setTimeout(() => {
@@ -254,6 +295,7 @@ function applySafariFixes() {
         card.style.webkitBackfaceVisibility = 'hidden';
         card.style.backfaceVisibility = 'hidden';
         card.style.willChange = 'transform';
+        card.style.webkitFontSmoothing = 'antialiased';
       });
       
       // Fix carousel containers  
@@ -270,9 +312,12 @@ function applySafariFixes() {
         img.style.webkitBackfaceVisibility = 'hidden';
         img.style.backfaceVisibility = 'hidden';
         img.style.imageRendering = '-webkit-optimize-contrast';
+        img.style.maxWidth = '100%';
+        img.style.height = 'auto';
+        img.style.objectFit = 'cover';
       });
       
-      console.log('✅ Safari carousel fixes applied');
+      console.log('✅ Enhanced Safari carousel fixes applied');
     }, 100);
   }
 }
@@ -281,7 +326,7 @@ function applySafariFixes() {
 // MINIMAL SAFARI DETECTION + FIXES (Additional Safety Net)
 // ===================================
 function applySafariCarouselFix() {
-  // Simple Safari detection
+  // Simple Safari detection - Fixed regex
   const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
   
   if (isSafari) {
@@ -326,6 +371,7 @@ document.addEventListener('DOMContentLoaded', applySafariCarouselFix);
 // Also apply fixes after carousel is populated (fallbacks)
 setTimeout(applySafariFixes, 500);
 setTimeout(applySafariCarouselFix, 1000);
+setTimeout(applySafariFixes, 1500); // Extra fallback
 
 // Add info panel styles and HTML (kept in case you re-enable the panel)
 function addInfoPanelStyles() {
@@ -422,6 +468,7 @@ function addInfoPanelStyles() {
 
 // Initialize info panel scaffolding on load (safe to keep)
 document.addEventListener('DOMContentLoaded', addInfoPanelStyles);
+
 
 
 
