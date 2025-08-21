@@ -139,7 +139,57 @@ const noCache = (req, res, next) => {
 };
 
 // ===
-// DATA ARRAYS (keeping all your existing data)
+// URL ENCRYPTION HELPERS (NEW ADDITION!)
+// ===
+function encryptUrl(realUrl, additionalData = {}) {
+    if (!realUrl || realUrl === '#') return realUrl;
+    
+    const token = jwt.sign({
+        realUrl: realUrl,
+        ...additionalData,
+        timestamp: Date.now()
+    }, process.env.JWT_SECRET || 'a-new-super-strong-secret-for-sso', { expiresIn: '1h' });
+    
+    return `/api/link/${token}`;
+}
+
+function encryptLinksInObject(obj) {
+    if (!obj) return obj;
+    
+    const encrypted = { ...obj };
+    
+    // Automatically encrypt any URL fields
+    if (encrypted.programLink) {
+        encrypted.programLink = encryptUrl(encrypted.programLink, {
+            university: encrypted.university,
+            programName: encrypted.programName,
+            type: 'program'
+        });
+    }
+    if (encrypted.applyLink) {
+        encrypted.applyLink = encryptUrl(encrypted.applyLink, {
+            university: encrypted.university,
+            type: 'apply'
+        });
+    }
+    if (encrypted.erasmusLink) {
+        encrypted.erasmusLink = encryptUrl(encrypted.erasmusLink, {
+            university: encrypted.university,
+            type: 'erasmus'
+        });
+    }
+    if (encrypted.researchLink) {
+        encrypted.researchLink = encryptUrl(encrypted.researchLink, {
+            university: encrypted.university,
+            type: 'research'
+        });
+    }
+    
+    return encrypted;
+}
+
+// ===
+// DATA ARRAYS (keeping all your existing data - NO CHANGES!)
 // ===
 const europeContent = [ { university: "University of Passau", logo: "https://static.wixstatic.com/shapes/d77f36_467b1d2eed4042eab43fdff25124915b.svg", erasmusLink: "https://www.uni-passau.de/en/incoming-exchange-students", programName: "Degree-Seeking", programLink: "https://www.uni-passau.de/en/international/coming-to-passau/coming-to-passau-as-degree-seeking-student", applyLink: "https://www.globaleducarealliance.com/6?partner=Passau", researchLink: "https://www.uni-passau.de/en/international/going-abroad/research-and-teaching-sta" }, { university: "University of Passau", logo: "https://static.wixstatic.com/shapes/d77f36_467b1d2eed4042eab43fdff25124915b.svg", erasmusLink: "https://www.uni-passau.de/en/incoming-exchange-students", programName: "Exchange", programLink: "https://www.uni-passau.de/en/incoming-exchange-students", applyLink: "https://www.globaleducarealliance.com/6?partner=Passau", researchLink: "https://www.uni-passau.de/en/international/going-abroad/research-and-teaching-sta" }, null, null, { university: "ICES", logo: "https://static.wixstatic.com/media/d77f36_c11cec0bd94f4ab7a1b611cecb9e90cb~mv2.png", erasmusLink: "https://ices.fr/linternational/erasmus/", programName: "Full Degree", programLink: "https://ices-university.com/studies/", applyLink: "https://www.globaleducarealliance.com/6?partner=ICES" }, { university: "ICES", logo: "https://static.wixstatic.com/media/d77f36_c11cec0bd94f4ab7a1b611cecb9e90cb~mv2.png", erasmusLink: "https://ices.fr/linternational/erasmus/", programName: "Mobility", programLink: "https://ices-university.com/mobility/incoming/", applyLink: "https://www.globaleducarealliance.com/6?partner=ICES" }, null, null, { university: "Université Catholique de Lille", logo: "https://static.wixstatic.com/media/d77f36_009f964ce876419f9391e6a604f9257c~mv2.png", erasmusLink: "https://www.univ-catholille.fr/en/exchange-programs-academic-calendars", programName: "Exchange", programLink: "https://www.univ-catholille.fr/en/exchange-programs-academic-calendars", applyLink: "https://www.globaleducarealliance.com/6?partner=Lille", researchLink: "https://www.univ-catholille.fr/en/research-presentation/" }, { university: "Université Catholique de Lille", logo: "https://static.wixstatic.com/media/d77f36_009f964ce876419f9391e6a604f9257c~mv2.png", erasmusLink: "https://www.univ-catholille.fr/en/exchange-programs-academic-calendars", programName: "Summer Program", programLink: "https://www.univ-catholille.fr/en/lille-programs/lille-european-summer-program/", applyLink: "https://www.globaleducarealliance.com/6?partner=Lille", researchLink: "https://www.univ-catholille.fr/en/research-presentation/" }, null, null, { university: "IRCOM", logo: "https://static.wixstatic.com/media/d77f36_592f23b64ee44211abcb87444198e26a~mv2.jpg", erasmusLink: "https://www.ircom.fr/partir/", programName: "Master\nHumanitarian", programLink: "https://www.ircom.fr/formations/master-humanitaire/", applyLink: "https://www.globaleducarealliance.com/6?partner=IRCOM", researchLink: "https://www.ircom.fr/laborem/" }, { university: "IRCOM", logo: "https://static.wixstatic.com/media/d77f36_592f23b64ee44211abcb87444198e26a~mv2.jpg", erasmusLink: "https://www.ircom.fr/partir/", programName: "Mobility", programLink: "https://www.ircom.fr/partir/", applyLink: "https://www.globaleducarealliance.com/6?partner=IRCOM", researchLink: "https://www.ircom.fr/laborem/" }, null, null, { university: "KATHO-NRW", logo: "https://static.wixstatic.com/shapes/d77f36_b6a110be4758449f8537733a427f2dba.svg", erasmusLink: "https://katho-nrw.de/en/international/erasmus", programName: "Int'l Studies", programLink: "https://katho-nrw.de/en/international/international-studies", applyLink: "https://www.globaleducarealliance.com/6?partner=KATHO-NRW", researchLink: "https://katho-nrw.de/en/international/international-research" }, { university: "KATHO-NRW", logo: "https://static.wixstatic.com/shapes/d77f36_b6a110be4758449f8537733a427f2dba.svg", erasmusLink: "https://katho-nrw.de/en/international/erasmus", programName: "Study Abroad", programLink: "https://katho-nrw.de/en/international/international-studies/students-at-the-catholic-university-of-applied-sciences-studying-abroad", applyLink: "https://www.globaleducarealliance.com/6?partner=KATHO-NRW", researchLink: "https://www.univ-catholille.fr/en/research-presentation/" }, null, null, { university: "TSI", logo: "https://static.wixstatic.com/media/d77f36_1992247272bb4d55a3cac5060abec418~mv2.jpeg", erasmusLink: "https://tsi.lv/future-students/international/", programName: "Int'l Students", programLink: "https://tsi.lv/future-students/international/", applyLink: "https://www.globaleducarealliance.com/6?partner=TSI" }, { university: "TSI", logo: "https://static.wixstatic.com/media/d77f36_1992247272bb4d55a3cac5060abec418~mv2.jpeg", erasmusLink: "https://tsi.lv/future-students/international/", programName: "Innovation", programLink: "https://tsi.lv/research/innovation-knowledge-transfer/", applyLink: "https://www.globaleducarealliance.com/6?partner=TSI" }, null, null, { university: "INSEEC", logo: "https://static.wixstatic.com/media/d77f36_66d4c88c4ebb4b7da6cacaed57178165~mv2.webp", erasmusLink: "https://www.inseec.com/en/erasmus/", programName: "Exchanges", programLink: "https://www.inseec.com/en/academic-exchanges/", applyLink: "https://www.globaleducarealliance.com/6?partner=INSEEC" }, null, null];
 
@@ -263,8 +313,44 @@ app.get('/api/student/applications', requireAuth, (req, res) => {
     });
 });
 
+// ===
+// UPDATED: Globe data endpoint with automatic URL encryption!
+// ===
 app.get('/api/globe-data', (req, res) => {
-    res.json({ europeContent, newThailandContent, canadaContent, ukContent, usaContent, indiaContent, singaporeContent, malaysiaContent, countryPrograms, countryConfigs });
+    // Automatically encrypt ALL URLs in ALL content arrays
+    const encryptedData = {
+        europeContent: europeContent.map(encryptLinksInObject),
+        newThailandContent: newThailandContent.map(encryptLinksInObject),
+        canadaContent: canadaContent.map(encryptLinksInObject),
+        ukContent: ukContent.map(encryptLinksInObject),
+        usaContent: usaContent.map(encryptLinksInObject),
+        indiaContent: indiaContent.map(encryptLinksInObject),
+        singaporeContent: singaporeContent.map(encryptLinksInObject),
+        malaysiaContent: malaysiaContent.map(encryptLinksInObject),
+        countryPrograms,
+        countryConfigs
+    };
+    
+    res.json(encryptedData);
+});
+
+// ===
+// NEW: Link decryption and redirect endpoint
+// ===
+app.get('/api/link/:token', requireAuth, (req, res) => {
+    try {
+        const decoded = jwt.verify(req.params.token, process.env.JWT_SECRET || 'a-new-super-strong-secret-for-sso');
+        
+        // Log access for security monitoring (optional)
+        console.log(`🔗 Link access: ${decoded.type || 'unknown'} for ${decoded.university || 'unknown university'} by ${req.session.userEmail}`);
+        
+        // Redirect to the real URL
+        res.redirect(decoded.realUrl);
+        
+    } catch (error) {
+        console.error('🚫 Invalid link token:', error.message);
+        res.status(401).send('Link expired or invalid. Please try again.');
+    }
 });
 
 app.get('/api/carousel/data', (req, res) => {
