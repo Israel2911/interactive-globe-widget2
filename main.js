@@ -754,6 +754,8 @@ function latLonToVector3(lat, lon, radius) {
   const y = (radius * Math.cos(phi));
   return new THREE.Vector3(x, y, z);
 }
+
+
 function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
   // Rainbow colors array - all 7 colors!
   const rainbowColors = [
@@ -766,12 +768,6 @@ function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
     0x9400d3  // Violet
   ];
   
- function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
-  // Rainbow colors array
-  const rainbowColors = [
-    0xff0000, 0xff7f00, 0xffff00, 0x00ff00, 0x0000ff, 0x4b0082, 0x9400d3
-  ];
-  
   const color = rainbowColors[arcIndex % rainbowColors.length];
   
   const start = new THREE.Vector3(); fromGroup.getWorldPosition(start);
@@ -781,25 +777,20 @@ function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
   const offsetStart = start.clone().normalize().multiplyScalar(globeRadius + arcOffset);
   const offsetEnd = end.clone().normalize().multiplyScalar(globeRadius + arcOffset);
   const mid = offsetStart.clone().add(offsetEnd).multiplyScalar(0.5).normalize().multiplyScalar(globeRadius + arcOffset + arcElevation);
-  
   const curve = new THREE.QuadraticBezierCurve3(offsetStart, mid, offsetEnd);
-  
-  // ✨ ELEGANT ARC GEOMETRY - More segments, thinner, smoother
-  const geometry = new THREE.TubeGeometry(curve, 256, 0.002, 32, false);
-  
+  const geometry = new THREE.TubeGeometry(curve, 64, 0.005, 8, false);
   const vertexShader = `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
   const fragmentShader = `varying vec2 vUv; uniform float time; uniform vec3 color; void main() { float stripe1 = step(0.1, fract(vUv.x * 4.0 + time * 0.2)) - step(0.2, fract(vUv.x * 4.0 + time * 0.2)); float stripe2 = step(0.1, fract(vUv.x * 4.0 - time * 0.2)) - step(0.2, fract(vUv.x * 4.0 - time * 0.2)); float combinedStripes = max(stripe1, stripe2); float glow = (1.0 - abs(vUv.y - 0.5) * 2.0); if (combinedStripes > 0.0) { gl_FragColor = vec4(color, combinedStripes * glow); } else { discard; } }`;
-  
   const material = new THREE.ShaderMaterial({
     uniforms: { time: { value: 0 }, color: { value: new THREE.Color(color) } },
     vertexShader, fragmentShader, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
   });
-  
   const path = new THREE.Mesh(geometry, material);
   path.renderOrder = 1;
   globeGroup.add(path);
   return path;
 }
+
 
 function drawAllConnections() {
   const countryNames = ["India", "Europe", "UK", "Canada", "USA", "Singapore", "Malaysia"];
