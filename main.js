@@ -754,7 +754,20 @@ function latLonToVector3(lat, lon, radius) {
   const y = (radius * Math.cos(phi));
   return new THREE.Vector3(x, y, z);
 }
-function createConnectionPath(fromGroup, toGroup, color = 0xffff00) {
+function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
+  // Rainbow colors array - all 7 colors!
+  const rainbowColors = [
+    0xff0000, // Red
+    0xff7f00, // Orange
+    0xffff00, // Yellow
+    0x00ff00, // Green
+    0x0000ff, // Blue
+    0x4b0082, // Indigo
+    0x9400d3  // Violet
+  ];
+  
+  const color = rainbowColors[arcIndex % rainbowColors.length];
+  
   const start = new THREE.Vector3(); fromGroup.getWorldPosition(start);
   const end = new THREE.Vector3(); toGroup.getWorldPosition(end);
   const globeRadius = 1.0; const arcOffset = 0.05;
@@ -775,15 +788,17 @@ function createConnectionPath(fromGroup, toGroup, color = 0xffff00) {
   globeGroup.add(path);
   return path;
 }
+
 function drawAllConnections() {
   const countryNames = ["India", "Europe", "UK", "Canada", "USA", "Singapore", "Malaysia"];
   const pairs = countryNames.map(country => ["Thailand", country]);
-  arcPaths = pairs.map(([from, to]) => {
+  arcPaths = pairs.map(([from, to], index) => {
     const fromBlock = countryBlocks[from];
     const toBlock = countryBlocks[to];
-    if (fromBlock && toBlock) return createConnectionPath(fromBlock, toBlock);
+    if (fromBlock && toBlock) return createConnectionPath(fromBlock, toBlock, index);
   }).filter(Boolean);
 }
+
 
 // =======
 // MOUSE EVENT HANDLERS
