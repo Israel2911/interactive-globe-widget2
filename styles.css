@@ -394,7 +394,7 @@ body {
   
   /* Existing carousel mobile styles */
   .carousel-container { padding: 4px 8px; gap: 6px; }
-  .carousel-card { min-width: 140px; max-width: 140px; height: 100px; padding: 0; }
+  .carousel-card { min-width: 140px; max-width: 140px; height: 120px; padding: 0; }
   .carousel-card img { height: 65%; }
   .carousel-card-content { height: 35%; padding: 2px 4px; }
   .carousel-card-title { font-size: 0.7em; }
@@ -457,7 +457,7 @@ body {
 
 /* = VERY SMALL MOBILE (<480px) = */
 @media (max-width: 480px) {
-  .carousel-card { min-width: 120px; height: 90px; }
+  .carousel-card { min-width: 120px; height: 110px; }
   .carousel-card-title { font-size: 0.65em; }
   .carousel-card-text { font-size: 0.55em; }
   .nav-btn { width: 32px !important; height: 32px !important; }
