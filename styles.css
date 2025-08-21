@@ -451,10 +451,9 @@ body {
   #arcToggleBtn::before { width: 24px; height: 12px; }
 }
 /* ===================================
-   SAFARI-ONLY CAROUSEL FIXES (JS-Targeted Only)
+   ENHANCED SAFARI-ONLY CAROUSEL FIXES
 =================================== */
 
-/* ONLY JavaScript-detected Safari class targeting */
 .safari-browser .carousel-card {
   -webkit-transform: translate3d(0, 0, 0) !important;
   transform: translate3d(0, 0, 0) !important;
@@ -462,6 +461,12 @@ body {
   backface-visibility: hidden !important;
   will-change: transform !important;
   -webkit-font-smoothing: antialiased !important;
+  /* Force explicit sizing */
+  min-width: 160px !important;
+  width: 160px !important;
+  height: 120px !important;
+  flex-shrink: 0 !important;
+  box-sizing: border-box !important;
 }
 
 .safari-browser .carousel-card:hover {
@@ -475,9 +480,46 @@ body {
   -webkit-backface-visibility: hidden !important;
   backface-visibility: hidden !important;
   image-rendering: -webkit-optimize-contrast !important;
-  max-width: 100% !important;
-  height: auto !important;
+  /* Force explicit image sizing */
+  width: 100% !important;
+  height: 70% !important;
+  max-width: none !important;
+  min-height: 84px !important;
   object-fit: cover !important;
+  display: block !important;
+}
+
+.safari-browser .carousel-card-content {
+  /* Force content area sizing */
+  width: 100% !important;
+  height: 30% !important;
+  min-height: 36px !important;
+  padding: 4px 6px !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+.safari-browser .carousel-card-title {
+  /* Ensure title is visible */
+  font-size: 0.8em !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+  margin: 0 !important;
+  text-align: center !important;
+  color: inherit !important;
+}
+
+.safari-browser .carousel-card-text {
+  /* Ensure subtitle is visible */
+  font-size: 0.65em !important;
+  opacity: 0.85 !important;
+  line-height: 1.1 !important;
+  margin: 0 !important;
+  text-align: center !important;
+  color: inherit !important;
 }
 
 .safari-browser .carousel-container {
@@ -486,5 +528,20 @@ body {
   transform: translateZ(0) !important;
   -webkit-perspective: 1000px !important;
   perspective: 1000px !important;
+  /* Force container behavior */
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 8px 12px !important;
 }
+
+.safari-browser .carousel-wrapper {
+  /* Ensure wrapper doesn't interfere */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  max-width: 1200px !important;
+  margin: 0 auto !important;
+}
+
 
