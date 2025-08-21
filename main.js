@@ -109,7 +109,7 @@ function startAuthStatusPolling() {
     if (!oldStatus && authStatus.isAuthenticated) {
       console.log('🎉 User authentication detected - activating cubes!');
       activateAllCubes();
-      showNotification('🎮 University programs unlocked!', true);
+      showNotification('Congratulations! All university programs are now available.', true);
     }
     
     // Optional: Check if user logged out
