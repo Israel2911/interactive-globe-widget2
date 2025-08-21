@@ -233,9 +233,9 @@ function applySafariFixes() {
   // Detect Safari browsers specifically
   function isSafari() {
     const ua = navigator.userAgent.toLowerCase();
-    return ua.indexOf('safari') !== -1 && ua.indexOf('chrome') === -1;
+    return ua.indexOf('safari') !== -1 && ua.indexOf('chrome') === -1; // Fixed: !== and ===
   }
-
+  
   // Apply Safari-specific fixes
   if (isSafari()) {
     console.log('🍎 Safari detected - applying carousel fixes');
@@ -277,11 +277,55 @@ function applySafariFixes() {
   }
 }
 
+// ===================================
+// MINIMAL SAFARI DETECTION + FIXES (Additional Safety Net)
+// ===================================
+function applySafariCarouselFix() {
+  // Simple Safari detection
+  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+  
+  if (isSafari) {
+    console.log('🍎 Applying minimal Safari carousel fixes');
+    
+    // Add Safari class for CSS targeting
+    document.documentElement.classList.add('safari-browser');
+    
+    // Direct style application - most reliable method
+    const style = document.createElement('style');
+    style.textContent = `
+      .carousel-card {
+        -webkit-transform: translate3d(0, 0, 0) !important;
+        transform: translate3d(0, 0, 0) !important;
+        -webkit-backface-visibility: hidden !important;
+        backface-visibility: hidden !important;
+        will-change: transform !important;
+      }
+      
+      .carousel-card img {
+        -webkit-transform: translateZ(0) !important;
+        transform: translateZ(0) !important;
+        -webkit-backface-visibility: hidden !important;
+        backface-visibility: hidden !important;
+        image-rendering: -webkit-optimize-contrast !important;
+      }
+      
+      .carousel-container {
+        -webkit-overflow-scrolling: touch !important;
+        -webkit-transform: translateZ(0) !important;
+        transform: translateZ(0) !important;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+}
+
 // Apply Safari fixes when DOM is ready
 document.addEventListener('DOMContentLoaded', applySafariFixes);
+document.addEventListener('DOMContentLoaded', applySafariCarouselFix);
 
-// Also apply fixes after carousel is populated (fallback)
-setTimeout(applySafariFixes, 1000);
+// Also apply fixes after carousel is populated (fallbacks)
+setTimeout(applySafariFixes, 500);
+setTimeout(applySafariCarouselFix, 1000);
 
 // Add info panel styles and HTML (kept in case you re-enable the panel)
 function addInfoPanelStyles() {
@@ -348,7 +392,6 @@ function addInfoPanelStyles() {
       backface-visibility: hidden !important;
       will-change: transform !important;
     }
-
     .safari-browser .carousel-card img {
       -webkit-transform: translateZ(0) !important;
       transform: translateZ(0) !important;
@@ -356,7 +399,6 @@ function addInfoPanelStyles() {
       -webkit-backface-visibility: hidden !important;
       backface-visibility: hidden !important;
     }
-
     .safari-browser .carousel-container {
       -webkit-overflow-scrolling: touch !important;
       -webkit-transform: translateZ(0) !important;
@@ -364,6 +406,7 @@ function addInfoPanelStyles() {
     }
   `;
   document.head.appendChild(style);
+  
   const overlay = document.createElement('div');
   overlay.id = 'infoPanelOverlay';
   overlay.onclick = hideInfoPanel;
