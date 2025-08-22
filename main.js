@@ -990,8 +990,12 @@ function setupEventListeners() {
           controls.update(); 
           break;
         case 'btn-rotate': 
-          toggleGlobeRotation(); 
-          break;
+  if (controls) {
+    controls.autoRotate = true;  // Always starts rotation
+    isRotationPaused = false;
+  }
+  break;
+
         case 'btn-pan': 
           togglePanMode(); 
           break;
