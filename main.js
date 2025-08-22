@@ -1091,18 +1091,18 @@ async function createGlobeAndCubes() {
 // =======
 // ===
 // ANIMATION
-// ===
 function animate() {
   requestAnimationFrame(animate);
   const elapsedTime = clock.getElapsedTime();
-  if (controls && controls.enabled) { controls.update(); }
-  if (typeof TWEEN !== 'undefined') { TWEEN.update(); }
   
-  // Update neon arc shaders (flowing effect) - this is the only addition
-  arcPaths.forEach(path => { 
-    if (path.material.isShaderMaterial) { 
-      path.material.uniforms.time.value = elapsedTime; 
-    } 
+  // Debug logs - add these
+  console.log("Arc Count:", arcPaths.length);  // Should be 7
+  arcPaths.forEach((path, i) => {
+    if (path.material?.uniforms?.time) {
+      console.log(`Arc ${i} time:`, path.material.uniforms.time.value);  // Should increase each frame
+    } else {
+      console.warn(`Arc ${i} missing uniforms!`);
+    }
   });
   
   countryLabels.forEach(item => {
