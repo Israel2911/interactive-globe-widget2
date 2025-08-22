@@ -170,6 +170,7 @@ body {
   box-sizing: border-box;         /* Added */
 }
 
+
 .carousel-arrow {
   font-size: 1.5em;
   color: #ffa500;
@@ -222,7 +223,6 @@ body {
   flex-shrink: 0;                 /* Added */
 }
 
-
 .carousel-card-content {
   display: flex;
   flex-direction: column;
@@ -237,6 +237,7 @@ body {
   box-sizing: border-box;         /* Added */
   overflow: hidden;               /* Added */
 }
+
 
 .carousel-card-title {
   font-size: 0.8em;
