@@ -1090,21 +1090,15 @@ async function createGlobeAndCubes() {
 
 // =======
 // ===
+// =======
 // ANIMATION
+// =======
 function animate() {
   requestAnimationFrame(animate);
   const elapsedTime = clock.getElapsedTime();
-  
-  // Debug logs - add these
-  console.log("Arc Count:", arcPaths.length);  // Should be 7
-  arcPaths.forEach((path, i) => {
-    if (path.material?.uniforms?.time) {
-      console.log(`Arc ${i} time:`, path.material.uniforms.time.value);  // Should increase each frame
-    } else {
-      console.warn(`Arc ${i} missing uniforms!`);
-    }
-  });
-  
+  if (controls && controls.enabled) { controls.update(); }
+  if (typeof TWEEN !== 'undefined') { TWEEN.update(); }
+  arcPaths.forEach(path => { if (path.material.isShaderMaterial) { path.material.uniforms.time.value = elapsedTime; } });
   countryLabels.forEach(item => {
     const worldPosition = new THREE.Vector3();
     item.block.getWorldPosition(worldPosition);
