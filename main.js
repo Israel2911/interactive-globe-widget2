@@ -775,13 +775,34 @@ function createConnectionPath(fromGroup, toGroup, color = 0xffff00) {
   globeGroup.add(path);
   return path;
 }
+
 function drawAllConnections() {
+  // Rainbow colors array
+  const rainbowColors = [
+    0xff0000, // Red
+    0xff7f00, // Orange
+    0xffff00, // Yellow
+    0x00ff00, // Green
+    0x0000ff, // Blue
+    0x4b0082, // Indigo
+    0x9400d3  // Violet
+  ];
+  
   const countryNames = ["India", "Europe", "UK", "Canada", "USA", "Singapore", "Malaysia"];
-  const pairs = countryNames.map(country => ["Thailand", country]);
-  arcPaths = pairs.map(([from, to]) => {
+  
+  // Create pairs with colors
+  const pairs = countryNames.map((country, index) => [
+    "Thailand", 
+    country, 
+    rainbowColors[index % rainbowColors.length]
+  ]);
+  
+  arcPaths = pairs.map(([from, to, color]) => {
     const fromBlock = countryBlocks[from];
     const toBlock = countryBlocks[to];
-    if (fromBlock && toBlock) return createConnectionPath(fromBlock, toBlock);
+    if (fromBlock && toBlock) {
+      return createConnectionPath(fromBlock, toBlock, color);
+    }
   }).filter(Boolean);
 }
 
