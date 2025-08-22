@@ -160,7 +160,7 @@ body {
 .carousel-container {
   flex: 1;
   display: flex;
-  justify-content: flex-start;    /* Changed from center */
+  justify-content: center; /* ✨ Change this to center */   /* Changed from center */
   align-items: stretch;           /* Changed from center */
   overflow-x: auto;
   overflow-y: hidden;             /* Added */
