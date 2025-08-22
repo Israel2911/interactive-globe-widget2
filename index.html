@@ -31,13 +31,29 @@
         <button id="scrollLockBtn">Unlock Scroll</button>
     </div>
   </div>
-  <div class="control-buttons">
-    <button id="toggleNodesButton">Hide Neural Nodes</button>
-    <button id="pauseButton">Pause Rotation</button>
-    <button id="pauseCubesButton">Pause Cube Motion</button>
-    <button id="toggleMeshButton">Hide Globe Mesh</button>
-    <button id="arcToggleBtn">Hide Arcs</button>
-  </div>
+<div class="control-buttons">
+  <button id="toggleNodesButton" data-active="false" title="Toggle Neural Nodes">
+    <span class="btn-text">Hide Neural Nodes</span>
+    <span class="btn-icon">⚛️</span>
+  </button>
+  <button id="pauseButton" data-active="false" title="Toggle Rotation">
+    <span class="btn-text">Pause Rotation</span>
+    <span class="btn-icon">⏸</span>
+  </button>
+  <button id="pauseCubesButton" data-active="false" title="Toggle Cube Motion">
+    <span class="btn-text">Pause Cube Motion</span>
+    <span class="btn-icon">🧊</span>
+  </button>
+  <button id="toggleMeshButton" data-active="false" title="Toggle Globe Mesh">
+    <span class="btn-text">Hide Globe Mesh</span>
+    <span class="btn-icon">🌐</span>
+  </button>
+  <button id="arcToggleBtn" data-active="false" title="Toggle Arcs">
+    <span class="btn-text">Hide Arcs</span>
+    <span class="btn-icon">🌈</span>
+  </button>
+</div>
+
   <!-- Updated Info Panel with proper styling -->
   <div class="info-panel-overlay" id="infoPanelOverlay" onclick="hideInfoPanel()">
     <div class="info-panel" id="infoPanel" onclick="event.stopPropagation()">
