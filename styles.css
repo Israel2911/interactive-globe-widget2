@@ -225,29 +225,39 @@ body {
 
 .carousel-card-content {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;               /* Changed from column to row */
   justify-content: center;
-  align-items: center;
+  align-items: center;               /* Keep center alignment */
   text-align: center;
   width: 100%;
-  height: 36px;                   /* Changed from 30% to fixed pixels */
-  min-height: 36px;               /* Added */
-  max-height: 36px;               /* Added */
+  height: 36px;                      /* Keep fixed height */
+  min-height: 36px;                  
+  max-height: 36px;                  
   padding: 4px 6px;
-  box-sizing: border-box;         /* Added */
-  overflow: hidden;               /* Added */
+  box-sizing: border-box;            
+  overflow: hidden;                  
+  gap: 6px;                          /* Added gap between title and text */
+  white-space: nowrap;               /* Added to prevent line wrapping */
 }
-
 
 .carousel-card-title {
   font-size: 0.8em;
   font-weight: 600;
+  margin: 0;                         /* Added to remove default margin */
+  flex-shrink: 0;                    /* Added to prevent title from shrinking */
 }
 
 .carousel-card-text {
   font-size: 0.65em;
   opacity: 0.85;
+  margin: 0;                         /* Added to remove default margin */
+  flex-shrink: 1;                    /* Added to allow text to shrink if needed */
+  overflow: hidden;                  /* Added for text overflow handling */
+  text-overflow: ellipsis;           /* Added to show ... if text is too long */
 }
+
+
+
 
 /* Desktop Controls */
 .left-controls-stack {
@@ -401,7 +411,12 @@ body {
 }
   .carousel-card { min-width: 140px; max-width: 140px; height: 140px; padding: 0; }
   .carousel-card img { height: 65%; }
-  .carousel-card-content { height: 35%; padding: 2px 4px; }
+   .carousel-card-content {
+    flex-direction: column;          /* Stack vertically on mobile */
+    white-space: normal;             /* Allow wrapping on mobile */
+    gap: 2px;                        /* Smaller gap for mobile */
+  }
+
   .carousel-card-title { font-size: 0.7em; }
   .carousel-card-text { font-size: 0.6em; }
   .carousel-arrow { 
