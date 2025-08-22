@@ -160,14 +160,14 @@ body {
 .carousel-container {
   flex: 1;
   display: flex;
-  justify-content: center; /* ✨ Change this to center */
-  align-items: stretch;
+  justify-content: flex-start;    /* Changed from center */
+  align-items: stretch;           /* Changed from center */
   overflow-x: auto;
-  overflow-y: hidden;
+  overflow-y: hidden;             /* Added */
   gap: 8px;
   padding: 8px 12px;
   scroll-behavior: smooth;
-  box-sizing: border-box;
+  box-sizing: border-box;         /* Added */
 }
 
 
@@ -248,13 +248,6 @@ body {
   font-size: 0.65em;
   opacity: 0.85;
 }
-
-/* Desktop Controls */
-.left-controls-stack {
-  position: fixed;
-  left: 16px;
-  bot
-
 
 /* Desktop Controls */
 .left-controls-stack {
@@ -415,7 +408,6 @@ body {
   font-size: 1.2em; 
   margin: 0 10px; 
 }
-  
   /* Enhanced control buttons with icons */
   .control-buttons button { width: 36px; height: 36px; padding: 0; font-size: 0; position: relative; background: #22356a; border-radius: 6px; overflow: hidden; }
   .control-buttons button:hover { background: #ffa500; }
@@ -448,7 +440,7 @@ body {
 
 /* = MOBILE: LANDSCAPE ONLY - DEFINITIVE SPLIT LAYOUT = */
 @media (max-width: 926px) and (orientation: landscape) {
-  .carousel-card { min-width: 120px; height: 100px; }
+  .carousel-card { min-width: 120px; height: 80px; }
   #globe-canvas { height: calc(100vh - 145px); }
   /* LEFT GROUP: Navigation Arrows + Scroll Button */
   .left-controls-stack {
@@ -599,4 +591,3 @@ body {
 .notification.error {
   background-color: #ff4444;
 }
-
