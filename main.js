@@ -925,23 +925,80 @@ function onCanvasMouseUpPan(event) {
   onCanvasMouseUp(event);
 }
 
-// =======
+// ===
 // EVENT LISTENERS SETUP
-// =======
+// ===
 function setupEventListeners() {
   renderer.domElement.addEventListener('mousedown', onCanvasMouseDownPan);
   renderer.domElement.addEventListener('mousemove', onCanvasMouseMovePan);
   renderer.domElement.addEventListener('mouseup', onCanvasMouseUpPan);
   renderer.domElement.addEventListener('mouseenter', () => { if (isPanMode) { renderer.domElement.style.cursor = 'grab'; } });
+  
   const panSpeed = 0.1;
-  const btnUp = document.getElementById('btn-up'); if (btnUp) { btnUp.addEventListener('click', () => { controls.target.y += panSpeed; controls.update(); }); }
-  const btnDown = document.getElementById('btn-down'); if (btnDown) { btnDown.addEventListener('click', () => { controls.target.y -= panSpeed; controls.update(); }); }
-  const btnLeft = document.getElementById('btn-left'); if (btnLeft) { btnLeft.addEventListener('click', () => { controls.target.x -= panSpeed; controls.update(); }); }
-  const btnRight = document.getElementById('btn-right'); if (btnRight) { btnRight.addEventListener('click', () => { controls.target.x += panSpeed; controls.update(); }); }
-  const btnZoomIn = document.getElementById('btn-zoom-in'); if (btnZoomIn) { btnZoomIn.addEventListener('click', () => { camera.position.multiplyScalar(0.9); controls.update(); }); }
-  const btnZoomOut = document.getElementById('btn-zoom-out'); if (btnZoomOut) { btnZoomOut.addEventListener('click', () => { camera.position.multiplyScalar(1.1); controls.update(); }); }
-  const btnRotate = document.getElementById('btn-rotate'); if (btnRotate) { btnRotate.addEventListener('click', toggleGlobeRotation); }
-  const btnPan = document.getElementById('btn-pan'); if (btnPan) { btnPan.addEventListener('click', togglePanMode); }
+  const navButtons = ['btn-up', 'btn-down', 'btn-left', 'btn-right', 'btn-zoom-in', 'btn-zoom-out', 'btn-rotate', 'btn-pan'];
+  
+  // Enhanced nav button setup with toggle functionality
+  navButtons.forEach(id => {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    
+    btn.addEventListener('click', () => {
+      // Remove active state from all other nav buttons
+      navButtons.forEach(otherId => {
+        if (otherId !== id) {
+          const otherBtn = document.getElementById(otherId);
+          if (otherBtn) {
+            otherBtn.classList.remove('active');
+            otherBtn.removeAttribute('data-active');
+          }
+        }
+      });
+      
+      // Toggle this button's active state
+      if (btn.classList.contains('active')) {
+        btn.classList.remove('active');
+        btn.removeAttribute('data-active');
+      } else {
+        btn.classList.add('active');
+        btn.setAttribute('data-active', 'true');
+      }
+      
+      // Execute the button's functionality
+      switch (id) {
+        case 'btn-up': 
+          controls.target.y += panSpeed; 
+          controls.update(); 
+          break;
+        case 'btn-down': 
+          controls.target.y -= panSpeed; 
+          controls.update(); 
+          break;
+        case 'btn-left': 
+          controls.target.x -= panSpeed; 
+          controls.update(); 
+          break;
+        case 'btn-right': 
+          controls.target.x += panSpeed; 
+          controls.update(); 
+          break;
+        case 'btn-zoom-in': 
+          camera.position.multiplyScalar(0.9); 
+          controls.update(); 
+          break;
+        case 'btn-zoom-out': 
+          camera.position.multiplyScalar(1.1); 
+          controls.update(); 
+          break;
+        case 'btn-rotate': 
+          toggleGlobeRotation(); 
+          break;
+        case 'btn-pan': 
+          togglePanMode(); 
+          break;
+      }
+    });
+  });
+
   // Additional UI controls
   const pauseButton = document.getElementById("pauseButton");
   if (pauseButton) {
@@ -1003,6 +1060,9 @@ function setupEventListeners() {
     }
     scrollLockButton.addEventListener('click', () => { setGlobeInteraction(!controls.enabled); });
   }
+
+  // Continue with keyboard controls...
+
   // Keyboard controls
   document.addEventListener('keydown', (event) => {
     if (!controls) return;
