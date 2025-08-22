@@ -399,7 +399,7 @@ body {
   gap: 6px; 
   justify-content: center; 
 }
-  .carousel-card { min-width: 140px; max-width: 140px; height: 120px; padding: 0; }
+  .carousel-card { min-width: 140px; max-width: 140px; height: 140px; padding: 0; }
   .carousel-card img { height: 65%; }
   .carousel-card-content { height: 35%; padding: 2px 4px; }
   .carousel-card-title { font-size: 0.7em; }
