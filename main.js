@@ -754,22 +754,7 @@ function latLonToVector3(lat, lon, radius) {
   const y = (radius * Math.cos(phi));
   return new THREE.Vector3(x, y, z);
 }
-
-
-function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
-  // Rainbow colors array - all 7 colors!
-  const rainbowColors = [
-    0xff0000, // Red
-    0xff7f00, // Orange
-    0xffff00, // Yellow
-    0x00ff00, // Green
-    0x0000ff, // Blue
-    0x4b0082, // Indigo
-    0x9400d3  // Violet
-  ];
-  
-  const color = rainbowColors[arcIndex % rainbowColors.length];
-  
+function createConnectionPath(fromGroup, toGroup, color = 0xffff00) {
   const start = new THREE.Vector3(); fromGroup.getWorldPosition(start);
   const end = new THREE.Vector3(); toGroup.getWorldPosition(end);
   const globeRadius = 1.0; const arcOffset = 0.05;
@@ -778,9 +763,7 @@ function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
   const offsetEnd = end.clone().normalize().multiplyScalar(globeRadius + arcOffset);
   const mid = offsetStart.clone().add(offsetEnd).multiplyScalar(0.5).normalize().multiplyScalar(globeRadius + arcOffset + arcElevation);
   const curve = new THREE.QuadraticBezierCurve3(offsetStart, mid, offsetEnd);
-  // Elegant smooth arcs:
-const geometry = new THREE.TubeGeometry(curve, 256, 0.002, 32, false);
-
+  const geometry = new THREE.TubeGeometry(curve, 64, 0.005, 8, false);
   const vertexShader = `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
   const fragmentShader = `varying vec2 vUv; uniform float time; uniform vec3 color; void main() { float stripe1 = step(0.1, fract(vUv.x * 4.0 + time * 0.2)) - step(0.2, fract(vUv.x * 4.0 + time * 0.2)); float stripe2 = step(0.1, fract(vUv.x * 4.0 - time * 0.2)) - step(0.2, fract(vUv.x * 4.0 - time * 0.2)); float combinedStripes = max(stripe1, stripe2); float glow = (1.0 - abs(vUv.y - 0.5) * 2.0); if (combinedStripes > 0.0) { gl_FragColor = vec4(color, combinedStripes * glow); } else { discard; } }`;
   const material = new THREE.ShaderMaterial({
@@ -792,18 +775,15 @@ const geometry = new THREE.TubeGeometry(curve, 256, 0.002, 32, false);
   globeGroup.add(path);
   return path;
 }
-
-
 function drawAllConnections() {
   const countryNames = ["India", "Europe", "UK", "Canada", "USA", "Singapore", "Malaysia"];
   const pairs = countryNames.map(country => ["Thailand", country]);
-  arcPaths = pairs.map(([from, to], index) => {
+  arcPaths = pairs.map(([from, to]) => {
     const fromBlock = countryBlocks[from];
     const toBlock = countryBlocks[to];
-    if (fromBlock && toBlock) return createConnectionPath(fromBlock, toBlock, index);
+    if (fromBlock && toBlock) return createConnectionPath(fromBlock, toBlock);
   }).filter(Boolean);
 }
-
 
 // =======
 // MOUSE EVENT HANDLERS
@@ -925,84 +905,23 @@ function onCanvasMouseUpPan(event) {
   onCanvasMouseUp(event);
 }
 
-// ===
+// =======
 // EVENT LISTENERS SETUP
-// ===
+// =======
 function setupEventListeners() {
   renderer.domElement.addEventListener('mousedown', onCanvasMouseDownPan);
   renderer.domElement.addEventListener('mousemove', onCanvasMouseMovePan);
   renderer.domElement.addEventListener('mouseup', onCanvasMouseUpPan);
   renderer.domElement.addEventListener('mouseenter', () => { if (isPanMode) { renderer.domElement.style.cursor = 'grab'; } });
-  
   const panSpeed = 0.1;
-  const navButtons = ['btn-up', 'btn-down', 'btn-left', 'btn-right', 'btn-zoom-in', 'btn-zoom-out', 'btn-rotate', 'btn-pan'];
-  
-  // Enhanced nav button setup with toggle functionality
-  navButtons.forEach(id => {
-    const btn = document.getElementById(id);
-    if (!btn) return;
-    
-    btn.addEventListener('click', () => {
-      // Remove active state from all other nav buttons
-      navButtons.forEach(otherId => {
-        if (otherId !== id) {
-          const otherBtn = document.getElementById(otherId);
-          if (otherBtn) {
-            otherBtn.classList.remove('active');
-            otherBtn.removeAttribute('data-active');
-          }
-        }
-      });
-      
-      // Toggle this button's active state
-      if (btn.classList.contains('active')) {
-        btn.classList.remove('active');
-        btn.removeAttribute('data-active');
-      } else {
-        btn.classList.add('active');
-        btn.setAttribute('data-active', 'true');
-      }
-      
-      // Execute the button's functionality
-      switch (id) {
-        case 'btn-up': 
-          controls.target.y += panSpeed; 
-          controls.update(); 
-          break;
-        case 'btn-down': 
-          controls.target.y -= panSpeed; 
-          controls.update(); 
-          break;
-        case 'btn-left': 
-          controls.target.x -= panSpeed; 
-          controls.update(); 
-          break;
-        case 'btn-right': 
-          controls.target.x += panSpeed; 
-          controls.update(); 
-          break;
-        case 'btn-zoom-in': 
-          camera.position.multiplyScalar(0.9); 
-          controls.update(); 
-          break;
-        case 'btn-zoom-out': 
-          camera.position.multiplyScalar(1.1); 
-          controls.update(); 
-          break;
-        case 'btn-rotate': 
-  if (controls) {
-    controls.autoRotate = true;  // Always starts rotation
-    isRotationPaused = false;
-  }
-  break;
-
-        case 'btn-pan': 
-          togglePanMode(); 
-          break;
-      }
-    });
-  });
-
+  const btnUp = document.getElementById('btn-up'); if (btnUp) { btnUp.addEventListener('click', () => { controls.target.y += panSpeed; controls.update(); }); }
+  const btnDown = document.getElementById('btn-down'); if (btnDown) { btnDown.addEventListener('click', () => { controls.target.y -= panSpeed; controls.update(); }); }
+  const btnLeft = document.getElementById('btn-left'); if (btnLeft) { btnLeft.addEventListener('click', () => { controls.target.x -= panSpeed; controls.update(); }); }
+  const btnRight = document.getElementById('btn-right'); if (btnRight) { btnRight.addEventListener('click', () => { controls.target.x += panSpeed; controls.update(); }); }
+  const btnZoomIn = document.getElementById('btn-zoom-in'); if (btnZoomIn) { btnZoomIn.addEventListener('click', () => { camera.position.multiplyScalar(0.9); controls.update(); }); }
+  const btnZoomOut = document.getElementById('btn-zoom-out'); if (btnZoomOut) { btnZoomOut.addEventListener('click', () => { camera.position.multiplyScalar(1.1); controls.update(); }); }
+  const btnRotate = document.getElementById('btn-rotate'); if (btnRotate) { btnRotate.addEventListener('click', toggleGlobeRotation); }
+  const btnPan = document.getElementById('btn-pan'); if (btnPan) { btnPan.addEventListener('click', togglePanMode); }
   // Additional UI controls
   const pauseButton = document.getElementById("pauseButton");
   if (pauseButton) {
@@ -1064,9 +983,6 @@ function setupEventListeners() {
     }
     scrollLockButton.addEventListener('click', () => { setGlobeInteraction(!controls.enabled); });
   }
-
-  // Continue with keyboard controls...
-
   // Keyboard controls
   document.addEventListener('keydown', (event) => {
     if (!controls) return;
@@ -1298,4 +1214,3 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.error('❌ Error during initialization:', error);
   }
 });
-
