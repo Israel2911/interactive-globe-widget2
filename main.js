@@ -755,7 +755,7 @@ function latLonToVector3(lat, lon, radius) {
   return new THREE.Vector3(x, y, z);
 }
 function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
-  // Neon rainbow colors array - all 7 colors!
+  // Neon rainbow colors array
   const rainbowColors = [
     0xff0000, // Red
     0xff7f00, // Orange
@@ -793,6 +793,7 @@ function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
   globeGroup.add(path);
   return path;
 }
+
 function drawAllConnections() {
   const countryNames = ["India", "Europe", "UK", "Canada", "USA", "Singapore", "Malaysia"];
   const pairs = countryNames.map(country => ["Thailand", country]);
@@ -1088,14 +1089,22 @@ async function createGlobeAndCubes() {
 }
 
 // =======
+// ===
 // ANIMATION
-// =======
+// ===
 function animate() {
   requestAnimationFrame(animate);
   const elapsedTime = clock.getElapsedTime();
   if (controls && controls.enabled) { controls.update(); }
   if (typeof TWEEN !== 'undefined') { TWEEN.update(); }
-  arcPaths.forEach(path => { if (path.material.isShaderMaterial) { path.material.uniforms.time.value = elapsedTime; } });
+  
+  // Update neon arc shaders (flowing effect) - this is the only addition
+  arcPaths.forEach(path => { 
+    if (path.material.isShaderMaterial) { 
+      path.material.uniforms.time.value = elapsedTime; 
+    } 
+  });
+  
   countryLabels.forEach(item => {
     const worldPosition = new THREE.Vector3();
     item.block.getWorldPosition(worldPosition);
