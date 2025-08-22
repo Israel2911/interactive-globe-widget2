@@ -160,14 +160,14 @@ body {
 .carousel-container {
   flex: 1;
   display: flex;
-  justify-content: flex-start;    /* Changed from center */
-  align-items: stretch;           /* Changed from center */
+  justify-content: center; /* ✨ Change this to center */
+  align-items: stretch;
   overflow-x: auto;
-  overflow-y: hidden;             /* Added */
+  overflow-y: hidden;
   gap: 8px;
   padding: 8px 12px;
   scroll-behavior: smooth;
-  box-sizing: border-box;         /* Added */
+  box-sizing: border-box;
 }
 
 
