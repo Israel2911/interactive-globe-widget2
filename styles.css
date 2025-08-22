@@ -440,7 +440,7 @@ body {
 
 /* = MOBILE: LANDSCAPE ONLY - DEFINITIVE SPLIT LAYOUT = */
 @media (max-width: 926px) and (orientation: landscape) {
-  .carousel-card { min-width: 120px; height: 80px; }
+  .carousel-card { min-width: 120px; height: 100px; }
   #globe-canvas { height: calc(100vh - 145px); }
   /* LEFT GROUP: Navigation Arrows + Scroll Button */
   .left-controls-stack {
