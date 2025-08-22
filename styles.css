@@ -160,12 +160,14 @@ body {
 .carousel-container {
   flex: 1;
   display: flex;
-  justify-content: center;
-  align-items: center;
+  justify-content: flex-start;    /* Changed from center */
+  align-items: stretch;           /* Changed from center */
   overflow-x: auto;
+  overflow-y: hidden;             /* Added */
   gap: 8px;
   padding: 8px 12px;
   scroll-behavior: smooth;
+  box-sizing: border-box;         /* Added */
 }
 
 .carousel-arrow {
@@ -186,7 +188,7 @@ body {
   min-width: 160px;
   width: 160px;                   /* Added explicit width */
   max-width: 160px;               /* Added max-width */
-  height: 130px;
+  height: 120px;
   text-decoration: none;
   color: #ececec;
   border: 2px solid transparent;
@@ -382,32 +384,6 @@ body {
   background: linear-gradient(120deg, #2a2a2a 64%, #444444 100%);
   border: 2px solid #444;
 }
-
-
-/* Centered notification banner */
-.notification {
-  position: fixed;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: #4CAF50;
-  color: white;
-  padding: 15px 30px;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 1.2em;
-  text-align: center;
-  max-width: 480px;
-  width: 90%;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 9999;
-  cursor: pointer;
-}
-
-.notification.error {
-  background-color: #ff4444;
-}
-
 
 /* = MOBILE: GENERAL SHARED STYLES (< 768px) = */
 @media (max-width: 768px) {
