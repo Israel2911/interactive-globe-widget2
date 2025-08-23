@@ -1086,15 +1086,36 @@ async function createGlobeAndCubes() {
 // ===
 // =======
 // ANIMATION
-// =======
-// ANIMATION
 // ===
 function animate() {
+  // Call the animation loop recursively for the next frame
   requestAnimationFrame(animate);
+  
+  // Get the current elapsed time since the clock started
   const elapsedTime = clock.getElapsedTime();
+  
+  // Update orbit controls if they exist and are enabled
   if (controls && controls.enabled) { controls.update(); }
+  
+  // Update any TWEEN animations if TWEEN is defined
   if (typeof TWEEN !== 'undefined') { TWEEN.update(); }
-  arcPaths.forEach(path => { if (path.material.isShaderMaterial) { path.material.uniforms.time.value = elapsedTime; } });
+  
+  // Isolated function to animate neon arcs (integrated here for modularity)
+  function animateNeonArcs(elapsedTime) {
+    // Loop through each arc path
+    arcPaths.forEach(path => { 
+      // Check if the path uses ShaderMaterial (for neon effect)
+      if (path.material.isShaderMaterial) { 
+        // Update the 'time' uniform to animate the shader (creates flowing stripes)
+        path.material.uniforms.time.value = elapsedTime; 
+      } 
+    });
+  }
+  
+  // Call the neon arc animation with current time
+  animateNeonArcs(elapsedTime);
+  
+  // Update positions and orientations of country labels
   countryLabels.forEach(item => {
     const worldPosition = new THREE.Vector3();
     item.block.getWorldPosition(worldPosition);
@@ -1103,24 +1124,34 @@ function animate() {
     item.label.position.copy(labelPosition);
     item.label.lookAt(camera.position);
   });
+  
+  // Map for checking exploded state of cubes by country
   const explosionStateMap = {
     'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded,
     'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded,
     'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded
   };
+  
   const boundaryRadius = 1.0;
   const buffer = 0.02;
+  
+  // Update cube positions if movement is not paused
   if (!isCubeMovementPaused) {
     cubes.forEach((cube, i) => {
+      // Check if this cube is exploded
       const isExploded = cube.userData.neuralName && explosionStateMap[cube.userData.neuralName];
       if (!isExploded) {
+        // Move the cube
         cube.position.add(velocities[i]);
+        // Bounce off boundary if exceeded
         if (cube.position.length() > boundaryRadius - buffer) {
           cube.position.normalize().multiplyScalar(boundaryRadius - buffer);
           velocities[i].reflect(cube.position.clone().normalize());
         }
       }
     });
+    
+    // Update neural network connection lines
     if (neuralNetworkLines) {
       const vertices = [];
       const maxDist = 0.6;
@@ -1145,8 +1176,12 @@ function animate() {
       }
     }
   }
+  
+  // Render the scene with the current camera
   renderer.render(scene, camera);
 }
+
+
 // =======
 function togglePrivacySection() {
   const privacy = document.querySelector('.privacy-assurance');
