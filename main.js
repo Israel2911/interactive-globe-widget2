@@ -754,20 +754,8 @@ function latLonToVector3(lat, lon, radius) {
   const y = (radius * Math.cos(phi));
   return new THREE.Vector3(x, y, z);
 }
-function latLonToVector3(lat, lon, radius) {
-  const phi = (90 - lat) * (Math.PI / 180);
-  const theta = (lon + 180) * (Math.PI / 180);
-  const x = -(radius * Math.sin(phi) * Math.cos(theta));
-  const z = (radius * Math.sin(phi) * Math.sin(theta));
-  const y = (radius * Math.cos(phi));
-  return new THREE.Vector3(x, y, z);
-}
-
-// Isolated neon arc functions - all arc-related code grouped here
-let arcPaths = []; // Global array to hold arc meshes
-
-// Function to create a single neon rainbow arc
 function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
+  // Neon rainbow colors array
   const rainbowColors = [
     0xff0000, // Red
     0xff7f00, // Orange
@@ -777,7 +765,9 @@ function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
     0x4b0082, // Indigo
     0x9400d3  // Violet
   ];
+  
   const color = rainbowColors[arcIndex % rainbowColors.length];
+  
   const start = new THREE.Vector3(); fromGroup.getWorldPosition(start);
   const end = new THREE.Vector3(); toGroup.getWorldPosition(end);
   const globeRadius = 1.0; const arcOffset = 0.05;
@@ -786,21 +776,24 @@ function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
   const offsetEnd = end.clone().normalize().multiplyScalar(globeRadius + arcOffset);
   const mid = offsetStart.clone().add(offsetEnd).multiplyScalar(0.5).normalize().multiplyScalar(globeRadius + arcOffset + arcElevation);
   const curve = new THREE.QuadraticBezierCurve3(offsetStart, mid, offsetEnd);
+  
   const geometry = new THREE.TubeGeometry(curve, 64, 0.005, 8, false);
+  
   const vertexShader = `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
+  
   const fragmentShader = `varying vec2 vUv; uniform float time; uniform vec3 color; void main() { float stripe1 = step(0.1, fract(vUv.x * 4.0 + time * 0.2)) - step(0.2, fract(vUv.x * 4.0 + time * 0.2)); float stripe2 = step(0.1, fract(vUv.x * 4.0 - time * 0.2)) - step(0.2, fract(vUv.x * 4.0 - time * 0.2)); float combinedStripes = max(stripe1, stripe2); float glow = (1.0 - abs(vUv.y - 0.5) * 2.0); if (combinedStripes > 0.0) { gl_FragColor = vec4(color, combinedStripes * glow); } else { discard; } }`;
+  
   const material = new THREE.ShaderMaterial({
     uniforms: { time: { value: 0 }, color: { value: new THREE.Color(color) } },
     vertexShader, fragmentShader, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
   });
+  
   const path = new THREE.Mesh(geometry, material);
   path.renderOrder = 1;
   globeGroup.add(path);
-  arcPaths.push(path); // Add to array for animation
   return path;
 }
 
-// Function to draw all neon rainbow arcs
 function drawAllConnections() {
   const countryNames = ["India", "Europe", "UK", "Canada", "USA", "Singapore", "Malaysia"];
   const pairs = countryNames.map(country => ["Thailand", country]);
@@ -811,14 +804,6 @@ function drawAllConnections() {
   }).filter(Boolean);
 }
 
-// Isolated function to animate neon arcs
-function animateNeonArcs(elapsedTime) {
-  arcPaths.forEach(path => { 
-    if (path.material.isShaderMaterial) { 
-      path.material.uniforms.time.value = elapsedTime; 
-    } 
-  });
-}
 
 // =======
 // MOUSE EVENT HANDLERS
