@@ -759,12 +759,12 @@ function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
   // Neon rainbow colors array
   const rainbowColors = [
     0xff0000, // Red
-    0xff7f00, // Orange
-    0xffff00, // Yellow
-    0x00ff00, // Green
-    0x0000ff, // Blue
-    0x4b0082, // Indigo
-    0x9400d3  // Violet
+    0xff0000, // Red
+    0xff0000, // Red
+    0xff0000, // Red
+    0xff0000, // Red
+    0xff0000, // Red
+    0xff0000  // Red
   ];
   const color = rainbowColors[arcIndex % rainbowColors.length];
   const start = new THREE.Vector3(); fromGroup.getWorldPosition(start);
@@ -797,7 +797,6 @@ function drawAllConnections() {
     });
   }
   arcPaths = []; // Reset the array
-  
   const countryNames = ["India", "Europe", "UK", "Canada", "USA", "Singapore", "Malaysia"];
   const pairs = countryNames.map(country => ["Thailand", country]);
   arcPaths = pairs.map(([from, to], index) => {
