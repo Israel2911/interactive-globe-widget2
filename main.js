@@ -1130,16 +1130,12 @@ async function createGlobeAndCubes() {
 function animate() {
   // Call the animation loop recursively for the next frame
   requestAnimationFrame(animate);
-  
   // Get the current elapsed time since the clock started
   const elapsedTime = clock.getElapsedTime();
-  
   // Update orbit controls if they exist and are enabled
   if (controls && controls.enabled) { controls.update(); }
-  
   // Update any TWEEN animations if TWEEN is defined
   if (typeof TWEEN !== 'undefined') { TWEEN.update(); }
-  
   // Isolated function to animate neon arcs (integrated here for modularity)
   function animateNeonArcs(elapsedTime) {
     // Loop through each arc path
@@ -1151,10 +1147,8 @@ function animate() {
       } 
     });
   }
-  
   // Call the neon arc animation with current time
   animateNeonArcs(elapsedTime);
-  
   // Update positions and orientations of country labels
   countryLabels.forEach(item => {
     const worldPosition = new THREE.Vector3();
@@ -1164,17 +1158,14 @@ function animate() {
     item.label.position.copy(labelPosition);
     item.label.lookAt(camera.position);
   });
-  
   // Map for checking exploded state of cubes by country
   const explosionStateMap = {
     'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded,
     'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded,
     'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded
   };
-  
   const boundaryRadius = 1.0;
   const buffer = 0.02;
-  
   // Update cube positions if movement is not paused
   if (!isCubeMovementPaused) {
     cubes.forEach((cube, i) => {
@@ -1216,7 +1207,6 @@ function animate() {
       }
     }
   }
-  
   // Render the scene with the current camera
   renderer.render(scene, camera);
 }
