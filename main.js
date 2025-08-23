@@ -754,89 +754,58 @@ function latLonToVector3(lat, lon, radius) {
   const y = (radius * Math.cos(phi));
   return new THREE.Vector3(x, y, z);
 }
-// ----------  ARC HELPERS  ----------
-// Remove every existing arc mesh from the globe and free GPU memory
-function clearArcPaths() {
-  if (!arcPaths) return;                 // nothing to clear yet
-  arcPaths.forEach(path => {
-    if (!path) return;
-    globeGroup.remove(path);             // detach from scene / group
-    if (path.geometry) path.geometry.dispose();
-    if (path.material) path.material.dispose();
-  });
-  arcPaths = [];                         // reset the global array
-}
-
-// Build ONE neon rainbow arc between two country blocks
+// ARC PATH
 function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
-  const rainbowColors = [0xff0000, 0xff7f00, 0xffff00, 0x00ff00,
-                         0x0000ff, 0x4b0082, 0x9400d3];
+  // Neon rainbow colors array
+  const rainbowColors = [
+    0xff0000, // Red
+    0xff7f00, // Orange
+    0xffff00, // Yellow
+    0x00ff00, // Green
+    0x0000ff, // Blue
+    0x4b0082, // Indigo
+    0x9400d3  // Violet
+  ];
   const color = rainbowColors[arcIndex % rainbowColors.length];
-
-  // Calculate three control points for a quadratic Bézier-tube
-  const start   = fromGroup.getWorldPosition(new THREE.Vector3());
-  const end     = toGroup  .getWorldPosition(new THREE.Vector3());
-  const R       = 1.0, offset = 0.05;
-  const midLift = start.distanceTo(end) * 0.4;
-  const p0 = start.clone().normalize().multiplyScalar(R + offset);
-  const p2 = end  .clone().normalize().multiplyScalar(R + offset);
-  const p1 = p0.clone().add(p2).multiplyScalar(0.5)
-                     .normalize().multiplyScalar(R + offset + midLift);
-
-  // Geometry + neon-stripe shader
-  const geometry = new THREE.TubeGeometry(
-    new THREE.QuadraticBezierCurve3(p0, p1, p2), 64, 0.005, 8, false);
-
-  const vertexShader = `
-    varying vec2 vUv;
-    void main() {
-      vUv = uv;
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
-    }`;
-
-  const fragmentShader = `
-    varying vec2 vUv;
-    uniform float time;
-    uniform vec3  color;
-    void main() {
-      float stripeA = step(0.1, fract(vUv.x*4.0 + time*0.3))
-                    - step(0.2, fract(vUv.x*4.0 + time*0.3));
-      float stripeB = step(0.1, fract(vUv.x*4.0 - time*0.3))
-                    - step(0.2, fract(vUv.x*4.0 - time*0.3));
-      float stripes = max(stripeA, stripeB);
-      float glow    = 1.0 - abs(vUv.y - 0.5)*2.0;
-      if (stripes > 0.0){
-        gl_FragColor = vec4(color, stripes * glow);
-      } else {
-        discard;
-      }
-    }`;
-
+  const start = new THREE.Vector3(); fromGroup.getWorldPosition(start);
+  const end = new THREE.Vector3(); toGroup.getWorldPosition(end);
+  const globeRadius = 1.0; const arcOffset = 0.05;
+  const distance = start.distanceTo(end); const arcElevation = distance * 0.4;
+  const offsetStart = start.clone().normalize().multiplyScalar(globeRadius + arcOffset);
+  const offsetEnd = end.clone().normalize().multiplyScalar(globeRadius + arcOffset);
+  const mid = offsetStart.clone().add(offsetEnd).multiplyScalar(0.5).normalize().multiplyScalar(globeRadius + arcOffset + arcElevation);
+  const curve = new THREE.QuadraticBezierCurve3(offsetStart, mid, offsetEnd);
+  const geometry = new THREE.TubeGeometry(curve, 64, 0.005, 8, false);
+  const vertexShader = `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
+  const fragmentShader = `varying vec2 vUv; uniform float time; uniform vec3 color; void main() { float stripe1 = step(0.1, fract(vUv.x * 4.0 + time * 0.2)) - step(0.2, fract(vUv.x * 4.0 + time * 0.2)); float stripe2 = step(0.1, fract(vUv.x * 4.0 - time * 0.2)) - step(0.2, fract(vUv.x * 4.0 - time * 0.2)); float combinedStripes = max(stripe1, stripe2); float glow = (1.0 - abs(vUv.y - 0.5) * 2.0); if (combinedStripes > 0.0) { gl_FragColor = vec4(color, combinedStripes * glow); } else { discard; } }`;
   const material = new THREE.ShaderMaterial({
     uniforms: { time: { value: 0 }, color: { value: new THREE.Color(color) } },
-    vertexShader, fragmentShader,
-    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
+    vertexShader, fragmentShader, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
   });
-
-  const mesh = new THREE.Mesh(geometry, material);
-  mesh.renderOrder = 1;                  // render on top of globe
-  globeGroup.add(mesh);
-  return mesh;
+  const path = new THREE.Mesh(geometry, material);
+  path.renderOrder = 1;
+  globeGroup.add(path);
+  return path;
 }
-
-// ----------  MAIN DRAW  ----------
 function drawAllConnections() {
-  clearArcPaths();                       // *** remove old arcs first ***
-
-  const partners = ["India","Europe","UK","Canada",
-                    "USA","Singapore","Malaysia"];
-  arcPaths = partners.map((country,i) => {
-    const from = countryBlocks["Thailand"];
-    const to   = countryBlocks[country];
-    return (from && to) ? createConnectionPath(from,to,i) : null;
+  // Remove old arcs before adding new ones
+  if (arcPaths && arcPaths.length > 0) {
+    arcPaths.forEach(path => {
+      globeGroup.remove(path);
+      path.geometry.dispose();
+      path.material.dispose();
+    });
+  }
+  arcPaths = []; // Reset the array
+  
+  const countryNames = ["India", "Europe", "UK", "Canada", "USA", "Singapore", "Malaysia"];
+  const pairs = countryNames.map(country => ["Thailand", country]);
+  arcPaths = pairs.map(([from, to], index) => {
+    const fromBlock = countryBlocks[from];
+    const toBlock = countryBlocks[to];
+    if (fromBlock && toBlock) return createConnectionPath(fromBlock, toBlock, index);
   }).filter(Boolean);
 }
-
 
 
 // =======
