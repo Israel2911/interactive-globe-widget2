@@ -720,6 +720,11 @@ const toggleFunctionMap = {
 // Ensure this flows with Part 1 by declaring arcParticles globally in Part 1 (add: let arcParticles = []; after let arcPaths = []; in Part 1).
 // All other functions remain as in your current structure, with changes only to arc-related parts.
 
+// = FULL UPDATED PART 2 CODE =
+// Incorporated modifications for arcs: Increased radial segments for fuller tubes, simplified shader for consistent glow, added particle flow for professional movement animation.
+// Ensure this flows with Part 1 by declaring arcParticles globally in Part 1 (add: let arcParticles = []; after let arcPaths = []; in Part 1).
+// All other functions remain as in your current structure, with changes only to arc-related parts.
+
 // ===
 // CUBE CREATION
 // ===
@@ -776,17 +781,19 @@ function latLonToVector3(lat, lon, radius) {
 }
 // Modified: createConnectionPath (smoother tube, improved shader, professional look)
 function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
-  // Neon rainbow colors array
-  const rainbowColors = [
+  // Extended neon rainbow colors array with extra violet and indigo shades
+  const rainbowExtendedColors = [
     0xff0000, // Red
     0xff7f00, // Orange
     0xffff00, // Yellow
     0x00ff00, // Green
     0x0000ff, // Blue
     0x4b0082, // Indigo
-    0x9400d3  // Violet
+    0x8a2be2, // BlueViolet
+    0x9400d3, // DarkViolet
+    0x7f00ff  // Violet
   ];
-  const color = rainbowColors[arcIndex % rainbowColors.length];
+  const color = rainbowExtendedColors[arcIndex % rainbowExtendedColors.length];
   const start = new THREE.Vector3(); fromGroup.getWorldPosition(start);
   const end = new THREE.Vector3(); toGroup.getWorldPosition(end);
   const globeRadius = 1.0; const arcOffset = 0.05;
@@ -1276,5 +1283,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.error('❌ Error during initialization:', error);
   }
 });
+
 
 
