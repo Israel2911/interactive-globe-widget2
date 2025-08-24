@@ -763,13 +763,16 @@ function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
       }
   return cubeObject;
 }
-function createNeuralNetwork() {
-  const vertices = [];
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-  const material = new THREE.LineBasicMaterial({ color: 0x00BFFF, blending: THREE.AdditiveBlending, transparent: true, opacity: 0.35 });
-  neuralNetworkLines = new THREE.LineSegments(geometry, material);
-  globeGroup.add(neuralNetworkLines);
+// Add this function (if not already added) to create each curved arc
+function createCurvedNetworkLink(start, end, color = 0x00BFFF, elevation = 0.08) {
+  const midPoint = start.clone().lerp(end, 0.5).normalize().multiplyScalar(start.length() + elevation);
+  const curve = new THREE.QuadraticBezierCurve3(start, midPoint, end);
+  const points = curve.getPoints(16);
+  const geometry = new THREE.BufferGeometry().setFromPoints(points);
+  const material = new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.32 });
+  const arcLine = new THREE.Line(geometry, material);
+  scene.add(arcLine);
+  return arcLine;
 }
 function latLonToVector3(lat, lon, radius) {
   const phi = (90 - lat) * (Math.PI / 180);
@@ -1145,6 +1148,8 @@ async function createGlobeAndCubes() {
 // ===
 // ANIMATION
 // ===
+// ANIMATION
+// ===
 function animate() {
   requestAnimationFrame(animate);
   const elapsedTime = clock.getElapsedTime();
@@ -1177,8 +1182,9 @@ function animate() {
         }
       }
     });
+    // Remove old network arcs before redrawing (prevents duplicates)
+    scene.children = scene.children.filter(child => !child.userData || !child.userData.isNetworkArc);
     if (neuralNetworkLines) {
-      const vertices = [];
       const maxDist = 0.6;
       const connectionsPerCube = 4;
       for (let i = 0; i < cubes.length; i++) {
@@ -1192,18 +1198,16 @@ function animate() {
         neighbors.sort((a, b) => a.dist - b.dist);
         const closest = neighbors.slice(0, connectionsPerCube);
         closest.forEach(n => {
-          vertices.push(cubes[i].position.x, cubes[i].position.y, cubes[i].position.z);
-          vertices.push(n.cube.position.x, n.cube.position.y, n.cube.position.z);
+          const start = cubes[i].position.clone();
+          const end = n.cube.position.clone();
+          const arc = createCurvedNetworkLink(start, end, 0x00BFFF, 0.08); // Create curved arc
+          arc.userData = { isNetworkArc: true }; // Tag for removal next frame
         });
-      }
-      if (neuralNetworkLines.visible) {
-        neuralNetworkLines.geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
       }
     }
   }
   renderer.render(scene, camera);
 }
-// ===
 function togglePrivacySection() {
   const privacy = document.querySelector('.privacy-assurance');
   const trust = document.querySelector('.trust-indicators');
