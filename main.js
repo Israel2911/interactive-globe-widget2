@@ -755,29 +755,51 @@ function latLonToVector3(lat, lon, radius) {
   return new THREE.Vector3(x, y, z);
 }
 // ARC PATH
+// UPDATED: ARC PATH (now surface-hugging great-circle with neon Tron-style shader)
 function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
-  // Neon rainbow colors array
-  const rainbowColors = [
-    0xff0000, // Red
-    0xff0000, // Red
-    0xff0000, // Red
-    0xff0000, // Red
-    0xff0000, // Red
-    0xff0000, // Red
-    0xff0000  // Red
+  const neonColors = [
+    0x00eaff, // Cyan
+    0x19ffcd, // Teal
+    0x44aaff, // Blue
+    0x22ddff, // Light cyan
+    0x66ffee, // Mint
+    0x33bbff, // Sky blue
+    0x00eaff  // Cyan
   ];
-  const color = rainbowColors[arcIndex % rainbowColors.length];
+  const color = neonColors[arcIndex % neonColors.length];
   const start = new THREE.Vector3(); fromGroup.getWorldPosition(start);
   const end = new THREE.Vector3(); toGroup.getWorldPosition(end);
-  const globeRadius = 1.0; const arcOffset = 0.05;
-  const distance = start.distanceTo(end); const arcElevation = distance * 0.4;
-  const offsetStart = start.clone().normalize().multiplyScalar(globeRadius + arcOffset);
-  const offsetEnd = end.clone().normalize().multiplyScalar(globeRadius + arcOffset);
-  const mid = offsetStart.clone().add(offsetEnd).multiplyScalar(0.5).normalize().multiplyScalar(globeRadius + arcOffset + arcElevation);
-  const curve = new THREE.QuadraticBezierCurve3(offsetStart, mid, offsetEnd);
-  const geometry = new THREE.TubeGeometry(curve, 64, 0.005, 8, false);
+  const globeRadius = GLOBE_RADIUS;
+  const distance = start.distanceTo(end);
+  const segments = Math.floor(distance * 100) + 64; // Adaptive segments for better contour following
+  const surfaceOffset = 0.002; // Small offset to avoid z-fighting with globe mesh
+
+  // Great-circle slerp for surface path
+  const a = start.clone().normalize().multiplyScalar(globeRadius);
+  const b = end.clone().normalize().multiplyScalar(globeRadius);
+  const pts = [];
+  for (let i = 0; i <= segments; i++) {
+    const t = i / segments;
+    const dot = a.clone().normalize().dot(b.clone().normalize());
+    const omega = Math.acos(THREE.MathUtils.clamp(dot, -1, 1));
+    if (omega < 1e-6) {
+      pts.push(a.clone().multiplyScalar(1 + surfaceOffset));
+      continue;
+    }
+    const sinOmega = Math.sin(omega);
+    const s0 = Math.sin((1 - t) * omega) / sinOmega;
+    const s1 = Math.sin(t * omega) / sinOmega;
+    const p = a.clone().multiplyScalar(s0).add(b.clone().multiplyScalar(s1)).normalize().multiplyScalar(globeRadius * (1 + surfaceOffset));
+    pts.push(p);
+  }
+
+  // Curve and tube for light strip
+  const curve = new THREE.CatmullRomCurve3(pts);
+  const geometry = new THREE.TubeGeometry(curve, segments, 0.005, 8, false);
+
+  // Tron-style neon shader with pulse animation
   const vertexShader = `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
-  const fragmentShader = `varying vec2 vUv; uniform float time; uniform vec3 color; void main() { float stripe1 = step(0.1, fract(vUv.x * 4.0 + time * 0.2)) - step(0.2, fract(vUv.x * 4.0 + time * 0.2)); float stripe2 = step(0.1, fract(vUv.x * 4.0 - time * 0.2)) - step(0.2, fract(vUv.x * 4.0 - time * 0.2)); float combinedStripes = max(stripe1, stripe2); float glow = (1.0 - abs(vUv.y - 0.5) * 2.0); if (combinedStripes > 0.0) { gl_FragColor = vec4(color, combinedStripes * glow); } else { discard; } }`;
+  const fragmentShader = `varying vec2 vUv; uniform float time; uniform vec3 color; void main() { float stripe1 = step(0.1, fract(vUv.x * 4.0 + time * 0.2)) - step(0.2, fract(vUv.x * 4.0 + time * 0.2)); float stripe2 = step(0.1, fract(vUv.x * 4.0 - time * 0.2)) - step(0.2, fract(vUv.x * 4.0 - time * 0.2)); float combinedStripes = max(stripe1, stripe2); float glow = (1.0 - abs(vUv.y - 0.5) * 2.0) * (0.5 + 0.5 * sin(time * 2.0 + vUv.x * 3.14)); // Added pulse if (combinedStripes > 0.0) { gl_FragColor = vec4(color * glow, combinedStripes * glow); } else { discard; } }`;
   const material = new THREE.ShaderMaterial({
     uniforms: { time: { value: 0 }, color: { value: new THREE.Color(color) } },
     vertexShader, fragmentShader, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
@@ -787,6 +809,8 @@ function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
   globeGroup.add(path);
   return path;
 }
+
+// UPDATED: drawAllConnections (now includes neon grid paths following Mercator grid lines)
 function drawAllConnections() {
   // Remove old arcs before adding new ones
   if (arcPaths && arcPaths.length > 0) {
@@ -797,6 +821,60 @@ function drawAllConnections() {
     });
   }
   arcPaths = []; // Reset the array
+
+  // UPDATED: Build global Mercator grid as neon light strips (meridians/parallels hugging surface)
+  const gridStrips = []; // Local to manage grid
+  const lonStep = 15, latStep = 15, samples = 128, gridRadius = GLOBE_RADIUS, gridOffset = 0.002;
+// UPDATED: drawAllConnections (now includes neon grid paths following Mercator grid lines)
+function drawAllConnections() {
+  // Remove old arcs before adding new ones
+  if (arcPaths && arcPaths.length > 0) {
+    arcPaths.forEach(path => {
+      globeGroup.remove(path);
+      path.geometry.dispose();
+      path.material.dispose();
+    });
+  }
+  arcPaths = []; // Reset the array
+
+  // Build global Mercator grid as neon light strips (meridians/parallels hugging surface)
+  const gridStrips = []; // Local to manage grid
+  const lonStep = 15, latStep = 15, samples = 128, gridRadius = GLOBE_RADIUS, gridOffset = 0.002;
+  const gridLines = [];
+  // Parallels (constant lat)
+  for (let lat = -80; lat <= 80; lat += latStep) {
+    const pts = [];
+    for (let i = 0; i <= samples; i++) {
+      const lon = -180 + (360 * i / samples);
+      pts.push(latLonToVector3(lat, lon, gridRadius).multiplyScalar(1 + gridOffset));
+    }
+    gridLines.push(pts);
+  }
+  // Meridians (constant lon)
+  for (let lon = -180; lon <= 180; lon += lonStep) {
+    const pts = [];
+    for (let i = 0; i <= samples; i++) {
+      const lat = -85 + (170 * i / samples);
+      pts.push(latLonToVector3(lat, lon, gridRadius).multiplyScalar(1 + gridOffset));
+    }
+    gridLines.push(pts);
+  }
+  gridLines.forEach((pts, i) => {
+    const curve = new THREE.CatmullRomCurve3(pts);
+    const geometry = new THREE.TubeGeometry(curve, samples, 0.003, 8, false);
+    const material = new THREE.ShaderMaterial({
+      uniforms: { time: { value: 0 }, color: { value: new THREE.Color(i % 2 === 0 ? 0x00eaff : 0x22ddff) } },
+      vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+      fragmentShader: `varying vec2 vUv; uniform float time; uniform vec3 color; void main() { float stripe1 = step(0.1, fract(vUv.x * 6.0 + time * 0.15)) - step(0.2, fract(vUv.x * 6.0 + time * 0.15)); float stripe2 = step(0.1, fract(vUv.x * 6.0 - time * 0.15)) - step(0.2, fract(vUv.x * 6.0 - time * 0.15)); float combinedStripes = max(stripe1, stripe2); float glow = (1.0 - abs(vUv.y - 0.5) * 2.0) * (0.5 + 0.5 * sin(time * 1.5 + vUv.x * 3.14)); if (combinedStripes > 0.0) { gl_FragColor = vec4(color * glow, combinedStripes * glow); } else { discard; } }`,
+      transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
+    });
+    const strip = new THREE.Mesh(geometry, material);
+    strip.renderOrder = 1;
+    globeGroup.add(strip);
+    gridStrips.push(strip);
+  });
+
+  // Build store arcs (surface-hugging)
   const countryNames = ["India", "Europe", "UK", "Canada", "USA", "Singapore", "Malaysia"];
   const pairs = countryNames.map(country => ["Thailand", country]);
   arcPaths = pairs.map(([from, to], index) => {
@@ -804,7 +882,12 @@ function drawAllConnections() {
     const toBlock = countryBlocks[to];
     if (fromBlock && toBlock) return createConnectionPath(fromBlock, toBlock, index);
   }).filter(Boolean);
+
+  // Store gridStrips for animation integration (static property, no global)
+  drawAllConnections.gridStrips = gridStrips;
 }
+
+
 
 
 // =======
@@ -1092,21 +1175,25 @@ async function createGlobeAndCubes() {
 
 // =======
 // ===
-// =======
+// ===
 // ANIMATION
 // ===
 function animate() {
   // Call the animation loop recursively for the next frame
   requestAnimationFrame(animate);
+  
   // Get the current elapsed time since the clock started
   const elapsedTime = clock.getElapsedTime();
+  
   // Update orbit controls if they exist and are enabled
   if (controls && controls.enabled) { controls.update(); }
+  
   // Update any TWEEN animations if TWEEN is defined
   if (typeof TWEEN !== 'undefined') { TWEEN.update(); }
+  
   // Isolated function to animate neon arcs (integrated here for modularity)
   function animateNeonArcs(elapsedTime) {
-    // Loop through each arc path
+    // Loop through each arc path (existing logic unchanged)
     arcPaths.forEach(path => { 
       // Check if the path uses ShaderMaterial (for neon effect)
       if (path.material.isShaderMaterial) { 
@@ -1114,9 +1201,20 @@ function animate() {
         path.material.uniforms.time.value = elapsedTime; 
       } 
     });
+    
+    // INTEGRATED: Update grid time if grid has been built (no changes to existing structure)
+    if (drawAllConnections.gridStrips) {
+      drawAllConnections.gridStrips.forEach(strip => {
+        if (strip.material.isShaderMaterial) {
+          strip.material.uniforms.time.value = elapsedTime;
+        }
+      });
+    }
   }
+  
   // Call the neon arc animation with current time
   animateNeonArcs(elapsedTime);
+  
   // Update positions and orientations of country labels
   countryLabels.forEach(item => {
     const worldPosition = new THREE.Vector3();
@@ -1126,14 +1224,17 @@ function animate() {
     item.label.position.copy(labelPosition);
     item.label.lookAt(camera.position);
   });
+  
   // Map for checking exploded state of cubes by country
   const explosionStateMap = {
     'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded,
     'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded,
     'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded
   };
+  
   const boundaryRadius = 1.0;
   const buffer = 0.02;
+  
   // Update cube positions if movement is not paused
   if (!isCubeMovementPaused) {
     cubes.forEach((cube, i) => {
@@ -1149,6 +1250,9 @@ function animate() {
         }
       }
     });
+  }
+}
+
     
     // Update neural network connection lines
     if (neuralNetworkLines) {
