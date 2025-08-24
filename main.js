@@ -700,9 +700,14 @@ const toggleFunctionMap = {
   'Singapore': createToggleFunction('Singapore'), 'Malaysia': createToggleFunction('Malaysia')
 };
 
-// =======
+// = FULL UPDATED PART 2 CODE =
+// Incorporated modifications for arcs: Increased radial segments for fuller tubes, simplified shader for consistent glow, added particle flow for professional movement animation.
+// Ensure this flows with Part 1 by declaring arcParticles globally in Part 1 (add: let arcParticles = []; after let arcPaths = []; in Part 1).
+// All other functions remain as in your current structure, with changes only to arc-related parts.
+
+// ===
 // CUBE CREATION
-// =======
+// ===
 function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
   let contentIdx = 0;
   const cubeObject = new THREE.Group();
@@ -754,6 +759,7 @@ function latLonToVector3(lat, lon, radius) {
   const y = (radius * Math.cos(phi));
   return new THREE.Vector3(x, y, z);
 }
+// **Modified: createConnectionPath (smoother tube, improved shader, professional look)**  // Highlighted in red: This entire function has updates for geometry and shader
 function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
   // Neon rainbow colors array
   const rainbowColors = [
@@ -765,9 +771,7 @@ function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
     0x4b0082, // Indigo
     0x9400d3  // Violet
   ];
-  
   const color = rainbowColors[arcIndex % rainbowColors.length];
-  
   const start = new THREE.Vector3(); fromGroup.getWorldPosition(start);
   const end = new THREE.Vector3(); toGroup.getWorldPosition(end);
   const globeRadius = 1.0; const arcOffset = 0.05;
@@ -776,24 +780,53 @@ function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
   const offsetEnd = end.clone().normalize().multiplyScalar(globeRadius + arcOffset);
   const mid = offsetStart.clone().add(offsetEnd).multiplyScalar(0.5).normalize().multiplyScalar(globeRadius + arcOffset + arcElevation);
   const curve = new THREE.QuadraticBezierCurve3(offsetStart, mid, offsetEnd);
-  
-  const geometry = new THREE.TubeGeometry(curve, 64, 0.005, 8, false);
-  
+  // **Modification: Higher radial segments for smoother, fuller tube (avoids "half tube" look)**  // Highlighted in red: Increased radialSegments to 24
+  const geometry = new THREE.TubeGeometry(curve, 64, 0.008, 24, false); // Increased radius slightly, radialSegments to 24 for roundness
+  // **Modified Shader: Simpler glow with soft pulsing, no heavy discard for professional, consistent appearance**  // Highlighted in red: Updated fragment shader for soft pulse
   const vertexShader = `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
-  
-  const fragmentShader = `varying vec2 vUv; uniform float time; uniform vec3 color; void main() { float stripe1 = step(0.1, fract(vUv.x * 4.0 + time * 0.2)) - step(0.2, fract(vUv.x * 4.0 + time * 0.2)); float stripe2 = step(0.1, fract(vUv.x * 4.0 - time * 0.2)) - step(0.2, fract(vUv.x * 4.0 - time * 0.2)); float combinedStripes = max(stripe1, stripe2); float glow = (1.0 - abs(vUv.y - 0.5) * 2.0); if (combinedStripes > 0.0) { gl_FragColor = vec4(color, combinedStripes * glow); } else { discard; } }`;
-  
+  const fragmentShader = `
+    varying vec2 vUv;
+    uniform float time;
+    uniform vec3 color;
+    void main() {
+      float glow = sin(time * 2.0 + vUv.x * 10.0) * 0.5 + 0.5; // Soft wave pulse
+      float intensity = (1.0 - abs(vUv.y - 0.5) * 2.0) * glow;
+      gl_FragColor = vec4(color, intensity * 0.8);
+    }`;
   const material = new THREE.ShaderMaterial({
     uniforms: { time: { value: 0 }, color: { value: new THREE.Color(color) } },
-    vertexShader, fragmentShader, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
+    vertexShader, fragmentShader,
+    transparent: true,
+    side: THREE.DoubleSide, // Ensures full visibility
+    depthWrite: false,
+    blending: THREE.AdditiveBlending
   });
-  
   const path = new THREE.Mesh(geometry, material);
   path.renderOrder = 1;
+  path.userData.curve = curve; // Store for particle animation
   globeGroup.add(path);
   return path;
 }
-
+// **New: Function to create and animate particles along an arc for flowing movement**  // Highlighted in red: Entirely new function for particle flow
+function animateArcParticles(arc) {
+  const curve = arc.userData.curve;
+  if (!curve) return;
+  const particleCount = 5; // Number of particles per arc for flow effect
+  const speed = 0.5; // Adjust for faster/slower movement
+  for (let i = 0; i < particleCount; i++) {
+    const particle = new THREE.Mesh(
+      new THREE.SphereGeometry(0.01, 8, 8),
+      new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.7 })
+    );
+    particle.userData = {
+      t: Math.random(), // Random start position along curve
+      speed: speed * (0.8 + Math.random() * 0.4) // Slight speed variation
+    };
+    scene.add(particle);
+    arcParticles.push(particle);
+  }
+}
+// **In drawAllConnections, add particle setup after creating arcs**  // Highlighted in red: Added particle initialization
 function drawAllConnections() {
   const countryNames = ["India", "Europe", "UK", "Canada", "USA", "Singapore", "Malaysia"];
   const pairs = countryNames.map(country => ["Thailand", country]);
@@ -802,12 +835,12 @@ function drawAllConnections() {
     const toBlock = countryBlocks[to];
     if (fromBlock && toBlock) return createConnectionPath(fromBlock, toBlock, index);
   }).filter(Boolean);
+  // New: Initialize particles for each arc
+  arcPaths.forEach(animateArcParticles);
 }
-
-
-// =======
+// ===
 // MOUSE EVENT HANDLERS
-// =======
+// ===
 function onCanvasMouseDown(event) {
   mouseDownPos.set(event.clientX, event.clientY);
 }
@@ -821,7 +854,6 @@ function closeAllExploded() {
   if (isSingaporeCubeExploded) toggleFunctionMap['Singapore']();
   if (isMalaysiaCubeExploded) toggleFunctionMap['Malaysia']();
 }
-
 // THE KEY CLICK HANDLER — keep exploration public; gate subcube details
 function onCanvasMouseUp(event) {
   if (transformControls.dragging) return;
@@ -889,7 +921,6 @@ function onCanvasMouseUp(event) {
     closeAllExploded(); 
   }
 }
-
 // Pan mode wrappers
 function onCanvasMouseDownPan(event) {
   mouseDownPos.set(event.clientX, event.clientY);
@@ -924,10 +955,9 @@ function onCanvasMouseUpPan(event) {
   }
   onCanvasMouseUp(event);
 }
-
-// =======
+// ===
 // EVENT LISTENERS SETUP
-// =======
+// ===
 function setupEventListeners() {
   renderer.domElement.addEventListener('mousedown', onCanvasMouseDownPan);
   renderer.domElement.addEventListener('mousemove', onCanvasMouseMovePan);
@@ -1018,10 +1048,9 @@ function setupEventListeners() {
   });
   window.addEventListener('resize', () => { updateCanvasSize(); });
 }
-
-// =======
+// ===
 // GLOBE AND CUBES CREATION
-// =======
+// ===
 async function createGlobeAndCubes() {
   console.log('🔄 Creating globe and cubes...');
   createNeuralNetwork();
@@ -1087,18 +1116,29 @@ async function createGlobeAndCubes() {
   });
   console.log('✅ Globe and cubes created successfully');
 }
-
-// =======
 // ===
-// =======
+// ===
+// ===
 // ANIMATION
-// =======
+// ===
 function animate() {
   requestAnimationFrame(animate);
   const elapsedTime = clock.getElapsedTime();
   if (controls && controls.enabled) { controls.update(); }
   if (typeof TWEEN !== 'undefined') { TWEEN.update(); }
-  arcPaths.forEach(path => { if (path.material.isShaderMaterial) { path.material.uniforms.time.value = elapsedTime; } });
+  // Update arc shaders
+  arcPaths.forEach(path => { 
+    if (path.material.isShaderMaterial) { 
+      path.material.uniforms.time.value = elapsedTime; 
+    } 
+  });
+  // **New: Update particle positions along arcs for flowing movement**  // Highlighted in red: Added particle update loop
+  arcParticles.forEach(particle => {
+    particle.userData.t = (particle.userData.t + particle.userData.speed * 0.001) % 1; // Loop along curve
+    const pos = particle.parent.userData.curve.getPointAt(particle.userData.t); // Get position on curve
+    particle.position.copy(pos);
+    particle.material.opacity = 0.7 + Math.sin(elapsedTime * 2 + particle.userData.t * 10) * 0.3; // Pulse opacity
+  });
   countryLabels.forEach(item => {
     const worldPosition = new THREE.Vector3();
     item.block.getWorldPosition(worldPosition);
@@ -1151,8 +1191,7 @@ function animate() {
   }
   renderer.render(scene, camera);
 }
-
-// =======
+// ===
 function togglePrivacySection() {
   const privacy = document.querySelector('.privacy-assurance');
   const trust = document.querySelector('.trust-indicators');
@@ -1177,18 +1216,14 @@ function showNotification(message, isSuccess = true) {
   const div = document.createElement('div');
   const icon = isSuccess ? '✅' : '❌';
   const cssClass = isSuccess ? 'notification' : 'notification error';
-  
   div.innerHTML = `
     <div class="${cssClass}" onclick="this.remove()">
       ${icon} ${message}
     </div>
   `;
-  
   document.body.appendChild(div);
   setTimeout(() => div.remove(), 5000);
 }
-
-
 // ===
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('🚀 Loading Interactive Globe Widget...');
@@ -1236,3 +1271,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.error('❌ Error during initialization:', error);
   }
 });
+
