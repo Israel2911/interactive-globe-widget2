@@ -705,26 +705,6 @@ const toggleFunctionMap = {
 // Ensure this flows with Part 1 by declaring arcParticles globally in Part 1 (add: let arcParticles = []; after let arcPaths = []; in Part 1).
 // All other functions remain as in your current structure, with changes only to arc-related parts.
 
-// = FULL UPDATED PART 2 CODE =
-// Incorporated modifications for arcs: Increased radial segments for fuller tubes, simplified shader for consistent glow, added particle flow for professional movement animation.
-// Ensure this flows with Part 1 by declaring arcParticles globally in Part 1 (add: let arcParticles = []; after let arcPaths = []; in Part 1).
-// All other functions remain as in your current structure, with changes only to arc-related parts.
-
-// = FULL UPDATED PART 2 CODE =
-// Incorporated modifications for arcs: Increased radial segments for fuller tubes, simplified shader for consistent glow, added particle flow for professional movement animation.
-// Ensure this flows with Part 1 by declaring arcParticles globally in Part 1 (add: let arcParticles = []; after let arcPaths = []; in Part 1).
-// All other functions remain as in your current structure, with changes only to arc-related parts.
-
-// = FULL UPDATED PART 2 CODE =
-// Incorporated modifications for arcs: Increased radial segments for fuller tubes, simplified shader for consistent glow, added particle flow for professional movement animation.
-// Ensure this flows with Part 1 by declaring arcParticles globally in Part 1 (add: let arcParticles = []; after let arcPaths = []; in Part 1).
-// All other functions remain as in your current structure, with changes only to arc-related parts.
-
-// = FULL UPDATED PART 2 CODE =
-// Incorporated modifications for arcs: Increased radial segments for fuller tubes, simplified shader for consistent glow, added particle flow for professional movement animation.
-// Ensure this flows with Part 1 by declaring arcParticles globally in Part 1 (add: let arcParticles = []; after let arcPaths = []; in Part 1).
-// All other functions remain as in your current structure, with changes only to arc-related parts.
-
 // ===
 // CUBE CREATION
 // ===
@@ -763,16 +743,13 @@ function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
       }
   return cubeObject;
 }
-// Add this function (if not already added) to create each curved arc
-function createCurvedNetworkLink(start, end, color = 0x00BFFF, elevation = 0.08) {
-  const midPoint = start.clone().lerp(end, 0.5).normalize().multiplyScalar(start.length() + elevation);
-  const curve = new THREE.QuadraticBezierCurve3(start, midPoint, end);
-  const points = curve.getPoints(16);
-  const geometry = new THREE.BufferGeometry().setFromPoints(points);
-  const material = new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.32 });
-  const arcLine = new THREE.Line(geometry, material);
-  scene.add(arcLine);
-  return arcLine;
+function createNeuralNetwork() {
+  const vertices = [];
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+  const material = new THREE.LineBasicMaterial({ color: 0x00BFFF, blending: THREE.AdditiveBlending, transparent: true, opacity: 0.35 });
+  neuralNetworkLines = new THREE.LineSegments(geometry, material);
+  globeGroup.add(neuralNetworkLines);
 }
 function latLonToVector3(lat, lon, radius) {
   const phi = (90 - lat) * (Math.PI / 180);
@@ -845,23 +822,19 @@ function drawAllConnections() {
   // Original pairs (Thailand to others)
   const countryNames = ["India", "Europe", "UK", "Canada", "USA", "Singapore", "Malaysia"];
   const originalPairs = countryNames.map(country => ["Thailand", country]);
-
   // New requested pairs
   const additionalPairs = [
     ["India", "Canada"],
     ["India", "Europe"],
     ["Canada", "USA"]
   ];
-
   // Combine all pairs
   const allPairs = [...originalPairs, ...additionalPairs];
-
   arcPaths = allPairs.map(([from, to], index) => {
     const fromBlock = countryBlocks[from];
     const toBlock = countryBlocks[to];
     if (fromBlock && toBlock) return createConnectionPath(fromBlock, toBlock, index);
   }).filter(Boolean);
-
   // New: Initialize particles for each arc
   arcPaths.forEach(animateArcParticles);
 }
@@ -1148,8 +1121,6 @@ async function createGlobeAndCubes() {
 // ===
 // ANIMATION
 // ===
-// ANIMATION
-// ===
 function animate() {
   requestAnimationFrame(animate);
   const elapsedTime = clock.getElapsedTime();
@@ -1287,6 +1258,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.error('❌ Error during initialization:', error);
   }
 });
+
 
 
 
