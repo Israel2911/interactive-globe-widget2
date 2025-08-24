@@ -715,6 +715,11 @@ const toggleFunctionMap = {
 // Ensure this flows with Part 1 by declaring arcParticles globally in Part 1 (add: let arcParticles = []; after let arcPaths = []; in Part 1).
 // All other functions remain as in your current structure, with changes only to arc-related parts.
 
+// = FULL UPDATED PART 2 CODE =
+// Incorporated modifications for arcs: Increased radial segments for fuller tubes, simplified shader for consistent glow, added particle flow for professional movement animation.
+// Ensure this flows with Part 1 by declaring arcParticles globally in Part 1 (add: let arcParticles = []; after let arcPaths = []; in Part 1).
+// All other functions remain as in your current structure, with changes only to arc-related parts.
+
 // ===
 // CUBE CREATION
 // ===
@@ -825,15 +830,28 @@ function animateArcParticles(arc) {
     arcParticles.push(particle);
   }
 }
-// In drawAllConnections, add particle setup after creating arcs
+// Modified: drawAllConnections now includes additional arcs (India-Canada, India-Europe, Canada-USA)
 function drawAllConnections() {
+  // Original pairs (Thailand to others)
   const countryNames = ["India", "Europe", "UK", "Canada", "USA", "Singapore", "Malaysia"];
-  const pairs = countryNames.map(country => ["Thailand", country]);
-  arcPaths = pairs.map(([from, to], index) => {
+  const originalPairs = countryNames.map(country => ["Thailand", country]);
+
+  // New requested pairs
+  const additionalPairs = [
+    ["India", "Canada"],
+    ["India", "Europe"],
+    ["Canada", "USA"]
+  ];
+
+  // Combine all pairs
+  const allPairs = [...originalPairs, ...additionalPairs];
+
+  arcPaths = allPairs.map(([from, to], index) => {
     const fromBlock = countryBlocks[from];
     const toBlock = countryBlocks[to];
     if (fromBlock && toBlock) return createConnectionPath(fromBlock, toBlock, index);
   }).filter(Boolean);
+
   // New: Initialize particles for each arc
   arcPaths.forEach(animateArcParticles);
 }
