@@ -706,6 +706,12 @@ const toggleFunctionMap = {
 // All other functions remain as in your current structure, with changes only to arc-related parts.
 
 // ===
+// = FULL UPDATED PART 2 CODE =
+// Incorporated modifications for arcs: Increased radial segments for fuller tubes, simplified shader for consistent glow, added particle flow for professional movement animation.
+// Ensure this flows with Part 1 by declaring arcParticles globally in Part 1 (add: let arcParticles = []; after let arcPaths = []; in Part 1).
+// All other functions remain as in your current structure, with changes only to arc-related parts.
+
+// ===
 // CUBE CREATION
 // ===
 function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
@@ -759,7 +765,7 @@ function latLonToVector3(lat, lon, radius) {
   const y = (radius * Math.cos(phi));
   return new THREE.Vector3(x, y, z);
 }
-// **Modified: createConnectionPath (smoother tube, improved shader, professional look)**  // Highlighted in red: This entire function has updates for geometry and shader
+// Modified: createConnectionPath (smoother tube, improved shader, professional look)
 function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
   // Neon rainbow colors array
   const rainbowColors = [
@@ -780,9 +786,9 @@ function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
   const offsetEnd = end.clone().normalize().multiplyScalar(globeRadius + arcOffset);
   const mid = offsetStart.clone().add(offsetEnd).multiplyScalar(0.5).normalize().multiplyScalar(globeRadius + arcOffset + arcElevation);
   const curve = new THREE.QuadraticBezierCurve3(offsetStart, mid, offsetEnd);
-  // **Modification: Higher radial segments for smoother, fuller tube (avoids "half tube" look)**  // Highlighted in red: Increased radialSegments to 24
+  // Modification: Higher radial segments for smoother, fuller tube (avoids "half tube" look)
   const geometry = new THREE.TubeGeometry(curve, 64, 0.008, 24, false); // Increased radius slightly, radialSegments to 24 for roundness
-  // **Modified Shader: Simpler glow with soft pulsing, no heavy discard for professional, consistent appearance**  // Highlighted in red: Updated fragment shader for soft pulse
+  // Modified Shader: Simpler glow with soft pulsing, no heavy discard for professional, consistent appearance
   const vertexShader = `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
   const fragmentShader = `
     varying vec2 vUv;
@@ -807,7 +813,7 @@ function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
   globeGroup.add(path);
   return path;
 }
-// **New: Function to create and animate particles along an arc for flowing movement**  // Highlighted in red: Entirely new function for particle flow
+// New: Function to create and animate particles along an arc for flowing movement
 function animateArcParticles(arc) {
   const curve = arc.userData.curve;
   if (!curve) return;
@@ -820,13 +826,14 @@ function animateArcParticles(arc) {
     );
     particle.userData = {
       t: Math.random(), // Random start position along curve
-      speed: speed * (0.8 + Math.random() * 0.4) // Slight speed variation
+      speed: speed * (0.8 + Math.random() * 0.4), // Slight speed variation
+      curve: curve  // NEW: Store the curve reference here to avoid parent lookup issues
     };
     scene.add(particle);
     arcParticles.push(particle);
   }
 }
-// **In drawAllConnections, add particle setup after creating arcs**  // Highlighted in red: Added particle initialization
+// In drawAllConnections, add particle setup after creating arcs
 function drawAllConnections() {
   const countryNames = ["India", "Europe", "UK", "Canada", "USA", "Singapore", "Malaysia"];
   const pairs = countryNames.map(country => ["Thailand", country]);
@@ -1132,10 +1139,10 @@ function animate() {
       path.material.uniforms.time.value = elapsedTime; 
     } 
   });
-  // **New: Update particle positions along arcs for flowing movement**  // Highlighted in red: Added particle update loop
+  // New: Update particle positions along arcs for flowing movement
   arcParticles.forEach(particle => {
     particle.userData.t = (particle.userData.t + particle.userData.speed * 0.001) % 1; // Loop along curve
-    const pos = particle.parent.userData.curve.getPointAt(particle.userData.t); // Get position on curve
+    const pos = particle.userData.curve.getPointAt(particle.userData.t); // UPDATED: Use stored curve
     particle.position.copy(pos);
     particle.material.opacity = 0.7 + Math.sin(elapsedTime * 2 + particle.userData.t * 10) * 0.3; // Pulse opacity
   });
