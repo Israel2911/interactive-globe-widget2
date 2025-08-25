@@ -474,9 +474,9 @@ async function populateCarousel() {
          <img src="${item.img}" alt="${item.title}"/>
          <div class="carousel-card-content">
            <div class="carousel-card-title">${item.title}</div>
-           <div class="carousel-card-text">${item.text}</div>
+          <div class="carousel-card-text">${item.text}</div>
          </div>
-       </a>`
+       </a>\`
     );
   });
   document.querySelectorAll('.carousel-card').forEach(card => {
@@ -504,10 +504,9 @@ function scrollCarousel(direction) {
   const cardWidth = card.offsetWidth + 16;
   container.scrollBy({ left: direction * cardWidth, behavior: 'smooth' });
 }
-
-// =======
+// ===
 // CONTROL TOGGLES
-// =======
+// ===
 function togglePanMode() {
   isPanMode = !isPanMode;
   const panButton = document.getElementById('btn-pan');
@@ -548,10 +547,9 @@ function toggleGlobeRotation() {
     if (rotateBtn) { rotateBtn.style.background = controls.autoRotate ? '#a46bfd' : 'rgba(0,0,0,0.8)'; }
   }
 }
-
-// =======
+// ===
 // Three.js initialization
-// =======
+// ===
 function initializeThreeJS() {
   console.log('🔄 Initializing Three.js...');
   scene = new THREE.Scene();
@@ -598,17 +596,17 @@ function updateCanvasSize() {
   camera.aspect = window.innerWidth / newHeight;
   camera.updateProjectionMatrix();
 }
-
-// =======
+// ===
 // UTILITIES
-// =======
+// ===
 function getColorByData(data) {
   const baseHue = data.domain * 30 % 360;
   const lightness = 50 + data.engagement * 25;
   const saturation = 70;
   const riskShift = data.risk > 0.5 ? 0 : 120;
   const hue = (baseHue + riskShift) % 360;
-  const color = new THREE.Color(`hsl(${hue}, ${saturation}%, ${lightness}%)`);
+  const color = new THREE.Color();
+  color.setHSL(hue / 360, saturation / 100, lightness / 100);
   color.multiplyScalar(data.confidence);
   return color;
 }
@@ -623,7 +621,7 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
   ctx.textAlign = 'center';
   const texture = new THREE.CanvasTexture(canvas);
   function drawText() {
-    const lines = text.split('\n');
+    const lines = text.split('\\n');
     const fontSize = lines.length > 1 ? 28 : 32;
     ctx.font = `bold ${fontSize}px Arial`;
     let y = 128 + (lines.length > 1 ? 0 : 10);
@@ -639,10 +637,9 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
   } else { drawText(); }
   return new THREE.MeshStandardMaterial({ map: texture, emissive: new THREE.Color(bgColor), emissiveIntensity: 0.6 });
 }
-
-// =======
+// ===
 // TOGGLE FUNCTION CREATION
-// =======
+// ===
 function createToggleFunction(cubeName) {
   return function() {
     const explosionStateMap = {
@@ -699,7 +696,6 @@ const toggleFunctionMap = {
   'USA': createToggleFunction('USA'), 'India': createToggleFunction('India'),
   'Singapore': createToggleFunction('Singapore'), 'Malaysia': createToggleFunction('Malaysia')
 };
-
 // ===
 // CUBE CREATION
 // ===
@@ -863,7 +859,7 @@ function onCanvasMouseUp(event) {
   const allClickableObjects = [...Object.values(countryBlocks), ...neuronGroup.children];
   const intersects = raycaster.intersectObjects(allClickableObjects, true);
   if (intersects.length === 0) { closeAllExploded(); return; }
-  const clickedObject = intersects[0].object;
+  const clickedObject = intersects.object;
   // COUNTRY BLOCK CLICKED — explode (no auth)
   if (clickedObject.userData.countryName) {
     const countryName = clickedObject.userData.countryName;
@@ -1004,7 +1000,7 @@ function setupEventListeners() {
   if (toggleNodesButton) {
     toggleNodesButton.addEventListener('click', () => {
       const neuralNodes = cubes.filter(cube => cube.userData.isSmallNode);
-      const areVisible = neuralNodes.length > 0 && neuralNodes[0].visible;
+      const areVisible = neuralNodes.length > 0 && neuralNodes.visible;
       const newVisibility = !areVisible;
       neuralNodes.forEach(node => { node.visible = newVisibility; });
       if (neuralNetworkLines) { neuralNetworkLines.visible = newVisibility; }
@@ -1082,15 +1078,7 @@ async function createGlobeAndCubes() {
     if (cubeObject.userData.neuralName) { neuralCubeMap[cubeObject.userData.neuralName] = cubeObject; }
   }
   new THREE.TextureLoader().load("https://static.wixstatic.com/media/d77f36_8f868995fda643a0a61562feb20eb733~mv2.jpg", (tex) => {
-    const globe = new THREE.Mesh(new THREE.SphereGeometry(GLOBE_RADIUS, 64, 64), new THREE.MeshPhongMaterial({ map: tex, transparent: true, opacity: 0.5, depthTest: true, depthWrite: true }));
-    globe.renderOrder = -1;
-    globeGroup.add(globe);
-  }, undefined, (error) => {
-    console.error('Globe texture load error:', error);
-    // Fallback to solid color
-    const fallbackMaterial = new THREE.MeshPhongMaterial({ color: 0x003366, transparent: true, opacity: 0.5, depthTest: true, depthWrite: true });
-    const globe = new THREE.Mesh(new THREE.SphereGeometry(GLOBE_RADIUS, 64, 64), fallbackMaterial);
-    globe.renderOrder = -1;
+    const globe = new THREE.Mesh(new THREE.SphereGeometry(GLOBE_RADIUS, 64, 64), new THREE.MeshPhongMaterial({ map: tex, transparent: true, opacity: 0.28 }));
     globeGroup.add(globe);
   });
   let wireframeMesh = new THREE.Mesh(new THREE.SphereGeometry(GLOBE_RADIUS + 0.05, 64, 64), new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true, transparent: true, opacity: 0.12 }));
@@ -1267,5 +1255,3 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.error('❌ Error during initialization:', error);
   }
 });
-
-
