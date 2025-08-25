@@ -817,23 +817,19 @@ function drawAllConnections() {
   // Original pairs (Thailand to others)
   const countryNames = ["India", "Europe", "UK", "Canada", "USA", "Singapore", "Malaysia"];
   const originalPairs = countryNames.map(country => ["Thailand", country]);
-
   // New requested pairs
   const additionalPairs = [
     ["India", "Canada"],
     ["India", "Europe"],
     ["Canada", "USA"]
   ];
-
   // Combine all pairs
   const allPairs = [...originalPairs, ...additionalPairs];
-
   arcPaths = allPairs.map(([from, to], index) => {
     const fromBlock = countryBlocks[from];
     const toBlock = countryBlocks[to];
     if (fromBlock && toBlock) return createConnectionPath(fromBlock, toBlock, index);
   }).filter(Boolean);
-
   // New: Initialize particles for each arc
   arcPaths.forEach(animateArcParticles);
 }
@@ -1086,7 +1082,15 @@ async function createGlobeAndCubes() {
     if (cubeObject.userData.neuralName) { neuralCubeMap[cubeObject.userData.neuralName] = cubeObject; }
   }
   new THREE.TextureLoader().load("https://static.wixstatic.com/media/d77f36_8f868995fda643a0a61562feb20eb733~mv2.jpg", (tex) => {
-    const globe = new THREE.Mesh(new THREE.SphereGeometry(GLOBE_RADIUS, 64, 64), new THREE.MeshPhongMaterial({ map: tex, transparent: true, opacity: 0.4, depthTest: true, depthWrite: true })); // Increased opacity for visibility
+    const globe = new THREE.Mesh(new THREE.SphereGeometry(GLOBE_RADIUS, 64, 64), new THREE.MeshPhongMaterial({ map: tex, transparent: true, opacity: 0.5, depthTest: true, depthWrite: true }));
+    globe.renderOrder = -1;
+    globeGroup.add(globe);
+  }, undefined, (error) => {
+    console.error('Globe texture load error:', error);
+    // Fallback to solid color
+    const fallbackMaterial = new THREE.MeshPhongMaterial({ color: 0x003366, transparent: true, opacity: 0.5, depthTest: true, depthWrite: true });
+    const globe = new THREE.Mesh(new THREE.SphereGeometry(GLOBE_RADIUS, 64, 64), fallbackMaterial);
+    globe.renderOrder = -1;
     globeGroup.add(globe);
   });
   let wireframeMesh = new THREE.Mesh(new THREE.SphereGeometry(GLOBE_RADIUS + 0.05, 64, 64), new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true, transparent: true, opacity: 0.12 }));
@@ -1263,3 +1267,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.error('❌ Error during initialization:', error);
   }
 });
+
