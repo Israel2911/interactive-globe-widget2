@@ -744,13 +744,24 @@ function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
   return cubeObject;
 }
 function createNeuralNetwork() {
-  const vertices = [];
   const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-  const material = new THREE.LineBasicMaterial({ color: 0x00BFFF, blending: THREE.AdditiveBlending, transparent: true, opacity: 0.35 });
-  neuralNetworkLines = new THREE.LineSegments(geometry, material);
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute([], 3));
+  
+  // Use a Mesh material suitable for a subtle, glowing membrane
+  const material = new THREE.MeshBasicMaterial({
+    color: 0x00BFFF,
+    side: THREE.DoubleSide, // Render both sides of the triangles
+    transparent: true,
+    opacity: 0.1, // Set a very low opacity for the subtle effect
+    blending: THREE.AdditiveBlending, // Additive blending gives a nice glow
+    depthWrite: false // Prevents transparency sorting issues
+  });
+
+  // Change from LineSegments to a Mesh
+  neuralNetworkLines = new THREE.Mesh(geometry, material);
   globeGroup.add(neuralNetworkLines);
 }
+
 function latLonToVector3(lat, lon, radius) {
   const phi = (90 - lat) * (Math.PI / 180);
   const theta = (lon + 180) * (Math.PI / 180);
@@ -1124,7 +1135,8 @@ async function createGlobeAndCubes() {
 // ===
 // ===
 // ===
-// ANIMATION (with curved neural network lines)
+// ===
+// ANIMATION (with integrated membrane effect)
 // ===
 function animate() {
   requestAnimationFrame(animate);
@@ -1158,6 +1170,47 @@ function animate() {
         }
       }
     });
+
+    // = START: Updated Neural Network Membrane =
+    if (neuralNetworkLines && neuralNetworkLines.visible) {
+        const vertices = [];
+        const maxDist = 0.6;
+        const connectionsPerCube = 3; // Using 3 connections creates more stable triangles
+        for (let i = 0; i < cubes.length; i++) {
+            if (!cubes[i].visible || cubes[i].userData.neuralName) continue;
+            let neighbors = [];
+            for (let j = i + 1; j < cubes.length; j++) {
+                if (!cubes[j].visible || cubes[j].userData.neuralName) continue;
+                const dist = cubes[i].position.distanceTo(cubes[j].position);
+                if (dist < maxDist) {
+                    neighbors.push({ dist: dist, cube: cubes[j] });
+                }
+            }
+            neighbors.sort((a, b) => a.dist - b.dist);
+            const closest = neighbors.slice(0, connectionsPerCube);
+            // Create triangular faces (the membrane) between the node and its neighbors
+            for (let k = 0; k < closest.length; k++) {
+                const startNode = cubes[i].position;
+                const endNode = closest[k].cube.position;
+                // The third point of the triangle will be the next neighbor in the list,
+                // creating a fan of triangles around the start node.
+                const nextNeighborIndex = (k + 1) % closest.length;
+                const thirdNode = closest[nextNeighborIndex].cube.position;
+                // Add the three points of the triangle to the vertices array
+                vertices.push(startNode.x, startNode.y, startNode.z);
+                vertices.push(endNode.x, endNode.y, endNode.z);
+                vertices.push(thirdNode.x, thirdNode.y, thirdNode.z);
+            }
+        }
+        // Update the geometry of our mesh with the new triangle vertices
+        neuralNetworkLines.geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+        neuralNetworkLines.geometry.attributes.position.needsUpdate = true;
+        neuralNetworkLines.geometry.computeVertexNormals(); // Recalculate normals for correct appearance
+    }
+    // = END: Updated Neural Network Membrane =
+  }
+  renderer.render(scene, camera);
+}
 
     // === START: Updated Neural Network Lines (with Curves) ===
     if (neuralNetworkLines) {
