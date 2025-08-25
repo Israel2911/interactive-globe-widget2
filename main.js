@@ -705,26 +705,6 @@ const toggleFunctionMap = {
 // Ensure this flows with Part 1 by declaring arcParticles globally in Part 1 (add: let arcParticles = []; after let arcPaths = []; in Part 1).
 // All other functions remain as in your current structure, with changes only to arc-related parts.
 
-// = FULL UPDATED PART 2 CODE =
-// Incorporated modifications for arcs: Increased radial segments for fuller tubes, simplified shader for consistent glow, added particle flow for professional movement animation.
-// Ensure this flows with Part 1 by declaring arcParticles globally in Part 1 (add: let arcParticles = []; after let arcPaths = []; in Part 1).
-// All other functions remain as in your current structure, with changes only to arc-related parts.
-
-// = FULL UPDATED PART 2 CODE =
-// Incorporated modifications for arcs: Increased radial segments for fuller tubes, simplified shader for consistent glow, added particle flow for professional movement animation.
-// Ensure this flows with Part 1 by declaring arcParticles globally in Part 1 (add: let arcParticles = []; after let arcPaths = []; in Part 1).
-// All other functions remain as in your current structure, with changes only to arc-related parts.
-
-// = FULL UPDATED PART 2 CODE =
-// Incorporated modifications for arcs: Increased radial segments for fuller tubes, simplified shader for consistent glow, added particle flow for professional movement animation.
-// Ensure this flows with Part 1 by declaring arcParticles globally in Part 1 (add: let arcParticles = []; after let arcPaths = []; in Part 1).
-// All other functions remain as in your current structure, with changes only to arc-related parts.
-
-// = FULL UPDATED PART 2 CODE =
-// Incorporated modifications for arcs: Increased radial segments for fuller tubes, simplified shader for consistent glow, added particle flow for professional movement animation.
-// Ensure this flows with Part 1 by declaring arcParticles globally in Part 1 (add: let arcParticles = []; after let arcPaths = []; in Part 1).
-// All other functions remain as in your current structure, with changes only to arc-related parts.
-
 // ===
 // CUBE CREATION
 // ===
@@ -1143,7 +1123,8 @@ async function createGlobeAndCubes() {
 // ===
 // ===
 // ===
-// ANIMATION
+// ===
+// ANIMATION (with curved neural network lines)
 // ===
 function animate() {
   requestAnimationFrame(animate);
@@ -1177,6 +1158,8 @@ function animate() {
         }
       }
     });
+
+    // === START: Updated Neural Network Lines (with Curves) ===
     if (neuralNetworkLines) {
       const vertices = [];
       const maxDist = 0.6;
@@ -1184,25 +1167,38 @@ function animate() {
       for (let i = 0; i < cubes.length; i++) {
         if (!cubes[i].visible || cubes[i].userData.neuralName) continue;
         let neighbors = [];
-        for (let j = 0; j < cubes.length; j++) {
-          if (i === j || !cubes[j].visible || cubes[j].userData.neuralName) continue;
+        for (let j = i + 1; j < cubes.length; j++) { // Avoid duplicate pairs
+          if (!cubes[j].visible || cubes[j].userData.neuralName) continue;
           const dist = cubes[i].position.distanceTo(cubes[j].position);
           if (dist < maxDist) { neighbors.push({ dist: dist, cube: cubes[j] }); }
         }
         neighbors.sort((a, b) => a.dist - b.dist);
         const closest = neighbors.slice(0, connectionsPerCube);
         closest.forEach(n => {
-          vertices.push(cubes[i].position.x, cubes[i].position.y, cubes[i].position.z);
-          vertices.push(n.cube.position.x, n.cube.position.y, n.cube.position.z);
+          const start = cubes[i].position;
+          const end = n.cube.position;
+          // Curve control point: halfway between start and end, pushed outward for arc
+          const mid = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
+          const control = mid.clone().normalize().multiplyScalar(mid.length() + 0.2);
+
+          const curve = new THREE.QuadraticBezierCurve3(start, control, end);
+          const points = curve.getPoints(8); // More points = smoother curve
+
+          for (let k = 0; k < points.length - 1; k++) {
+            vertices.push(points[k].x, points[k].y, points[k].z);
+            vertices.push(points[k+1].x, points[k+1].y, points[k+1].z);
+          }
         });
       }
       if (neuralNetworkLines.visible) {
         neuralNetworkLines.geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
       }
     }
+    // === END: Updated Neural Network Lines ===
   }
   renderer.render(scene, camera);
 }
+
 // ===
 function togglePrivacySection() {
   const privacy = document.querySelector('.privacy-assurance');
