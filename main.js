@@ -1123,10 +1123,16 @@ async function createGlobeAndCubes() {
 }
 // ===
 // ===
-// ANIMATION (CORRECTED AND ERROR-PROOF)
+// Add this counter right before your animate function so it persists
+let frameCounter = 0;
+
+// ===
+// ANIMATION (WITH OPTIMIZATION INTEGRATED)
 // ===
 function animate() {
   requestAnimationFrame(animate);
+  frameCounter++; // Increment the counter
+
   const elapsedTime = clock.getElapsedTime();
   if (controls && controls.enabled) { controls.update(); }
   if (typeof TWEEN !== 'undefined') { TWEEN.update(); }
@@ -1157,13 +1163,13 @@ function animate() {
         }
       }
     });
-
-    // = START: ROBUST Neural Network Membrane =
-    if (neuralNetworkLines && neuralNetworkLines.visible) {
+    
+    // = START: ROBUST AND OPTIMIZED Neural Network Membrane =
+    // This condition now includes a check to only run every 10 frames
+    if (neuralNetworkLines && neuralNetworkLines.visible && frameCounter % 10 === 0) {
         const vertices = [];
         const maxDist = 0.6;
         const connectionsPerCube = 3;
-
         for (let i = 0; i < cubes.length; i++) {
             if (!cubes[i].visible || cubes[i].userData.neuralName) continue;
             
@@ -1179,15 +1185,11 @@ function animate() {
             neighbors.sort((a, b) => a.dist - b.dist);
             const closest = neighbors.slice(0, connectionsPerCube);
 
-            // *** THE FIX IS HERE ***
-            // Only proceed if we have at least 2 neighbors to form a triangle.
             if (closest.length > 1) {
-                // Create a "fan" of triangles from the current node to its neighbors.
                 for (let k = 0; k < closest.length - 1; k++) {
                     const startNode = cubes[i].position;
                     const neighbor1 = closest[k].cube.position;
                     const neighbor2 = closest[k + 1].cube.position;
-
                     vertices.push(startNode.x, startNode.y, startNode.z);
                     vertices.push(neighbor1.x, neighbor1.y, neighbor1.z);
                     vertices.push(neighbor2.x, neighbor2.y, neighbor2.z);
@@ -1199,7 +1201,7 @@ function animate() {
         neuralNetworkLines.geometry.attributes.position.needsUpdate = true;
         neuralNetworkLines.geometry.computeVertexNormals();
     }
-    // = END: ROBUST Neural Network Membrane =
+    // = END: ROBUST AND OPTIMIZED Neural Network Membrane =
   }
   renderer.render(scene, camera);
 }
