@@ -715,6 +715,16 @@ const toggleFunctionMap = {
 // Ensure this flows with Part 1 by declaring arcParticles globally in Part 1 (add: let arcParticles = []; after let arcPaths = []; in Part 1).
 // All other functions remain as in your current structure, with changes only to arc-related parts.
 
+// = FULL UPDATED PART 2 CODE =
+// Incorporated modifications for arcs: Increased radial segments for fuller tubes, simplified shader for consistent glow, added particle flow for professional movement animation.
+// Ensure this flows with Part 1 by declaring arcParticles globally in Part 1 (add: let arcParticles = []; after let arcPaths = []; in Part 1).
+// All other functions remain as in your current structure, with changes only to arc-related parts.
+
+// = FULL UPDATED PART 2 CODE =
+// Incorporated modifications for arcs: Increased radial segments for fuller tubes, simplified shader for consistent glow, added particle flow for professional movement animation.
+// Ensure this flows with Part 1 by declaring arcParticles globally in Part 1 (add: let arcParticles = []; after let arcPaths = []; in Part 1).
+// All other functions remain as in your current structure, with changes only to arc-related parts.
+
 // ===
 // CUBE CREATION
 // ===
@@ -832,19 +842,23 @@ function drawAllConnections() {
   // Original pairs (Thailand to others)
   const countryNames = ["India", "Europe", "UK", "Canada", "USA", "Singapore", "Malaysia"];
   const originalPairs = countryNames.map(country => ["Thailand", country]);
+
   // New requested pairs
   const additionalPairs = [
     ["India", "Canada"],
     ["India", "Europe"],
     ["Canada", "USA"]
   ];
+
   // Combine all pairs
   const allPairs = [...originalPairs, ...additionalPairs];
+
   arcPaths = allPairs.map(([from, to], index) => {
     const fromBlock = countryBlocks[from];
     const toBlock = countryBlocks[to];
     if (fromBlock && toBlock) return createConnectionPath(fromBlock, toBlock, index);
   }).filter(Boolean);
+
   // New: Initialize particles for each arc
   arcPaths.forEach(animateArcParticles);
 }
@@ -1163,14 +1177,8 @@ function animate() {
         }
       }
     });
-    // Remove old network arcs before redrawing (prevents duplicates)
-    for (let i = scene.children.length - 1; i >= 0; i--) {
-      const child = scene.children[i];
-      if (child.userData && child.userData.isNetworkArc) {
-        scene.remove(child);
-      }
-    }
     if (neuralNetworkLines) {
+      const vertices = [];
       const maxDist = 0.6;
       const connectionsPerCube = 4;
       for (let i = 0; i < cubes.length; i++) {
@@ -1184,16 +1192,18 @@ function animate() {
         neighbors.sort((a, b) => a.dist - b.dist);
         const closest = neighbors.slice(0, connectionsPerCube);
         closest.forEach(n => {
-          const start = cubes[i].position.clone();
-          const end = n.cube.position.clone();
-          const arc = createCurvedNetworkLink(start, end, 0x00BFFF, 0.08); // Create curved arc
-          arc.userData = { isNetworkArc: true }; // Tag for removal next frame
+          vertices.push(cubes[i].position.x, cubes[i].position.y, cubes[i].position.z);
+          vertices.push(n.cube.position.x, n.cube.position.y, n.cube.position.z);
         });
+      }
+      if (neuralNetworkLines.visible) {
+        neuralNetworkLines.geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
       }
     }
   }
   renderer.render(scene, camera);
 }
+// ===
 function togglePrivacySection() {
   const privacy = document.querySelector('.privacy-assurance');
   const trust = document.querySelector('.trust-indicators');
@@ -1273,4 +1283,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.error('❌ Error during initialization:', error);
   }
 });
+
+
 
