@@ -863,7 +863,7 @@ function onCanvasMouseUp(event) {
   const allClickableObjects = [...Object.values(countryBlocks), ...neuronGroup.children];
   const intersects = raycaster.intersectObjects(allClickableObjects, true);
   if (intersects.length === 0) { closeAllExploded(); return; }
-  const clickedObject = intersects.object;
+  const clickedObject = intersects[0].object;
   // COUNTRY BLOCK CLICKED — explode (no auth)
   if (clickedObject.userData.countryName) {
     const countryName = clickedObject.userData.countryName;
@@ -1004,7 +1004,7 @@ function setupEventListeners() {
   if (toggleNodesButton) {
     toggleNodesButton.addEventListener('click', () => {
       const neuralNodes = cubes.filter(cube => cube.userData.isSmallNode);
-      const areVisible = neuralNodes.length > 0 && neuralNodes.visible;
+      const areVisible = neuralNodes.length > 0 && neuralNodes[0].visible;
       const newVisibility = !areVisible;
       neuralNodes.forEach(node => { node.visible = newVisibility; });
       if (neuralNetworkLines) { neuralNetworkLines.visible = newVisibility; }
@@ -1267,4 +1267,5 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.error('❌ Error during initialization:', error);
   }
 });
+
 
