@@ -506,46 +506,38 @@ function scrollCarousel(direction) {
 }
 
 // =======
-// CONTROL TOGGLES
-// =======
-function togglePanMode() {
-  isPanMode = !isPanMode;
-  const panButton = document.getElementById('btn-pan');
+// ===
+// CONTROL TOGGLES (Corrected and Final Version)
+// ===
+
+// This single function controls whether the user is in "rotate" or "pan" mode.
+// It does NOT affect the automatic rotation.
+function setInteractionMode(mode) {
+  if (!controls) return;
+
+  const rotateBtn = document.getElementById('btn-rotate');
+  const panBtn = document.getElementById('btn-pan');
   const canvas = renderer.domElement;
-  if (isPanMode) {
-    controls.mouseButtons.LEFT = THREE.MOUSE.PAN;
-    controls.touches.ONE = THREE.TOUCH.PAN;
-    if (panButton) {
-      panButton.classList.add('pan-mode');
-      panButton.style.background = '#ffa500';
-      panButton.style.color = '#222';
-      panButton.title = 'Exit Pan Mode (Click to switch to Rotate)';
-      panButton.style.outline = '2px solid #ffa500';
-      panButton.setAttribute('data-active', 'true');
-    }
-    canvas.style.cursor = 'grab';
-    if (transformControls) { transformControls.enabled = false; transformControls.visible = false; }
-  } else {
+
+  if (mode === 'ROTATE') {
+    // Set controls to ROTATE mode
     controls.mouseButtons.LEFT = THREE.MOUSE.ROTATE;
     controls.touches.ONE = THREE.TOUCH.ROTATE;
-    if (panButton) {
-      panButton.classList.remove('pan-mode');
-      panButton.style.background = '#223366';
-      panButton.style.color = '#fff';
-      panButton.title = 'Enter Pan Mode (Click to enable panning)';
-      panButton.style.outline = 'none';
-      panButton.removeAttribute('data-active');
-    }
-    canvas.style.cursor = 'default';
-    if (transformControls) { transformControls.enabled = true; }
-  }
-  console.log(isPanMode ? '🖐️ Pan mode enabled - left click drags to move globe' : '🔄 Pan mode disabled - normal rotation enabled');
-}
-function toggleGlobeRotation() {
-  if (controls) {
-    controls.autoRotate = !controls.autoRotate;
-    const rotateBtn = document.getElementById('btn-rotate');
-    if (rotateBtn) { rotateBtn.style.background = controls.autoRotate ? '#a46bfd' : 'rgba(0,0,0,0.8)'; }
+
+    // Set button styles for ROTATE mode
+    if (rotateBtn) rotateBtn.style.background = '#a46bfd'; // Active purple color
+    if (panBtn) panBtn.style.background = 'rgba(0,0,0,0.8)'; // Inactive color
+    canvas.style.cursor = 'default'; // Default cursor for rotation
+
+  } else if (mode === 'PAN') {
+    // Set controls to PAN mode
+    controls.mouseButtons.LEFT = THREE.MOUSE.PAN;
+    controls.touches.ONE = THREE.TOUCH.PAN;
+
+    // Set button styles for PAN mode
+    if (rotateBtn) rotateBtn.style.background = 'rgba(0,0,0,0.8)'; // Inactive color
+    if (panBtn) panBtn.style.background = '#ffa500'; // Active orange color
+    canvas.style.cursor = 'grab'; // "grab" cursor for panning
   }
 }
 
@@ -961,13 +953,15 @@ function onCanvasMouseUpPan(event) {
   onCanvasMouseUp(event);
 }
 // ===
-// EVENT LISTENERS SETUP
+// ===
+// EVENT LISTENERS SETUP (Corrected and Final Version)
 // ===
 function setupEventListeners() {
   renderer.domElement.addEventListener('mousedown', onCanvasMouseDownPan);
   renderer.domElement.addEventListener('mousemove', onCanvasMouseMovePan);
   renderer.domElement.addEventListener('mouseup', onCanvasMouseUpPan);
   renderer.domElement.addEventListener('mouseenter', () => { if (isPanMode) { renderer.domElement.style.cursor = 'grab'; } });
+
   const panSpeed = 0.1;
   const btnUp = document.getElementById('btn-up'); if (btnUp) { btnUp.addEventListener('click', () => { controls.target.y += panSpeed; controls.update(); }); }
   const btnDown = document.getElementById('btn-down'); if (btnDown) { btnDown.addEventListener('click', () => { controls.target.y -= panSpeed; controls.update(); }); }
@@ -975,9 +969,18 @@ function setupEventListeners() {
   const btnRight = document.getElementById('btn-right'); if (btnRight) { btnRight.addEventListener('click', () => { controls.target.x += panSpeed; controls.update(); }); }
   const btnZoomIn = document.getElementById('btn-zoom-in'); if (btnZoomIn) { btnZoomIn.addEventListener('click', () => { camera.position.multiplyScalar(0.9); controls.update(); }); }
   const btnZoomOut = document.getElementById('btn-zoom-out'); if (btnZoomOut) { btnZoomOut.addEventListener('click', () => { camera.position.multiplyScalar(1.1); controls.update(); }); }
-  const btnRotate = document.getElementById('btn-rotate'); if (btnRotate) { btnRotate.addEventListener('click', toggleGlobeRotation); }
-  const btnPan = document.getElementById('btn-pan'); if (btnPan) { btnPan.addEventListener('click', togglePanMode); }
-  // Additional UI controls
+
+  // --- START: CORRECTED BUTTON LOGIC ---
+  const btnRotate = document.getElementById('btn-rotate');
+  if (btnRotate) { btnRotate.addEventListener('click', () => setInteractionMode('ROTATE')); }
+  
+  const btnPan = document.getElementById('btn-pan');
+  if (btnPan) { btnPan.addEventListener('click', () => setInteractionMode('PAN')); }
+
+  // Set the default mode to ROTATE when the application starts
+  setInteractionMode('ROTATE');
+
+  // This pause button ONLY controls automatic rotation.
   const pauseButton = document.getElementById("pauseButton");
   if (pauseButton) {
     pauseButton.addEventListener("click", () => {
@@ -986,6 +989,8 @@ function setupEventListeners() {
       pauseButton.textContent = isRotationPaused ? "Resume Rotation" : "Pause Rotation";
     });
   }
+  // --- END: CORRECTED BUTTON LOGIC ---
+
   const pauseCubesButton = document.getElementById("pauseCubesButton");
   if (pauseCubesButton) {
     pauseCubesButton.addEventListener("click", () => {
@@ -1038,7 +1043,7 @@ function setupEventListeners() {
     }
     scrollLockButton.addEventListener('click', () => { setGlobeInteraction(!controls.enabled); });
   }
-  // Keyboard controls
+
   document.addEventListener('keydown', (event) => {
     if (!controls) return;
     switch(event.code) {
@@ -1048,12 +1053,15 @@ function setupEventListeners() {
       case 'ArrowRight': case 'KeyD': event.preventDefault(); controls.target.x += 0.1; controls.update(); break;
       case 'Equal': case 'NumpadAdd': event.preventDefault(); camera.position.multiplyScalar(0.9); controls.update(); break;
       case 'Minus': case 'NumpadSubtract': event.preventDefault(); camera.position.multiplyScalar(1.1); controls.update(); break;
-      case 'Space': event.preventDefault(); toggleGlobeRotation(); break;
+      case 'Space': 
+        event.preventDefault(); 
+        if(pauseButton) pauseButton.click(); // Space bar correctly triggers the pause button
+        break;
     }
   });
   window.addEventListener('resize', () => { updateCanvasSize(); });
 }
-// ===
+
 // GLOBE AND CUBES CREATION
 // ===
 async function createGlobeAndCubes() {
