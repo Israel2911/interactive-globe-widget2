@@ -700,10 +700,9 @@ const toggleFunctionMap = {
   'Singapore': createToggleFunction('Singapore'), 'Malaysia': createToggleFunction('Malaysia')
 };
 
-// = FULL UPDATED PART 2 CODE =
-// Incorporated modifications for arcs: Increased radial segments for fuller tubes, simplified shader for consistent glow, added particle flow for professional movement animation.
-// Ensure this flows with Part 1 by declaring arcParticles globally in Part 1 (add: let arcParticles = []; after let arcPaths = []; in Part 1).
-// All other functions remain as in your current structure, with changes only to arc-related parts.
+// =================================================================
+// == FULL CORRECTED PART 2
+// =================================================================
 
 // ===
 // CUBE CREATION
@@ -743,21 +742,21 @@ function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
       }
   return cubeObject;
 }
+
+// CORRECTED: Creates a Mesh for the membrane effect
 function createNeuralNetwork() {
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.Float32BufferAttribute([], 3));
   
-  // Use a Mesh material suitable for a subtle, glowing membrane
   const material = new THREE.MeshBasicMaterial({
     color: 0x00BFFF,
-    side: THREE.DoubleSide, // Render both sides of the triangles
+    side: THREE.DoubleSide,
     transparent: true,
-    opacity: 0.1, // Set a very low opacity for the subtle effect
-    blending: THREE.AdditiveBlending, // Additive blending gives a nice glow
-    depthWrite: false // Prevents transparency sorting issues
+    opacity: 0.1,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
   });
 
-  // Change from LineSegments to a Mesh
   neuralNetworkLines = new THREE.Mesh(geometry, material);
   globeGroup.add(neuralNetworkLines);
 }
@@ -770,19 +769,11 @@ function latLonToVector3(lat, lon, radius) {
   const y = (radius * Math.cos(phi));
   return new THREE.Vector3(x, y, z);
 }
-// Modified: createConnectionPath (smoother tube, improved shader, professional look)
+
 function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
-  // Extended neon rainbow colors array with extra violet and indigo shades
   const rainbowExtendedColors = [
-    0xff0000, // Red
-    0xff7f00, // Orange
-    0xffff00, // Yellow
-    0x00ff00, // Green
-    0x0000ff, // Blue
-    0x4b0082, // Indigo
-    0x8a2be2, // BlueViolet
-    0x9400d3, // DarkViolet
-    0x7f00ff  // Violet
+    0xff0000, 0xff7f00, 0xffff00, 0x00ff00, 0x0000ff, 
+    0x4b0082, 0x8a2be2, 0x9400d3, 0x7f00ff
   ];
   const color = rainbowExtendedColors[arcIndex % rainbowExtendedColors.length];
   const start = new THREE.Vector3(); fromGroup.getWorldPosition(start);
@@ -793,9 +784,7 @@ function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
   const offsetEnd = end.clone().normalize().multiplyScalar(globeRadius + arcOffset);
   const mid = offsetStart.clone().add(offsetEnd).multiplyScalar(0.5).normalize().multiplyScalar(globeRadius + arcOffset + arcElevation);
   const curve = new THREE.QuadraticBezierCurve3(offsetStart, mid, offsetEnd);
-  // Modification: Higher radial segments for smoother, fuller tube (avoids "half tube" look)
-  const geometry = new THREE.TubeGeometry(curve, 64, 0.008, 24, false); // Increased radius slightly, radialSegments to 24 for roundness
-  // Modified Shader: Simpler glow with soft pulsing, no heavy discard for professional, consistent appearance
+  const geometry = new THREE.TubeGeometry(curve, 64, 0.008, 24, false);
   const vertexShader = `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
   const fragmentShader = `varying vec2 vUv; uniform float time; uniform vec3 color; void main() { float glow = sin(time * 2.0 + vUv.x * 10.0) * 0.5 + 0.5; float intensity = (1.0 - abs(vUv.y - 0.5) * 2.0) * glow; gl_FragColor = vec4(color, intensity * 0.8); }`;
   const material = new THREE.ShaderMaterial({
@@ -804,25 +793,25 @@ function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
   });
   const path = new THREE.Mesh(geometry, material);
   path.renderOrder = 1;
-  path.userData.curve = curve; // Store for particle animation
+  path.userData.curve = curve;
   globeGroup.add(path);
   return path;
 }
-// New: Function to create and animate particles along an arc for flowing movement
+
 function animateArcParticles(arc) {
   const curve = arc.userData.curve;
   if (!curve) return;
-  const particleCount = 5; // Number of particles per arc for flow effect
-  const speed = 0.5; // Adjust for faster/slower movement
+  const particleCount = 5;
+  const speed = 0.5;
   for (let i = 0; i < particleCount; i++) {
     const particle = new THREE.Mesh(
       new THREE.SphereGeometry(0.01, 8, 8),
       new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.7 })
     );
     particle.userData = {
-      t: Math.random(), // Random start position along curve
-      speed: speed * (0.8 + Math.random() * 0.4), // Slight speed variation
-      curve: curve  // NEW: Store the curve reference here to avoid parent lookup issues
+      t: Math.random(),
+      speed: speed * (0.8 + Math.random() * 0.4),
+      curve: curve
     };
     scene.add(particle);
     arcParticles.push(particle);
@@ -1132,11 +1121,7 @@ async function createGlobeAndCubes() {
   console.log('✅ Globe and cubes created successfully');
 }
 // ===
-// ===
-// ===
-// ===
-// ===
-// ANIMATION (with integrated membrane effect)
+// ANIMATION (CORRECTED - only contains the membrane code)
 // ===
 function animate() {
   requestAnimationFrame(animate);
@@ -1175,7 +1160,7 @@ function animate() {
     if (neuralNetworkLines && neuralNetworkLines.visible) {
         const vertices = [];
         const maxDist = 0.6;
-        const connectionsPerCube = 3; // Using 3 connections creates more stable triangles
+        const connectionsPerCube = 3;
         for (let i = 0; i < cubes.length; i++) {
             if (!cubes[i].visible || cubes[i].userData.neuralName) continue;
             let neighbors = [];
@@ -1188,30 +1173,24 @@ function animate() {
             }
             neighbors.sort((a, b) => a.dist - b.dist);
             const closest = neighbors.slice(0, connectionsPerCube);
-            // Create triangular faces (the membrane) between the node and its neighbors
             for (let k = 0; k < closest.length; k++) {
                 const startNode = cubes[i].position;
                 const endNode = closest[k].cube.position;
-                // The third point of the triangle will be the next neighbor in the list,
-                // creating a fan of triangles around the start node.
                 const nextNeighborIndex = (k + 1) % closest.length;
                 const thirdNode = closest[nextNeighborIndex].cube.position;
-                // Add the three points of the triangle to the vertices array
                 vertices.push(startNode.x, startNode.y, startNode.z);
                 vertices.push(endNode.x, endNode.y, endNode.z);
                 vertices.push(thirdNode.x, thirdNode.y, thirdNode.z);
             }
         }
-        // Update the geometry of our mesh with the new triangle vertices
         neuralNetworkLines.geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
         neuralNetworkLines.geometry.attributes.position.needsUpdate = true;
-        neuralNetworkLines.geometry.computeVertexNormals(); // Recalculate normals for correct appearance
+        neuralNetworkLines.geometry.computeVertexNormals();
     }
     // = END: Updated Neural Network Membrane =
   }
   renderer.render(scene, camera);
 }
-
     // === START: Updated Neural Network Lines (with Curves) ===
     if (neuralNetworkLines) {
       const vertices = [];
