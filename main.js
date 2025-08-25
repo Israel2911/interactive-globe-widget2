@@ -705,6 +705,11 @@ const toggleFunctionMap = {
 // Ensure this flows with Part 1 by declaring arcParticles globally in Part 1 (add: let arcParticles = []; after let arcPaths = []; in Part 1).
 // All other functions remain as in your current structure, with changes only to arc-related parts.
 
+// = FULL UPDATED PART 2 CODE =
+// Incorporated modifications for arcs: Increased radial segments for fuller tubes, simplified shader for consistent glow, added particle flow for professional movement animation.
+// Ensure this flows with Part 1 by declaring arcParticles globally in Part 1 (add: let arcParticles = []; after let arcPaths = []; in Part 1).
+// All other functions remain as in your current structure, with changes only to arc-related parts.
+
 // ===
 // CUBE CREATION
 // ===
@@ -1176,7 +1181,7 @@ function animate() {
         closest.forEach(n => {
           const start = cubes[i].position.clone();
           const end = n.cube.position.clone();
-          const arc = createCurvedNetworkLink(start, end, 0x00BFFF, 0.08); // Create curved arc
+          const arc = createCurvedLinkBetweenNodes(start, end, 0x00BFFF, 0.08); // Create curved arc
           arc.userData = { isNetworkArc: true }; // Tag for removal next frame
         });
       }
@@ -1263,5 +1268,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.error('❌ Error during initialization:', error);
   }
 });
-
 
