@@ -508,46 +508,39 @@ function scrollCarousel(direction) {
 // =======
 // CONTROL TOGGLES
 // =======
-function togglePanMode() {
-  isPanMode = !isPanMode;
-  const panButton = document.getElementById('btn-pan');
+
+
+// This single function controls whether the user is in "rotate" or "pan" mode.
+// It does NOT affect the automatic rotation.
+function setInteractionMode(mode) {
+  if (!controls) return;
+
+  const rotateBtn = document.getElementById('btn-rotate');
+  const panBtn = document.getElementById('btn-pan');
   const canvas = renderer.domElement;
-  if (isPanMode) {
-    controls.mouseButtons.LEFT = THREE.MOUSE.PAN;
-    controls.touches.ONE = THREE.TOUCH.PAN;
-    if (panButton) {
-      panButton.classList.add('pan-mode');
-      panButton.style.background = '#ffa500';
-      panButton.style.color = '#222';
-      panButton.title = 'Exit Pan Mode (Click to switch to Rotate)';
-      panButton.style.outline = '2px solid #ffa500';
-      panButton.setAttribute('data-active', 'true');
-    }
-    canvas.style.cursor = 'grab';
-    if (transformControls) { transformControls.enabled = false; transformControls.visible = false; }
-  } else {
+
+  if (mode === 'ROTATE') {
+    // Set controls to ROTATE
     controls.mouseButtons.LEFT = THREE.MOUSE.ROTATE;
     controls.touches.ONE = THREE.TOUCH.ROTATE;
-    if (panButton) {
-      panButton.classList.remove('pan-mode');
-      panButton.style.background = '#223366';
-      panButton.style.color = '#fff';
-      panButton.title = 'Enter Pan Mode (Click to enable panning)';
-      panButton.style.outline = 'none';
-      panButton.removeAttribute('data-active');
-    }
+
+    // Set styles for ROTATE mode
+    if (rotateBtn) rotateBtn.style.background = '#a46bfd'; // Active purple
+    if (panBtn) panBtn.style.background = 'rgba(0,0,0,0.8)'; // Inactive
     canvas.style.cursor = 'default';
-    if (transformControls) { transformControls.enabled = true; }
+
+  } else if (mode === 'PAN') {
+    // Set controls to PAN
+    controls.mouseButtons.LEFT = THREE.MOUSE.PAN;
+    controls.touches.ONE = THREE.TOUCH.PAN;
+
+    // Set styles for PAN mode
+    if (rotateBtn) rotateBtn.style.background = 'rgba(0,0,0,0.8)'; // Inactive
+    if (panBtn) panBtn.style.background = '#ffa500'; // Active orange
+    canvas.style.cursor = 'grab';
   }
-  console.log(isPanMode ? '🖐️ Pan mode enabled - left click drags to move globe' : '🔄 Pan mode disabled - normal rotation enabled');
 }
-function toggleGlobeRotation() {
-  if (controls) {
-    controls.autoRotate = !controls.autoRotate;
-    const rotateBtn = document.getElementById('btn-rotate');
-    if (rotateBtn) { rotateBtn.style.background = controls.autoRotate ? '#a46bfd' : 'rgba(0,0,0,0.8)'; }
-  }
-}
+
 
 // =======
 // Three.js initialization
@@ -1039,6 +1032,102 @@ function setupEventListeners() {
     scrollLockButton.addEventListener('click', () => { setGlobeInteraction(!controls.enabled); });
   }
   // Keyboard controls
+// ===
+// EVENT LISTENERS SETUP (Corrected and Final Version)
+// ===
+function setupEventListeners() {
+  renderer.domElement.addEventListener('mousedown', onCanvasMouseDownPan);
+  renderer.domElement.addEventListener('mousemove', onCanvasMouseMovePan);
+  renderer.domElement.addEventListener('mouseup', onCanvasMouseUpPan);
+  renderer.domElement.addEventListener('mouseenter', () => { if (isPanMode) { renderer.domElement.style.cursor = 'grab'; } });
+
+  const panSpeed = 0.1;
+  const btnUp = document.getElementById('btn-up'); if (btnUp) { btnUp.addEventListener('click', () => { controls.target.y += panSpeed; controls.update(); }); }
+  const btnDown = document.getElementById('btn-down'); if (btnDown) { btnDown.addEventListener('click', () => { controls.target.y -= panSpeed; controls.update(); }); }
+  const btnLeft = document.getElementById('btn-left'); if (btnLeft) { btnLeft.addEventListener('click', () => { controls.target.x -= panSpeed; controls.update(); }); }
+  const btnRight = document.getElementById('btn-right'); if (btnRight) { btnRight.addEventListener('click', () => { controls.target.x += panSpeed; controls.update(); }); }
+  const btnZoomIn = document.getElementById('btn-zoom-in'); if (btnZoomIn) { btnZoomIn.addEventListener('click', () => { camera.position.multiplyScalar(0.9); controls.update(); }); }
+  const btnZoomOut = document.getElementById('btn-zoom-out'); if (btnZoomOut) { btnZoomOut.addEventListener('click', () => { camera.position.multiplyScalar(1.1); controls.update(); }); }
+
+  // --- START: CORRECTED BUTTON LOGIC ---
+
+  // Point the rotate and pan buttons to the new state-switching function
+  const btnRotate = document.getElementById('btn-rotate');
+  if (btnRotate) { btnRotate.addEventListener('click', () => setInteractionMode('ROTATE')); }
+  
+  const btnPan = document.getElementById('btn-pan');
+  if (btnPan) { btnPan.addEventListener('click', () => setInteractionMode('PAN')); }
+
+  // Set the default mode to ROTATE when the application starts
+  setInteractionMode('ROTATE');
+
+  // The pause button listener is separate and ONLY controls auto-rotation
+  const pauseButton = document.getElementById("pauseButton");
+  if (pauseButton) {
+    pauseButton.addEventListener("click", () => {
+      isRotationPaused = !isRotationPaused;
+      controls.autoRotate = !isRotationPaused;
+      pauseButton.textContent = isRotationPaused ? "Resume Rotation" : "Pause Rotation";
+    });
+  }
+
+  // --- END: CORRECTED BUTTON LOGIC ---
+
+  // Additional UI controls
+  const pauseCubesButton = document.getElementById("pauseCubesButton");
+  if (pauseCubesButton) {
+    pauseCubesButton.addEventListener("click", () => {
+      isCubeMovementPaused = !isCubeMovementPaused;
+      pauseCubesButton.textContent = isCubeMovementPaused ? "Resume Cube Motion" : "Pause Cube Motion";
+    });
+  }
+  const toggleMeshButton = document.getElementById("toggleMeshButton");
+  if (toggleMeshButton) {
+    toggleMeshButton.addEventListener("click", () => {
+      const wireframeMesh = globeGroup.children.find(child => child.material && child.material.wireframe);
+      if (wireframeMesh) {
+        wireframeMesh.visible = !wireframeMesh.visible;
+        toggleMeshButton.textContent = wireframeMesh.visible ? "Hide Globe Mesh" : "Show Globe Mesh";
+      }
+    });
+  }
+  const arcToggleBtn = document.getElementById("arcToggleBtn");
+  if (arcToggleBtn) {
+    arcToggleBtn.addEventListener("click", () => {
+      let visible = false;
+      arcPaths.forEach((p, i) => { if (i === 0) { visible = !p.visible; } p.visible = visible; });
+    });
+  }
+  const toggleNodesButton = document.getElementById('toggleNodesButton');
+  if (toggleNodesButton) {
+    toggleNodesButton.addEventListener('click', () => {
+      const neuralNodes = cubes.filter(cube => cube.userData.isSmallNode);
+      const areVisible = neuralNodes.length > 0 && neuralNodes[0].visible;
+      const newVisibility = !areVisible;
+      neuralNodes.forEach(node => { node.visible = newVisibility; });
+      if (neuralNetworkLines) { neuralNetworkLines.visible = newVisibility; }
+      toggleNodesButton.textContent = newVisibility ? "Hide Neural Nodes" : "Show Neural Nodes";
+    });
+  }
+  const scrollLockButton = document.getElementById('scrollLockBtn');
+  if (scrollLockButton) {
+    function setGlobeInteraction(isInteractive) {
+      if (controls) { controls.enabled = isInteractive; }
+      const scrollInstruction = document.getElementById('scrollLockInstruction');
+      if (isInteractive) {
+        scrollLockButton.textContent = 'Unlock Scroll';
+        scrollLockButton.classList.remove('unlocked');
+        if (scrollInstruction) scrollInstruction.textContent = 'Globe is active.';
+      } else {
+        scrollLockButton.textContent = 'Lock Globe';
+        scrollLockButton.classList.add('unlocked');
+        if (scrollInstruction) scrollInstruction.textContent = 'Page scroll is active.';
+      }
+    }
+    scrollLockButton.addEventListener('click', () => { setGlobeInteraction(!controls.enabled); });
+  }
+
+  // Keyboard controls - The space bar listener needs to point to the correct function now
   document.addEventListener('keydown', (event) => {
     if (!controls) return;
     switch(event.code) {
@@ -1048,12 +1137,16 @@ function setupEventListeners() {
       case 'ArrowRight': case 'KeyD': event.preventDefault(); controls.target.x += 0.1; controls.update(); break;
       case 'Equal': case 'NumpadAdd': event.preventDefault(); camera.position.multiplyScalar(0.9); controls.update(); break;
       case 'Minus': case 'NumpadSubtract': event.preventDefault(); camera.position.multiplyScalar(1.1); controls.update(); break;
-      case 'Space': event.preventDefault(); toggleGlobeRotation(); break;
+      // This line is important - the Space bar should trigger the same action as the pause button
+      case 'Space': 
+        event.preventDefault(); 
+        if(pauseButton) pauseButton.click(); // Programmatically click the pause button
+        break;
     }
   });
   window.addEventListener('resize', () => { updateCanvasSize(); });
 }
-// ===
+
 // GLOBE AND CUBES CREATION
 // ===
 async function createGlobeAndCubes() {
