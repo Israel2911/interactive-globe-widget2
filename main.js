@@ -997,5 +997,269 @@ function setupEventListeners() {
       }
     });
   }
-  const arcToggleBtn = document.get
-
+  const arcToggleBtn = document.getElementById("arcToggleBtn");
+  if (arcToggleBtn) {
+    arcToggleBtn.addEventListener("click", () => {
+      let visible = false;
+      arcPaths.forEach((p, i) => { if (i === 0) { visible = !p.visible; } p.visible = visible; });
+    });
+  }
+  const toggleNodesButton = document.getElementById('toggleNodesButton');
+  if (toggleNodesButton) {
+    toggleNodesButton.addEventListener('click', () => {
+      const neuralNodes = cubes.filter(cube => cube.userData.isSmallNode);
+      const areVisible = neuralNodes.length > 0 && neuralNodes[0].visible;
+      const newVisibility = !areVisible;
+      neuralNodes.forEach(node => { node.visible = newVisibility; });
+      if (neuralNetworkLines) { neuralNetworkLines.visible = newVisibility; }
+      toggleNodesButton.textContent = newVisibility ? "Hide Neural Nodes" : "Show Neural Nodes";
+    });
+  }
+  const scrollLockButton = document.getElementById('scrollLockBtn');
+  if (scrollLockButton) {
+    function setGlobeInteraction(isInteractive) {
+      if (controls) { controls.enabled = isInteractive; }
+      const scrollInstruction = document.getElementById('scrollLockInstruction');
+      if (isInteractive) {
+        scrollLockButton.textContent = 'Unlock Scroll';
+        scrollLockButton.classList.remove('unlocked');
+        if (scrollInstruction) scrollInstruction.textContent = 'Globe is active.';
+      } else {
+        scrollLockButton.textContent = 'Lock Globe';
+        scrollLockButton.classList.add('unlocked');
+        if (scrollInstruction) scrollInstruction.textContent = 'Page scroll is active.';
+      }
+    }
+    scrollLockButton.addEventListener('click', () => { setGlobeInteraction(!controls.enabled); });
+  }
+  // Keyboard controls
+  document.addEventListener('keydown', (event) => {
+    if (!controls) return;
+    switch(event.code) {
+      case 'ArrowUp': case 'KeyW': event.preventDefault(); controls.target.y += 0.1; controls.update(); break;
+      case 'ArrowDown': case 'KeyS': event.preventDefault(); controls.target.y -= 0.1; controls.update(); break;
+      case 'ArrowLeft': case 'KeyA': event.preventDefault(); controls.target.x -= 0.1; controls.update(); break;
+      case 'ArrowRight': case 'KeyD': event.preventDefault(); controls.target.x += 0.1; controls.update(); break;
+      case 'Equal': case 'NumpadAdd': event.preventDefault(); camera.position.multiplyScalar(0.9); controls.update(); break;
+      case 'Minus': case 'NumpadSubtract': event.preventDefault(); camera.position.multiplyScalar(1.1); controls.update(); break;
+      case 'Space': event.preventDefault(); toggleGlobeRotation(); break;
+    }
+  });
+  window.addEventListener('resize', () => { updateCanvasSize(); });
+}
+// ===
+// GLOBE AND CUBES CREATION
+// ===
+async function createGlobeAndCubes() {
+  console.log('🔄 Creating globe and cubes...');
+  createNeuralNetwork();
+  for (let i = 0; i < count; i++) {
+    const r = maxRadius * Math.random();
+    const theta = Math.random() * 2 * Math.PI;
+    const phi = Math.acos(2 * Math.random() - 1);
+    const x = r * Math.sin(phi) * Math.cos(theta);
+    const y = r * Math.sin(phi) * Math.sin(theta);
+    const z = r * Math.cos(phi);
+    let cubeObject;
+    if (i === 0) { cubeObject = createNeuralCube(europeContent, europeSubCubes, explodedPositions, '#003366'); cubeObject.userData.neuralName = 'Europe'; europeCube = cubeObject; }
+    else if (i === 1) { cubeObject = createNeuralCube(newThailandContent, newThailandSubCubes, newThailandExplodedPositions, '#A52A2A'); cubeObject.userData.neuralName = 'Thailand'; newThailandCube = cubeObject; }
+    else if (i === 2) { cubeObject = createNeuralCube(canadaContent, canadaSubCubes, canadaExplodedPositions, '#006400'); cubeObject.userData.neuralName = 'Canada'; canadaCube = cubeObject; }
+    else if (i === 3) { cubeObject = createNeuralCube(ukContent, ukSubCubes, ukExplodedPositions, '#483D8B'); cubeObject.userData.neuralName = 'UK'; ukCube = cubeObject; }
+    else if (i === 4) { cubeObject = createNeuralCube(usaContent, usaSubCubes, usaExplodedPositions, '#B22234'); cubeObject.userData.neuralName = 'USA'; usaCube = cubeObject; }
+    else if (i === 5) { cubeObject = createNeuralCube(indiaContent, indiaSubCubes, indiaExplodedPositions, '#FF9933'); cubeObject.userData.neuralName = 'India'; indiaCube = cubeObject; }
+    else if (i === 6) { cubeObject = createNeuralCube(singaporeContent, singaporeSubCubes, singaporeExplodedPositions, '#EE2536'); cubeObject.userData.neuralName = 'Singapore'; singaporeCube = cubeObject; }
+    else if (i === 7) { cubeObject = createNeuralCube(malaysiaContent, malaysiaSubCubes, malaysiaExplodedPositions, '#FFD700'); cubeObject.userData.neuralName = 'Malaysia'; malaysiaCube = cubeObject; }
+    else {
+      cubeObject = new THREE.Group();
+      const data = { domain: i % 12, engagement: Math.random(), age: Math.random(), risk: Math.random(), confidence: 0.7 + Math.random() * 0.3 };
+      dummyDataSet.push(data);
+      const color = getColorByData(data);
+      const subCubeMaterial = new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.6, transparent: true, opacity: 1.0 });
+      const microcube = new THREE.Mesh(new THREE.BoxGeometry(vortexCubeSize, vortexCubeSize, vortexCubeSize), subCubeMaterial);
+      cubeObject.add(microcube);
+      cubeObject.userData.isSmallNode = true;
+    }
+    cubeObject.position.set(x, y, z);
+    neuronGroup.add(cubeObject);
+    cubes.push(cubeObject);
+    velocities.push(new THREE.Vector3((Math.random() - 0.5) * 0.002, (Math.random() - 0.5) * 0.002, (Math.random() - 0.5) * 0.002));
+    if (cubeObject.userData.neuralName) { neuralCubeMap[cubeObject.userData.neuralName] = cubeObject; }
+  }
+  new THREE.TextureLoader().load("https://static.wixstatic.com/media/d77f36_8f868995fda643a0a61562feb20eb733~mv2.jpg", (tex) => {
+    const globe = new THREE.Mesh(new THREE.SphereGeometry(GLOBE_RADIUS, 64, 64), new THREE.MeshPhongMaterial({ map: tex, transparent: true, opacity: 0.28 }));
+    globeGroup.add(globe);
+  });
+  let wireframeMesh = new THREE.Mesh(new THREE.SphereGeometry(GLOBE_RADIUS + 0.05, 64, 64), new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true, transparent: true, opacity: 0.12 }));
+  globeGroup.add(wireframeMesh);
+  fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', (font) => {
+    countryConfigs.forEach(config => {
+      const size = 0.03;
+      const blockGeometry = new THREE.BoxGeometry(size, size, size);
+      const blockMaterial = new THREE.MeshStandardMaterial({ color: config.color, emissive: config.color, emissiveIntensity: 0.6, transparent: true, opacity: 0.95 });
+      const blockMesh = new THREE.Mesh(blockGeometry, blockMaterial);
+      blockMesh.userData.countryName = config.name;
+      const position = latLonToVector3(config.lat, config.lon, 1.1);
+      blockMesh.position.copy(position);
+      blockMesh.lookAt(0, 0, 0);
+      globeGroup.add(blockMesh);
+      countryBlocks[config.name] = blockMesh;
+      const lG = new THREE.TextGeometry(config.name, { font: font, size: 0.018, height: 0.0001, curveSegments: 8 });
+      lG.center();
+      const lM = new THREE.MeshBasicMaterial({ color: 0xffffff });
+      const lMesh = new THREE.Mesh(lG, lM);
+      countryLabels.push({ label: lMesh, block: blockMesh, offset: 0.06 });
+      globeGroup.add(lMesh);
+    });
+    drawAllConnections();
+    setTimeout(() => { highlightCountriesByProgram("UG"); }, 500);
+  });
+  console.log('✅ Globe and cubes created successfully');
+}
+// ===
+// ===
+// ===
+// ANIMATION
+// ===
+function animate() {
+  requestAnimationFrame(animate);
+  const elapsedTime = clock.getElapsedTime();
+  if (controls && controls.enabled) { controls.update(); }
+  if (typeof TWEEN !== 'undefined') { TWEEN.update(); }
+  arcPaths.forEach(path => { if (path.material.isShaderMaterial) { path.material.uniforms.time.value = elapsedTime; } });
+  countryLabels.forEach(item => {
+    const worldPosition = new THREE.Vector3();
+    item.block.getWorldPosition(worldPosition);
+    const offsetDirection = worldPosition.clone().normalize();
+    const labelPosition = worldPosition.clone().add(offsetDirection.multiplyScalar(item.offset));
+    item.label.position.copy(labelPosition);
+    item.label.lookAt(camera.position);
+  });
+  const explosionStateMap = {
+    'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded,
+    'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded,
+    'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded
+  };
+  const boundaryRadius = 1.0;
+  const buffer = 0.02;
+  if (!isCubeMovementPaused) {
+    cubes.forEach((cube, i) => {
+      const isExploded = cube.userData.neuralName && explosionStateMap[cube.userData.neuralName];
+      if (!isExploded) {
+        cube.position.add(velocities[i]);
+        if (cube.position.length() > boundaryRadius - buffer) {
+          cube.position.normalize().multiplyScalar(boundaryRadius - buffer);
+          velocities[i].reflect(cube.position.clone().normalize());
+        }
+      }
+    });
+    // Remove old network arcs before redrawing (prevents duplicates)
+    for (let i = scene.children.length - 1; i >= 0; i--) {
+      const child = scene.children[i];
+      if (child.userData && child.userData.isNetworkArc) {
+        scene.remove(child);
+      }
+    }
+    if (neuralNetworkLines) {
+      const maxDist = 0.6;
+      const connectionsPerCube = 4;
+      for (let i = 0; i < cubes.length; i++) {
+        if (!cubes[i].visible || cubes[i].userData.neuralName) continue;
+        let neighbors = [];
+        for (let j = 0; j < cubes.length; j++) {
+          if (i === j || !cubes[j].visible || cubes[j].userData.neuralName) continue;
+          const dist = cubes[i].position.distanceTo(cubes[j].position);
+          if (dist < maxDist) { neighbors.push({ dist: dist, cube: cubes[j] }); }
+        }
+        neighbors.sort((a, b) => a.dist - b.dist);
+        const closest = neighbors.slice(0, connectionsPerCube);
+        closest.forEach(n => {
+          const start = cubes[i].position.clone();
+          const end = n.cube.position.clone();
+          const arc = createCurvedLinkBetweenNodes(start, end, 0x00BFFF, 0.08); // Create curved arc
+          arc.userData = { isNetworkArc: true }; // Tag for removal next frame
+        });
+      }
+    }
+  }
+  renderer.render(scene, camera);
+}
+// ===
+function togglePrivacySection() {
+  const privacy = document.querySelector('.privacy-assurance');
+  const trust = document.querySelector('.trust-indicators');
+  privacy.classList.toggle('active');
+  trust.classList.toggle('active');
+  if (privacy.classList.contains('active')) {
+    privacy.scrollIntoView({ behavior: 'smooth' });
+  }
+}
+// Show trust indicators after load
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    const trustElement = document.querySelector('.trust-indicators');
+    if (trustElement) {
+      trustElement.classList.add('active');
+    }
+  }, 2000);
+});
+// Notification helpers
+// Centered notification helper
+function showNotification(message, isSuccess = true) {
+  const div = document.createElement('div');
+  const icon = isSuccess ? '✅' : '❌';
+  const cssClass = isSuccess ? 'notification' : 'notification error';
+  div.innerHTML = `
+    <div class="${cssClass}" onclick="this.remove()">
+      ${icon} ${message}
+    </div>
+  `;
+  document.body.appendChild(div);
+  setTimeout(() => div.remove(), 5000);
+}
+// ===
+document.addEventListener('DOMContentLoaded', async () => {
+  console.log('🚀 Loading Interactive Globe Widget...');
+  try {
+    console.log('🔍 Checking authentication status...');
+    await fetchAuthStatus();
+    
+    // IMPORTANT: Initialize immediately if authenticated
+    if (authStatus.isAuthenticated) {
+      console.log('✅ User is already authenticated on load!');
+    }
+    
+    console.log('1️⃣ Fetching server data...');
+    await fetchDataFromBackend();
+    console.log('2️⃣ Initializing Three.js...');
+    initializeThreeJS();
+    console.log('3️⃣ Setting up event listeners...');
+    setupEventListeners();
+    console.log('4️⃣ Creating globe and cubes...');
+    await createGlobeAndCubes();
+    
+    // CRITICAL: Activate cubes AFTER they're created
+    if (authStatus.isAuthenticated) {
+      console.log('🎮 Activating cubes for authenticated user!');
+      setTimeout(() => {
+        activateAllCubes(); // This already shows the notification
+        // REMOVED: showNotification('🎮 University programs unlocked!', true);
+      }, 500); // Small delay to ensure cubes are fully initialized
+    }
+    
+    console.log('5️⃣ Populating carousel...');
+    await populateCarousel();
+    console.log('6️⃣ Starting animation...');
+    animate();
+    console.log('7️⃣ Starting auth monitoring...');
+    startAuthStatusPolling();
+    
+    const leftBtn = document.getElementById('carouselScrollLeft');
+    const rightBtn = document.getElementById('carouselScrollRight');
+    if (leftBtn) leftBtn.onclick = () => scrollCarousel(-1);
+    if (rightBtn) rightBtn.onclick = () => scrollCarousel(1);
+    updateCanvasSize();
+    console.log('✅ Globe Widget loaded successfully!');
+  } catch (error) {
+    console.error('❌ Error during initialization:', error);
+  }
+});
