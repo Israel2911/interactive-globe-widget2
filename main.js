@@ -867,7 +867,7 @@ function onCanvasMouseUp(event) {
   const allClickableObjects = [...Object.values(countryBlocks), ...neuronGroup.children];
   const intersects = raycaster.intersectObjects(allClickableObjects, true);
   if (intersects.length === 0) { closeAllExploded(); return; }
-  const clickedObject = intersects[0].object;
+  const clickedObject = intersects.object;
   // COUNTRY BLOCK CLICKED — explode (no auth)
   if (clickedObject.userData.countryName) {
     const countryName = clickedObject.userData.countryName;
@@ -1008,7 +1008,7 @@ function setupEventListeners() {
   if (toggleNodesButton) {
     toggleNodesButton.addEventListener('click', () => {
       const neuralNodes = cubes.filter(cube => cube.userData.isSmallNode);
-      const areVisible = neuralNodes.length > 0 && neuralNodes[0].visible;
+      const areVisible = neuralNodes.length > 0 && neuralNodes.visible;
       const newVisibility = !areVisible;
       neuralNodes.forEach(node => { node.visible = newVisibility; });
       if (neuralNetworkLines) { neuralNetworkLines.visible = newVisibility; }
@@ -1086,7 +1086,7 @@ async function createGlobeAndCubes() {
     if (cubeObject.userData.neuralName) { neuralCubeMap[cubeObject.userData.neuralName] = cubeObject; }
   }
   new THREE.TextureLoader().load("https://static.wixstatic.com/media/d77f36_8f868995fda643a0a61562feb20eb733~mv2.jpg", (tex) => {
-    const globe = new THREE.Mesh(new THREE.SphereGeometry(GLOBE_RADIUS, 64, 64), new THREE.MeshPhongMaterial({ map: tex, transparent: true, opacity: 0.28 }));
+    const globe = new THREE.Mesh(new THREE.SphereGeometry(GLOBE_RADIUS, 64, 64), new THREE.MeshPhongMaterial({ map: tex, transparent: true, opacity: 0.4, depthTest: true, depthWrite: true })); // Increased opacity for visibility
     globeGroup.add(globe);
   });
   let wireframeMesh = new THREE.Mesh(new THREE.SphereGeometry(GLOBE_RADIUS + 0.05, 64, 64), new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true, transparent: true, opacity: 0.12 }));
