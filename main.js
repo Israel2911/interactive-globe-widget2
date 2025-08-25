@@ -1071,6 +1071,7 @@ function setupEventListeners() {
     });
   }
 
+
   // --- END: CORRECTED BUTTON LOGIC ---
 
   // Additional UI controls
@@ -1127,7 +1128,7 @@ function setupEventListeners() {
     scrollLockButton.addEventListener('click', () => { setGlobeInteraction(!controls.enabled); });
   }
 
-  // Keyboard controls - The space bar listener needs to point to the correct function now
+// Keyboard controls - The space bar listener needs to point to the correct function now
   document.addEventListener('keydown', (event) => {
     if (!controls) return;
     switch(event.code) {
@@ -1146,7 +1147,6 @@ function setupEventListeners() {
   });
   window.addEventListener('resize', () => { updateCanvasSize(); });
 }
-
 // GLOBE AND CUBES CREATION
 // ===
 async function createGlobeAndCubes() {
