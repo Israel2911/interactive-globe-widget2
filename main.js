@@ -752,7 +752,7 @@ function createNeuralNetwork() {
     color: 0x00BFFF,
     side: THREE.DoubleSide,
     transparent: true,
-    opacity: 0.1,
+    opacity: 0.1, // You can increase this (e.g., to 0.15) if it's too subtle
     blending: THREE.AdditiveBlending,
     depthWrite: false
   });
@@ -760,6 +760,7 @@ function createNeuralNetwork() {
   neuralNetworkLines = new THREE.Mesh(geometry, material);
   globeGroup.add(neuralNetworkLines);
 }
+
 
 function latLonToVector3(lat, lon, radius) {
   const phi = (90 - lat) * (Math.PI / 180);
@@ -1121,7 +1122,8 @@ async function createGlobeAndCubes() {
   console.log('✅ Globe and cubes created successfully');
 }
 // ===
-// ANIMATION (CORRECTED - only contains the membrane code)
+// ===
+// ANIMATION (CORRECTED AND ERROR-PROOF)
 // ===
 function animate() {
   requestAnimationFrame(animate);
@@ -1156,13 +1158,15 @@ function animate() {
       }
     });
 
-    // = START: Updated Neural Network Membrane =
+    // = START: ROBUST Neural Network Membrane =
     if (neuralNetworkLines && neuralNetworkLines.visible) {
         const vertices = [];
         const maxDist = 0.6;
         const connectionsPerCube = 3;
+
         for (let i = 0; i < cubes.length; i++) {
             if (!cubes[i].visible || cubes[i].userData.neuralName) continue;
+            
             let neighbors = [];
             for (let j = i + 1; j < cubes.length; j++) {
                 if (!cubes[j].visible || cubes[j].userData.neuralName) continue;
@@ -1171,62 +1175,31 @@ function animate() {
                     neighbors.push({ dist: dist, cube: cubes[j] });
                 }
             }
+            
             neighbors.sort((a, b) => a.dist - b.dist);
             const closest = neighbors.slice(0, connectionsPerCube);
-            for (let k = 0; k < closest.length; k++) {
-                const startNode = cubes[i].position;
-                const endNode = closest[k].cube.position;
-                const nextNeighborIndex = (k + 1) % closest.length;
-                const thirdNode = closest[nextNeighborIndex].cube.position;
-                vertices.push(startNode.x, startNode.y, startNode.z);
-                vertices.push(endNode.x, endNode.y, endNode.z);
-                vertices.push(thirdNode.x, thirdNode.y, thirdNode.z);
+
+            // *** THE FIX IS HERE ***
+            // Only proceed if we have at least 2 neighbors to form a triangle.
+            if (closest.length > 1) {
+                // Create a "fan" of triangles from the current node to its neighbors.
+                for (let k = 0; k < closest.length - 1; k++) {
+                    const startNode = cubes[i].position;
+                    const neighbor1 = closest[k].cube.position;
+                    const neighbor2 = closest[k + 1].cube.position;
+
+                    vertices.push(startNode.x, startNode.y, startNode.z);
+                    vertices.push(neighbor1.x, neighbor1.y, neighbor1.z);
+                    vertices.push(neighbor2.x, neighbor2.y, neighbor2.z);
+                }
             }
         }
+        
         neuralNetworkLines.geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
         neuralNetworkLines.geometry.attributes.position.needsUpdate = true;
         neuralNetworkLines.geometry.computeVertexNormals();
     }
-    // = END: Updated Neural Network Membrane =
-  }
-  renderer.render(scene, camera);
-}
-    // === START: Updated Neural Network Lines (with Curves) ===
-    if (neuralNetworkLines) {
-      const vertices = [];
-      const maxDist = 0.6;
-      const connectionsPerCube = 4;
-      for (let i = 0; i < cubes.length; i++) {
-        if (!cubes[i].visible || cubes[i].userData.neuralName) continue;
-        let neighbors = [];
-        for (let j = i + 1; j < cubes.length; j++) { // Avoid duplicate pairs
-          if (!cubes[j].visible || cubes[j].userData.neuralName) continue;
-          const dist = cubes[i].position.distanceTo(cubes[j].position);
-          if (dist < maxDist) { neighbors.push({ dist: dist, cube: cubes[j] }); }
-        }
-        neighbors.sort((a, b) => a.dist - b.dist);
-        const closest = neighbors.slice(0, connectionsPerCube);
-        closest.forEach(n => {
-          const start = cubes[i].position;
-          const end = n.cube.position;
-          // Curve control point: halfway between start and end, pushed outward for arc
-          const mid = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
-          const control = mid.clone().normalize().multiplyScalar(mid.length() + 0.2);
-
-          const curve = new THREE.QuadraticBezierCurve3(start, control, end);
-          const points = curve.getPoints(8); // More points = smoother curve
-
-          for (let k = 0; k < points.length - 1; k++) {
-            vertices.push(points[k].x, points[k].y, points[k].z);
-            vertices.push(points[k+1].x, points[k+1].y, points[k+1].z);
-          }
-        });
-      }
-      if (neuralNetworkLines.visible) {
-        neuralNetworkLines.geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-      }
-    }
-    // === END: Updated Neural Network Lines ===
+    // = END: ROBUST Neural Network Membrane =
   }
   renderer.render(scene, camera);
 }
