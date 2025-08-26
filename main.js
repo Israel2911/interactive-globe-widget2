@@ -266,9 +266,12 @@ let carouselData = [];
 let isInteracting = false, hoverTimeout;
 let clickedSubCube = null;
 // --- START: NEW HOVER CARD VARIABLES ---
+// --- START: NEW HOVER CARD VARIABLES ---
 let currentlyHovered = null;
 let hoverCard; // Will be defined after the page loads
+let hoverTimeout; // --- ADD THIS LINE ---
 // --- END: NEW HOVER CARD VARIABLES ---
+
 // ===
 // PUBLIC DATA FETCH
 // ===
