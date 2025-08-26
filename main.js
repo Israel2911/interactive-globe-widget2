@@ -697,7 +697,8 @@ const toggleFunctionMap = {
 // =================================================================
 
 // ===
-// CUBE CREATION
+// ===
+// CUBE CREATION (with "Apply Now" highlight)
 // ===
 function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
   let contentIdx = 0;
@@ -708,12 +709,17 @@ function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
         const item = content[contentIdx];
         let material, userData;
         if (item) {
-          material = createTexture(item.programName, item.logo, color);
+          // --- THIS IS THE VISUAL CHANGE ---
+          // If an applyLink exists (and isn't just a placeholder), set the color to purple.
+          const cubeColor = (item.applyLink && item.applyLink !== '#') ? '#a46bfd' : color; 
+          
+          material = createTexture(item.programName, item.logo, cubeColor);
           userData = item;
         } else {
           material = createTexture('Unassigned', null, '#333333');
           userData = { university: "Unassigned" };
         }
+        
         const microcube = new THREE.Mesh(
           new THREE.BoxGeometry(vortexCubeSize, vortexCubeSize, vortexCubeSize),
           material
@@ -734,6 +740,7 @@ function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
       }
   return cubeObject;
 }
+
 
 // CORRECTED: Creates a Mesh for the membrane effect
 function createNeuralNetwork() {
