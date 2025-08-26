@@ -1,5 +1,5 @@
 // =============
-// ==  PART 1: SETUP, AUTH, AND DATA
+// ==  PART 1: SETUP, AUTH, AND UI
 // =============
 
 // === Authentication & Redirection ===
@@ -115,7 +115,6 @@ function startAuthStatusPolling() {
     if (!oldStatus && authStatus.isAuthenticated) {
       console.log('🎉 User authentication detected - activating cubes!');
       activateAllCubes(); // This already shows the notification
-      // REMOVED: showNotification('Congratulations! All university programs are now available.', true);
     }
     
     // Optional: Check if user logged out
@@ -131,10 +130,6 @@ function startAuthStatusPolling() {
 // IMPROVED SHOW INFO PANEL WITH SAFER AUTHENTICATION CHECK
 async function showInfoPanel(data) {
   console.log('🎯 showInfoPanel called with:', data);
-  console.log('🔗 University:', data?.university);
-  console.log('🔗 Program Link:', data?.programLink);
-  console.log('🔗 Apply Link:', data?.applyLink);
-  
   if (!data || data.university === 'Unassigned') {
     console.log('❌ No valid university data');
     return;
@@ -199,27 +194,20 @@ function hideInfoPanel() {
   document.getElementById('infoPanelOverlay').style.display = 'none';
 }
 
-// Add info panel styles and HTML (kept in case you re-enable the panel)
 function addInfoPanelStyles() {
   const style = document.createElement('style');
   style.textContent = `
     #infoPanelOverlay {
-      display: none;
-      position: fixed;
-      top: 0; left: 0;
+      display: none; position: fixed; top: 0; left: 0;
       width: 100%; height: 100%;
       background: rgba(0,0,0,0.8);
       z-index: 10000;
-      justify-content: center;
-      align-items: center;
+      justify-content: center; align-items: center;
     }
     .info-panel {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      max-width: 600px;
-      max-height: 80vh;
-      overflow-y: auto;
+      background: white; padding: 20px;
+      border-radius: 10px; max-width: 600px;
+      max-height: 80vh; overflow-y: auto;
     }
     .partner-cta {
       padding: 8px 16px; margin: 5px;
@@ -247,7 +235,6 @@ function addInfoPanelStyles() {
   document.body.appendChild(overlay);
 }
 
-// Initialize info panel scaffolding on load (safe to keep)
 document.addEventListener('DOMContentLoaded', addInfoPanelStyles);
 
 
@@ -281,14 +268,7 @@ const mouse = new THREE.Vector2();
 const mouseDownPos = new THREE.Vector2();
 const clock = new THREE.Clock();
 let countryConfigs = [];
-let europeContent = [];
-let newThailandContent = [];
-let canadaContent = [];
-let ukContent = [];
-let usaContent = [];
-let indiaContent = [];
-let singaporeContent = [];
-let malaysiaContent = [];
+let europeContent = [], newThailandContent = [], canadaContent = [], ukContent = [], usaContent = [], indiaContent = [], singaporeContent = [], malaysiaContent = [];
 let allUniversityContent = [];
 let countryPrograms = {};
 let globalContentMap = {};
@@ -304,84 +284,52 @@ async function fetchCarouselData() {
     const response = await fetch('/api/carousel/data');
     if (response.ok) {
       carouselData = await response.json();
-      console.log('📊 Carousel data loaded:', carouselData);
       return true;
-    }
+    } else { throw new Error('Carousel fetch failed'); }
   } catch (error) {
     console.log('Using fallback carousel data');
     carouselData = [
       { category: "UG", img: "https://static.wixstatic.com/media/d77f36_deddd99f45db4a55953835f5d3926246~mv2.png", title: "Undergraduate", text: "Bachelor-level opportunities." },
       { category: "PG", img: "https://static.wixstatic.com/media/d77f36_ae2a1e8b47514fb6b0a995be456a9eec~mv2.png", title: "Postgraduate", text: "Master's & advanced ." },
-      { category: "Diploma", img: "https://static.wixstatic.com/media/d77f36_e8f60f4350304ee79afab3978a44e307~mv2.png", title: "Diploma", text: "Professional & foundation." },
-      { category: "Mobility", img: "https://static.wixstatic.com/media/d77f36_1118d15eee5a45f2a609c762d077857e~mv2.png", title: "Semester Abroad", text: "Exchange & mobility." },
-      { category: "Upskilling", img: "https://static.wixstatic.com/media/d77f36_d8d9655ba23f4849abba7d09ddb12092~mv2.png", title: "Upskilling", text: "Short-term training." },
-      { category: "Research", img: "https://static.wixstatic.com/media/d77f36_aa9eb498381d4adc897522e38301ae6f~mv2.jpg", title: "Research", text: "Opportunities & links." }
     ];
     return false;
   }
 }
 async function fetchDataFromBackend() {
   try {
-    console.log('🔄 Fetching data from server...');
     const response = await fetch('/api/globe-data');
     if (response.ok) {
       const data = await response.json();
-      console.log('✅ Server data received:', data);
-      europeContent = data.europeContent || [];
-      newThailandContent = data.newThailandContent || [];
-      canadaContent = data.canadaContent || [];
-      ukContent = data.ukContent || [];
-      usaContent = data.usaContent || [];
-      indiaContent = data.indiaContent || [];
-      singaporeContent = data.singaporeContent || [];
-      malaysiaContent = data.malaysiaContent || [];
-      countryPrograms = data.countryPrograms || {};
+      Object.assign(globalContentMap, {
+        'Europe': data.europeContent || [], 'Thailand': data.newThailandContent || [], 'Canada': data.canadaContent || [], 'UK': data.ukContent || [],
+        'USA': data.usaContent || [], 'India': data.indiaContent || [], 'Singapore': data.singaporeContent || [], 'Malaysia': data.malaysiaContent || []
+      });
+      allUniversityContent = Object.values(globalContentMap).flat();
       countryConfigs = data.countryConfigs || [];
-      globalContentMap = {
-        'Europe': europeContent, 'Thailand': newThailandContent, 'Canada': canadaContent, 'UK': ukContent,
-        'USA': usaContent, 'India': indiaContent, 'Singapore': singaporeContent, 'Malaysia': malaysiaContent
-      };
-      allUniversityContent = [
-        ...europeContent, ...newThailandContent, ...canadaContent, ...ukContent,
-        ...usaContent, ...indiaContent, ...singaporeContent, ...malaysiaContent
-      ];
-      console.log('✅ Data loaded successfully!');
       return true;
-    }
+    } else { throw new Error('Globe data fetch failed'); }
   } catch (error) {
-    console.error('❌ Error fetching data:', error);
-    // Fallback: minimal scaffolding
+    console.error('Error fetching data, using fallback:', error);
     countryConfigs = [
       {"name": "India", "lat": 22, "lon": 78, "color": 0xFF9933}, {"name": "Europe", "lat": 48.8566, "lon": 2.3522, "color": 0x0000FF},
-      {"name": "UK", "lat": 53, "lon": -0.1276, "color": 0x191970}, {"name": "Singapore", "lat": 1.35, "lon": 103.8, "color": 0xff0000},
-      {"name": "Malaysia", "lat": 4, "lon": 102, "color": 0x0000ff}, {"name": "Thailand", "lat": 13.7563, "lon": 100.5018, "color": 0xffcc00},
-      {"name": "Canada", "lat": 56.1304, "lon": -106.3468, "color": 0xff0000}, {"name": "USA", "lat": 39.8283, "lon": -98.5795, "color": 0x003366}
     ];
-    europeContent = Array(27).fill(null); newThailandContent = Array(27).fill(null); canadaContent = Array(27).fill(null);
-    ukContent = Array(27).fill(null); usaContent = Array(27).fill(null); indiaContent = Array(27).fill(null);
-    singaporeContent = Array(27).fill(null); malaysiaContent = Array(27).fill(null);
+    return false;
   }
-  return false;
 }
 
 // =======
-// PROGRAM FILTERING / HIGHLIGHTING (unchanged)
+// PROGRAM FILTERING / HIGHLIGHTING
 // =======
 function getMatchingCountries(category) {
   if (!globalContentMap || Object.keys(globalContentMap).length === 0) { return []; }
   const matcherMap = {
     'ug': content => content.some(p => p && /bachelor|bba|undergraduate|bsn|degree/i.test(p.programName)),
     'pg': content => content.some(p => p && /master|mba|postgraduate|ms|msn/i.test(p.programName)),
-    'mobility': content => content.some(p => p && /exchange|abroad|mobility|study/i.test(p.programName)),  
-    'diploma': content => content.some(p => p && /diploma/i.test(p.programName)),
-    'upskilling': content => content.some(p => p && /cyber|data|tech|ux|upskill/i.test(p.programName)),
-    'research': content => content.some(p => p && /research|phd|doctor/i.test(p.programName))
   };
   const matcher = matcherMap[category.toLowerCase()] || (() => false);
   return Object.keys(globalContentMap).filter(country => matcher(globalContentMap[country]));
 }
 function highlightCountriesByProgram(level) {
-  console.log('🌍 Highlighting countries for program:', level);
   const matchingCountries = getMatchingCountries(level);
   Object.entries(countryBlocks).forEach(([country, group]) => {
     const isActive = matchingCountries.includes(country);
@@ -390,23 +338,18 @@ function highlightCountriesByProgram(level) {
     group.scale.setScalar(isActive ? 1.2 : 1.0);
     const labelItem = countryLabels.find(item => item.block === group);
     if (labelItem) { labelItem.label.material.color.set(isActive ? 0xffff00 : 0xffffff); }
-    if (typeof TWEEN !== 'undefined' && isActive) {
-      new TWEEN.Tween(group.material).to({ emissiveIntensity: 2.0 }, 300).yoyo(true).repeat(2).start();
-    }
   });
-  console.log(`✨ Highlighted ${matchingCountries.length} countries:`, matchingCountries);
 }
 function highlightNeuralCubesByProgram(selectedCategory) {
-  console.log(`🌍 Global neural cube filtering for: ${selectedCategory}`);
   const category = selectedCategory.toLowerCase();
   const matchingCountries = getMatchingCountries(category);
   Object.keys(neuralCubeMap).forEach(countryName => {
     const cube = neuralCubeMap[countryName];
-    if (cube && typeof TWEEN !== 'undefined') { new TWEEN.Tween(cube.scale).to({ x: 1.0, y: 1.0, z: 1.0 }, 300).start(); }
+    if (cube) { new TWEEN.Tween(cube.scale).to({ x: 1.0, y: 1.0, z: 1.0 }, 300).start(); }
   });
   matchingCountries.forEach(countryName => {
     const cube = neuralCubeMap[countryName];
-    if (cube && typeof TWEEN !== 'undefined') { new TWEEN.Tween(cube.scale).to({ x: 1.3, y: 1.3, z: 1.3 }, 500).start(); }
+    if (cube) { new TWEEN.Tween(cube.scale).to({ x: 1.3, y: 1.3, z: 1.3 }, 500).start(); }
   });
   cubes.forEach(cube => {
     if (cube.children && cube.children.length > 10) {
@@ -416,17 +359,12 @@ function highlightNeuralCubesByProgram(selectedCategory) {
         let shouldHighlight = false;
         if (category === "ug") { shouldHighlight = /ug|undergraduate|degree|bachelor|bsn|bba|business school|academic/i.test(prog); }
         else if (category === "pg") { shouldHighlight = /pg|postgraduate|master|msc|ma|msn|mba|phd|public policy|journalism|prospectus/i.test(prog); }
-        else if (category === "diploma") { shouldHighlight = /diploma/i.test(prog); }
-        else if (category === "mobility") { shouldHighlight = /exchange|mobility|semester|abroad|short|global/i.test(prog); }
-        else if (category === "upskilling") { shouldHighlight = /upskill|certificat|short|cyber|data|stack|design/i.test(prog); }
-        else if (category === "research") { shouldHighlight = !!subCube.userData.researchLink; }
-        else if (category === "language") { shouldHighlight = /lang/i.test(prog); }
-        if (shouldHighlight) { subCube.material.emissiveIntensity = 1.5; subCube.material.opacity = 1.0; subCube.scale.setScalar(1.3); }
-        else { subCube.material.emissiveIntensity = 0.2; subCube.material.opacity = 0.25; subCube.scale.setScalar(1.0); }
+        subCube.material.emissiveIntensity = shouldHighlight ? 1.5 : 0.2;
+        subCube.material.opacity = shouldHighlight ? 1.0 : 0.25;
+        subCube.scale.setScalar(shouldHighlight ? 1.3 : 1.0);
       });
     }
   });
-  console.log(`✨ Scaled ${matchingCountries.length} neural cubes for ${selectedCategory}`);
 }
 
 // =======
@@ -435,18 +373,17 @@ function highlightNeuralCubesByProgram(selectedCategory) {
 async function populateCarousel() {
   await fetchCarouselData();
   const container = document.getElementById('carouselContainer');
-  if (!container) { console.log('❌ Carousel container not found'); return; }
+  if (!container) return;
   container.innerHTML = '';
   carouselData.forEach(item => {
-    container.insertAdjacentHTML(
-      'beforeend',
-      `<a href="#" class="carousel-card" data-category="${item.category}">
-         <img src="${item.img}" alt="${item.title}"/>
-         <div class="carousel-card-content">
-           <div class="carousel-card-title">${item.title}</div>
-           <div class="carousel-card-text">${item.text}</div>
-         </div>
-       </a>`
+    container.insertAdjacentHTML('beforeend', `
+      <a href="#" class="carousel-card" data-category="${item.category}">
+        <img src="${item.img}" alt="${item.title}"/>
+        <div class="carousel-card-content">
+          <div class="carousel-card-title">${item.title}</div>
+          <div class="carousel-card-text">${item.text}</div>
+        </div>
+      </a>`
     );
   });
   document.querySelectorAll('.carousel-card').forEach(card => {
@@ -455,7 +392,6 @@ async function populateCarousel() {
       document.querySelectorAll('.carousel-card').forEach(c => c.classList.remove('selected'));
       this.classList.add('selected');
       const category = this.dataset.category;
-      console.log(`🌍 Global filtering activated for: ${category}`);
       highlightCountriesByProgram(category);
       highlightNeuralCubesByProgram(category);
     });
@@ -465,7 +401,6 @@ async function populateCarousel() {
     defaultCard.classList.add('selected');
     setTimeout(() => { highlightCountriesByProgram('UG'); highlightNeuralCubesByProgram('UG'); }, 1000);
   }
-  console.log('✅ Carousel populated successfully');
 }
 function scrollCarousel(direction) {
   const container = document.getElementById('carouselContainer');
@@ -476,38 +411,25 @@ function scrollCarousel(direction) {
 }
 
 // =======
-// ===
-// CONTROL TOGGLES (Corrected and Final Version)
-// ===
-
-// This single function controls whether the user is in "rotate" or "pan" mode.
-// It does NOT affect the automatic rotation.
+// CONTROL TOGGLES
+// =======
 function setInteractionMode(mode) {
   if (!controls) return;
-
   const rotateBtn = document.getElementById('btn-rotate');
   const panBtn = document.getElementById('btn-pan');
   const canvas = renderer.domElement;
-
   if (mode === 'ROTATE') {
-    // Set controls to ROTATE mode
     controls.mouseButtons.LEFT = THREE.MOUSE.ROTATE;
     controls.touches.ONE = THREE.TOUCH.ROTATE;
-
-    // Set button styles for ROTATE mode
-    if (rotateBtn) rotateBtn.style.background = '#a46bfd'; // Active purple color
-    if (panBtn) panBtn.style.background = 'rgba(0,0,0,0.8)'; // Inactive color
-    canvas.style.cursor = 'default'; // Default cursor for rotation
-
+    if (rotateBtn) rotateBtn.style.background = '#a46bfd';
+    if (panBtn) panBtn.style.background = 'rgba(0,0,0,0.8)';
+    canvas.style.cursor = 'default';
   } else if (mode === 'PAN') {
-    // Set controls to PAN mode
     controls.mouseButtons.LEFT = THREE.MOUSE.PAN;
     controls.touches.ONE = THREE.TOUCH.PAN;
-
-    // Set button styles for PAN mode
-    if (rotateBtn) rotateBtn.style.background = 'rgba(0,0,0,0.8)'; // Inactive color
-    if (panBtn) panBtn.style.background = '#ffa500'; // Active orange color
-    canvas.style.cursor = 'grab'; // "grab" cursor for panning
+    if (rotateBtn) rotateBtn.style.background = 'rgba(0,0,0,0.8)';
+    if (panBtn) panBtn.style.background = '#ffa500';
+    canvas.style.cursor = 'grab';
   }
 }
 
@@ -515,7 +437,6 @@ function setInteractionMode(mode) {
 // Three.js initialization
 // =======
 function initializeThreeJS() {
-  console.log('🔄 Initializing Three.js...');
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.001, 1000);
   camera.position.z = 3.5;
@@ -527,15 +448,10 @@ function initializeThreeJS() {
   scene.add(globeGroup);
   globeGroup.add(neuronGroup);
   controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.1;
-  controls.enablePan = true;
-  controls.autoRotate = true;
-  controls.autoRotateSpeed = 0.6;
-  controls.minDistance = 0.01;
-  controls.maxDistance = 15.0;
-  controls.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN };
-  controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
+  Object.assign(controls, {
+    enableDamping: true, dampingFactor: 0.1, enablePan: true, autoRotate: true,
+    autoRotateSpeed: 0.6, minDistance: 1.5, maxDistance: 10.0
+  });
   transformControls = new THREE.TransformControls(camera, renderer.domElement);
   transformControls.setMode('translate');
   transformControls.addEventListener('dragging-changed', event => { if (controls) controls.enabled = !event.value; });
@@ -545,9 +461,6 @@ function initializeThreeJS() {
   const pointLight = new THREE.PointLight(0xffffff, 1.5);
   pointLight.position.set(5, 5, 5);
   scene.add(pointLight);
-  renderer.domElement.addEventListener('mousedown', () => { isInteracting = true; clearTimeout(hoverTimeout); if (isPanMode) renderer.domElement.style.cursor = 'grabbing'; });
-  renderer.domElement.addEventListener('mouseup', () => { hoverTimeout = setTimeout(() => { isInteracting = false; }, 200); if (isPanMode) renderer.domElement.style.cursor = 'grab'; });
-  console.log('✅ Three.js initialized successfully');
 }
 function updateCanvasSize() {
   const headerHeight = document.querySelector('.header-ui-bar')?.offsetHeight || 0;
@@ -564,20 +477,9 @@ function updateCanvasSize() {
 // =======
 // UTILITIES
 // =======
-function getColorByData(data) {
-  const baseHue = data.domain * 30 % 360;
-  const lightness = 50 + data.engagement * 25;
-  const saturation = 70;
-  const riskShift = data.risk > 0.5 ? 0 : 120;
-  const hue = (baseHue + riskShift) % 360;
-  const color = new THREE.Color(`hsl(${hue}, ${saturation}%, ${lightness}%)`);
-  color.multiplyScalar(data.confidence);
-  return color;
-}
 function createTexture(text, logoUrl, bgColor = '#003366') {
   const canvas = document.createElement('canvas');
-  canvas.width = 256;
-  canvas.height = 256;
+  canvas.width = 256; canvas.height = 256;
   const ctx = canvas.getContext('2d');
   ctx.fillStyle = bgColor;
   ctx.fillRect(0, 0, 256, 256);
@@ -613,18 +515,17 @@ function createToggleFunction(cubeName) {
       'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded
     };
     const setExplosionStateMap = {
-      'Europe': (v) => isEuropeCubeExploded = v, 'Thailand': (v) => isNewThailandCubeExploded = v,
-      'Canada': (v) => isCanadaCubeExploded = v, 'UK': (v) => isUkCubeExploded = v,
-      'USA': (v) => isUsaCubeExploded = v, 'India': (v) => isIndiaCubeExploded = v,
-      'Singapore': (v) => isSingaporeCubeExploded = v, 'Malaysia': (v) => isMalaysiaCubeExploded = v
+      'Europe': v => isEuropeCubeExploded = v, 'Thailand': v => isNewThailandCubeExploded = v, 'Canada': v => isCanadaCubeExploded = v,
+      'UK': v => isUkCubeExploded = v, 'USA': v => isUsaCubeExploded = v, 'India': v => isIndiaCubeExploded = v,
+      'Singapore': v => isSingaporeCubeExploded = v, 'Malaysia': v => isMalaysiaCubeExploded = v
     };
     const cubeMap = {
-      'Europe': europeCube, 'Thailand': newThailandCube, 'Canada': canadaCube,
-      'UK': ukCube, 'USA': usaCube, 'India': indiaCube, 'Singapore': singaporeCube, 'Malaysia': malaysiaCube
+      'Europe': europeCube, 'Thailand': newThailandCube, 'Canada': canadaCube, 'UK': ukCube, 'USA': usaCube,
+      'India': indiaCube, 'Singapore': singaporeCube, 'Malaysia': malaysiaCube
     };
     const subCubeMap = {
-      'Europe': europeSubCubes, 'Thailand': newThailandSubCubes, 'Canada': canadaSubCubes,
-      'UK': ukSubCubes, 'USA': usaSubCubes, 'India': indiaSubCubes, 'Singapore': singaporeSubCubes, 'Malaysia': malaysiaSubCubes
+      'Europe': europeSubCubes, 'Thailand': newThailandSubCubes, 'Canada': canadaSubCubes, 'UK': ukSubCubes,
+      'USA': usaSubCubes, 'India': indiaSubCubes, 'Singapore': singaporeSubCubes, 'Malaysia': malaysiaSubCubes
     };
     const explodedPosMap = {
       'Europe': explodedPositions, 'Thailand': newThailandExplodedPositions, 'Canada': canadaExplodedPositions,
@@ -661,6 +562,7 @@ const toggleFunctionMap = {
   'USA': createToggleFunction('USA'), 'India': createToggleFunction('India'),
   'Singapore': createToggleFunction('Singapore'), 'Malaysia': createToggleFunction('Malaysia')
 };
+
 
 // ===
 // CUBE CREATION (with "Apply Now" highlight)
