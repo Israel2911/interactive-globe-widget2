@@ -1053,67 +1053,75 @@ async function createGlobeAndCubes() {
   console.log('✅ Globe and cubes created successfully');
 }
 // ===
-// ANIMATION (with "Sticky" Hover Card Logic)
+// ANIMATION (with FINAL "Sticky" and Interactive Hover Card)
 // ===
 function animate() {
   requestAnimationFrame(animate);
-  
-  // --- START: HOVER CARD LOGIC ---
+
+  // --- START: IMPROVED HOVER LOGIC ---
   if (hoverCard) {
     raycaster.setFromCamera(mouse, camera);
     const intersects = raycaster.intersectObjects(neuronGroup.children, true);
-    
+
     let foundValidSubCube = false;
     if (intersects.length > 0) {
       const firstIntersect = intersects[0].object;
-      
+
       if (firstIntersect.userData.isSubCube && firstIntersect.userData.university !== "Unassigned") {
         foundValidSubCube = true;
-        
+
+        // If we found a cube, clear any pending timeout to hide the card
+        clearTimeout(hoverTimeout);
+        hoverCard.classList.remove('hover-card-hidden');
+
+        // Update card content ONLY if we hover over a NEW cube
         if (currentlyHovered !== firstIntersect) {
           currentlyHovered = firstIntersect;
           const data = firstIntersect.userData;
-          
+
           document.getElementById('hover-card-title').textContent = data.university;
           document.getElementById('hover-card-program').textContent = data.programName.replace(/\\n/g, ' ');
-          
+
           const infoBtn = document.getElementById('hover-card-info-btn');
           const applyBtn = document.getElementById('hover-card-apply-btn');
+
+          // --- MAKE THE BUTTONS CLICKABLE ---
+          // This assigns the click action directly to the buttons on the card
+          infoBtn.onclick = () => { if (!infoBtn.disabled) window.open(data.programLink, '_blank'); };
+          applyBtn.onclick = () => { if (!applyBtn.disabled) window.open(data.applyLink, '_blank'); };
           
           infoBtn.disabled = !data.programLink || data.programLink === '#';
           applyBtn.disabled = !data.applyLink || data.applyLink === '#';
-          
-          hoverCard.classList.remove('hover-card-hidden');
         }
-        
-        // --- "STICKY" POSITIONING LOGIC ---
-        if (currentlyHovered) {
-          const vector = new THREE.Vector3();
-          currentlyHovered.getWorldPosition(vector);
-          vector.project(camera);
-          
-          const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
-          const y = (vector.y * -0.5 + 0.5) * window.innerHeight;
-          
-          hoverCard.style.left = `${x + 15}px`;
-          hoverCard.style.top = `${y}px`;
-        }
+
+        // Update position based on the currently hovered cube's screen location
+        const vector = new THREE.Vector3();
+        currentlyHovered.getWorldPosition(vector);
+        vector.project(camera);
+        const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
+        const y = (vector.y * -0.5 + 0.5) * window.innerHeight;
+        hoverCard.style.left = `${x + 15}px`;
+        hoverCard.style.top = `${y}px`;
       }
     }
-    
+
+    // If we did NOT find a valid cube and one was previously hovered...
     if (!foundValidSubCube && currentlyHovered) {
-      currentlyHovered = null;
-      hoverCard.classList.add('hover-card-hidden');
+      // ...start a timer to hide the card after a delay.
+      hoverTimeout = setTimeout(() => {
+        hoverCard.classList.add('hover-card-hidden');
+        currentlyHovered = null; // Clear the selection after the card is hidden
+      }, 3000); // 3-second grace period to move mouse to the card
     }
   }
-  // --- END: HOVER CARD LOGIC ---
+  // --- END: IMPROVED HOVER LOGIC ---
 
   const elapsedTime = clock.getElapsedTime();
   if (controls && controls.enabled) { controls.update(); }
   if (typeof TWEEN !== 'undefined') { TWEEN.update(); }
-  
+
   arcPaths.forEach(path => { if (path.material.isShaderMaterial) { path.material.uniforms.time.value = elapsedTime; } });
-  
+
   countryLabels.forEach(item => {
     const worldPosition = new THREE.Vector3();
     item.block.getWorldPosition(worldPosition);
@@ -1122,13 +1130,13 @@ function animate() {
     item.label.position.copy(labelPosition);
     item.label.lookAt(camera.position);
   });
-  
+
   const explosionStateMap = {
     'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded,
     'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded,
     'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded
   };
-  
+
   const boundaryRadius = 1.0;
   const buffer = 0.02;
   if (!isCubeMovementPaused) {
@@ -1142,14 +1150,13 @@ function animate() {
         }
       }
     });
-    
+
     if (neuralNetworkLines && neuralNetworkLines.visible) {
         const vertices = [];
         const maxDist = 0.6;
         const connectionsPerCube = 3;
         for (let i = 0; i < cubes.length; i++) {
             if (!cubes[i].visible || cubes[i].userData.neuralName) continue;
-            
             let neighbors = [];
             for (let j = i + 1; j < cubes.length; j++) {
                 if (!cubes[j].visible || cubes[j].userData.neuralName) continue;
@@ -1158,10 +1165,8 @@ function animate() {
                     neighbors.push({ dist: dist, cube: cubes[j] });
                 }
             }
-            
             neighbors.sort((a, b) => a.dist - b.dist);
             const closest = neighbors.slice(0, connectionsPerCube);
-            
             if (closest.length > 1) {
                 for (let k = 0; k < closest.length - 1; k++) {
                     const startNode = cubes[i].position;
@@ -1173,16 +1178,15 @@ function animate() {
                 }
             }
         }
-        
         neuralNetworkLines.geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
         neuralNetworkLines.geometry.attributes.position.needsUpdate = true;
         neuralNetworkLines.geometry.computeVertexNormals();
     }
   }
-  
+
   renderer.render(scene, camera);
 }
-// ===
+
 function togglePrivacySection() {
   const privacy = document.querySelector('.privacy-assurance');
   const trust = document.querySelector('.trust-indicators');
