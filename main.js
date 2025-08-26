@@ -819,27 +819,15 @@ function animateArcParticles(arc) {
 }
 // Modified: drawAllConnections now includes additional arcs (India-Canada, India-Europe, Canada-USA)
 function drawAllConnections() {
-  // Original pairs (Thailand to others)
   const countryNames = ["India", "Europe", "UK", "Canada", "USA", "Singapore", "Malaysia"];
   const originalPairs = countryNames.map(country => ["Thailand", country]);
-
-  // New requested pairs
-  const additionalPairs = [
-    ["India", "Canada"],
-    ["India", "Europe"],
-    ["Canada", "USA"]
-  ];
-
-  // Combine all pairs
+  const additionalPairs = [["India", "Canada"], ["India", "Europe"], ["Canada", "USA"]];
   const allPairs = [...originalPairs, ...additionalPairs];
-
   arcPaths = allPairs.map(([from, to], index) => {
     const fromBlock = countryBlocks[from];
     const toBlock = countryBlocks[to];
     if (fromBlock && toBlock) return createConnectionPath(fromBlock, toBlock, index);
   }).filter(Boolean);
-
-  // New: Initialize particles for each arc
   arcPaths.forEach(animateArcParticles);
 }
 // ===
@@ -969,6 +957,13 @@ function setupEventListeners() {
   renderer.domElement.addEventListener('mouseup', onCanvasMouseUpPan);
   renderer.domElement.addEventListener('mouseenter', () => { if (isPanMode) { renderer.domElement.style.cursor = 'grab'; } });
 
+  // Add the global mousemove listener for the hover card
+  window.addEventListener('mousemove', (event) => {
+    const canvasRect = renderer.domElement.getBoundingClientRect();
+    mouse.x = ((event.clientX - canvasRect.left) / canvasRect.width) * 2 - 1;
+    mouse.y = -((event.clientY - canvasRect.top) / canvasRect.height) * 2 + 1;
+  });
+
   const panSpeed = 0.1;
   const btnUp = document.getElementById('btn-up'); if (btnUp) { btnUp.addEventListener('click', () => { controls.target.y += panSpeed; controls.update(); }); }
   const btnDown = document.getElementById('btn-down'); if (btnDown) { btnDown.addEventListener('click', () => { controls.target.y -= panSpeed; controls.update(); }); }
@@ -977,17 +972,14 @@ function setupEventListeners() {
   const btnZoomIn = document.getElementById('btn-zoom-in'); if (btnZoomIn) { btnZoomIn.addEventListener('click', () => { camera.position.multiplyScalar(0.9); controls.update(); }); }
   const btnZoomOut = document.getElementById('btn-zoom-out'); if (btnZoomOut) { btnZoomOut.addEventListener('click', () => { camera.position.multiplyScalar(1.1); controls.update(); }); }
 
-  // --- START: CORRECTED BUTTON LOGIC ---
   const btnRotate = document.getElementById('btn-rotate');
   if (btnRotate) { btnRotate.addEventListener('click', () => setInteractionMode('ROTATE')); }
   
   const btnPan = document.getElementById('btn-pan');
   if (btnPan) { btnPan.addEventListener('click', () => setInteractionMode('PAN')); }
-
-  // Set the default mode to ROTATE when the application starts
+  
   setInteractionMode('ROTATE');
 
-  // This pause button ONLY controls automatic rotation.
   const pauseButton = document.getElementById("pauseButton");
   if (pauseButton) {
     pauseButton.addEventListener("click", () => {
@@ -996,8 +988,7 @@ function setupEventListeners() {
       pauseButton.textContent = isRotationPaused ? "Resume Rotation" : "Pause Rotation";
     });
   }
-  // --- END: CORRECTED BUTTON LOGIC ---
-
+  
   const pauseCubesButton = document.getElementById("pauseCubesButton");
   if (pauseCubesButton) {
     pauseCubesButton.addEventListener("click", () => {
@@ -1062,7 +1053,7 @@ function setupEventListeners() {
       case 'Minus': case 'NumpadSubtract': event.preventDefault(); camera.position.multiplyScalar(1.1); controls.update(); break;
       case 'Space': 
         event.preventDefault(); 
-        if(pauseButton) pauseButton.click(); // Space bar correctly triggers the pause button
+        if(pauseButton) pauseButton.click();
         break;
     }
   });
@@ -1138,10 +1129,63 @@ async function createGlobeAndCubes() {
 }
 // ===
 // ===
-// ANIMATION (CORRECTED AND ERROR-PROOF)
+// ANIMATION (WITH HOVER CARD AND INFO PANEL LOGIC)
 // ===
 function animate() {
   requestAnimationFrame(animate);
+
+  // --- START: FULLY CORRECTED HOVER LOGIC ---
+  if (hoverCard) {
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(neuronGroup.children, true);
+    let foundValidSubCube = false;
+
+    if (intersects.length > 0) {
+      const firstIntersect = intersects[0].object;
+      if (firstIntersect.userData.isSubCube && firstIntersect.userData.university !== "Unassigned") {
+        foundValidSubCube = true;
+        
+        clearTimeout(hoverTimeout); // Clear any pending hide timeout
+        hoverCard.classList.remove('hover-card-hidden');
+
+        if (currentlyHovered !== firstIntersect) {
+          currentlyHovered = firstIntersect;
+          const data = firstIntersect.userData;
+          
+          document.getElementById('hover-card-title').textContent = data.university;
+          document.getElementById('hover-card-program').textContent = data.programName.replace(/\\n/g, ' ');
+
+          const infoBtn = document.getElementById('hover-card-info-btn');
+          const applyBtn = document.getElementById('hover-card-apply-btn');
+          
+          infoBtn.onclick = () => { if (!infoBtn.disabled) window.open(data.programLink, '_blank'); };
+          applyBtn.onclick = () => { if (!applyBtn.disabled) window.open(data.applyLink, '_blank'); };
+          
+          infoBtn.disabled = !data.programLink || data.programLink === '#';
+          applyBtn.disabled = !data.applyLink || data.applyLink === '#';
+        }
+
+        if (currentlyHovered) {
+          const vector = new THREE.Vector3();
+          currentlyHovered.getWorldPosition(vector);
+          vector.project(camera);
+          const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
+          const y = (vector.y * -0.5 + 0.5) * window.innerHeight;
+          hoverCard.style.left = `${x + 15}px`;
+          hoverCard.style.top = `${y}px`;
+        }
+      }
+    }
+    
+    if (!foundValidSubCube && currentlyHovered) {
+      hoverTimeout = setTimeout(() => {
+        hoverCard.classList.add('hover-card-hidden');
+        currentlyHovered = null; // Clear selection
+      }, 3000);
+    }
+  }
+  // --- END: FULLY CORRECTED HOVER LOGIC ---
+
   const elapsedTime = clock.getElapsedTime();
   if (controls && controls.enabled) { controls.update(); }
   if (typeof TWEEN !== 'undefined') { TWEEN.update(); }
@@ -1173,15 +1217,12 @@ function animate() {
       }
     });
 
-    // = START: ROBUST Neural Network Membrane =
     if (neuralNetworkLines && neuralNetworkLines.visible) {
         const vertices = [];
         const maxDist = 0.6;
         const connectionsPerCube = 3;
-
         for (let i = 0; i < cubes.length; i++) {
             if (!cubes[i].visible || cubes[i].userData.neuralName) continue;
-            
             let neighbors = [];
             for (let j = i + 1; j < cubes.length; j++) {
                 if (!cubes[j].visible || cubes[j].userData.neuralName) continue;
@@ -1190,31 +1231,21 @@ function animate() {
                     neighbors.push({ dist: dist, cube: cubes[j] });
                 }
             }
-            
             neighbors.sort((a, b) => a.dist - b.dist);
             const closest = neighbors.slice(0, connectionsPerCube);
-
-            // *** THE FIX IS HERE ***
-            // Only proceed if we have at least 2 neighbors to form a triangle.
             if (closest.length > 1) {
-                // Create a "fan" of triangles from the current node to its neighbors.
                 for (let k = 0; k < closest.length - 1; k++) {
                     const startNode = cubes[i].position;
                     const neighbor1 = closest[k].cube.position;
                     const neighbor2 = closest[k + 1].cube.position;
-
-                    vertices.push(startNode.x, startNode.y, startNode.z);
-                    vertices.push(neighbor1.x, neighbor1.y, neighbor1.z);
-                    vertices.push(neighbor2.x, neighbor2.y, neighbor2.z);
+                    vertices.push(startNode.x, startNode.y, startNode.z, neighbor1.x, neighbor1.y, neighbor1.z, neighbor2.x, neighbor2.y, neighbor2.z);
                 }
             }
         }
-        
         neuralNetworkLines.geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
         neuralNetworkLines.geometry.attributes.position.needsUpdate = true;
         neuralNetworkLines.geometry.computeVertexNormals();
     }
-    // = END: ROBUST Neural Network Membrane =
   }
   renderer.render(scene, camera);
 }
@@ -1229,7 +1260,6 @@ function togglePrivacySection() {
     privacy.scrollIntoView({ behavior: 'smooth' });
   }
 }
-// Show trust indicators after load
 window.addEventListener('load', () => {
   setTimeout(() => {
     const trustElement = document.querySelector('.trust-indicators');
@@ -1238,8 +1268,6 @@ window.addEventListener('load', () => {
     }
   }, 2000);
 });
-// Notification helpers
-// Centered notification helper
 function showNotification(message, isSuccess = true) {
   const div = document.createElement('div');
   const icon = isSuccess ? '✅' : '❌';
@@ -1256,14 +1284,12 @@ function showNotification(message, isSuccess = true) {
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('🚀 Loading Interactive Globe Widget...');
   try {
+    hoverCard = document.getElementById('hover-card'); // Initialize hoverCard
     console.log('🔍 Checking authentication status...');
     await fetchAuthStatus();
-    
-    // IMPORTANT: Initialize immediately if authenticated
     if (authStatus.isAuthenticated) {
       console.log('✅ User is already authenticated on load!');
     }
-    
     console.log('1️⃣ Fetching server data...');
     await fetchDataFromBackend();
     console.log('2️⃣ Initializing Three.js...');
@@ -1272,23 +1298,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupEventListeners();
     console.log('4️⃣ Creating globe and cubes...');
     await createGlobeAndCubes();
-    
-    // CRITICAL: Activate cubes AFTER they're created
     if (authStatus.isAuthenticated) {
       console.log('🎮 Activating cubes for authenticated user!');
       setTimeout(() => {
-        activateAllCubes(); // This already shows the notification
-        // REMOVED: showNotification('🎮 University programs unlocked!', true);
-      }, 500); // Small delay to ensure cubes are fully initialized
+        activateAllCubes();
+      }, 500);
     }
-    
     console.log('5️⃣ Populating carousel...');
     await populateCarousel();
     console.log('6️⃣ Starting animation...');
     animate();
     console.log('7️⃣ Starting auth monitoring...');
     startAuthStatusPolling();
-    
     const leftBtn = document.getElementById('carouselScrollLeft');
     const rightBtn = document.getElementById('carouselScrollRight');
     if (leftBtn) leftBtn.onclick = () => scrollCarousel(-1);
