@@ -1,8 +1,3 @@
-// =============
-// ==  PART 1: SETUP, AUTH, AND UI
-// =============
-
-// === Authentication & Redirection ===
 function redirectToWix() { /* no-op on external globe */ }
 async function requireLoginAndGo() { return; }
 // No-op placeholders replacing custom SSO usage in front-end
@@ -115,6 +110,7 @@ function startAuthStatusPolling() {
     if (!oldStatus && authStatus.isAuthenticated) {
       console.log('🎉 User authentication detected - activating cubes!');
       activateAllCubes(); // This already shows the notification
+      // REMOVED: showNotification('Congratulations! All university programs are now available.', true);
     }
     
     // Optional: Check if user logged out
@@ -130,96 +126,142 @@ function startAuthStatusPolling() {
 // IMPROVED SHOW INFO PANEL WITH SAFER AUTHENTICATION CHECK
 async function showInfoPanel(data) {
   console.log('🎯 showInfoPanel called with:', data);
+  console.log('🔗 University:', data?.university);
+  console.log('🔗 Program Link:', data?.programLink);
+  console.log('🔗 Apply Link:', data?.applyLink);
+  
   if (!data || data.university === 'Unassigned') {
     console.log('❌ No valid university data');
     return;
   }
 
-  // This function now builds and displays a full panel.
-  const uniData = allUniversityContent.filter(item => item && item.university === data.university);
-  if (uniData.length === 0) {
-    console.log('❌ No university content found');
-    return;
-  }
+  // REMOVED: Redundant auth check - already checked in onCanvasMouseUp
+  console.log('✅ User authenticated, opening program link');
   
-  const mainErasmusLink = uniData[0].erasmusLink;
-  document.getElementById('infoPanelMainCard').innerHTML = `
-    <div class="main-card-details">
-      <img src="${uniData[0].logo}" alt="${data.university}">
-      <h3>${data.university}</h3>
-    </div>
-    <div class="main-card-actions">
-      ${mainErasmusLink ? `<a href="${mainErasmusLink}" target="_blank" class="partner-cta erasmus">Erasmus Info</a>` : ''}
+  // Open the university/program link directly
+  const linkToOpen = data.programLink || data.applyLink;
+  if (linkToOpen && linkToOpen !== '#') {
+    console.log(`🔗 Opening link: ${linkToOpen}`);
+    window.open(linkToOpen, '_blank');
+  } else {
+    console.log('❌ No valid link found for this program');
+    showNotification('No link available for this program', false);
+  }
+}
+
+
+// ---------- If later you allow panel post-login, remove the return above and use builder below ----------
+/*
+const uniData = allUniversityContent.filter(item => item && item.university === data.university);
+if (uniData.length === 0) {
+  console.log('❌ No university content found');
+  return;
+}
+const mainErasmusLink = uniData[0].erasmusLink;
+document.getElementById('infoPanelMainCard').innerHTML = `
+  <div class="main-card-details">
+    <img src="${uniData.logo}" alt="${data.university}">
+    <h3>${data.university}</h3>
+  </div>
+  <div class="main-card-actions">
+    ${mainErasmusLink ? `<a href="${mainErasmusLink}" target="_blank" class="partner-cta erasmus">Erasmus Info</a>` : ''}
+  </div>
+`;
+document.getElementById('infoPanelSubcards').innerHTML = '';
+uniData.forEach(item => {
+  if (!item) return;
+  const infoEnabled = item.programLink && item.programLink !== '#';
+  const applyEnabled = item.applyLink && item.applyLink !== '#';
+  const subcardHTML = `
+    <div class="subcard">
+      <div class="subcard-info">
+        <img src="${item.logo}" alt="">
+        <h4>${item.programName.replace(/\\n/g, ' ')}</h4>
+      </div>
+      <div class="subcard-buttons">
+        <button class="partner-cta info" ${infoEnabled ? '' : 'disabled'} data-href="${infoEnabled ? item.programLink : ''}">University Info</button>
+        <button class="partner-cta apply" ${applyEnabled ? '' : 'disabled'} data-return="/members/home">Apply Now</button>
+      </div>
     </div>
   `;
-  
-  document.getElementById('infoPanelSubcards').innerHTML = '';
-  uniData.forEach(item => {
-    if (!item) return;
-    const infoEnabled = item.programLink && item.programLink !== '#';
-    const applyEnabled = item.applyLink && item.applyLink !== '#';
-    const subcardHTML = `
-      <div class="subcard">
-        <div class="subcard-info">
-          <img src="${item.logo}" alt="">
-          <h4>${item.programName.replace(/\\n/g, ' ')}</h4>
-        </div>
-        <div class="subcard-buttons">
-          <button class="partner-cta info" ${infoEnabled ? '' : 'disabled'} data-href="${infoEnabled ? item.programLink : ''}">University Info</button>
-          <button class="partner-cta apply" ${applyEnabled ? '' : 'disabled'} data-return="/members/home">Apply Now</button>
-        </div>
-      </div>
-    `;
-    document.getElementById('infoPanelSubcards').insertAdjacentHTML('beforeend', subcardHTML);
+  document.getElementById('infoPanelSubcards').insertAdjacentHTML('beforeend', subcardHTML);
+});
+const container = document.getElementById('infoPanelSubcards');
+container.querySelectorAll('.partner-cta.info').forEach(btn => {
+  btn.addEventListener('click', e => {
+    const href = e.currentTarget.getAttribute('data-href');
+    if (href) window.open(href, '_blank');
   });
-  
-  const container = document.getElementById('infoPanelSubcards');
-  container.querySelectorAll('.partner-cta.info').forEach(btn => {
-    btn.addEventListener('click', e => {
-      const href = e.currentTarget.getAttribute('data-href');
-      if (href) window.open(href, '_blank');
-    });
+});
+container.querySelectorAll('.partner-cta.apply').forEach(btn => {
+  btn.addEventListener('click', e => {
+    window.top.location.href = 'https://www.globaleducarealliance.com/home?promptLogin=1';
   });
-  container.querySelectorAll('.partner-cta.apply').forEach(btn => {
-    btn.addEventListener('click', e => {
-      window.top.location.href = 'https://www.globaleducarealliance.com/home?promptLogin=1';
-    });
-  });
-  
-  document.getElementById('infoPanelOverlay').style.display = 'flex';
-  console.log('✅ Info panel displayed with both university and application links');
-}
+});
+document.getElementById('infoPanelOverlay').style.display = 'flex';
+console.log('✅ Info panel displayed with both university and application links');
+*/
 
 function hideInfoPanel() {
   document.getElementById('infoPanelOverlay').style.display = 'none';
 }
 
+// Add info panel styles and HTML (kept in case you re-enable the panel)
 function addInfoPanelStyles() {
   const style = document.createElement('style');
   style.textContent = `
     #infoPanelOverlay {
-      display: none; position: fixed; top: 0; left: 0;
-      width: 100%; height: 100%;
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
       background: rgba(0,0,0,0.8);
       z-index: 10000;
-      justify-content: center; align-items: center;
+      justify-content: center;
+      align-items: center;
     }
     .info-panel {
-      background: white; padding: 20px;
-      border-radius: 10px; max-width: 600px;
-      max-height: 80vh; overflow-y: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 600px;
+      max-height: 80vh;
+      overflow-y: auto;
     }
     .partner-cta {
-      padding: 8px 16px; margin: 5px;
-      border: none; border-radius: 5px;
-      background: #007bff; color: white;
+      padding: 8px 16px;
+      margin: 5px;
+      border: none;
+      border-radius: 5px;
+      background: #007bff;
+      color: white;
       cursor: pointer;
     }
-    .partner-cta.disabled { background: #ccc; cursor: not-allowed; }
-    .partner-cta:hover:not(.disabled) { background: #0056b3; }
-    .subcard { border: 1px solid #ddd; padding: 10px; margin: 10px 0; border-radius: 5px; }
-    .subcard-info img { width: 40px; height: 40px; margin-right: 10px; }
-    .main-card-details img { width: 60px; height: 60px; margin-right: 15px; }
+    .partner-cta.disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    .partner-cta:hover:not(.disabled) {
+      background: #0056b3;
+    }
+    .subcard {
+      border: 1px solid #ddd;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+    }
+    .subcard-info img {
+      width: 40px;
+      height: 40px;
+      margin-right: 10px;
+    }
+    .main-card-details img {
+      width: 60px;
+      height: 60px;
+      margin-right: 15px;
+    }
   `;
   document.head.appendChild(style);
   const overlay = document.createElement('div');
@@ -235,6 +277,7 @@ function addInfoPanelStyles() {
   document.body.appendChild(overlay);
 }
 
+// Initialize info panel scaffolding on load (safe to keep)
 document.addEventListener('DOMContentLoaded', addInfoPanelStyles);
 
 
@@ -268,7 +311,14 @@ const mouse = new THREE.Vector2();
 const mouseDownPos = new THREE.Vector2();
 const clock = new THREE.Clock();
 let countryConfigs = [];
-let europeContent = [], newThailandContent = [], canadaContent = [], ukContent = [], usaContent = [], indiaContent = [], singaporeContent = [], malaysiaContent = [];
+let europeContent = [];
+let newThailandContent = [];
+let canadaContent = [];
+let ukContent = [];
+let usaContent = [];
+let indiaContent = [];
+let singaporeContent = [];
+let malaysiaContent = [];
 let allUniversityContent = [];
 let countryPrograms = {};
 let globalContentMap = {};
@@ -284,52 +334,84 @@ async function fetchCarouselData() {
     const response = await fetch('/api/carousel/data');
     if (response.ok) {
       carouselData = await response.json();
+      console.log('📊 Carousel data loaded:', carouselData);
       return true;
-    } else { throw new Error('Carousel fetch failed'); }
+    }
   } catch (error) {
     console.log('Using fallback carousel data');
     carouselData = [
       { category: "UG", img: "https://static.wixstatic.com/media/d77f36_deddd99f45db4a55953835f5d3926246~mv2.png", title: "Undergraduate", text: "Bachelor-level opportunities." },
       { category: "PG", img: "https://static.wixstatic.com/media/d77f36_ae2a1e8b47514fb6b0a995be456a9eec~mv2.png", title: "Postgraduate", text: "Master's & advanced ." },
+      { category: "Diploma", img: "https://static.wixstatic.com/media/d77f36_e8f60f4350304ee79afab3978a44e307~mv2.png", title: "Diploma", text: "Professional & foundation." },
+      { category: "Mobility", img: "https://static.wixstatic.com/media/d77f36_1118d15eee5a45f2a609c762d077857e~mv2.png", title: "Semester Abroad", text: "Exchange & mobility." },
+      { category: "Upskilling", img: "https://static.wixstatic.com/media/d77f36_d8d9655ba23f4849abba7d09ddb12092~mv2.png", title: "Upskilling", text: "Short-term training." },
+      { category: "Research", img: "https://static.wixstatic.com/media/d77f36_aa9eb498381d4adc897522e38301ae6f~mv2.jpg", title: "Research", text: "Opportunities & links." }
     ];
     return false;
   }
 }
 async function fetchDataFromBackend() {
   try {
+    console.log('🔄 Fetching data from server...');
     const response = await fetch('/api/globe-data');
     if (response.ok) {
       const data = await response.json();
-      Object.assign(globalContentMap, {
-        'Europe': data.europeContent || [], 'Thailand': data.newThailandContent || [], 'Canada': data.canadaContent || [], 'UK': data.ukContent || [],
-        'USA': data.usaContent || [], 'India': data.indiaContent || [], 'Singapore': data.singaporeContent || [], 'Malaysia': data.malaysiaContent || []
-      });
-      allUniversityContent = Object.values(globalContentMap).flat();
+      console.log('✅ Server data received:', data);
+      europeContent = data.europeContent || [];
+      newThailandContent = data.newThailandContent || [];
+      canadaContent = data.canadaContent || [];
+      ukContent = data.ukContent || [];
+      usaContent = data.usaContent || [];
+      indiaContent = data.indiaContent || [];
+      singaporeContent = data.singaporeContent || [];
+      malaysiaContent = data.malaysiaContent || [];
+      countryPrograms = data.countryPrograms || {};
       countryConfigs = data.countryConfigs || [];
+      globalContentMap = {
+        'Europe': europeContent, 'Thailand': newThailandContent, 'Canada': canadaContent, 'UK': ukContent,
+        'USA': usaContent, 'India': indiaContent, 'Singapore': singaporeContent, 'Malaysia': malaysiaContent
+      };
+      allUniversityContent = [
+        ...europeContent, ...newThailandContent, ...canadaContent, ...ukContent,
+        ...usaContent, ...indiaContent, ...singaporeContent, ...malaysiaContent
+      ];
+      console.log('✅ Data loaded successfully!');
       return true;
-    } else { throw new Error('Globe data fetch failed'); }
+    }
   } catch (error) {
-    console.error('Error fetching data, using fallback:', error);
+    console.error('❌ Error fetching data:', error);
+    // Fallback: minimal scaffolding
     countryConfigs = [
       {"name": "India", "lat": 22, "lon": 78, "color": 0xFF9933}, {"name": "Europe", "lat": 48.8566, "lon": 2.3522, "color": 0x0000FF},
+      {"name": "UK", "lat": 53, "lon": -0.1276, "color": 0x191970}, {"name": "Singapore", "lat": 1.35, "lon": 103.8, "color": 0xff0000},
+      {"name": "Malaysia", "lat": 4, "lon": 102, "color": 0x0000ff}, {"name": "Thailand", "lat": 13.7563, "lon": 100.5018, "color": 0xffcc00},
+      {"name": "Canada", "lat": 56.1304, "lon": -106.3468, "color": 0xff0000}, {"name": "USA", "lat": 39.8283, "lon": -98.5795, "color": 0x003366}
     ];
-    return false;
+    europeContent = Array(27).fill(null); newThailandContent = Array(27).fill(null); canadaContent = Array(27).fill(null);
+    ukContent = Array(27).fill(null); usaContent = Array(27).fill(null); indiaContent = Array(27).fill(null);
+    singaporeContent = Array(27).fill(null); malaysiaContent = Array(27).fill(null);
   }
+  return false;
 }
 
 // =======
-// PROGRAM FILTERING / HIGHLIGHTING
+// PROGRAM FILTERING / HIGHLIGHTING (unchanged)
 // =======
 function getMatchingCountries(category) {
   if (!globalContentMap || Object.keys(globalContentMap).length === 0) { return []; }
   const matcherMap = {
     'ug': content => content.some(p => p && /bachelor|bba|undergraduate|bsn|degree/i.test(p.programName)),
     'pg': content => content.some(p => p && /master|mba|postgraduate|ms|msn/i.test(p.programName)),
+    'mobility': content => content.some(p => p && /exchange|abroad|mobility|study/i.test(p.programName)),  
+    'diploma': content => content.some(p => p && /diploma/i.test(p.programName)),
+    'upskilling': content => content.some(p => p && /cyber|data|tech|ux|upskill/i.test(p.programName)),
+    'research': content => content.some(p => p && /research|phd|doctor/i.test(p.programName))
   };
   const matcher = matcherMap[category.toLowerCase()] || (() => false);
   return Object.keys(globalContentMap).filter(country => matcher(globalContentMap[country]));
 }
 function highlightCountriesByProgram(level) {
+  console.log('🌍 Highlighting countries for program:', level);
   const matchingCountries = getMatchingCountries(level);
   Object.entries(countryBlocks).forEach(([country, group]) => {
     const isActive = matchingCountries.includes(country);
@@ -338,18 +420,23 @@ function highlightCountriesByProgram(level) {
     group.scale.setScalar(isActive ? 1.2 : 1.0);
     const labelItem = countryLabels.find(item => item.block === group);
     if (labelItem) { labelItem.label.material.color.set(isActive ? 0xffff00 : 0xffffff); }
+    if (typeof TWEEN !== 'undefined' && isActive) {
+      new TWEEN.Tween(group.material).to({ emissiveIntensity: 2.0 }, 300).yoyo(true).repeat(2).start();
+    }
   });
+  console.log(`✨ Highlighted ${matchingCountries.length} countries:`, matchingCountries);
 }
 function highlightNeuralCubesByProgram(selectedCategory) {
+  console.log(`🌍 Global neural cube filtering for: ${selectedCategory}`);
   const category = selectedCategory.toLowerCase();
   const matchingCountries = getMatchingCountries(category);
   Object.keys(neuralCubeMap).forEach(countryName => {
     const cube = neuralCubeMap[countryName];
-    if (cube) { new TWEEN.Tween(cube.scale).to({ x: 1.0, y: 1.0, z: 1.0 }, 300).start(); }
+    if (cube && typeof TWEEN !== 'undefined') { new TWEEN.Tween(cube.scale).to({ x: 1.0, y: 1.0, z: 1.0 }, 300).start(); }
   });
   matchingCountries.forEach(countryName => {
     const cube = neuralCubeMap[countryName];
-    if (cube) { new TWEEN.Tween(cube.scale).to({ x: 1.3, y: 1.3, z: 1.3 }, 500).start(); }
+    if (cube && typeof TWEEN !== 'undefined') { new TWEEN.Tween(cube.scale).to({ x: 1.3, y: 1.3, z: 1.3 }, 500).start(); }
   });
   cubes.forEach(cube => {
     if (cube.children && cube.children.length > 10) {
@@ -359,12 +446,17 @@ function highlightNeuralCubesByProgram(selectedCategory) {
         let shouldHighlight = false;
         if (category === "ug") { shouldHighlight = /ug|undergraduate|degree|bachelor|bsn|bba|business school|academic/i.test(prog); }
         else if (category === "pg") { shouldHighlight = /pg|postgraduate|master|msc|ma|msn|mba|phd|public policy|journalism|prospectus/i.test(prog); }
-        subCube.material.emissiveIntensity = shouldHighlight ? 1.5 : 0.2;
-        subCube.material.opacity = shouldHighlight ? 1.0 : 0.25;
-        subCube.scale.setScalar(shouldHighlight ? 1.3 : 1.0);
+        else if (category === "diploma") { shouldHighlight = /diploma/i.test(prog); }
+        else if (category === "mobility") { shouldHighlight = /exchange|mobility|semester|abroad|short|global/i.test(prog); }
+        else if (category === "upskilling") { shouldHighlight = /upskill|certificat|short|cyber|data|stack|design/i.test(prog); }
+        else if (category === "research") { shouldHighlight = !!subCube.userData.researchLink; }
+        else if (category === "language") { shouldHighlight = /lang/i.test(prog); }
+        if (shouldHighlight) { subCube.material.emissiveIntensity = 1.5; subCube.material.opacity = 1.0; subCube.scale.setScalar(1.3); }
+        else { subCube.material.emissiveIntensity = 0.2; subCube.material.opacity = 0.25; subCube.scale.setScalar(1.0); }
       });
     }
   });
+  console.log(`✨ Scaled ${matchingCountries.length} neural cubes for ${selectedCategory}`);
 }
 
 // =======
@@ -373,17 +465,18 @@ function highlightNeuralCubesByProgram(selectedCategory) {
 async function populateCarousel() {
   await fetchCarouselData();
   const container = document.getElementById('carouselContainer');
-  if (!container) return;
+  if (!container) { console.log('❌ Carousel container not found'); return; }
   container.innerHTML = '';
   carouselData.forEach(item => {
-    container.insertAdjacentHTML('beforeend', `
-      <a href="#" class="carousel-card" data-category="${item.category}">
-        <img src="${item.img}" alt="${item.title}"/>
-        <div class="carousel-card-content">
-          <div class="carousel-card-title">${item.title}</div>
-          <div class="carousel-card-text">${item.text}</div>
-        </div>
-      </a>`
+    container.insertAdjacentHTML(
+      'beforeend',
+      `<a href="#" class="carousel-card" data-category="${item.category}">
+         <img src="${item.img}" alt="${item.title}"/>
+         <div class="carousel-card-content">
+           <div class="carousel-card-title">${item.title}</div>
+           <div class="carousel-card-text">${item.text}</div>
+         </div>
+       </a>`
     );
   });
   document.querySelectorAll('.carousel-card').forEach(card => {
@@ -392,6 +485,7 @@ async function populateCarousel() {
       document.querySelectorAll('.carousel-card').forEach(c => c.classList.remove('selected'));
       this.classList.add('selected');
       const category = this.dataset.category;
+      console.log(`🌍 Global filtering activated for: ${category}`);
       highlightCountriesByProgram(category);
       highlightNeuralCubesByProgram(category);
     });
@@ -401,6 +495,7 @@ async function populateCarousel() {
     defaultCard.classList.add('selected');
     setTimeout(() => { highlightCountriesByProgram('UG'); highlightNeuralCubesByProgram('UG'); }, 1000);
   }
+  console.log('✅ Carousel populated successfully');
 }
 function scrollCarousel(direction) {
   const container = document.getElementById('carouselContainer');
@@ -411,25 +506,38 @@ function scrollCarousel(direction) {
 }
 
 // =======
-// CONTROL TOGGLES
-// =======
+// ===
+// CONTROL TOGGLES (Corrected and Final Version)
+// ===
+
+// This single function controls whether the user is in "rotate" or "pan" mode.
+// It does NOT affect the automatic rotation.
 function setInteractionMode(mode) {
   if (!controls) return;
+
   const rotateBtn = document.getElementById('btn-rotate');
   const panBtn = document.getElementById('btn-pan');
   const canvas = renderer.domElement;
+
   if (mode === 'ROTATE') {
+    // Set controls to ROTATE mode
     controls.mouseButtons.LEFT = THREE.MOUSE.ROTATE;
     controls.touches.ONE = THREE.TOUCH.ROTATE;
-    if (rotateBtn) rotateBtn.style.background = '#a46bfd';
-    if (panBtn) panBtn.style.background = 'rgba(0,0,0,0.8)';
-    canvas.style.cursor = 'default';
+
+    // Set button styles for ROTATE mode
+    if (rotateBtn) rotateBtn.style.background = '#a46bfd'; // Active purple color
+    if (panBtn) panBtn.style.background = 'rgba(0,0,0,0.8)'; // Inactive color
+    canvas.style.cursor = 'default'; // Default cursor for rotation
+
   } else if (mode === 'PAN') {
+    // Set controls to PAN mode
     controls.mouseButtons.LEFT = THREE.MOUSE.PAN;
     controls.touches.ONE = THREE.TOUCH.PAN;
-    if (rotateBtn) rotateBtn.style.background = 'rgba(0,0,0,0.8)';
-    if (panBtn) panBtn.style.background = '#ffa500';
-    canvas.style.cursor = 'grab';
+
+    // Set button styles for PAN mode
+    if (rotateBtn) rotateBtn.style.background = 'rgba(0,0,0,0.8)'; // Inactive color
+    if (panBtn) panBtn.style.background = '#ffa500'; // Active orange color
+    canvas.style.cursor = 'grab'; // "grab" cursor for panning
   }
 }
 
@@ -437,6 +545,7 @@ function setInteractionMode(mode) {
 // Three.js initialization
 // =======
 function initializeThreeJS() {
+  console.log('🔄 Initializing Three.js...');
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.001, 1000);
   camera.position.z = 3.5;
@@ -448,10 +557,15 @@ function initializeThreeJS() {
   scene.add(globeGroup);
   globeGroup.add(neuronGroup);
   controls = new THREE.OrbitControls(camera, renderer.domElement);
-  Object.assign(controls, {
-    enableDamping: true, dampingFactor: 0.1, enablePan: true, autoRotate: true,
-    autoRotateSpeed: 0.6, minDistance: 1.5, maxDistance: 10.0
-  });
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.1;
+  controls.enablePan = true;
+  controls.autoRotate = true;
+  controls.autoRotateSpeed = 0.6;
+  controls.minDistance = 0.01;
+  controls.maxDistance = 15.0;
+  controls.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN };
+  controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
   transformControls = new THREE.TransformControls(camera, renderer.domElement);
   transformControls.setMode('translate');
   transformControls.addEventListener('dragging-changed', event => { if (controls) controls.enabled = !event.value; });
@@ -461,6 +575,9 @@ function initializeThreeJS() {
   const pointLight = new THREE.PointLight(0xffffff, 1.5);
   pointLight.position.set(5, 5, 5);
   scene.add(pointLight);
+  renderer.domElement.addEventListener('mousedown', () => { isInteracting = true; clearTimeout(hoverTimeout); if (isPanMode) renderer.domElement.style.cursor = 'grabbing'; });
+  renderer.domElement.addEventListener('mouseup', () => { hoverTimeout = setTimeout(() => { isInteracting = false; }, 200); if (isPanMode) renderer.domElement.style.cursor = 'grab'; });
+  console.log('✅ Three.js initialized successfully');
 }
 function updateCanvasSize() {
   const headerHeight = document.querySelector('.header-ui-bar')?.offsetHeight || 0;
@@ -477,9 +594,20 @@ function updateCanvasSize() {
 // =======
 // UTILITIES
 // =======
+function getColorByData(data) {
+  const baseHue = data.domain * 30 % 360;
+  const lightness = 50 + data.engagement * 25;
+  const saturation = 70;
+  const riskShift = data.risk > 0.5 ? 0 : 120;
+  const hue = (baseHue + riskShift) % 360;
+  const color = new THREE.Color(`hsl(${hue}, ${saturation}%, ${lightness}%)`);
+  color.multiplyScalar(data.confidence);
+  return color;
+}
 function createTexture(text, logoUrl, bgColor = '#003366') {
   const canvas = document.createElement('canvas');
-  canvas.width = 256; canvas.height = 256;
+  canvas.width = 256;
+  canvas.height = 256;
   const ctx = canvas.getContext('2d');
   ctx.fillStyle = bgColor;
   ctx.fillRect(0, 0, 256, 256);
@@ -487,7 +615,7 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
   ctx.textAlign = 'center';
   const texture = new THREE.CanvasTexture(canvas);
   function drawText() {
-    const lines = text.split('\\n');
+    const lines = text.split('\n');
     const fontSize = lines.length > 1 ? 28 : 32;
     ctx.font = `bold ${fontSize}px Arial`;
     let y = 128 + (lines.length > 1 ? 0 : 10);
@@ -515,17 +643,18 @@ function createToggleFunction(cubeName) {
       'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded
     };
     const setExplosionStateMap = {
-      'Europe': v => isEuropeCubeExploded = v, 'Thailand': v => isNewThailandCubeExploded = v, 'Canada': v => isCanadaCubeExploded = v,
-      'UK': v => isUkCubeExploded = v, 'USA': v => isUsaCubeExploded = v, 'India': v => isIndiaCubeExploded = v,
-      'Singapore': v => isSingaporeCubeExploded = v, 'Malaysia': v => isMalaysiaCubeExploded = v
+      'Europe': (v) => isEuropeCubeExploded = v, 'Thailand': (v) => isNewThailandCubeExploded = v,
+      'Canada': (v) => isCanadaCubeExploded = v, 'UK': (v) => isUkCubeExploded = v,
+      'USA': (v) => isUsaCubeExploded = v, 'India': (v) => isIndiaCubeExploded = v,
+      'Singapore': (v) => isSingaporeCubeExploded = v, 'Malaysia': (v) => isMalaysiaCubeExploded = v
     };
     const cubeMap = {
-      'Europe': europeCube, 'Thailand': newThailandCube, 'Canada': canadaCube, 'UK': ukCube, 'USA': usaCube,
-      'India': indiaCube, 'Singapore': singaporeCube, 'Malaysia': malaysiaCube
+      'Europe': europeCube, 'Thailand': newThailandCube, 'Canada': canadaCube,
+      'UK': ukCube, 'USA': usaCube, 'India': indiaCube, 'Singapore': singaporeCube, 'Malaysia': malaysiaCube
     };
     const subCubeMap = {
-      'Europe': europeSubCubes, 'Thailand': newThailandSubCubes, 'Canada': canadaSubCubes, 'UK': ukSubCubes,
-      'USA': usaSubCubes, 'India': indiaSubCubes, 'Singapore': singaporeSubCubes, 'Malaysia': malaysiaSubCubes
+      'Europe': europeSubCubes, 'Thailand': newThailandSubCubes, 'Canada': canadaSubCubes,
+      'UK': ukSubCubes, 'USA': usaSubCubes, 'India': indiaSubCubes, 'Singapore': singaporeSubCubes, 'Malaysia': malaysiaSubCubes
     };
     const explodedPosMap = {
       'Europe': explodedPositions, 'Thailand': newThailandExplodedPositions, 'Canada': canadaExplodedPositions,
@@ -563,10 +692,10 @@ const toggleFunctionMap = {
   'Singapore': createToggleFunction('Singapore'), 'Malaysia': createToggleFunction('Malaysia')
 };
 
-
-// =============
+// =================================================================
 // == FULL CORRECTED PART 2
-// =============
+// =================================================================
+
 // ===
 // ===
 // CUBE CREATION (with "Apply Now" highlight)
@@ -580,7 +709,10 @@ function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
         const item = content[contentIdx];
         let material, userData;
         if (item) {
+          // --- THIS IS THE VISUAL CHANGE ---
+          // If an applyLink exists (and isn't just a placeholder), set the color to purple.
           const cubeColor = (item.applyLink && item.applyLink !== '#') ? '#a46bfd' : color; 
+          
           material = createTexture(item.programName, item.logo, cubeColor);
           userData = item;
         } else {
@@ -608,21 +740,27 @@ function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
       }
   return cubeObject;
 }
+
+
 // CORRECTED: Creates a Mesh for the membrane effect
 function createNeuralNetwork() {
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.Float32BufferAttribute([], 3));
+  
   const material = new THREE.MeshBasicMaterial({
     color: 0x00BFFF,
     side: THREE.DoubleSide,
     transparent: true,
-    opacity: 0.1,
+    opacity: 0.1, // You can increase this (e.g., to 0.15) if it's too subtle
     blending: THREE.AdditiveBlending,
     depthWrite: false
   });
+
   neuralNetworkLines = new THREE.Mesh(geometry, material);
   globeGroup.add(neuralNetworkLines);
 }
+
+
 function latLonToVector3(lat, lon, radius) {
   const phi = (90 - lat) * (Math.PI / 180);
   const theta = (lon + 180) * (Math.PI / 180);
@@ -631,8 +769,12 @@ function latLonToVector3(lat, lon, radius) {
   const y = (radius * Math.cos(phi));
   return new THREE.Vector3(x, y, z);
 }
+
 function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
-  const rainbowExtendedColors = [0xff0000, 0xff7f00, 0xffff00, 0x00ff00, 0x0000ff, 0x4b0082, 0x8a2be2, 0x9400d3, 0x7f00ff];
+  const rainbowExtendedColors = [
+    0xff0000, 0xff7f00, 0xffff00, 0x00ff00, 0x0000ff, 
+    0x4b0082, 0x8a2be2, 0x9400d3, 0x7f00ff
+  ];
   const color = rainbowExtendedColors[arcIndex % rainbowExtendedColors.length];
   const start = new THREE.Vector3(); fromGroup.getWorldPosition(start);
   const end = new THREE.Vector3(); toGroup.getWorldPosition(end);
@@ -655,6 +797,7 @@ function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
   globeGroup.add(path);
   return path;
 }
+
 function animateArcParticles(arc) {
   const curve = arc.userData.curve;
   if (!curve) return;
@@ -674,16 +817,29 @@ function animateArcParticles(arc) {
     arcParticles.push(particle);
   }
 }
+// Modified: drawAllConnections now includes additional arcs (India-Canada, India-Europe, Canada-USA)
 function drawAllConnections() {
+  // Original pairs (Thailand to others)
   const countryNames = ["India", "Europe", "UK", "Canada", "USA", "Singapore", "Malaysia"];
   const originalPairs = countryNames.map(country => ["Thailand", country]);
-  const additionalPairs = [["India", "Canada"], ["India", "Europe"], ["Canada", "USA"]];
+
+  // New requested pairs
+  const additionalPairs = [
+    ["India", "Canada"],
+    ["India", "Europe"],
+    ["Canada", "USA"]
+  ];
+
+  // Combine all pairs
   const allPairs = [...originalPairs, ...additionalPairs];
+
   arcPaths = allPairs.map(([from, to], index) => {
     const fromBlock = countryBlocks[from];
     const toBlock = countryBlocks[to];
     if (fromBlock && toBlock) return createConnectionPath(fromBlock, toBlock, index);
   }).filter(Boolean);
+
+  // New: Initialize particles for each arc
   arcPaths.forEach(animateArcParticles);
 }
 // ===
@@ -702,6 +858,7 @@ function closeAllExploded() {
   if (isSingaporeCubeExploded) toggleFunctionMap['Singapore']();
   if (isMalaysiaCubeExploded) toggleFunctionMap['Malaysia']();
 }
+// THE KEY CLICK HANDLER — keep exploration public; gate subcube details
 function onCanvasMouseUp(event) {
   if (transformControls.dragging) return;
   const deltaX = Math.abs(event.clientX - mouseDownPos.x);
@@ -716,19 +873,27 @@ function onCanvasMouseUp(event) {
   const intersects = raycaster.intersectObjects(allClickableObjects, true);
   if (intersects.length === 0) { closeAllExploded(); return; }
   const clickedObject = intersects[0].object;
+  // COUNTRY BLOCK CLICKED — explode (no auth)
   if (clickedObject.userData.countryName) {
     const countryName = clickedObject.userData.countryName;
     const correspondingNeuralCube = neuralCubeMap[countryName];
     const toggleFunc = toggleFunctionMap[countryName];
     if (correspondingNeuralCube && toggleFunc) {
-      const explosionStateMap = {'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded, 'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded, 'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded};
+      const explosionStateMap = {
+        'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded,
+        'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded,
+        'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded
+      };
       const anyExploded = Object.values(explosionStateMap).some(state => state);
       closeAllExploded();
-      if (typeof TWEEN !== 'undefined') { new TWEEN.Tween(correspondingNeuralCube.scale).to({ x: 1.5, y: 1.5, z: 1.5 }, 200).yoyo(true).repeat(1).start(); }
+      if (typeof TWEEN !== 'undefined') {
+        new TWEEN.Tween(correspondingNeuralCube.scale).to({ x: 1.5, y: 1.5, z: 1.5 }, 200).yoyo(true).repeat(1).start();
+      }
       setTimeout(() => { toggleFunc(); }, anyExploded ? 810 : 400);
     }
     return;
   }
+  // SUBCUBE or child clicked
   let parent = clickedObject;
   let neuralName = null;
   let clickedSubCubeLocal = clickedObject.userData.isSubCube ? clickedObject : null;
@@ -736,7 +901,11 @@ function onCanvasMouseUp(event) {
     if (parent.userData.neuralName) { neuralName = parent.userData.neuralName; break; }
     parent = parent.parent;
   }
-  const explosionStateMap = {'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded, 'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded, 'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded};
+  const explosionStateMap = {
+    'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded,
+    'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded,
+    'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded
+  };
   if (neuralName) {
     const isExploded = explosionStateMap[neuralName];
     const toggleFunc = toggleFunctionMap[neuralName];
@@ -747,6 +916,7 @@ function onCanvasMouseUp(event) {
         window.open('https://www.globaleducarealliance.com/home?promptLogin=1', '_blank');
       }
     } else {
+      // Just explode/collapse
       const anyExploded = Object.values(explosionStateMap).some(state => state);
       closeAllExploded();
       setTimeout(() => toggleFunc(), anyExploded ? 810 : 0);
@@ -755,6 +925,7 @@ function onCanvasMouseUp(event) {
     closeAllExploded(); 
   }
 }
+// Pan mode wrappers
 function onCanvasMouseDownPan(event) {
   mouseDownPos.set(event.clientX, event.clientY);
   if (isPanMode) {
@@ -797,13 +968,6 @@ function setupEventListeners() {
   renderer.domElement.addEventListener('mousemove', onCanvasMouseMovePan);
   renderer.domElement.addEventListener('mouseup', onCanvasMouseUpPan);
   renderer.domElement.addEventListener('mouseenter', () => { if (isPanMode) { renderer.domElement.style.cursor = 'grab'; } });
-  
-  // *** NEW: Add the global mousemove listener for the hover card ***
-  window.addEventListener('mousemove', (event) => {
-    const canvasRect = renderer.domElement.getBoundingClientRect();
-    mouse.x = ((event.clientX - canvasRect.left) / canvasRect.width) * 2 - 1;
-    mouse.y = -((event.clientY - canvasRect.top) / canvasRect.height) * 2 + 1;
-  });
 
   const panSpeed = 0.1;
   const btnUp = document.getElementById('btn-up'); if (btnUp) { btnUp.addEventListener('click', () => { controls.target.y += panSpeed; controls.update(); }); }
@@ -812,9 +976,18 @@ function setupEventListeners() {
   const btnRight = document.getElementById('btn-right'); if (btnRight) { btnRight.addEventListener('click', () => { controls.target.x += panSpeed; controls.update(); }); }
   const btnZoomIn = document.getElementById('btn-zoom-in'); if (btnZoomIn) { btnZoomIn.addEventListener('click', () => { camera.position.multiplyScalar(0.9); controls.update(); }); }
   const btnZoomOut = document.getElementById('btn-zoom-out'); if (btnZoomOut) { btnZoomOut.addEventListener('click', () => { camera.position.multiplyScalar(1.1); controls.update(); }); }
-  const btnRotate = document.getElementById('btn-rotate'); if (btnRotate) { btnRotate.addEventListener('click', () => setInteractionMode('ROTATE')); }
-  const btnPan = document.getElementById('btn-pan'); if (btnPan) { btnPan.addEventListener('click', () => setInteractionMode('PAN')); }
+
+  // --- START: CORRECTED BUTTON LOGIC ---
+  const btnRotate = document.getElementById('btn-rotate');
+  if (btnRotate) { btnRotate.addEventListener('click', () => setInteractionMode('ROTATE')); }
+  
+  const btnPan = document.getElementById('btn-pan');
+  if (btnPan) { btnPan.addEventListener('click', () => setInteractionMode('PAN')); }
+
+  // Set the default mode to ROTATE when the application starts
   setInteractionMode('ROTATE');
+
+  // This pause button ONLY controls automatic rotation.
   const pauseButton = document.getElementById("pauseButton");
   if (pauseButton) {
     pauseButton.addEventListener("click", () => {
@@ -823,6 +996,8 @@ function setupEventListeners() {
       pauseButton.textContent = isRotationPaused ? "Resume Rotation" : "Pause Rotation";
     });
   }
+  // --- END: CORRECTED BUTTON LOGIC ---
+
   const pauseCubesButton = document.getElementById("pauseCubesButton");
   if (pauseCubesButton) {
     pauseCubesButton.addEventListener("click", () => {
@@ -875,6 +1050,7 @@ function setupEventListeners() {
     }
     scrollLockButton.addEventListener('click', () => { setGlobeInteraction(!controls.enabled); });
   }
+
   document.addEventListener('keydown', (event) => {
     if (!controls) return;
     switch(event.code) {
@@ -884,11 +1060,15 @@ function setupEventListeners() {
       case 'ArrowRight': case 'KeyD': event.preventDefault(); controls.target.x += 0.1; controls.update(); break;
       case 'Equal': case 'NumpadAdd': event.preventDefault(); camera.position.multiplyScalar(0.9); controls.update(); break;
       case 'Minus': case 'NumpadSubtract': event.preventDefault(); camera.position.multiplyScalar(1.1); controls.update(); break;
-      case 'Space': event.preventDefault(); if(pauseButton) pauseButton.click(); break;
+      case 'Space': 
+        event.preventDefault(); 
+        if(pauseButton) pauseButton.click(); // Space bar correctly triggers the pause button
+        break;
     }
   });
   window.addEventListener('resize', () => { updateCanvasSize(); });
 }
+
 // GLOBE AND CUBES CREATION
 // ===
 async function createGlobeAndCubes() {
@@ -958,63 +1138,10 @@ async function createGlobeAndCubes() {
 }
 // ===
 // ===
-// ANIMATION (WITH STICKY/INTERACTIVE HOVER CARD)
+// ANIMATION (CORRECTED AND ERROR-PROOF)
 // ===
 function animate() {
   requestAnimationFrame(animate);
-  
-  // --- START: FULLY CORRECTED HOVER LOGIC ---
-  if (hoverCard) {
-    raycaster.setFromCamera(mouse, camera);
-    const intersects = raycaster.intersectObjects(neuronGroup.children, true);
-    let foundValidSubCube = false;
-
-    if (intersects.length > 0) {
-      const firstIntersect = intersects[0].object;
-      if (firstIntersect.userData.isSubCube && firstIntersect.userData.university !== "Unassigned") {
-        foundValidSubCube = true;
-        
-        clearTimeout(hoverTimeout); // Clear any pending hide timeout
-        hoverCard.classList.remove('hover-card-hidden');
-
-        if (currentlyHovered !== firstIntersect) {
-          currentlyHovered = firstIntersect;
-          const data = firstIntersect.userData;
-          
-          document.getElementById('hover-card-title').textContent = data.university;
-          document.getElementById('hover-card-program').textContent = data.programName.replace(/\\n/g, ' ');
-
-          const infoBtn = document.getElementById('hover-card-info-btn');
-          const applyBtn = document.getElementById('hover-card-apply-btn');
-          
-          infoBtn.onclick = () => { if (!infoBtn.disabled) window.open(data.programLink, '_blank'); };
-          applyBtn.onclick = () => { if (!applyBtn.disabled) window.open(data.applyLink, '_blank'); };
-          
-          infoBtn.disabled = !data.programLink || data.programLink === '#';
-          applyBtn.disabled = !data.applyLink || data.applyLink === '#';
-        }
-
-        if (currentlyHovered) {
-          const vector = new THREE.Vector3();
-          currentlyHovered.getWorldPosition(vector);
-          vector.project(camera);
-          const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
-          const y = (vector.y * -0.5 + 0.5) * window.innerHeight;
-          hoverCard.style.left = `${x + 15}px`;
-          hoverCard.style.top = `${y}px`;
-        }
-      }
-    }
-    
-    if (!foundValidSubCube && currentlyHovered) {
-      hoverTimeout = setTimeout(() => {
-        hoverCard.classList.add('hover-card-hidden');
-        currentlyHovered = null; // Clear selection
-      }, 3000); // 3-second grace period
-    }
-  }
-  // --- END: FULLY CORRECTED HOVER LOGIC ---
-
   const elapsedTime = clock.getElapsedTime();
   if (controls && controls.enabled) { controls.update(); }
   if (typeof TWEEN !== 'undefined') { TWEEN.update(); }
@@ -1027,7 +1154,11 @@ function animate() {
     item.label.position.copy(labelPosition);
     item.label.lookAt(camera.position);
   });
-  const explosionStateMap = {'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded, 'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded, 'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded};
+  const explosionStateMap = {
+    'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded,
+    'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded,
+    'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded
+  };
   const boundaryRadius = 1.0;
   const buffer = 0.02;
   if (!isCubeMovementPaused) {
@@ -1041,36 +1172,53 @@ function animate() {
         }
       }
     });
+
+    // = START: ROBUST Neural Network Membrane =
     if (neuralNetworkLines && neuralNetworkLines.visible) {
         const vertices = [];
         const maxDist = 0.6;
         const connectionsPerCube = 3;
+
         for (let i = 0; i < cubes.length; i++) {
             if (!cubes[i].visible || cubes[i].userData.neuralName) continue;
+            
             let neighbors = [];
             for (let j = i + 1; j < cubes.length; j++) {
                 if (!cubes[j].visible || cubes[j].userData.neuralName) continue;
                 const dist = cubes[i].position.distanceTo(cubes[j].position);
-                if (dist < maxDist) { neighbors.push({ dist: dist, cube: cubes[j] }); }
+                if (dist < maxDist) {
+                    neighbors.push({ dist: dist, cube: cubes[j] });
+                }
             }
+            
             neighbors.sort((a, b) => a.dist - b.dist);
             const closest = neighbors.slice(0, connectionsPerCube);
+
+            // *** THE FIX IS HERE ***
+            // Only proceed if we have at least 2 neighbors to form a triangle.
             if (closest.length > 1) {
+                // Create a "fan" of triangles from the current node to its neighbors.
                 for (let k = 0; k < closest.length - 1; k++) {
                     const startNode = cubes[i].position;
                     const neighbor1 = closest[k].cube.position;
                     const neighbor2 = closest[k + 1].cube.position;
-                    vertices.push(startNode.x, startNode.y, startNode.z, neighbor1.x, neighbor1.y, neighbor1.z, neighbor2.x, neighbor2.y, neighbor2.z);
+
+                    vertices.push(startNode.x, startNode.y, startNode.z);
+                    vertices.push(neighbor1.x, neighbor1.y, neighbor1.z);
+                    vertices.push(neighbor2.x, neighbor2.y, neighbor2.z);
                 }
             }
         }
+        
         neuralNetworkLines.geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
         neuralNetworkLines.geometry.attributes.position.needsUpdate = true;
         neuralNetworkLines.geometry.computeVertexNormals();
     }
+    // = END: ROBUST Neural Network Membrane =
   }
   renderer.render(scene, camera);
 }
+
 // ===
 function togglePrivacySection() {
   const privacy = document.querySelector('.privacy-assurance');
@@ -1081,17 +1229,26 @@ function togglePrivacySection() {
     privacy.scrollIntoView({ behavior: 'smooth' });
   }
 }
+// Show trust indicators after load
 window.addEventListener('load', () => {
   setTimeout(() => {
     const trustElement = document.querySelector('.trust-indicators');
-    if (trustElement) { trustElement.classList.add('active'); }
+    if (trustElement) {
+      trustElement.classList.add('active');
+    }
   }, 2000);
 });
+// Notification helpers
+// Centered notification helper
 function showNotification(message, isSuccess = true) {
   const div = document.createElement('div');
   const icon = isSuccess ? '✅' : '❌';
   const cssClass = isSuccess ? 'notification' : 'notification error';
-  div.innerHTML = `<div class="${cssClass}" onclick="this.remove()">${icon} ${message}</div>`;
+  div.innerHTML = `
+    <div class="${cssClass}" onclick="this.remove()">
+      ${icon} ${message}
+    </div>
+  `;
   document.body.appendChild(div);
   setTimeout(() => div.remove(), 5000);
 }
@@ -1099,9 +1256,14 @@ function showNotification(message, isSuccess = true) {
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('🚀 Loading Interactive Globe Widget...');
   try {
-    hoverCard = document.getElementById('hover-card'); // Initialize hoverCard
     console.log('🔍 Checking authentication status...');
     await fetchAuthStatus();
+    
+    // IMPORTANT: Initialize immediately if authenticated
+    if (authStatus.isAuthenticated) {
+      console.log('✅ User is already authenticated on load!');
+    }
+    
     console.log('1️⃣ Fetching server data...');
     await fetchDataFromBackend();
     console.log('2️⃣ Initializing Three.js...');
@@ -1110,17 +1272,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupEventListeners();
     console.log('4️⃣ Creating globe and cubes...');
     await createGlobeAndCubes();
-    createToggleFunctions(); // IMPORTANT: Call this after cubes are created
+    
+    // CRITICAL: Activate cubes AFTER they're created
     if (authStatus.isAuthenticated) {
       console.log('🎮 Activating cubes for authenticated user!');
-      setTimeout(() => { activateAllCubes(); }, 500);
+      setTimeout(() => {
+        activateAllCubes(); // This already shows the notification
+        // REMOVED: showNotification('🎮 University programs unlocked!', true);
+      }, 500); // Small delay to ensure cubes are fully initialized
     }
+    
     console.log('5️⃣ Populating carousel...');
     await populateCarousel();
     console.log('6️⃣ Starting animation...');
     animate();
     console.log('7️⃣ Starting auth monitoring...');
     startAuthStatusPolling();
+    
     const leftBtn = document.getElementById('carouselScrollLeft');
     const rightBtn = document.getElementById('carouselScrollRight');
     if (leftBtn) leftBtn.onclick = () => scrollCarousel(-1);
@@ -1131,5 +1299,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.error('❌ Error during initialization:', error);
   }
 });
-
 
