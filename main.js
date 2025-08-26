@@ -5,13 +5,11 @@ async function isLoggedIn() { return false; }
 async function updateAuthStatus() { /* no-op to keep UI simple */ }
 async function handleCallback() { /* no-op */ }
 async function logout() { window.top.location.href = 'https://www.globaleducarealliance.com/home'; }
-
 // ===
 // DASHBOARD / UPLOAD actions — always require login, then go Home
 // ===
 async function openStudentDashboard() { await requireLoginAndGo(); }
 async function uploadDocument() { await requireLoginAndGo(); }
-
 // ===
 // AUTH-DEPENDENT ACTIVATION (UI visual only — still allowed for engagement)
 // ===
@@ -34,7 +32,6 @@ function activateAllCubes() {
   });
   showNotification('Success! You now have access to all university programs.');
 }
-
 // ===
 // SAFE FETCH WRAPPER - NEW ADDITION
 // ===
@@ -63,10 +60,8 @@ async function safeFetch(url, options = {}) {
     return null;
   }
 }
-
 // Info panel — fully gated behind server auth status
 let authStatus = { isAuthenticated: false, user: null };
-
 // ===
 // IMPROVED FETCH AUTH STATUS WITH ERROR HANDLING
 // ===
@@ -96,7 +91,6 @@ async function fetchAuthStatus() {
     authStatus = { isAuthenticated: false, user: null };
   }
 }
-
 // ===
 // ===
 // AUTH STATUS POLLING - IMPROVED WITH SAFER FETCH
@@ -120,8 +114,6 @@ function startAuthStatusPolling() {
     }
   }, 3000); // Check every 3 seconds
 }
-
-
 // ===
 // IMPROVED SHOW INFO PANEL WITH SAFER AUTHENTICATION CHECK
 async function showInfoPanel(data) {
@@ -129,27 +121,22 @@ async function showInfoPanel(data) {
   console.log('🔗 University:', data?.university);
   console.log('🔗 Program Link:', data?.programLink);
   console.log('🔗 Apply Link:', data?.applyLink);
-  
   if (!data || data.university === 'Unassigned') {
     console.log('❌ No valid university data');
     return;
   }
-
   // REMOVED: Redundant auth check - already checked in onCanvasMouseUp
   console.log('✅ User authenticated, opening program link');
-  
   // Open the university/program link directly
   const linkToOpen = data.programLink || data.applyLink;
   if (linkToOpen && linkToOpen !== '#') {
     console.log(`🔗 Opening link: ${linkToOpen}`);
-    window.open(linkToOpen, '_blank');
+    window.open(linkToOpen, '\_blank');
   } else {
     console.log('❌ No valid link found for this program');
     showNotification('No link available for this program', false);
   }
 }
-
-
 // ---------- If later you allow panel post-login, remove the return above and use builder below ----------
 /*
 const uniData = allUniversityContent.filter(item => item && item.university === data.university);
@@ -158,7 +145,7 @@ if (uniData.length === 0) {
   return;
 }
 const mainErasmusLink = uniData[0].erasmusLink;
-document.getElementById('infoPanelMainCard').innerHTML = `
+document.getElementById('infoPanelMainCard').innerHTML = \`
   <div class="main-card-details">
     <img src="${uniData.logo}" alt="${data.university}">
     <h3>${data.university}</h3>
@@ -166,13 +153,13 @@ document.getElementById('infoPanelMainCard').innerHTML = `
   <div class="main-card-actions">
     ${mainErasmusLink ? `<a href="${mainErasmusLink}" target="_blank" class="partner-cta erasmus">Erasmus Info</a>` : ''}
   </div>
-`;
+\`;
 document.getElementById('infoPanelSubcards').innerHTML = '';
 uniData.forEach(item => {
   if (!item) return;
   const infoEnabled = item.programLink && item.programLink !== '#';
   const applyEnabled = item.applyLink && item.applyLink !== '#';
-  const subcardHTML = `
+  const subcardHTML = \`
     <div class="subcard">
       <div class="subcard-info">
         <img src="${item.logo}" alt="">
@@ -183,14 +170,14 @@ uniData.forEach(item => {
         <button class="partner-cta apply" ${applyEnabled ? '' : 'disabled'} data-return="/members/home">Apply Now</button>
       </div>
     </div>
-  `;
+  \`;
   document.getElementById('infoPanelSubcards').insertAdjacentHTML('beforeend', subcardHTML);
 });
 const container = document.getElementById('infoPanelSubcards');
 container.querySelectorAll('.partner-cta.info').forEach(btn => {
   btn.addEventListener('click', e => {
     const href = e.currentTarget.getAttribute('data-href');
-    if (href) window.open(href, '_blank');
+    if (href) window.open(href, '\_blank');
   });
 });
 container.querySelectorAll('.partner-cta.apply').forEach(btn => {
@@ -201,11 +188,9 @@ container.querySelectorAll('.partner-cta.apply').forEach(btn => {
 document.getElementById('infoPanelOverlay').style.display = 'flex';
 console.log('✅ Info panel displayed with both university and application links');
 */
-
 function hideInfoPanel() {
   document.getElementById('infoPanelOverlay').style.display = 'none';
 }
-
 // Add info panel styles and HTML (kept in case you re-enable the panel)
 function addInfoPanelStyles() {
   const style = document.createElement('style');
@@ -276,15 +261,11 @@ function addInfoPanelStyles() {
   `;
   document.body.appendChild(overlay);
 }
-
 // Initialize info panel scaffolding on load (safe to keep)
 document.addEventListener('DOMContentLoaded', addInfoPanelStyles);
-
-
-
-// =======
+// ===
 // GLOBE WIDGET LOGIC (Client-Side UI Only) — unchanged foundation
-// =======
+// ===
 let scene, camera, renderer, controls, globeGroup, transformControls;
 let GLOBE_RADIUS = 1.0;
 let isPanMode = false;
@@ -325,10 +306,13 @@ let globalContentMap = {};
 let carouselData = [];
 let isInteracting = false, hoverTimeout;
 let clickedSubCube = null;
-
-// =======
+// --- START: NEW HOVER CARD VARIABLES ---
+let currentlyHovered = null;
+let hoverCard; // Will be defined after the page loads
+// --- END: NEW HOVER CARD VARIABLES ---
+// ===
 // PUBLIC DATA FETCH
-// =======
+// ===
 async function fetchCarouselData() {
   try {
     const response = await fetch('/api/carousel/data');
@@ -393,10 +377,9 @@ async function fetchDataFromBackend() {
   }
   return false;
 }
-
-// =======
+// ===
 // PROGRAM FILTERING / HIGHLIGHTING (unchanged)
-// =======
+// ===
 function getMatchingCountries(category) {
   if (!globalContentMap || Object.keys(globalContentMap).length === 0) { return []; }
   const matcherMap = {
@@ -458,10 +441,9 @@ function highlightNeuralCubesByProgram(selectedCategory) {
   });
   console.log(`✨ Scaled ${matchingCountries.length} neural cubes for ${selectedCategory}`);
 }
-
-// =======
+// ===
 // CAROUSEL
-// =======
+// ===
 async function populateCarousel() {
   await fetchCarouselData();
   const container = document.getElementById('carouselContainer');
@@ -504,46 +486,38 @@ function scrollCarousel(direction) {
   const cardWidth = card.offsetWidth + 16;
   container.scrollBy({ left: direction * cardWidth, behavior: 'smooth' });
 }
-
-// =======
+// ===
 // ===
 // CONTROL TOGGLES (Corrected and Final Version)
 // ===
-
 // This single function controls whether the user is in "rotate" or "pan" mode.
 // It does NOT affect the automatic rotation.
 function setInteractionMode(mode) {
   if (!controls) return;
-
   const rotateBtn = document.getElementById('btn-rotate');
   const panBtn = document.getElementById('btn-pan');
   const canvas = renderer.domElement;
-
   if (mode === 'ROTATE') {
     // Set controls to ROTATE mode
     controls.mouseButtons.LEFT = THREE.MOUSE.ROTATE;
     controls.touches.ONE = THREE.TOUCH.ROTATE;
-
     // Set button styles for ROTATE mode
     if (rotateBtn) rotateBtn.style.background = '#a46bfd'; // Active purple color
     if (panBtn) panBtn.style.background = 'rgba(0,0,0,0.8)'; // Inactive color
     canvas.style.cursor = 'default'; // Default cursor for rotation
-
   } else if (mode === 'PAN') {
     // Set controls to PAN mode
     controls.mouseButtons.LEFT = THREE.MOUSE.PAN;
     controls.touches.ONE = THREE.TOUCH.PAN;
-
     // Set button styles for PAN mode
     if (rotateBtn) rotateBtn.style.background = 'rgba(0,0,0,0.8)'; // Inactive color
     if (panBtn) panBtn.style.background = '#ffa500'; // Active orange color
     canvas.style.cursor = 'grab'; // "grab" cursor for panning
   }
 }
-
-// =======
+// ===
 // Three.js initialization
-// =======
+// ===
 function initializeThreeJS() {
   console.log('🔄 Initializing Three.js...');
   scene = new THREE.Scene();
@@ -590,10 +564,9 @@ function updateCanvasSize() {
   camera.aspect = window.innerWidth / newHeight;
   camera.updateProjectionMatrix();
 }
-
-// =======
+// ===
 // UTILITIES
-// =======
+// ===
 function getColorByData(data) {
   const baseHue = data.domain * 30 % 360;
   const lightness = 50 + data.engagement * 25;
@@ -615,7 +588,7 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
   ctx.textAlign = 'center';
   const texture = new THREE.CanvasTexture(canvas);
   function drawText() {
-    const lines = text.split('\n');
+    const lines = text.split('\\n');
     const fontSize = lines.length > 1 ? 28 : 32;
     ctx.font = `bold ${fontSize}px Arial`;
     let y = 128 + (lines.length > 1 ? 0 : 10);
@@ -631,10 +604,9 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
   } else { drawText(); }
   return new THREE.MeshStandardMaterial({ map: texture, emissive: new THREE.Color(bgColor), emissiveIntensity: 0.6 });
 }
-
-// =======
+// ===
 // TOGGLE FUNCTION CREATION
-// =======
+// ===
 function createToggleFunction(cubeName) {
   return function() {
     const explosionStateMap = {
@@ -691,14 +663,11 @@ const toggleFunctionMap = {
   'USA': createToggleFunction('USA'), 'India': createToggleFunction('India'),
   'Singapore': createToggleFunction('Singapore'), 'Malaysia': createToggleFunction('Malaysia')
 };
-
-// =================================================================
+// =============
 // == FULL CORRECTED PART 2
-// =================================================================
-
+// =============
 // ===
-// ===
-// CUBE CREATION (with "Apply Now" highlight)
+// CUBE CREATION
 // ===
 function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
   let contentIdx = 0;
@@ -709,10 +678,7 @@ function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
         const item = content[contentIdx];
         let material, userData;
         if (item) {
-          // --- THIS IS THE VISUAL CHANGE ---
-          // If an applyLink exists (and isn't just a placeholder), set the color to purple.
           const cubeColor = (item.applyLink && item.applyLink !== '#') ? '#a46bfd' : color; 
-          
           material = createTexture(item.programName, item.logo, cubeColor);
           userData = item;
         } else {
@@ -740,27 +706,21 @@ function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
       }
   return cubeObject;
 }
-
-
 // CORRECTED: Creates a Mesh for the membrane effect
 function createNeuralNetwork() {
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.Float32BufferAttribute([], 3));
-  
   const material = new THREE.MeshBasicMaterial({
     color: 0x00BFFF,
     side: THREE.DoubleSide,
     transparent: true,
-    opacity: 0.1, // You can increase this (e.g., to 0.15) if it's too subtle
+    opacity: 0.1,
     blending: THREE.AdditiveBlending,
     depthWrite: false
   });
-
   neuralNetworkLines = new THREE.Mesh(geometry, material);
   globeGroup.add(neuralNetworkLines);
 }
-
-
 function latLonToVector3(lat, lon, radius) {
   const phi = (90 - lat) * (Math.PI / 180);
   const theta = (lon + 180) * (Math.PI / 180);
@@ -769,7 +729,6 @@ function latLonToVector3(lat, lon, radius) {
   const y = (radius * Math.cos(phi));
   return new THREE.Vector3(x, y, z);
 }
-
 function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
   const rainbowExtendedColors = [
     0xff0000, 0xff7f00, 0xffff00, 0x00ff00, 0x0000ff, 
@@ -797,7 +756,6 @@ function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
   globeGroup.add(path);
   return path;
 }
-
 function animateArcParticles(arc) {
   const curve = arc.userData.curve;
   if (!curve) return;
@@ -817,29 +775,20 @@ function animateArcParticles(arc) {
     arcParticles.push(particle);
   }
 }
-// Modified: drawAllConnections now includes additional arcs (India-Canada, India-Europe, Canada-USA)
 function drawAllConnections() {
-  // Original pairs (Thailand to others)
   const countryNames = ["India", "Europe", "UK", "Canada", "USA", "Singapore", "Malaysia"];
   const originalPairs = countryNames.map(country => ["Thailand", country]);
-
-  // New requested pairs
   const additionalPairs = [
     ["India", "Canada"],
     ["India", "Europe"],
     ["Canada", "USA"]
   ];
-
-  // Combine all pairs
   const allPairs = [...originalPairs, ...additionalPairs];
-
   arcPaths = allPairs.map(([from, to], index) => {
     const fromBlock = countryBlocks[from];
     const toBlock = countryBlocks[to];
     if (fromBlock && toBlock) return createConnectionPath(fromBlock, toBlock, index);
   }).filter(Boolean);
-
-  // New: Initialize particles for each arc
   arcPaths.forEach(animateArcParticles);
 }
 // ===
@@ -858,22 +807,24 @@ function closeAllExploded() {
   if (isSingaporeCubeExploded) toggleFunctionMap['Singapore']();
   if (isMalaysiaCubeExploded) toggleFunctionMap['Malaysia']();
 }
-// THE KEY CLICK HANDLER — keep exploration public; gate subcube details
 function onCanvasMouseUp(event) {
   if (transformControls.dragging) return;
   const deltaX = Math.abs(event.clientX - mouseDownPos.x);
   const deltaY = Math.abs(event.clientY - mouseDownPos.y);
   if (deltaX > 5 || deltaY > 5) return;
   if (event.target.closest('.info-panel')) return;
+  
   const canvasRect = renderer.domElement.getBoundingClientRect();
   mouse.x = ((event.clientX - canvasRect.left) / canvasRect.width) * 2 - 1;
   mouse.y = -((event.clientY - canvasRect.top) / canvasRect.height) * 2 + 1;
+  
   raycaster.setFromCamera(mouse, camera);
   const allClickableObjects = [...Object.values(countryBlocks), ...neuronGroup.children];
   const intersects = raycaster.intersectObjects(allClickableObjects, true);
+  
   if (intersects.length === 0) { closeAllExploded(); return; }
+  
   const clickedObject = intersects[0].object;
-  // COUNTRY BLOCK CLICKED — explode (no auth)
   if (clickedObject.userData.countryName) {
     const countryName = clickedObject.userData.countryName;
     const correspondingNeuralCube = neuralCubeMap[countryName];
@@ -893,7 +844,7 @@ function onCanvasMouseUp(event) {
     }
     return;
   }
-  // SUBCUBE or child clicked
+  
   let parent = clickedObject;
   let neuralName = null;
   let clickedSubCubeLocal = clickedObject.userData.isSubCube ? clickedObject : null;
@@ -901,11 +852,13 @@ function onCanvasMouseUp(event) {
     if (parent.userData.neuralName) { neuralName = parent.userData.neuralName; break; }
     parent = parent.parent;
   }
+  
   const explosionStateMap = {
     'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded,
     'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded,
     'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded
   };
+  
   if (neuralName) {
     const isExploded = explosionStateMap[neuralName];
     const toggleFunc = toggleFunctionMap[neuralName];
@@ -916,7 +869,6 @@ function onCanvasMouseUp(event) {
         window.open('https://www.globaleducarealliance.com/home?promptLogin=1', '_blank');
       }
     } else {
-      // Just explode/collapse
       const anyExploded = Object.values(explosionStateMap).some(state => state);
       closeAllExploded();
       setTimeout(() => toggleFunc(), anyExploded ? 810 : 0);
@@ -925,7 +877,6 @@ function onCanvasMouseUp(event) {
     closeAllExploded(); 
   }
 }
-// Pan mode wrappers
 function onCanvasMouseDownPan(event) {
   mouseDownPos.set(event.clientX, event.clientY);
   if (isPanMode) {
@@ -960,14 +911,22 @@ function onCanvasMouseUpPan(event) {
   onCanvasMouseUp(event);
 }
 // ===
-// ===
-// EVENT LISTENERS SETUP (Corrected and Final Version)
+// EVENT LISTENERS SETUP
 // ===
 function setupEventListeners() {
   renderer.domElement.addEventListener('mousedown', onCanvasMouseDownPan);
   renderer.domElement.addEventListener('mousemove', onCanvasMouseMovePan);
   renderer.domElement.addEventListener('mouseup', onCanvasMouseUpPan);
   renderer.domElement.addEventListener('mouseenter', () => { if (isPanMode) { renderer.domElement.style.cursor = 'grab'; } });
+
+  // --- START: NEW MOUSE MOVE LISTENER FOR HOVER CARD ---
+  window.addEventListener('mousemove', (event) => {
+    // This keeps the `mouse` vector updated for the raycaster in the animate loop
+    const canvasRect = renderer.domElement.getBoundingClientRect();
+    mouse.x = ((event.clientX - canvasRect.left) / canvasRect.width) * 2 - 1;
+    mouse.y = -((event.clientY - canvasRect.top) / canvasRect.height) * 2 + 1;
+  });
+  // --- END: NEW MOUSE MOVE LISTENER ---
 
   const panSpeed = 0.1;
   const btnUp = document.getElementById('btn-up'); if (btnUp) { btnUp.addEventListener('click', () => { controls.target.y += panSpeed; controls.update(); }); }
@@ -976,18 +935,14 @@ function setupEventListeners() {
   const btnRight = document.getElementById('btn-right'); if (btnRight) { btnRight.addEventListener('click', () => { controls.target.x += panSpeed; controls.update(); }); }
   const btnZoomIn = document.getElementById('btn-zoom-in'); if (btnZoomIn) { btnZoomIn.addEventListener('click', () => { camera.position.multiplyScalar(0.9); controls.update(); }); }
   const btnZoomOut = document.getElementById('btn-zoom-out'); if (btnZoomOut) { btnZoomOut.addEventListener('click', () => { camera.position.multiplyScalar(1.1); controls.update(); }); }
-
-  // --- START: CORRECTED BUTTON LOGIC ---
+  
   const btnRotate = document.getElementById('btn-rotate');
   if (btnRotate) { btnRotate.addEventListener('click', () => setInteractionMode('ROTATE')); }
-  
   const btnPan = document.getElementById('btn-pan');
   if (btnPan) { btnPan.addEventListener('click', () => setInteractionMode('PAN')); }
-
-  // Set the default mode to ROTATE when the application starts
+  
   setInteractionMode('ROTATE');
-
-  // This pause button ONLY controls automatic rotation.
+  
   const pauseButton = document.getElementById("pauseButton");
   if (pauseButton) {
     pauseButton.addEventListener("click", () => {
@@ -996,8 +951,7 @@ function setupEventListeners() {
       pauseButton.textContent = isRotationPaused ? "Resume Rotation" : "Pause Rotation";
     });
   }
-  // --- END: CORRECTED BUTTON LOGIC ---
-
+  
   const pauseCubesButton = document.getElementById("pauseCubesButton");
   if (pauseCubesButton) {
     pauseCubesButton.addEventListener("click", () => {
@@ -1050,7 +1004,6 @@ function setupEventListeners() {
     }
     scrollLockButton.addEventListener('click', () => { setGlobeInteraction(!controls.enabled); });
   }
-
   document.addEventListener('keydown', (event) => {
     if (!controls) return;
     switch(event.code) {
@@ -1062,13 +1015,13 @@ function setupEventListeners() {
       case 'Minus': case 'NumpadSubtract': event.preventDefault(); camera.position.multiplyScalar(1.1); controls.update(); break;
       case 'Space': 
         event.preventDefault(); 
-        if(pauseButton) pauseButton.click(); // Space bar correctly triggers the pause button
+        if(pauseButton) pauseButton.click();
         break;
     }
   });
   window.addEventListener('resize', () => { updateCanvasSize(); });
 }
-
+// ===
 // GLOBE AND CUBES CREATION
 // ===
 async function createGlobeAndCubes() {
@@ -1137,15 +1090,57 @@ async function createGlobeAndCubes() {
   console.log('✅ Globe and cubes created successfully');
 }
 // ===
-// ===
-// ANIMATION (CORRECTED AND ERROR-PROOF)
+// ANIMATION (with Hover Card Logic)
 // ===
 function animate() {
   requestAnimationFrame(animate);
+  
+  // --- START: HOVER CARD LOGIC ---
+  if (hoverCard) {
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(neuronGroup.children, true);
+    
+    let foundValidSubCube = false;
+    if (intersects.length > 0) {
+      const firstIntersect = intersects[0].object;
+      
+      if (firstIntersect.userData.isSubCube && firstIntersect.userData.university !== "Unassigned") {
+        foundValidSubCube = true;
+        
+        if (currentlyHovered !== firstIntersect) {
+          currentlyHovered = firstIntersect;
+          const data = firstIntersect.userData;
+          
+          document.getElementById('hover-card-title').textContent = data.university;
+          document.getElementById('hover-card-program').textContent = data.programName.replace(/\\n/g, ' ');
+          
+          const infoBtn = document.getElementById('hover-card-info-btn');
+          const applyBtn = document.getElementById('hover-card-apply-btn');
+          
+          infoBtn.disabled = !data.programLink || data.programLink === '#';
+          applyBtn.disabled = !data.applyLink || data.applyLink === '#';
+          
+          hoverCard.classList.remove('hover-card-hidden');
+        }
+        
+        hoverCard.style.left = `${(window.event?.clientX || 0) + 20}px`;
+        hoverCard.style.top = `${(window.event?.clientY || 0) + 20}px`;
+      }
+    }
+    
+    if (!foundValidSubCube && currentlyHovered) {
+      currentlyHovered = null;
+      hoverCard.classList.add('hover-card-hidden');
+    }
+  }
+  // --- END: HOVER CARD LOGIC ---
+
   const elapsedTime = clock.getElapsedTime();
   if (controls && controls.enabled) { controls.update(); }
   if (typeof TWEEN !== 'undefined') { TWEEN.update(); }
+  
   arcPaths.forEach(path => { if (path.material.isShaderMaterial) { path.material.uniforms.time.value = elapsedTime; } });
+  
   countryLabels.forEach(item => {
     const worldPosition = new THREE.Vector3();
     item.block.getWorldPosition(worldPosition);
@@ -1154,11 +1149,13 @@ function animate() {
     item.label.position.copy(labelPosition);
     item.label.lookAt(camera.position);
   });
+  
   const explosionStateMap = {
     'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded,
     'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded,
     'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded
   };
+  
   const boundaryRadius = 1.0;
   const buffer = 0.02;
   if (!isCubeMovementPaused) {
@@ -1172,13 +1169,11 @@ function animate() {
         }
       }
     });
-
-    // = START: ROBUST Neural Network Membrane =
+    
     if (neuralNetworkLines && neuralNetworkLines.visible) {
         const vertices = [];
         const maxDist = 0.6;
         const connectionsPerCube = 3;
-
         for (let i = 0; i < cubes.length; i++) {
             if (!cubes[i].visible || cubes[i].userData.neuralName) continue;
             
@@ -1193,16 +1188,12 @@ function animate() {
             
             neighbors.sort((a, b) => a.dist - b.dist);
             const closest = neighbors.slice(0, connectionsPerCube);
-
-            // *** THE FIX IS HERE ***
-            // Only proceed if we have at least 2 neighbors to form a triangle.
+            
             if (closest.length > 1) {
-                // Create a "fan" of triangles from the current node to its neighbors.
                 for (let k = 0; k < closest.length - 1; k++) {
                     const startNode = cubes[i].position;
                     const neighbor1 = closest[k].cube.position;
                     const neighbor2 = closest[k + 1].cube.position;
-
                     vertices.push(startNode.x, startNode.y, startNode.z);
                     vertices.push(neighbor1.x, neighbor1.y, neighbor1.z);
                     vertices.push(neighbor2.x, neighbor2.y, neighbor2.z);
@@ -1214,11 +1205,10 @@ function animate() {
         neuralNetworkLines.geometry.attributes.position.needsUpdate = true;
         neuralNetworkLines.geometry.computeVertexNormals();
     }
-    // = END: ROBUST Neural Network Membrane =
   }
+  
   renderer.render(scene, camera);
 }
-
 // ===
 function togglePrivacySection() {
   const privacy = document.querySelector('.privacy-assurance');
@@ -1239,7 +1229,6 @@ window.addEventListener('load', () => {
   }, 2000);
 });
 // Notification helpers
-// Centered notification helper
 function showNotification(message, isSuccess = true) {
   const div = document.createElement('div');
   const icon = isSuccess ? '✅' : '❌';
@@ -1254,41 +1243,26 @@ function showNotification(message, isSuccess = true) {
 }
 // ===
 document.addEventListener('DOMContentLoaded', async () => {
+  hoverCard = document.getElementById('hover-card'); // Initialize the hover card
   console.log('🚀 Loading Interactive Globe Widget...');
   try {
-    console.log('🔍 Checking authentication status...');
     await fetchAuthStatus();
-    
-    // IMPORTANT: Initialize immediately if authenticated
     if (authStatus.isAuthenticated) {
       console.log('✅ User is already authenticated on load!');
     }
-    
-    console.log('1️⃣ Fetching server data...');
     await fetchDataFromBackend();
-    console.log('2️⃣ Initializing Three.js...');
     initializeThreeJS();
-    console.log('3️⃣ Setting up event listeners...');
     setupEventListeners();
-    console.log('4️⃣ Creating globe and cubes...');
     await createGlobeAndCubes();
-    
-    // CRITICAL: Activate cubes AFTER they're created
     if (authStatus.isAuthenticated) {
       console.log('🎮 Activating cubes for authenticated user!');
       setTimeout(() => {
-        activateAllCubes(); // This already shows the notification
-        // REMOVED: showNotification('🎮 University programs unlocked!', true);
-      }, 500); // Small delay to ensure cubes are fully initialized
+        activateAllCubes();
+      }, 500);
     }
-    
-    console.log('5️⃣ Populating carousel...');
     await populateCarousel();
-    console.log('6️⃣ Starting animation...');
     animate();
-    console.log('7️⃣ Starting auth monitoring...');
     startAuthStatusPolling();
-    
     const leftBtn = document.getElementById('carouselScrollLeft');
     const rightBtn = document.getElementById('carouselScrollRight');
     if (leftBtn) leftBtn.onclick = () => scrollCarousel(-1);
@@ -1299,5 +1273,3 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.error('❌ Error during initialization:', error);
   }
 });
-
-
