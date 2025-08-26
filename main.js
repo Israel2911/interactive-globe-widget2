@@ -123,30 +123,54 @@ function startAuthStatusPolling() {
 
 
 // ===
-// IMPROVED SHOW INFO PANEL WITH SAFER AUTHENTICATION CHECK
 async function showInfoPanel(data) {
-  console.log('🎯 showInfoPanel called with:', data);
-  console.log('🔗 University:', data?.university);
-  console.log('🔗 Program Link:', data?.programLink);
-  console.log('🔗 Apply Link:', data?.applyLink);
-  
-  if (!data || data.university === 'Unassigned') {
-    console.log('❌ No valid university data');
-    return;
-  }
-
-  // REMOVED: Redundant auth check - already checked in onCanvasMouseUp
-  console.log('✅ User authenticated, opening program link');
-  
-  // Open the university/program link directly
-  const linkToOpen = data.programLink || data.applyLink;
-  if (linkToOpen && linkToOpen !== '#') {
-    console.log(`🔗 Opening link: ${linkToOpen}`);
-    window.open(linkToOpen, '_blank');
-  } else {
-    console.log('❌ No valid link found for this program');
-    showNotification('No link available for this program', false);
-  }
+    const uniData = allUniversityContent.filter(item => item && item.university === data.university);
+    if (uniData.length === 0) {
+      console.log('❌ No university content found');
+      return;
+    }
+    const mainErasmusLink = uniData[0].erasmusLink;
+    document.getElementById('infoPanelMainCard').innerHTML = `
+      <div class="main-card-details">
+        <img src="${uniData[0].logo}" alt="${data.university}">
+        <h3>${data.university}</h3>
+      </div>
+      <div class="main-card-actions">
+        ${mainErasmusLink ? `<a href="${mainErasmusLink}" target="_blank" class="partner-cta erasmus">Erasmus Info</a>` : ''}
+      </div>
+    `;
+    document.getElementById('infoPanelSubcards').innerHTML = '';
+    uniData.forEach(item => {
+      if (!item) return;
+      const infoEnabled = item.programLink && item.programLink !== '#';
+      const applyEnabled = item.applyLink && item.applyLink !== '#';
+      const subcardHTML = `
+        <div class="subcard">
+          <div class="subcard-info">
+            <img src="${item.logo}" alt="">
+            <h4>${item.programName.replace(/\\n/g, ' ')}</h4>
+          </div>
+          <div class="subcard-buttons">
+            <button class="partner-cta info" ${infoEnabled ? '' : 'disabled'} data-href="${infoEnabled ? item.programLink : ''}">University Info</button>
+            <button class="partner-cta apply" ${applyEnabled ? '' : 'disabled'} data-return="/members/home">Apply Now</button>
+          </div>
+        </div>
+      `;
+      document.getElementById('infoPanelSubcards').insertAdjacentHTML('beforeend', subcardHTML);
+    });
+    const container = document.getElementById('infoPanelSubcards');
+    container.querySelectorAll('.partner-cta.info').forEach(btn => {
+      btn.addEventListener('click', e => {
+        const href = e.currentTarget.getAttribute('data-href');
+        if (href) window.open(href, '_blank');
+      });
+    });
+    container.querySelectorAll('.partner-cta.apply').forEach(btn => {
+      btn.addEventListener('click', e => {
+        window.top.location.href = 'https://www.globaleducarealliance.com/home?promptLogin=1';
+      });
+    });
+    document.getElementById('infoPanelOverlay').style.display = 'flex'; 
 }
 
 
@@ -325,6 +349,9 @@ let globalContentMap = {};
 let carouselData = [];
 let isInteracting = false, hoverTimeout;
 let clickedSubCube = null;
+let currentlyHovered = null; // Add this line
+let hoverCard;             // Add this line
+
 
 // =======
 // PUBLIC DATA FETCH
@@ -1138,14 +1165,65 @@ async function createGlobeAndCubes() {
 }
 // ===
 // ===
-// ANIMATION (CORRECTED AND ERROR-PROOF)
+// ===
+// ANIMATION (CORRECTED AND FULLY INTEGRATED)
 // ===
 function animate() {
   requestAnimationFrame(animate);
+
+  // --- START: FULLY CORRECTED HOVER LOGIC ---
+  if (hoverCard) {
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(neuronGroup.children, true);
+    let foundValidSubCube = false;
+
+    if (intersects.length > 0) {
+      const firstIntersect = intersects[0].object;
+      if (firstIntersect.userData.isSubCube && firstIntersect.userData.university !== "Unassigned") {
+        foundValidSubCube = true;
+        
+        clearTimeout(hoverTimeout); // Prevent the card from hiding while hovering
+        hoverCard.classList.remove('hover-card-hidden');
+
+        if (currentlyHovered !== firstIntersect) {
+          currentlyHovered = firstIntersect;
+          const data = firstIntersect.userData;
+          
+          // Update the content of the hover card
+          document.getElementById('hover-card-title').textContent = data.university;
+          document.getElementById('hover-card-program').textContent = data.programName.replace(/\\n/g, ' ');
+        }
+
+        if (currentlyHovered) {
+          // Update the position of the hover card
+          const vector = new THREE.Vector3();
+          currentlyHovered.getWorldPosition(vector);
+          vector.project(camera);
+          const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
+          const y = (vector.y * -0.5 + 0.5) * window.innerHeight;
+          hoverCard.style.left = `${x + 15}px`;
+          hoverCard.style.top = `${y}px`;
+        }
+      }
+    }
+    
+    if (!foundValidSubCube && currentlyHovered) {
+      // If the mouse is no longer over a valid subcube, start a timer to hide it
+      hoverTimeout = setTimeout(() => {
+        hoverCard.classList.add('hover-card-hidden');
+        currentlyHovered = null; // Clear the selection
+      }, 300); // Hide after a short delay for a smoother experience
+    }
+  }
+  // --- END: FULLY CORRECTED HOVER LOGIC ---
+
+  // === START: EXISTING ANIMATION LOGIC (RETAINED) ===
   const elapsedTime = clock.getElapsedTime();
   if (controls && controls.enabled) { controls.update(); }
   if (typeof TWEEN !== 'undefined') { TWEEN.update(); }
+
   arcPaths.forEach(path => { if (path.material.isShaderMaterial) { path.material.uniforms.time.value = elapsedTime; } });
+
   countryLabels.forEach(item => {
     const worldPosition = new THREE.Vector3();
     item.block.getWorldPosition(worldPosition);
@@ -1154,13 +1232,16 @@ function animate() {
     item.label.position.copy(labelPosition);
     item.label.lookAt(camera.position);
   });
+
   const explosionStateMap = {
     'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded,
     'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded,
     'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded
   };
+
   const boundaryRadius = 1.0;
   const buffer = 0.02;
+
   if (!isCubeMovementPaused) {
     cubes.forEach((cube, i) => {
       const isExploded = cube.userData.neuralName && explosionStateMap[cube.userData.neuralName];
@@ -1173,12 +1254,10 @@ function animate() {
       }
     });
 
-    // = START: ROBUST Neural Network Membrane =
     if (neuralNetworkLines && neuralNetworkLines.visible) {
         const vertices = [];
         const maxDist = 0.6;
         const connectionsPerCube = 3;
-
         for (let i = 0; i < cubes.length; i++) {
             if (!cubes[i].visible || cubes[i].userData.neuralName) continue;
             
@@ -1193,16 +1272,12 @@ function animate() {
             
             neighbors.sort((a, b) => a.dist - b.dist);
             const closest = neighbors.slice(0, connectionsPerCube);
-
-            // *** THE FIX IS HERE ***
-            // Only proceed if we have at least 2 neighbors to form a triangle.
+            
             if (closest.length > 1) {
-                // Create a "fan" of triangles from the current node to its neighbors.
                 for (let k = 0; k < closest.length - 1; k++) {
                     const startNode = cubes[i].position;
                     const neighbor1 = closest[k].cube.position;
                     const neighbor2 = closest[k + 1].cube.position;
-
                     vertices.push(startNode.x, startNode.y, startNode.z);
                     vertices.push(neighbor1.x, neighbor1.y, neighbor1.z);
                     vertices.push(neighbor2.x, neighbor2.y, neighbor2.z);
@@ -1214,10 +1289,12 @@ function animate() {
         neuralNetworkLines.geometry.attributes.position.needsUpdate = true;
         neuralNetworkLines.geometry.computeVertexNormals();
     }
-    // = END: ROBUST Neural Network Membrane =
   }
+  
   renderer.render(scene, camera);
+  // === END: EXISTING ANIMATION LOGIC (RETAINED) ===
 }
+
 
 // ===
 function togglePrivacySection() {
@@ -1256,10 +1333,12 @@ function showNotification(message, isSuccess = true) {
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('🚀 Loading Interactive Globe Widget...');
   try {
+    // THIS IS THE LINE YOU NEED TO ADD
+    hoverCard = document.getElementById('hover-card'); 
+
     console.log('🔍 Checking authentication status...');
     await fetchAuthStatus();
     
-    // IMPORTANT: Initialize immediately if authenticated
     if (authStatus.isAuthenticated) {
       console.log('✅ User is already authenticated on load!');
     }
@@ -1273,13 +1352,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log('4️⃣ Creating globe and cubes...');
     await createGlobeAndCubes();
     
-    // CRITICAL: Activate cubes AFTER they're created
     if (authStatus.isAuthenticated) {
       console.log('🎮 Activating cubes for authenticated user!');
       setTimeout(() => {
-        activateAllCubes(); // This already shows the notification
-        // REMOVED: showNotification('🎮 University programs unlocked!', true);
-      }, 500); // Small delay to ensure cubes are fully initialized
+        activateAllCubes();
+      }, 500);
     }
     
     console.log('5️⃣ Populating carousel...');
@@ -1293,9 +1370,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const rightBtn = document.getElementById('carouselScrollRight');
     if (leftBtn) leftBtn.onclick = () => scrollCarousel(-1);
     if (rightBtn) rightBtn.onclick = () => scrollCarousel(1);
+    
     updateCanvasSize();
     console.log('✅ Globe Widget loaded successfully!');
   } catch (error) {
     console.error('❌ Error during initialization:', error);
   }
 });
+
