@@ -1166,7 +1166,7 @@ async function createGlobeAndCubes() {
 // ===
 // ===
 // ===
-// ANIMATION (CORRECTED WITH PRECISE HOVER LOGIC)
+// ANIMATION (CORRECTED AND FULLY INTEGRATED)
 // ===
 function animate() {
   requestAnimationFrame(animate);
@@ -1182,8 +1182,8 @@ function animate() {
       // Check if the intersected object is a sub-cube and has valid data
       if (firstIntersect.userData.isSubCube && firstIntersect.userData.university !== "Unassigned") {
         foundValidSubCube = true;
-
-        // If this is a new cube, update the content
+        
+        // If this is a new cube being hovered, update the card's content
         if (currentlyHovered !== firstIntersect) {
           currentlyHovered = firstIntersect;
           const data = firstIntersect.userData;
@@ -1192,15 +1192,15 @@ function animate() {
           
           const infoBtn = document.getElementById('hover-card-info-btn');
           const applyBtn = document.getElementById('hover-card-apply-btn');
-
-          // Set button actions and disabled states
+          
+          // Set button actions and enable/disable them based on link availability
           infoBtn.onclick = () => { if (!infoBtn.disabled) window.open(data.programLink, '_blank'); };
           applyBtn.onclick = () => { if (!applyBtn.disabled) window.open(data.applyLink, '_blank'); };
           infoBtn.disabled = !data.programLink || data.programLink === '#';
           applyBtn.disabled = !data.applyLink || data.applyLink === '#';
         }
-
-        // Always show and update position
+        
+        // Always show the card and update its position
         hoverCard.classList.remove('hover-card-hidden');
         const vector = new THREE.Vector3();
         currentlyHovered.getWorldPosition(vector);
@@ -1212,7 +1212,7 @@ function animate() {
       }
     }
 
-    // If no valid cube is being hovered, hide the card
+    // If no valid sub-cube is being hovered, hide the card
     if (!foundValidSubCube) {
       hoverCard.classList.add('hover-card-hidden');
       currentlyHovered = null; // Clear the selection
@@ -1224,9 +1224,9 @@ function animate() {
   const elapsedTime = clock.getElapsedTime();
   if (controls && controls.enabled) { controls.update(); }
   if (typeof TWEEN !== 'undefined') { TWEEN.update(); }
-  
+
   arcPaths.forEach(path => { if (path.material.isShaderMaterial) { path.material.uniforms.time.value = elapsedTime; } });
-  
+
   countryLabels.forEach(item => {
     const worldPosition = new THREE.Vector3();
     item.block.getWorldPosition(worldPosition);
@@ -1235,15 +1235,16 @@ function animate() {
     item.label.position.copy(labelPosition);
     item.label.lookAt(camera.position);
   });
-  
+
   const explosionStateMap = {
     'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded,
     'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded,
     'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded
   };
-  
+
   const boundaryRadius = 1.0;
   const buffer = 0.02;
+
   if (!isCubeMovementPaused) {
     cubes.forEach((cube, i) => {
       const isExploded = cube.userData.neuralName && explosionStateMap[cube.userData.neuralName];
