@@ -626,7 +626,8 @@ const toggleFunctionMap = {
 // == FULL CORRECTED PART 2
 // =============
 // ===
-// CUBE CREATION
+// ===
+// CUBE CREATION (Reverted to Original Colors)
 // ===
 function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
   let contentIdx = 0;
@@ -637,8 +638,9 @@ function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
         const item = content[contentIdx];
         let material, userData;
         if (item) {
-          const cubeColor = (item.applyLink && item.applyLink !== '#') ? '#a46bfd' : color; 
-          material = createTexture(item.programName, item.logo, cubeColor);
+          // --- THIS IS THE REVERTED LOGIC ---
+          // We are now simply using the 'color' passed into the function for all cubes.
+          material = createTexture(item.programName, item.logo, color);
           userData = item;
         } else {
           material = createTexture('Unassigned', null, '#333333');
@@ -665,6 +667,7 @@ function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
       }
   return cubeObject;
 }
+
 // CORRECTED: Creates a Mesh for the membrane effect
 function createNeuralNetwork() {
   const geometry = new THREE.BufferGeometry();
