@@ -1,3 +1,8 @@
+// =============
+// ==  PART 1: SETUP, AUTH, AND DATA
+// =============
+
+// === Authentication & Redirection ===
 function redirectToWix() { /* no-op on external globe */ }
 async function requireLoginAndGo() { return; }
 // No-op placeholders replacing custom SSO usage in front-end
@@ -135,72 +140,60 @@ async function showInfoPanel(data) {
     return;
   }
 
-  // REMOVED: Redundant auth check - already checked in onCanvasMouseUp
-  console.log('✅ User authenticated, opening program link');
-  
-  // Open the university/program link directly
-  const linkToOpen = data.programLink || data.applyLink;
-  if (linkToOpen && linkToOpen !== '#') {
-    console.log(`🔗 Opening link: ${linkToOpen}`);
-    window.open(linkToOpen, '_blank');
-  } else {
-    console.log('❌ No valid link found for this program');
-    showNotification('No link available for this program', false);
+  // This function now builds and displays a full panel.
+  const uniData = allUniversityContent.filter(item => item && item.university === data.university);
+  if (uniData.length === 0) {
+    console.log('❌ No university content found');
+    return;
   }
-}
-
-
-// ---------- If later you allow panel post-login, remove the return above and use builder below ----------
-/*
-const uniData = allUniversityContent.filter(item => item && item.university === data.university);
-if (uniData.length === 0) {
-  console.log('❌ No university content found');
-  return;
-}
-const mainErasmusLink = uniData[0].erasmusLink;
-document.getElementById('infoPanelMainCard').innerHTML = `
-  <div class="main-card-details">
-    <img src="${uniData.logo}" alt="${data.university}">
-    <h3>${data.university}</h3>
-  </div>
-  <div class="main-card-actions">
-    ${mainErasmusLink ? `<a href="${mainErasmusLink}" target="_blank" class="partner-cta erasmus">Erasmus Info</a>` : ''}
-  </div>
-`;
-document.getElementById('infoPanelSubcards').innerHTML = '';
-uniData.forEach(item => {
-  if (!item) return;
-  const infoEnabled = item.programLink && item.programLink !== '#';
-  const applyEnabled = item.applyLink && item.applyLink !== '#';
-  const subcardHTML = `
-    <div class="subcard">
-      <div class="subcard-info">
-        <img src="${item.logo}" alt="">
-        <h4>${item.programName.replace(/\\n/g, ' ')}</h4>
-      </div>
-      <div class="subcard-buttons">
-        <button class="partner-cta info" ${infoEnabled ? '' : 'disabled'} data-href="${infoEnabled ? item.programLink : ''}">University Info</button>
-        <button class="partner-cta apply" ${applyEnabled ? '' : 'disabled'} data-return="/members/home">Apply Now</button>
-      </div>
+  
+  const mainErasmusLink = uniData[0].erasmusLink;
+  document.getElementById('infoPanelMainCard').innerHTML = `
+    <div class="main-card-details">
+      <img src="${uniData[0].logo}" alt="${data.university}">
+      <h3>${data.university}</h3>
+    </div>
+    <div class="main-card-actions">
+      ${mainErasmusLink ? `<a href="${mainErasmusLink}" target="_blank" class="partner-cta erasmus">Erasmus Info</a>` : ''}
     </div>
   `;
-  document.getElementById('infoPanelSubcards').insertAdjacentHTML('beforeend', subcardHTML);
-});
-const container = document.getElementById('infoPanelSubcards');
-container.querySelectorAll('.partner-cta.info').forEach(btn => {
-  btn.addEventListener('click', e => {
-    const href = e.currentTarget.getAttribute('data-href');
-    if (href) window.open(href, '_blank');
+  
+  document.getElementById('infoPanelSubcards').innerHTML = '';
+  uniData.forEach(item => {
+    if (!item) return;
+    const infoEnabled = item.programLink && item.programLink !== '#';
+    const applyEnabled = item.applyLink && item.applyLink !== '#';
+    const subcardHTML = `
+      <div class="subcard">
+        <div class="subcard-info">
+          <img src="${item.logo}" alt="">
+          <h4>${item.programName.replace(/\\n/g, ' ')}</h4>
+        </div>
+        <div class="subcard-buttons">
+          <button class="partner-cta info" ${infoEnabled ? '' : 'disabled'} data-href="${infoEnabled ? item.programLink : ''}">University Info</button>
+          <button class="partner-cta apply" ${applyEnabled ? '' : 'disabled'} data-return="/members/home">Apply Now</button>
+        </div>
+      </div>
+    `;
+    document.getElementById('infoPanelSubcards').insertAdjacentHTML('beforeend', subcardHTML);
   });
-});
-container.querySelectorAll('.partner-cta.apply').forEach(btn => {
-  btn.addEventListener('click', e => {
-    window.top.location.href = 'https://www.globaleducarealliance.com/home?promptLogin=1';
+  
+  const container = document.getElementById('infoPanelSubcards');
+  container.querySelectorAll('.partner-cta.info').forEach(btn => {
+    btn.addEventListener('click', e => {
+      const href = e.currentTarget.getAttribute('data-href');
+      if (href) window.open(href, '_blank');
+    });
   });
-});
-document.getElementById('infoPanelOverlay').style.display = 'flex';
-console.log('✅ Info panel displayed with both university and application links');
-*/
+  container.querySelectorAll('.partner-cta.apply').forEach(btn => {
+    btn.addEventListener('click', e => {
+      window.top.location.href = 'https://www.globaleducarealliance.com/home?promptLogin=1';
+    });
+  });
+  
+  document.getElementById('infoPanelOverlay').style.display = 'flex';
+  console.log('✅ Info panel displayed with both university and application links');
+}
 
 function hideInfoPanel() {
   document.getElementById('infoPanelOverlay').style.display = 'none';
@@ -213,10 +206,8 @@ function addInfoPanelStyles() {
     #infoPanelOverlay {
       display: none;
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
       background: rgba(0,0,0,0.8);
       z-index: 10000;
       justify-content: center;
@@ -231,37 +222,16 @@ function addInfoPanelStyles() {
       overflow-y: auto;
     }
     .partner-cta {
-      padding: 8px 16px;
-      margin: 5px;
-      border: none;
-      border-radius: 5px;
-      background: #007bff;
-      color: white;
+      padding: 8px 16px; margin: 5px;
+      border: none; border-radius: 5px;
+      background: #007bff; color: white;
       cursor: pointer;
     }
-    .partner-cta.disabled {
-      background: #ccc;
-      cursor: not-allowed;
-    }
-    .partner-cta:hover:not(.disabled) {
-      background: #0056b3;
-    }
-    .subcard {
-      border: 1px solid #ddd;
-      padding: 10px;
-      margin: 10px 0;
-      border-radius: 5px;
-    }
-    .subcard-info img {
-      width: 40px;
-      height: 40px;
-      margin-right: 10px;
-    }
-    .main-card-details img {
-      width: 60px;
-      height: 60px;
-      margin-right: 15px;
-    }
+    .partner-cta.disabled { background: #ccc; cursor: not-allowed; }
+    .partner-cta:hover:not(.disabled) { background: #0056b3; }
+    .subcard { border: 1px solid #ddd; padding: 10px; margin: 10px 0; border-radius: 5px; }
+    .subcard-info img { width: 40px; height: 40px; margin-right: 10px; }
+    .main-card-details img { width: 60px; height: 60px; margin-right: 15px; }
   `;
   document.head.appendChild(style);
   const overlay = document.createElement('div');
@@ -615,7 +585,7 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
   ctx.textAlign = 'center';
   const texture = new THREE.CanvasTexture(canvas);
   function drawText() {
-    const lines = text.split('\n');
+    const lines = text.split('\\n');
     const fontSize = lines.length > 1 ? 28 : 32;
     ctx.font = `bold ${fontSize}px Arial`;
     let y = 128 + (lines.length > 1 ? 0 : 10);
@@ -691,8 +661,7 @@ const toggleFunctionMap = {
   'USA': createToggleFunction('USA'), 'India': createToggleFunction('India'),
   'Singapore': createToggleFunction('Singapore'), 'Malaysia': createToggleFunction('Malaysia')
 };
-// =============
-// ===
+
 // ===
 // CUBE CREATION (with "Apply Now" highlight)
 // ===
