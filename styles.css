@@ -598,7 +598,7 @@ body {
   padding: 15px;
   border-radius: 8px;
   border: 1px solid #a46bfd;
-  pointer-events: none; /* CRITICAL: This lets mouse clicks pass through to the globe canvas */
+  pointer-events: none; /* This is the line to change */
   transition: opacity 0.2s ease-in-out;
   z-index: 1000;
   max-width: 250px;
@@ -622,6 +622,7 @@ body {
   margin: 0 0 12px 0;
   font-size: 14px;
   line-height: 1.4;
+  
 }
 
 #hover-card-buttons button {
