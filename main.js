@@ -1,27 +1,28 @@
+// =============
+// ==  PART 1: SETUP, AUTH, AND DATA
+// =============
+
+// === Authentication & Redirection (No-Op for Standalone) ===
 function redirectToWix() { /* no-op on external globe */ }
 async function requireLoginAndGo() { return; }
-// No-op placeholders replacing custom SSO usage in front-end
 async function isLoggedIn() { return false; }
-async function updateAuthStatus() { /* no-op to keep UI simple */ }
+async function updateAuthStatus() { /* no-op */ }
 async function handleCallback() { /* no-op */ }
 async function logout() { window.top.location.href = 'https://www.globaleducarealliance.com/home'; }
-// ===
-// DASHBOARD / UPLOAD actions — always require login, then go Home
-// ===
+
+// === Dashboard / Upload actions ===
 async function openStudentDashboard() { await requireLoginAndGo(); }
 async function uploadDocument() { await requireLoginAndGo(); }
-// ===
-// AUTH-DEPENDENT ACTIVATION (UI visual only — still allowed for engagement)
-// ===
+
+// === AUTH-DEPENDENT ACTIVATION ===
 function activateAllCubes() {
   console.log('🎮 Activating all university cubes for authenticated member');
-  Object.entries(countryBlocks).forEach(([country, group]) => {
+  Object.values(countryBlocks).forEach(group => {
     group.userData.isClickable = true;
     group.material.opacity = 1.0;
     group.material.emissiveIntensity = 1.2;
   });
-  [europeSubCubes, newThailandSubCubes, canadaSubCubes, ukSubCubes, 
-   usaSubCubes, indiaSubCubes, singaporeSubCubes, malaysiaSubCubes].forEach(subCubeArray => {
+  [europeSubCubes, newThailandSubCubes, canadaSubCubes, ukSubCubes, usaSubCubes, indiaSubCubes, singaporeSubCubes, malaysiaSubCubes].forEach(subCubeArray => {
       subCubeArray.forEach(subCube => {
         if (subCube && subCube.userData) {
           subCube.userData.isClickable = true;
@@ -32,113 +33,79 @@ function activateAllCubes() {
   });
   showNotification('Success! You now have access to all university programs.');
 }
-// ===
-// SAFE FETCH WRAPPER - NEW ADDITION
-// ===
+
+// === SAFE FETCH WRAPPER ===
 async function safeFetch(url, options = {}) {
   try {
     console.log(`🌐 Fetching: ${url}`);
     const response = await fetch(url, {
       credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json' },
       ...options
     });
-    
     if (!response.ok) {
       console.error(`❌ HTTP Error ${response.status}: ${response.statusText} for ${url}`);
       return null;
     }
-    
     const data = await response.json();
     console.log(`✅ Success fetching: ${url}`);
     return data;
-    
   } catch (error) {
     console.error(`❌ Network Error fetching ${url}:`, error);
     return null;
   }
 }
-// Info panel — fully gated behind server auth status
+
+// === AUTH STATUS LOGIC ===
 let authStatus = { isAuthenticated: false, user: null };
-// ===
-// IMPROVED FETCH AUTH STATUS WITH ERROR HANDLING
-// ===
 async function fetchAuthStatus() {
   try {
     console.log('🔍 Fetching auth status...');
-    const res = await fetch('/api/auth/status', { 
-      credentials: 'include', 
-      cache: 'no-store',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-    
+    const res = await fetch('/api/auth/status', { credentials: 'include', cache: 'no-store' });
     if (!res.ok) {
       console.error(`❌ Auth status fetch failed: ${res.status} ${res.statusText}`);
       authStatus = { isAuthenticated: false, user: null };
       return;
     }
-    
     const data = await res.json();
     authStatus = { isAuthenticated: !!data.isAuthenticated, user: data.user || null };
     console.log('✅ Auth status updated:', authStatus);
-    
   } catch (e) {
     console.error('❌ Auth status fetch error:', e);
     authStatus = { isAuthenticated: false, user: null };
   }
 }
-// ===
-// ===
-// AUTH STATUS POLLING - IMPROVED WITH SAFER FETCH
-// ===
+
 function startAuthStatusPolling() {
   setInterval(async () => {
     const oldStatus = authStatus.isAuthenticated;
     await fetchAuthStatus();
-    
-    // Check if user just logged in
     if (!oldStatus && authStatus.isAuthenticated) {
       console.log('🎉 User authentication detected - activating cubes!');
-      activateAllCubes(); // This already shows the notification
-      // REMOVED: showNotification('Congratulations! All university programs are now available.', true);
+      activateAllCubes();
     }
-    
-    // Optional: Check if user logged out
     if (oldStatus && !authStatus.isAuthenticated) {
       console.log('👋 User logged out');
       showNotification('Logged out successfully', false);
     }
-  }, 3000); // Check every 3 seconds
+  }, 3000);
 }
-// ===
-// ===
-// FINAL, POWERFUL INFO PANEL SYSTEM
-// ===
+
+// === INFO PANEL SYSTEM ===
 async function showInfoPanel(data) {
-  // We only need the university name from the clicked cube's data
   const universityName = data.university;
   if (!universityName || universityName === 'Unassigned') {
     console.log('❌ Clicked on an unassigned cube.');
     return;
   }
-
-  // Find ALL programs for this university from our master list
   const uniData = allUniversityContent.filter(item => item && item.university === universityName);
-  
   if (uniData.length === 0) {
     console.log(`❌ No content found for ${universityName}`);
-    // Fallback: If for some reason no data is found, do the simple link open
     const linkToOpen = data.programLink || data.applyLink;
     if (linkToOpen && linkToOpen !== '#') window.open(linkToOpen, '_blank');
     return;
   }
-
-  // --- BUILD THE MAIN CARD (University Level) ---
-  const mainProgram = uniData[0]; // Use the first program for general info
+  const mainProgram = uniData[0];
   document.getElementById('infoPanelMainCard').innerHTML = `
     <div class="main-card-details">
       <img src="${mainProgram.logo}" alt="${mainProgram.university} Logo">
@@ -148,17 +115,11 @@ async function showInfoPanel(data) {
       ${mainProgram.erasmusLink && mainProgram.erasmusLink !== '#' ? `<button class="partner-cta erasmus" onclick="window.open('${mainProgram.erasmusLink}', '_blank')">Erasmus Info</button>` : ''}
     </div>
   `;
-
-  // --- BUILD THE SUBCARDS (One for each program) ---
   const subcardsContainer = document.getElementById('infoPanelSubcards');
-  subcardsContainer.innerHTML = ''; // Clear previous content
-
+  subcardsContainer.innerHTML = '';
   uniData.forEach(item => {
-    if (!item) return;
-    
     const infoEnabled = item.programLink && item.programLink !== '#';
     const applyEnabled = item.applyLink && item.applyLink !== '#';
-    
     const subcardHTML = `
       <div class="subcard">
         <div class="subcard-info">
@@ -178,8 +139,6 @@ async function showInfoPanel(data) {
     `;
     subcardsContainer.insertAdjacentHTML('beforeend', subcardHTML);
   });
-
-  // Finally, display the fully built panel
   document.getElementById('infoPanelOverlay').style.display = 'flex';
   console.log(`✅ Info panel displayed for ${universityName}`);
 }
@@ -188,10 +147,8 @@ function hideInfoPanel() {
   document.getElementById('infoPanelOverlay').style.display = 'none';
 }
 
-// This function sets up the HTML and CSS for the panel when the page loads.
 function addInfoPanelStyles() {
   const style = document.createElement('style');
-  // Using the same CSS you already had
   style.textContent = `
     #infoPanelOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center; }
     .info-panel { background: white; padding: 20px; border-radius: 10px; max-width: 600px; max-height: 80vh; overflow-y: auto; }
@@ -205,7 +162,6 @@ function addInfoPanelStyles() {
     .main-card-details h3 { margin: 0; font-size: 24px; }
   `;
   document.head.appendChild(style);
-
   const overlay = document.createElement('div');
   overlay.id = 'infoPanelOverlay';
   overlay.onclick = hideInfoPanel;
@@ -219,18 +175,10 @@ function addInfoPanelStyles() {
   document.body.appendChild(overlay);
 }
 
-// This ensures the panel's HTML and CSS are ready when the page loads.
-document.addEventListener('DOMContentLoaded', addInfoPanelStyles);
-
-// ===
-// GLOBE WIDGET LOGIC (Client-Side UI Only) — unchanged foundation
-// ===
+// === GLOBE WIDGET LOGIC (Global Variables & Definitions) ===
 let scene, camera, renderer, controls, globeGroup, transformControls;
 let GLOBE_RADIUS = 1.0;
-let isPanMode = false;
-let isRotationPaused = false;
-let isCubeMovementPaused = false;
-let isDragging = false;
+let isPanMode = false, isRotationPaused = false, isCubeMovementPaused = false, isDragging = false;
 let previousMousePosition = { x: 0, y: 0 };
 let europeCube, newThailandCube, canadaCube, ukCube, usaCube, indiaCube, singaporeCube, malaysiaCube;
 const europeSubCubes = [], newThailandSubCubes = [], canadaSubCubes = [], ukSubCubes = [], usaSubCubes = [], indiaSubCubes = [], singaporeSubCubes = [], malaysiaSubCubes = [];
@@ -240,68 +188,45 @@ let isEuropeCubeExploded = false, isNewThailandCubeExploded = false, isCanadaCub
 const neuronGroup = new THREE.Group();
 const count = 150, maxRadius = 1.5, vortexCubeSize = 0.01, microGap = 0.002;
 const velocities = [], cubes = [], dummyDataSet = [];
-const neuralCubeMap = {};
-let neuralNetworkLines;
-const countryBlocks = {};
-let arcPaths = [];
-let countryLabels = [];
-const fontLoader = new THREE.FontLoader();
-const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2();
-const mouseDownPos = new THREE.Vector2();
-const clock = new THREE.Clock();
-let countryConfigs = [];
-let europeContent = [];
-let newThailandContent = [];
-let canadaContent = [];
-let ukContent = [];
-let usaContent = [];
-let indiaContent = [];
-let singaporeContent = [];
-let malaysiaContent = [];
-let allUniversityContent = [];
-let countryPrograms = {};
-let globalContentMap = {};
-let carouselData = [];
-let isInteracting = false, hoverTimeout;
+const neuralCubeMap = {}, countryBlocks = {}, countryPrograms = {}, globalContentMap = {};
+let arcPaths = [], arcParticles = [], countryLabels = [];
+let fontLoader, raycaster, mouse, clock;
+let countryConfigs = [], allUniversityContent = [], carouselData = [];
+let isInteracting = false;
 let clickedSubCube = null;
-// --- START: NEW HOVER CARD VARIABLES ---
-// --- START: NEW HOVER CARD VARIABLES ---
-let currentlyHovered = null;
-let hoverCard; // Will be defined after the page loads
-let hoverTimeout; // --- ADD THIS LINE ---
-// --- END: NEW HOVER CARD VARIABLES ---
 
-// ===
-// PUBLIC DATA FETCH
-// ===
+// --- Hover Card Variables ---
+let currentlyHovered = null;
+let hoverCard; 
+let hoverTimeout; 
+
+// === PUBLIC DATA FETCH ===
 async function fetchCarouselData() {
-  try {
-    const response = await fetch('/api/carousel/data');
-    if (response.ok) {
-      carouselData = await response.json();
-      console.log('📊 Carousel data loaded:', carouselData);
-      return true;
+    try {
+        const response = await safeFetch('/api/carousel/data');
+        if (response) {
+            carouselData = response;
+            console.log('📊 Carousel data loaded:', carouselData);
+        } else {
+            throw new Error("Fallback triggered");
+        }
+    } catch (error) {
+        console.log('Using fallback carousel data');
+        carouselData = [
+          { category: "UG", img: "https://static.wixstatic.com/media/d77f36_deddd99f45db4a55953835f5d3926246~mv2.png", title: "Undergraduate", text: "Bachelor-level opportunities." },
+          { category: "PG", img: "https://static.wixstatic.com/media/d77f36_ae2a1e8b47514fb6b0a995be456a9eec~mv2.png", title: "Postgraduate", text: "Master's & advanced." },
+          { category: "Diploma", img: "https://static.wixstatic.com/media/d77f36_e8f60f4350304ee79afab3978a44e307~mv2.png", title: "Diploma", text: "Professional & foundation." },
+          { category: "Mobility", img: "https://static.wixstatic.com/media/d77f36_1118d15eee5a45f2a609c762d077857e~mv2.png", title: "Semester Abroad", text: "Exchange & mobility." },
+          { category: "Upskilling", img: "https://static.wixstatic.com/media/d77f36_d8d9655ba23f4849abba7d09ddb12092~mv2.png", title: "Upskilling", text: "Short-term training." },
+          { category: "Research", img: "https://static.wixstatic.com/media/d77f36_aa9eb498381d4adc897522e38301ae6f~mv2.jpg", title: "Research", text: "Opportunities & links." }
+        ];
     }
-  } catch (error) {
-    console.log('Using fallback carousel data');
-    carouselData = [
-      { category: "UG", img: "https://static.wixstatic.com/media/d77f36_deddd99f45db4a55953835f5d3926246~mv2.png", title: "Undergraduate", text: "Bachelor-level opportunities." },
-      { category: "PG", img: "https://static.wixstatic.com/media/d77f36_ae2a1e8b47514fb6b0a995be456a9eec~mv2.png", title: "Postgraduate", text: "Master's & advanced ." },
-      { category: "Diploma", img: "https://static.wixstatic.com/media/d77f36_e8f60f4350304ee79afab3978a44e307~mv2.png", title: "Diploma", text: "Professional & foundation." },
-      { category: "Mobility", img: "https://static.wixstatic.com/media/d77f36_1118d15eee5a45f2a609c762d077857e~mv2.png", title: "Semester Abroad", text: "Exchange & mobility." },
-      { category: "Upskilling", img: "https://static.wixstatic.com/media/d77f36_d8d9655ba23f4849abba7d09ddb12092~mv2.png", title: "Upskilling", text: "Short-term training." },
-      { category: "Research", img: "https://static.wixstatic.com/media/d77f36_aa9eb498381d4adc897522e38301ae6f~mv2.jpg", title: "Research", text: "Opportunities & links." }
-    ];
-    return false;
-  }
 }
 async function fetchDataFromBackend() {
   try {
     console.log('🔄 Fetching data from server...');
-    const response = await fetch('/api/globe-data');
-    if (response.ok) {
-      const data = await response.json();
+    const data = await safeFetch('/api/globe-data');
+    if (data) {
       console.log('✅ Server data received:', data);
       europeContent = data.europeContent || [];
       newThailandContent = data.newThailandContent || [];
@@ -317,31 +242,23 @@ async function fetchDataFromBackend() {
         'Europe': europeContent, 'Thailand': newThailandContent, 'Canada': canadaContent, 'UK': ukContent,
         'USA': usaContent, 'India': indiaContent, 'Singapore': singaporeContent, 'Malaysia': malaysiaContent
       };
-      allUniversityContent = [
-        ...europeContent, ...newThailandContent, ...canadaContent, ...ukContent,
-        ...usaContent, ...indiaContent, ...singaporeContent, ...malaysiaContent
-      ];
+      allUniversityContent = Object.values(globalContentMap).flat();
       console.log('✅ Data loaded successfully!');
-      return true;
+    } else {
+        throw new Error("Fallback triggered");
     }
   } catch (error) {
     console.error('❌ Error fetching data:', error);
-    // Fallback: minimal scaffolding
     countryConfigs = [
       {"name": "India", "lat": 22, "lon": 78, "color": 0xFF9933}, {"name": "Europe", "lat": 48.8566, "lon": 2.3522, "color": 0x0000FF},
       {"name": "UK", "lat": 53, "lon": -0.1276, "color": 0x191970}, {"name": "Singapore", "lat": 1.35, "lon": 103.8, "color": 0xff0000},
       {"name": "Malaysia", "lat": 4, "lon": 102, "color": 0x0000ff}, {"name": "Thailand", "lat": 13.7563, "lon": 100.5018, "color": 0xffcc00},
       {"name": "Canada", "lat": 56.1304, "lon": -106.3468, "color": 0xff0000}, {"name": "USA", "lat": 39.8283, "lon": -98.5795, "color": 0x003366}
     ];
-    europeContent = Array(27).fill(null); newThailandContent = Array(27).fill(null); canadaContent = Array(27).fill(null);
-    ukContent = Array(27).fill(null); usaContent = Array(27).fill(null); indiaContent = Array(27).fill(null);
-    singaporeContent = Array(27).fill(null); malaysiaContent = Array(27).fill(null);
   }
-  return false;
 }
-// ===
-// PROGRAM FILTERING / HIGHLIGHTING (unchanged)
-// ===
+
+// === PROGRAM FILTERING / HIGHLIGHTING ===
 function getMatchingCountries(category) {
   if (!globalContentMap || Object.keys(globalContentMap).length === 0) { return []; }
   const matcherMap = {
@@ -403,9 +320,8 @@ function highlightNeuralCubesByProgram(selectedCategory) {
   });
   console.log(`✨ Scaled ${matchingCountries.length} neural cubes for ${selectedCategory}`);
 }
-// ===
-// CAROUSEL
-// ===
+
+// === CAROUSEL ===
 async function populateCarousel() {
   await fetchCarouselData();
   const container = document.getElementById('carouselContainer');
@@ -441,45 +357,37 @@ async function populateCarousel() {
   }
   console.log('✅ Carousel populated successfully');
 }
+
 function scrollCarousel(direction) {
   const container = document.getElementById('carouselContainer');
   const card = container ? container.querySelector('.carousel-card') : null;
   if (!card) return;
-  const cardWidth = card.offsetWidth + 16;
+  const cardWidth = card.offsetWidth + 16; // card width + gap
   container.scrollBy({ left: direction * cardWidth, behavior: 'smooth' });
 }
-// ===
-// ===
-// CONTROL TOGGLES (Corrected and Final Version)
-// ===
-// This single function controls whether the user is in "rotate" or "pan" mode.
-// It does NOT affect the automatic rotation.
+
+// === CONTROL TOGGLES ===
 function setInteractionMode(mode) {
   if (!controls) return;
   const rotateBtn = document.getElementById('btn-rotate');
   const panBtn = document.getElementById('btn-pan');
   const canvas = renderer.domElement;
   if (mode === 'ROTATE') {
-    // Set controls to ROTATE mode
     controls.mouseButtons.LEFT = THREE.MOUSE.ROTATE;
     controls.touches.ONE = THREE.TOUCH.ROTATE;
-    // Set button styles for ROTATE mode
-    if (rotateBtn) rotateBtn.style.background = '#a46bfd'; // Active purple color
-    if (panBtn) panBtn.style.background = 'rgba(0,0,0,0.8)'; // Inactive color
-    canvas.style.cursor = 'default'; // Default cursor for rotation
+    if (rotateBtn) rotateBtn.style.background = '#a46bfd';
+    if (panBtn) panBtn.style.background = 'rgba(0,0,0,0.8)';
+    canvas.style.cursor = 'default';
   } else if (mode === 'PAN') {
-    // Set controls to PAN mode
     controls.mouseButtons.LEFT = THREE.MOUSE.PAN;
     controls.touches.ONE = THREE.TOUCH.PAN;
-    // Set button styles for PAN mode
-    if (rotateBtn) rotateBtn.style.background = 'rgba(0,0,0,0.8)'; // Inactive color
-    if (panBtn) panBtn.style.background = '#ffa500'; // Active orange color
-    canvas.style.cursor = 'grab'; // "grab" cursor for panning
+    if (rotateBtn) rotateBtn.style.background = 'rgba(0,0,0,0.8)';
+    if (panBtn) panBtn.style.background = '#ffa500';
+    canvas.style.cursor = 'grab';
   }
 }
-// ===
-// Three.js initialization
-// ===
+
+// === Three.js Initialization ===
 function initializeThreeJS() {
   console.log('🔄 Initializing Three.js...');
   scene = new THREE.Scene();
@@ -511,10 +419,20 @@ function initializeThreeJS() {
   const pointLight = new THREE.PointLight(0xffffff, 1.5);
   pointLight.position.set(5, 5, 5);
   scene.add(pointLight);
+  
+  raycaster = new THREE.Raycaster();
+  mouse = new THREE.Vector2();
+  clock = new THREE.Clock();
+  fontLoader = new THREE.FontLoader();
+
   renderer.domElement.addEventListener('mousedown', () => { isInteracting = true; clearTimeout(hoverTimeout); if (isPanMode) renderer.domElement.style.cursor = 'grabbing'; });
   renderer.domElement.addEventListener('mouseup', () => { hoverTimeout = setTimeout(() => { isInteracting = false; }, 200); if (isPanMode) renderer.domElement.style.cursor = 'grab'; });
+  
+  addInfoPanelStyles();
+  
   console.log('✅ Three.js initialized successfully');
 }
+
 function updateCanvasSize() {
   const headerHeight = document.querySelector('.header-ui-bar')?.offsetHeight || 0;
   const footerHeight = document.querySelector('.footer-ui-bar')?.offsetHeight || 0;
@@ -526,9 +444,8 @@ function updateCanvasSize() {
   camera.aspect = window.innerWidth / newHeight;
   camera.updateProjectionMatrix();
 }
-// ===
-// UTILITIES
-// ===
+
+// === UTILITIES ===
 function getColorByData(data) {
   const baseHue = data.domain * 30 % 360;
   const lightness = 50 + data.engagement * 25;
@@ -566,9 +483,8 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
   } else { drawText(); }
   return new THREE.MeshStandardMaterial({ map: texture, emissive: new THREE.Color(bgColor), emissiveIntensity: 0.6 });
 }
-// ===
-// TOGGLE FUNCTION CREATION
-// ===
+
+// === TOGGLE FUNCTION CREATION ===
 function createToggleFunction(cubeName) {
   return function() {
     const explosionStateMap = {
@@ -626,12 +542,10 @@ const toggleFunctionMap = {
   'Singapore': createToggleFunction('Singapore'), 'Malaysia': createToggleFunction('Malaysia')
 };
 // =============
+// == PART 2: 3D OBJECTS & ANIMATION LOOP
 // =============
-// == FULLY CORRECTED PART 2 (with FINAL "Sticky" Hover Card)
-// =============
-// ===
-// CUBE CREATION (Reverted to Original Colors)
-// ===
+
+// === CUBE AND SCENE OBJECT CREATION ===
 function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
   let contentIdx = 0;
   const cubeObject = new THREE.Group();
@@ -641,49 +555,32 @@ function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
         const item = content[contentIdx];
         let material, userData;
         if (item) {
-          // Reverted to use the default country color for all cubes
           material = createTexture(item.programName, item.logo, color);
           userData = item;
         } else {
           material = createTexture('Unassigned', null, '#333333');
           userData = { university: "Unassigned" };
         }
-        
-        const microcube = new THREE.Mesh(
-          new THREE.BoxGeometry(vortexCubeSize, vortexCubeSize, vortexCubeSize),
-          material
-        );
-        const pos = new THREE.Vector3(
-          xi * (vortexCubeSize + microGap),
-          yi * (vortexCubeSize + microGap),
-          zi * (vortexCubeSize + microGap)
-        );
+        const microcube = new THREE.Mesh(new THREE.BoxGeometry(vortexCubeSize, vortexCubeSize, vortexCubeSize), material);
+        const pos = new THREE.Vector3(xi * (vortexCubeSize + microGap), yi * (vortexCubeSize + microGap), zi * (vortexCubeSize + microGap));
         microcube.position.copy(pos);
         microcube.userData = { ...userData, isSubCube: true, initialPosition: pos.clone() };
         subCubeArray.push(microcube);
-        explodedPositionArray.push(new THREE.Vector3(
-          xi * explodedSpacing, yi * explodedSpacing, zi * explodedSpacing
-        ));
+        explodedPositionArray.push(new THREE.Vector3(xi * explodedSpacing, yi * explodedSpacing, zi * explodedSpacing));
         cubeObject.add(microcube);
         contentIdx++;
       }
   return cubeObject;
 }
-// CORRECTED: Creates a Mesh for the membrane effect
+
 function createNeuralNetwork() {
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.Float32BufferAttribute([], 3));
-  const material = new THREE.MeshBasicMaterial({
-    color: 0x00BFFF,
-    side: THREE.DoubleSide,
-    transparent: true,
-    opacity: 0.1,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false
-  });
+  const material = new THREE.MeshBasicMaterial({ color: 0x00BFFF, side: THREE.DoubleSide, transparent: true, opacity: 0.1, blending: THREE.AdditiveBlending, depthWrite: false });
   neuralNetworkLines = new THREE.Mesh(geometry, material);
   globeGroup.add(neuralNetworkLines);
 }
+
 function latLonToVector3(lat, lon, radius) {
   const phi = (90 - lat) * (Math.PI / 180);
   const theta = (lon + 180) * (Math.PI / 180);
@@ -692,13 +589,15 @@ function latLonToVector3(lat, lon, radius) {
   const y = (radius * Math.cos(phi));
   return new THREE.Vector3(x, y, z);
 }
+
 function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
   const rainbowExtendedColors = [0xff0000, 0xff7f00, 0xffff00, 0x00ff00, 0x0000ff, 0x4b0082, 0x8a2be2, 0x9400d3, 0x7f00ff];
   const color = rainbowExtendedColors[arcIndex % rainbowExtendedColors.length];
   const start = new THREE.Vector3(); fromGroup.getWorldPosition(start);
   const end = new THREE.Vector3(); toGroup.getWorldPosition(end);
-  const globeRadius = 1.0; const arcOffset = 0.05;
-  const distance = start.distanceTo(end); const arcElevation = distance * 0.4;
+  const globeRadius = 1.0, arcOffset = 0.05;
+  const distance = start.distanceTo(end);
+  const arcElevation = distance * 0.4;
   const offsetStart = start.clone().normalize().multiplyScalar(globeRadius + arcOffset);
   const offsetEnd = end.clone().normalize().multiplyScalar(globeRadius + arcOffset);
   const mid = offsetStart.clone().add(offsetEnd).multiplyScalar(0.5).normalize().multiplyScalar(globeRadius + arcOffset + arcElevation);
@@ -706,53 +605,42 @@ function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
   const geometry = new THREE.TubeGeometry(curve, 64, 0.008, 24, false);
   const vertexShader = `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
   const fragmentShader = `varying vec2 vUv; uniform float time; uniform vec3 color; void main() { float glow = sin(time * 2.0 + vUv.x * 10.0) * 0.5 + 0.5; float intensity = (1.0 - abs(vUv.y - 0.5) * 2.0) * glow; gl_FragColor = vec4(color, intensity * 0.8); }`;
-  const material = new THREE.ShaderMaterial({
-    uniforms: { time: { value: 0 }, color: { value: new THREE.Color(color) } },
-    vertexShader, fragmentShader, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
-  });
+  const material = new THREE.ShaderMaterial({ uniforms: { time: { value: 0 }, color: { value: new THREE.Color(color) } }, vertexShader, fragmentShader, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
   const path = new THREE.Mesh(geometry, material);
   path.renderOrder = 1;
   path.userData.curve = curve;
   globeGroup.add(path);
   return path;
 }
+
 function animateArcParticles(arc) {
   const curve = arc.userData.curve;
   if (!curve) return;
-  const particleCount = 5;
-  const speed = 0.5;
-  for (let i = 0; i < particleCount; i++) {
-    const particle = new THREE.Mesh(
-      new THREE.SphereGeometry(0.01, 8, 8),
-      new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.7 })
-    );
-    particle.userData = {
-      t: Math.random(),
-      speed: speed * (0.8 + Math.random() * 0.4),
-      curve: curve
-    };
+  for (let i = 0; i < 5; i++) {
+    const particle = new THREE.Mesh(new THREE.SphereGeometry(0.01, 8, 8), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.7 }));
+    particle.userData = { t: Math.random(), speed: 0.5 * (0.8 + Math.random() * 0.4), curve };
     scene.add(particle);
     arcParticles.push(particle);
   }
 }
+
 function drawAllConnections() {
   const countryNames = ["India", "Europe", "UK", "Canada", "USA", "Singapore", "Malaysia"];
   const originalPairs = countryNames.map(country => ["Thailand", country]);
-  const additionalPairs = [ ["India", "Canada"], ["India", "Europe"], ["Canada", "USA"] ];
-  const allPairs = [...originalPairs, ...additionalPairs];
-  arcPaths = allPairs.map(([from, to], index) => {
+  const additionalPairs = [["India", "Canada"], ["India", "Europe"], ["Canada", "USA"]];
+  arcPaths = [...originalPairs, ...additionalPairs].map(([from, to], index) => {
     const fromBlock = countryBlocks[from];
     const toBlock = countryBlocks[to];
-    if (fromBlock && toBlock) return createConnectionPath(fromBlock, toBlock, index);
+    return fromBlock && toBlock ? createConnectionPath(fromBlock, toBlock, index) : null;
   }).filter(Boolean);
   arcPaths.forEach(animateArcParticles);
 }
-// ===
-// MOUSE EVENT HANDLERS
-// ===
+
+// === MOUSE EVENT HANDLERS ===
 function onCanvasMouseDown(event) {
   mouseDownPos.set(event.clientX, event.clientY);
 }
+
 function closeAllExploded() {
   if (isEuropeCubeExploded) toggleFunctionMap['Europe']();
   if (isNewThailandCubeExploded) toggleFunctionMap['Thailand']();
@@ -763,41 +651,42 @@ function closeAllExploded() {
   if (isSingaporeCubeExploded) toggleFunctionMap['Singapore']();
   if (isMalaysiaCubeExploded) toggleFunctionMap['Malaysia']();
 }
+
 function onCanvasMouseUp(event) {
   if (transformControls.dragging) return;
-  const deltaX = Math.abs(event.clientX - mouseDownPos.x);
-  const deltaY = Math.abs(event.clientY - mouseDownPos.y);
-  if (deltaX > 5 || deltaY > 5) return;
-  if (event.target.closest('.info-panel') || event.target.closest('.hover-card')) return;
+  if (Math.abs(event.clientX - mouseDownPos.x) > 5 || Math.abs(event.clientY - mouseDownPos.y) > 5) return;
+  if (event.target.closest('.info-panel') || event.target.closest('#hover-card')) return;
+
   const canvasRect = renderer.domElement.getBoundingClientRect();
   mouse.x = ((event.clientX - canvasRect.left) / canvasRect.width) * 2 - 1;
   mouse.y = -((event.clientY - canvasRect.top) / canvasRect.height) * 2 + 1;
+
   raycaster.setFromCamera(mouse, camera);
   const allClickableObjects = [...Object.values(countryBlocks), ...neuronGroup.children];
   const intersects = raycaster.intersectObjects(allClickableObjects, true);
+
   if (intersects.length === 0) { closeAllExploded(); return; }
+
   const clickedObject = intersects[0].object;
   if (clickedObject.userData.countryName) {
     const countryName = clickedObject.userData.countryName;
     const correspondingNeuralCube = neuralCubeMap[countryName];
     const toggleFunc = toggleFunctionMap[countryName];
     if (correspondingNeuralCube && toggleFunc) {
-      const explosionStateMap = {'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded,'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded,'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded};
       const anyExploded = Object.values(explosionStateMap).some(state => state);
       closeAllExploded();
       if (typeof TWEEN !== 'undefined') { new TWEEN.Tween(correspondingNeuralCube.scale).to({ x: 1.5, y: 1.5, z: 1.5 }, 200).yoyo(true).repeat(1).start(); }
-      setTimeout(() => { toggleFunc(); }, anyExploded ? 810 : 400);
+      setTimeout(() => toggleFunc(), anyExploded ? 810 : 400);
     }
     return;
   }
-  let parent = clickedObject;
-  let neuralName = null;
-  let clickedSubCubeLocal = clickedObject.userData.isSubCube ? clickedObject : null;
+
+  let parent = clickedObject, neuralName = null, clickedSubCubeLocal = clickedObject.userData.isSubCube ? clickedObject : null;
   while (parent) {
     if (parent.userData.neuralName) { neuralName = parent.userData.neuralName; break; }
     parent = parent.parent;
   }
-  const explosionStateMap = {'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded,'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded,'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded};
+
   if (neuralName) {
     const isExploded = explosionStateMap[neuralName];
     const toggleFunc = toggleFunctionMap[neuralName];
@@ -812,237 +701,80 @@ function onCanvasMouseUp(event) {
       closeAllExploded();
       setTimeout(() => toggleFunc(), anyExploded ? 810 : 0);
     }
-  } else { 
-    closeAllExploded(); 
+  } else {
+    closeAllExploded();
   }
 }
-function onCanvasMouseDownPan(event) {
-  mouseDownPos.set(event.clientX, event.clientY);
-  if (isPanMode) {
-    isDragging = true;
-    previousMousePosition = { x: event.clientX, y: event.clientY };
-    renderer.domElement.style.cursor = 'grabbing';
-    event.preventDefault(); event.stopPropagation();
-  }
-}
-function onCanvasMouseMovePan(event) {
-  if (isPanMode && isDragging) {
-    const deltaMove = { x: event.clientX - previousMousePosition.x, y: event.clientY - previousMousePosition.y };
-    const panSpeed = 0.001;
-    const deltaX = deltaMove.x * panSpeed;
-    const deltaY = deltaMove.y * panSpeed;
-    controls.target.x -= deltaX;
-    controls.target.y += deltaY;
-    const maxPan = 2.0;
-    controls.target.x = Math.max(-maxPan, Math.min(maxPan, controls.target.x));
-    controls.target.y = Math.max(-maxPan, Math.min(maxPan, controls.target.y));
-    controls.update();
-    previousMousePosition = { x: event.clientX, y: event.clientY };
-    event.preventDefault(); event.stopPropagation();
-  }
-}
-function onCanvasMouseUpPan(event) {
-  if (isPanMode) {
-    isDragging = false;
-    renderer.domElement.style.cursor = isPanMode ? 'grab' : 'default';
-    event.preventDefault(); event.stopPropagation();
-  }
-  onCanvasMouseUp(event);
-}
-// ===
-// EVENT LISTENERS SETUP
-// ===
-function setupEventListeners() {
-  renderer.domElement.addEventListener('mousedown', onCanvasMouseDownPan);
-  renderer.domElement.addEventListener('mousemove', onCanvasMouseMovePan);
-  renderer.domElement.addEventListener('mouseup', onCanvasMouseUpPan);
-  renderer.domElement.addEventListener('mouseenter', () => { if (isPanMode) { renderer.domElement.style.cursor = 'grab'; } });
-  
-  window.addEventListener('mousemove', (event) => {
-    const canvasRect = renderer.domElement.getBoundingClientRect();
-    mouse.x = ((event.clientX - canvasRect.left) / canvasRect.width) * 2 - 1;
-    mouse.y = -((event.clientY - canvasRect.top) / canvasRect.height) * 2 + 1;
-  });
 
-  const panSpeed = 0.1;
-  const btnUp = document.getElementById('btn-up'); if (btnUp) { btnUp.addEventListener('click', () => { controls.target.y += panSpeed; controls.update(); }); }
-  const btnDown = document.getElementById('btn-down'); if (btnDown) { btnDown.addEventListener('click', () => { controls.target.y -= panSpeed; controls.update(); }); }
-  const btnLeft = document.getElementById('btn-left'); if (btnLeft) { btnLeft.addEventListener('click', () => { controls.target.x -= panSpeed; controls.update(); }); }
-  const btnRight = document.getElementById('btn-right'); if (btnRight) { btnRight.addEventListener('click', () => { controls.target.x += panSpeed; controls.update(); }); }
-  const btnZoomIn = document.getElementById('btn-zoom-in'); if (btnZoomIn) { btnZoomIn.addEventListener('click', () => { camera.position.multiplyScalar(0.9); controls.update(); }); }
-  const btnZoomOut = document.getElementById('btn-zoom-out'); if (btnZoomOut) { btnZoomOut.addEventListener('click', () => { camera.position.multiplyScalar(1.1); controls.update(); }); }
-  
-  const btnRotate = document.getElementById('btn-rotate');
-  if (btnRotate) { btnRotate.addEventListener('click', () => setInteractionMode('ROTATE')); }
-  const btnPan = document.getElementById('btn-pan');
-  if (btnPan) { btnPan.addEventListener('click', () => setInteractionMode('PAN')); }
-  
-  setInteractionMode('ROTATE');
-  
-  const pauseButton = document.getElementById("pauseButton");
-  if (pauseButton) {
-    pauseButton.addEventListener("click", () => {
-      isRotationPaused = !isRotationPaused;
-      controls.autoRotate = !isRotationPaused;
-      pauseButton.textContent = isRotationPaused ? "Resume Rotation" : "Pause Rotation";
+// === EVENT LISTENERS SETUP ===
+function setupEventListeners() {
+    renderer.domElement.addEventListener('mousedown', onCanvasMouseDown);
+    
+    // Mouse move listener for raycaster
+    window.addEventListener('mousemove', (event) => {
+        const canvasRect = renderer.domElement.getBoundingClientRect();
+        mouse.x = ((event.clientX - canvasRect.left) / canvasRect.width) * 2 - 1;
+        mouse.y = -((event.clientY - canvasRect.top) / canvasRect.height) * 2 + 1;
+    }, false);
+
+    // Other listeners
+    const panSpeed = 0.1;
+    document.getElementById('btn-up')?.addEventListener('click', () => { controls.target.y += panSpeed; controls.update(); });
+    document.getElementById('btn-down')?.addEventListener('click', () => { controls.target.y -= panSpeed; controls.update(); });
+    document.getElementById('btn-left')?.addEventListener('click', () => { controls.target.x -= panSpeed; controls.update(); });
+    document.getElementById('btn-right')?.addEventListener('click', () => { controls.target.x += panSpeed; controls.update(); });
+    document.getElementById('btn-zoom-in')?.addEventListener('click', () => { camera.position.multiplyScalar(0.9); controls.update(); });
+    document.getElementById('btn-zoom-out')?.addEventListener('click', () => { camera.position.multiplyScalar(1.1); controls.update(); });
+    document.getElementById('btn-rotate')?.addEventListener('click', () => setInteractionMode('ROTATE'));
+    document.getElementById('btn-pan')?.addEventListener('click', () => setInteractionMode('PAN'));
+    setInteractionMode('ROTATE');
+    
+    // DOMContentLoaded at the end to initialize everything
+    document.addEventListener('DOMContentLoaded', async () => {
+        hoverCard = document.getElementById('hover-card');
+        console.log('🚀 Loading Interactive Globe Widget...');
+        try {
+            await fetchAuthStatus();
+            await fetchDataFromBackend();
+            initializeThreeJS();
+            setupEventListeners();
+            await createGlobeAndCubes();
+            if (authStatus.isAuthenticated) {
+                setTimeout(() => activateAllCubes(), 500);
+            }
+            await populateCarousel();
+            animate();
+            startAuthStatusPolling();
+            document.getElementById('carouselScrollLeft')?.addEventListener('click', () => scrollCarousel(-1));
+            document.getElementById('carouselScrollRight')?.addEventListener('click', () => scrollCarousel(1));
+            updateCanvasSize();
+            console.log('✅ Globe Widget loaded successfully!');
+        } catch (error) {
+            console.error('❌ Error during initialization:', error);
+        }
     });
-  }
-  
-  const pauseCubesButton = document.getElementById("pauseCubesButton");
-  if (pauseCubesButton) {
-    pauseCubesButton.addEventListener("click", () => {
-      isCubeMovementPaused = !isCubeMovementPaused;
-      pauseCubesButton.textContent = isCubeMovementPaused ? "Resume Cube Motion" : "Pause Cube Motion";
-    });
-  }
-  const toggleMeshButton = document.getElementById("toggleMeshButton");
-  if (toggleMeshButton) {
-    toggleMeshButton.addEventListener("click", () => {
-      const wireframeMesh = globeGroup.children.find(child => child.material && child.material.wireframe);
-      if (wireframeMesh) {
-        wireframeMesh.visible = !wireframeMesh.visible;
-        toggleMeshButton.textContent = wireframeMesh.visible ? "Hide Globe Mesh" : "Show Globe Mesh";
-      }
-    });
-  }
-  const arcToggleBtn = document.getElementById("arcToggleBtn");
-  if (arcToggleBtn) {
-    arcToggleBtn.addEventListener("click", () => {
-      let visible = false;
-      arcPaths.forEach((p, i) => { if (i === 0) { visible = !p.visible; } p.visible = visible; });
-    });
-  }
-  const toggleNodesButton = document.getElementById('toggleNodesButton');
-  if (toggleNodesButton) {
-    toggleNodesButton.addEventListener('click', () => {
-      const neuralNodes = cubes.filter(cube => cube.userData.isSmallNode);
-      const areVisible = neuralNodes.length > 0 && neuralNodes[0].visible;
-      const newVisibility = !areVisible;
-      neuralNodes.forEach(node => { node.visible = newVisibility; });
-      if (neuralNetworkLines) { neuralNetworkLines.visible = newVisibility; }
-      toggleNodesButton.textContent = newVisibility ? "Hide Neural Nodes" : "Show Neural Nodes";
-    });
-  }
-  const scrollLockButton = document.getElementById('scrollLockBtn');
-  if (scrollLockButton) {
-    function setGlobeInteraction(isInteractive) {
-      if (controls) { controls.enabled = isInteractive; }
-      const scrollInstruction = document.getElementById('scrollLockInstruction');
-      if (isInteractive) {
-        scrollLockButton.textContent = 'Unlock Scroll';
-        scrollLockButton.classList.remove('unlocked');
-        if (scrollInstruction) scrollInstruction.textContent = 'Globe is active.';
-      } else {
-        scrollLockButton.textContent = 'Lock Globe';
-        scrollLockButton.classList.add('unlocked');
-        if (scrollInstruction) scrollInstruction.textContent = 'Page scroll is active.';
-      }
-    }
-    scrollLockButton.addEventListener('click', () => { setGlobeInteraction(!controls.enabled); });
-  }
-  document.addEventListener('keydown', (event) => {
-    if (!controls) return;
-    switch(event.code) {
-      case 'ArrowUp': case 'KeyW': event.preventDefault(); controls.target.y += 0.1; controls.update(); break;
-      case 'ArrowDown': case 'KeyS': event.preventDefault(); controls.target.y -= 0.1; controls.update(); break;
-      case 'ArrowLeft': case 'KeyA': event.preventDefault(); controls.target.x -= 0.1; controls.update(); break;
-      case 'ArrowRight': case 'KeyD': event.preventDefault(); controls.target.x += 0.1; controls.update(); break;
-      case 'Equal': case 'NumpadAdd': event.preventDefault(); camera.position.multiplyScalar(0.9); controls.update(); break;
-      case 'Minus': case 'NumpadSubtract': event.preventDefault(); camera.position.multiplyScalar(1.1); controls.update(); break;
-      case 'Space': 
-        event.preventDefault(); 
-        if(pauseButton) pauseButton.click();
-        break;
-    }
-  });
-  window.addEventListener('resize', () => { updateCanvasSize(); });
+    
+    window.addEventListener('resize', updateCanvasSize);
 }
-// ===
-// GLOBE AND CUBES CREATION
-// ===
-async function createGlobeAndCubes() {
-  console.log('🔄 Creating globe and cubes...');
-  createNeuralNetwork();
-  for (let i = 0; i < count; i++) {
-    const r = maxRadius * Math.random();
-    const theta = Math.random() * 2 * Math.PI;
-    const phi = Math.acos(2 * Math.random() - 1);
-    const x = r * Math.sin(phi) * Math.cos(theta);
-    const y = r * Math.sin(phi) * Math.sin(theta);
-    const z = r * Math.cos(phi);
-    let cubeObject;
-    if (i === 0) { cubeObject = createNeuralCube(europeContent, europeSubCubes, explodedPositions, '#003366'); cubeObject.userData.neuralName = 'Europe'; europeCube = cubeObject; }
-    else if (i === 1) { cubeObject = createNeuralCube(newThailandContent, newThailandSubCubes, newThailandExplodedPositions, '#A52A2A'); cubeObject.userData.neuralName = 'Thailand'; newThailandCube = cubeObject; }
-    else if (i === 2) { cubeObject = createNeuralCube(canadaContent, canadaSubCubes, canadaExplodedPositions, '#006400'); cubeObject.userData.neuralName = 'Canada'; canadaCube = cubeObject; }
-    else if (i === 3) { cubeObject = createNeuralCube(ukContent, ukSubCubes, ukExplodedPositions, '#483D8B'); cubeObject.userData.neuralName = 'UK'; ukCube = cubeObject; }
-    else if (i === 4) { cubeObject = createNeuralCube(usaContent, usaSubCubes, usaExplodedPositions, '#B22234'); cubeObject.userData.neuralName = 'USA'; usaCube = cubeObject; }
-    else if (i === 5) { cubeObject = createNeuralCube(indiaContent, indiaSubCubes, indiaExplodedPositions, '#FF9933'); cubeObject.userData.neuralName = 'India'; indiaCube = cubeObject; }
-    else if (i === 6) { cubeObject = createNeuralCube(singaporeContent, singaporeSubCubes, singaporeExplodedPositions, '#EE2536'); cubeObject.userData.neuralName = 'Singapore'; singaporeCube = cubeObject; }
-    else if (i === 7) { cubeObject = createNeuralCube(malaysiaContent, malaysiaSubCubes, malaysiaExplodedPositions, '#FFD700'); cubeObject.userData.neuralName = 'Malaysia'; malaysiaCube = cubeObject; }
-    else {
-      cubeObject = new THREE.Group();
-      const data = { domain: i % 12, engagement: Math.random(), age: Math.random(), risk: Math.random(), confidence: 0.7 + Math.random() * 0.3 };
-      dummyDataSet.push(data);
-      const color = getColorByData(data);
-      const subCubeMaterial = new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.6, transparent: true, opacity: 1.0 });
-      const microcube = new THREE.Mesh(new THREE.BoxGeometry(vortexCubeSize, vortexCubeSize, vortexCubeSize), subCubeMaterial);
-      cubeObject.add(microcube);
-      cubeObject.userData.isSmallNode = true;
-    }
-    cubeObject.position.set(x, y, z);
-    neuronGroup.add(cubeObject);
-    cubes.push(cubeObject);
-    velocities.push(new THREE.Vector3((Math.random() - 0.5) * 0.002, (Math.random() - 0.5) * 0.002, (Math.random() - 0.5) * 0.002));
-    if (cubeObject.userData.neuralName) { neuralCubeMap[cubeObject.userData.neuralName] = cubeObject; }
-  }
-  new THREE.TextureLoader().load("https://static.wixstatic.com/media/d77f36_8f868995fda643a0a61562feb20eb733~mv2.jpg", (tex) => {
-    const globe = new THREE.Mesh(new THREE.SphereGeometry(GLOBE_RADIUS, 64, 64), new THREE.MeshPhongMaterial({ map: tex, transparent: true, opacity: 0.28 }));
-    globeGroup.add(globe);
-  });
-  let wireframeMesh = new THREE.Mesh(new THREE.SphereGeometry(GLOBE_RADIUS + 0.05, 64, 64), new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true, transparent: true, opacity: 0.12 }));
-  globeGroup.add(wireframeMesh);
-  fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', (font) => {
-    countryConfigs.forEach(config => {
-      const size = 0.03;
-      const blockGeometry = new THREE.BoxGeometry(size, size, size);
-      const blockMaterial = new THREE.MeshStandardMaterial({ color: config.color, emissive: config.color, emissiveIntensity: 0.6, transparent: true, opacity: 0.95 });
-      const blockMesh = new THREE.Mesh(blockGeometry, blockMaterial);
-      blockMesh.userData.countryName = config.name;
-      const position = latLonToVector3(config.lat, config.lon, 1.1);
-      blockMesh.position.copy(position);
-      blockMesh.lookAt(0, 0, 0);
-      globeGroup.add(blockMesh);
-      countryBlocks[config.name] = blockMesh;
-      const lG = new THREE.TextGeometry(config.name, { font: font, size: 0.018, height: 0.0001, curveSegments: 8 });
-      lG.center();
-      const lM = new THREE.MeshBasicMaterial({ color: 0xffffff });
-      const lMesh = new THREE.Mesh(lG, lM);
-      countryLabels.push({ label: lMesh, block: blockMesh, offset: 0.06 });
-      globeGroup.add(lMesh);
-    });
-    drawAllConnections();
-    setTimeout(() => { highlightCountriesByProgram("UG"); }, 500);
-  });
-  console.log('✅ Globe and cubes created successfully');
-}
-// ===
-// ANIMATION (with FINAL "Sticky" and Interactive Hover Card)
-// ===
+
+// === ANIMATION LOOP ===
 function animate() {
   requestAnimationFrame(animate);
+
   // --- START: IMPROVED HOVER LOGIC ---
   if (hoverCard) {
     raycaster.setFromCamera(mouse, camera);
     const intersects = raycaster.intersectObjects(neuronGroup.children, true);
+
     let foundValidSubCube = false;
     if (intersects.length > 0) {
       const firstIntersect = intersects[0].object;
+
       if (firstIntersect.userData.isSubCube && firstIntersect.userData.university !== "Unassigned") {
         foundValidSubCube = true;
-        // If we found a cube, clear any pending timeout to hide the card
         clearTimeout(hoverTimeout);
         hoverCard.classList.remove('hover-card-hidden');
-        // Update card content ONLY if we hover over a NEW cube
+
         if (currentlyHovered !== firstIntersect) {
           currentlyHovered = firstIntersect;
           const data = firstIntersect.userData;
@@ -1050,14 +782,14 @@ function animate() {
           document.getElementById('hover-card-program').textContent = data.programName.replace(/\\n/g, ' ');
           const infoBtn = document.getElementById('hover-card-info-btn');
           const applyBtn = document.getElementById('hover-card-apply-btn');
-          // --- MAKE THE BUTTONS CLICKABLE ---
+
           infoBtn.onclick = () => { if (!infoBtn.disabled) window.open(data.programLink, '_blank'); };
           applyBtn.onclick = () => { if (!applyBtn.disabled) window.open(data.applyLink, '_blank'); };
           
           infoBtn.disabled = !data.programLink || data.programLink === '#';
           applyBtn.disabled = !data.applyLink || data.applyLink === '#';
         }
-        // Update position based on the currently hovered cube's screen location
+
         if (currentlyHovered) {
           const vector = new THREE.Vector3();
           currentlyHovered.getWorldPosition(vector);
@@ -1069,20 +801,22 @@ function animate() {
         }
       }
     }
-    // If we did NOT find a valid cube and one was previously hovered
+
     if (!foundValidSubCube && currentlyHovered) {
-      // ...start a timer to hide the card after a delay.
       hoverTimeout = setTimeout(() => {
         hoverCard.classList.add('hover-card-hidden');
-        currentlyHovered = null; // Clear the selection
-      }, 3000); // 3-second grace period
+        currentlyHovered = null;
+      }, 3000); 
     }
   }
   // --- END: IMPROVED HOVER LOGIC ---
+
   const elapsedTime = clock.getElapsedTime();
   if (controls && controls.enabled) { controls.update(); }
   if (typeof TWEEN !== 'undefined') { TWEEN.update(); }
+
   arcPaths.forEach(path => { if (path.material.isShaderMaterial) { path.material.uniforms.time.value = elapsedTime; } });
+
   countryLabels.forEach(item => {
     const worldPosition = new THREE.Vector3();
     item.block.getWorldPosition(worldPosition);
@@ -1091,121 +825,45 @@ function animate() {
     item.label.position.copy(labelPosition);
     item.label.lookAt(camera.position);
   });
+
   const explosionStateMap = {
     'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded,
     'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded,
     'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded
   };
-  const boundaryRadius = 1.0;
-  const buffer = 0.02;
+
   if (!isCubeMovementPaused) {
     cubes.forEach((cube, i) => {
       const isExploded = cube.userData.neuralName && explosionStateMap[cube.userData.neuralName];
       if (!isExploded) {
         cube.position.add(velocities[i]);
-        if (cube.position.length() > boundaryRadius - buffer) {
-          cube.position.normalize().multiplyScalar(boundaryRadius - buffer);
+        if (cube.position.length() > 1.0 - 0.02) {
+          cube.position.normalize().multiplyScalar(1.0 - 0.02);
           velocities[i].reflect(cube.position.clone().normalize());
         }
       }
     });
+
     if (neuralNetworkLines && neuralNetworkLines.visible) {
         const vertices = [];
         const maxDist = 0.6;
-        const connectionsPerCube = 3;
         for (let i = 0; i < cubes.length; i++) {
             if (!cubes[i].visible || cubes[i].userData.neuralName) continue;
             let neighbors = [];
             for (let j = i + 1; j < cubes.length; j++) {
                 if (!cubes[j].visible || cubes[j].userData.neuralName) continue;
                 const dist = cubes[i].position.distanceTo(cubes[j].position);
-                if (dist < maxDist) {
-                    neighbors.push({ dist: dist, cube: cubes[j] });
-                }
+                if (dist < maxDist) neighbors.push({ dist, cube: cubes[j] });
             }
-            neighbors.sort((a, b) => a.dist - b.dist);
-            const closest = neighbors.slice(0, connectionsPerCube);
-            if (closest.length > 1) {
-                for (let k = 0; k < closest.length - 1; k++) {
-                    const startNode = cubes[i].position;
-                    const neighbor1 = closest[k].cube.position;
-                    const neighbor2 = closest[k + 1].cube.position;
-                    vertices.push(startNode.x, startNode.y, startNode.z);
-                    vertices.push(neighbor1.x, neighbor1.y, neighbor1.z);
-                    vertices.push(neighbor2.x, neighbor2.y, neighbor2.z);
-                }
-            }
+            neighbors.sort((a, b) => a.dist - b.dist).slice(0, 3).forEach(n => {
+                vertices.push(cubes[i].position.x, cubes[i].position.y, cubes[i].position.z);
+                vertices.push(n.cube.position.x, n.cube.position.y, n.cube.position.z);
+            });
         }
         neuralNetworkLines.geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
         neuralNetworkLines.geometry.attributes.position.needsUpdate = true;
-        neuralNetworkLines.geometry.computeVertexNormals();
     }
   }
+
   renderer.render(scene, camera);
 }
-// ===
-function togglePrivacySection() {
-  const privacy = document.querySelector('.privacy-assurance');
-  const trust = document.querySelector('.trust-indicators');
-  privacy.classList.toggle('active');
-  trust.classList.toggle('active');
-  if (privacy.classList.contains('active')) {
-    privacy.scrollIntoView({ behavior: 'smooth' });
-  }
-}
-// Show trust indicators after load
-window.addEventListener('load', () => {
-  setTimeout(() => {
-    const trustElement = document.querySelector('.trust-indicators');
-    if (trustElement) {
-      trustElement.classList.add('active');
-    }
-  }, 2000);
-});
-// Notification helpers
-function showNotification(message, isSuccess = true) {
-  const div = document.createElement('div');
-  const icon = isSuccess ? '✅' : '❌';
-  const cssClass = isSuccess ? 'notification' : 'notification error';
-  div.innerHTML = `
-    <div class="${cssClass}" onclick="this.remove()">
-      ${icon} ${message}
-    </div>
-  `;
-  document.body.appendChild(div);
-  setTimeout(() => div.remove(), 5000);
-}
-// ===
-document.addEventListener('DOMContentLoaded', async () => {
-  hoverCard = document.getElementById('hover-card'); // Initialize the hover card
-  console.log('🚀 Loading Interactive Globe Widget...');
-  try {
-    await fetchAuthStatus();
-    if (authStatus.isAuthenticated) {
-      console.log('✅ User is already authenticated on load!');
-    }
-    await fetchDataFromBackend();
-    initializeThreeJS();
-    setupEventListeners();
-    await createGlobeAndCubes();
-    if (authStatus.isAuthenticated) {
-      console.log('🎮 Activating cubes for authenticated user!');
-      setTimeout(() => {
-        activateAllCubes();
-      }, 500);
-    }
-    await populateCarousel();
-    animate();
-    startAuthStatusPolling();
-    const leftBtn = document.getElementById('carouselScrollLeft');
-    const rightBtn = document.getElementById('carouselScrollRight');
-    if (leftBtn) leftBtn.onclick = () => scrollCarousel(-1);
-    if (rightBtn) rightBtn.onclick = () => scrollCarousel(1);
-    updateCanvasSize();
-    console.log('✅ Globe Widget loaded successfully!');
-  } catch (error) {
-    console.error('❌ Error during initialization:', error);
-  }
-});
-
-
