@@ -564,6 +564,10 @@ const toggleFunctionMap = {
 };
 
 
+// =============
+// == FULL CORRECTED PART 2
+// =============
+// ===
 // ===
 // CUBE CREATION (with "Apply Now" highlight)
 // ===
@@ -583,6 +587,7 @@ function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
           material = createTexture('Unassigned', null, '#333333');
           userData = { university: "Unassigned" };
         }
+        
         const microcube = new THREE.Mesh(
           new THREE.BoxGeometry(vortexCubeSize, vortexCubeSize, vortexCubeSize),
           material
@@ -982,7 +987,6 @@ function animate() {
           const infoBtn = document.getElementById('hover-card-info-btn');
           const applyBtn = document.getElementById('hover-card-apply-btn');
           
-          // Assign click events to buttons
           infoBtn.onclick = () => { if (!infoBtn.disabled) window.open(data.programLink, '_blank'); };
           applyBtn.onclick = () => { if (!applyBtn.disabled) window.open(data.applyLink, '_blank'); };
           
@@ -990,7 +994,6 @@ function animate() {
           applyBtn.disabled = !data.applyLink || data.applyLink === '#';
         }
 
-        // Update card position continuously
         if (currentlyHovered) {
           const vector = new THREE.Vector3();
           currentlyHovered.getWorldPosition(vector);
@@ -1003,7 +1006,6 @@ function animate() {
       }
     }
     
-    // If no valid cube is hovered, start a timer to hide the card
     if (!foundValidSubCube && currentlyHovered) {
       hoverTimeout = setTimeout(() => {
         hoverCard.classList.add('hover-card-hidden');
@@ -1129,4 +1131,5 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.error('❌ Error during initialization:', error);
   }
 });
+
 
