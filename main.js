@@ -623,9 +623,9 @@ const toggleFunctionMap = {
   'Singapore': createToggleFunction('Singapore'), 'Malaysia': createToggleFunction('Malaysia')
 };
 // =============
-// == FULL CORRECTED PART 2
 // =============
-// ===
+// == FULL CORRECTED PART 2 (with "Sticky" Hover Card)
+// =============
 // ===
 // CUBE CREATION (Reverted to Original Colors)
 // ===
@@ -638,8 +638,7 @@ function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
         const item = content[contentIdx];
         let material, userData;
         if (item) {
-          // --- THIS IS THE REVERTED LOGIC ---
-          // We are now simply using the 'color' passed into the function for all cubes.
+          // Reverted to use the default country color for all cubes
           material = createTexture(item.programName, item.logo, color);
           userData = item;
         } else {
@@ -667,7 +666,6 @@ function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
       }
   return cubeObject;
 }
-
 // CORRECTED: Creates a Mesh for the membrane effect
 function createNeuralNetwork() {
   const geometry = new THREE.BufferGeometry();
@@ -1052,7 +1050,7 @@ async function createGlobeAndCubes() {
   console.log('✅ Globe and cubes created successfully');
 }
 // ===
-// ANIMATION (with Hover Card Logic)
+// ANIMATION (with "Sticky" Hover Card Logic)
 // ===
 function animate() {
   requestAnimationFrame(animate);
@@ -1085,8 +1083,18 @@ function animate() {
           hoverCard.classList.remove('hover-card-hidden');
         }
         
-        hoverCard.style.left = `${(window.event?.clientX || 0) + 20}px`;
-        hoverCard.style.top = `${(window.event?.clientY || 0) + 20}px`;
+        // --- "STICKY" POSITIONING LOGIC ---
+        if (currentlyHovered) {
+          const vector = new THREE.Vector3();
+          currentlyHovered.getWorldPosition(vector);
+          vector.project(camera);
+          
+          const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
+          const y = (vector.y * -0.5 + 0.5) * window.innerHeight;
+          
+          hoverCard.style.left = `${x + 15}px`;
+          hoverCard.style.top = `${y}px`;
+        }
       }
     }
     
@@ -1235,3 +1243,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.error('❌ Error during initialization:', error);
   }
 });
+
