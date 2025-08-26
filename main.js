@@ -1166,12 +1166,12 @@ async function createGlobeAndCubes() {
 // ===
 // ===
 // ===
-// ANIMATION (CORRECTED AND FULLY INTEGRATED)
+// ANIMATION (CORRECTED WITH PRECISE HOVER LOGIC)
 // ===
 function animate() {
   requestAnimationFrame(animate);
 
-  // --- START: FULLY CORRECTED HOVER LOGIC ---
+  // --- START: PRECISE HOVER LOGIC ---
   if (hoverCard) {
     raycaster.setFromCamera(mouse, camera);
     const intersects = raycaster.intersectObjects(neuronGroup.children, true);
@@ -1179,51 +1179,54 @@ function animate() {
 
     if (intersects.length > 0) {
       const firstIntersect = intersects[0].object;
+      // Check if the intersected object is a sub-cube and has valid data
       if (firstIntersect.userData.isSubCube && firstIntersect.userData.university !== "Unassigned") {
         foundValidSubCube = true;
-        
-        clearTimeout(hoverTimeout); // Prevent the card from hiding while hovering
-        hoverCard.classList.remove('hover-card-hidden');
 
+        // If this is a new cube, update the content
         if (currentlyHovered !== firstIntersect) {
           currentlyHovered = firstIntersect;
           const data = firstIntersect.userData;
-          
-          // Update the content of the hover card
           document.getElementById('hover-card-title').textContent = data.university;
           document.getElementById('hover-card-program').textContent = data.programName.replace(/\\n/g, ' ');
+          
+          const infoBtn = document.getElementById('hover-card-info-btn');
+          const applyBtn = document.getElementById('hover-card-apply-btn');
+
+          // Set button actions and disabled states
+          infoBtn.onclick = () => { if (!infoBtn.disabled) window.open(data.programLink, '_blank'); };
+          applyBtn.onclick = () => { if (!applyBtn.disabled) window.open(data.applyLink, '_blank'); };
+          infoBtn.disabled = !data.programLink || data.programLink === '#';
+          applyBtn.disabled = !data.applyLink || data.applyLink === '#';
         }
 
-        if (currentlyHovered) {
-          // Update the position of the hover card
-          const vector = new THREE.Vector3();
-          currentlyHovered.getWorldPosition(vector);
-          vector.project(camera);
-          const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
-          const y = (vector.y * -0.5 + 0.5) * window.innerHeight;
-          hoverCard.style.left = `${x + 15}px`;
-          hoverCard.style.top = `${y}px`;
-        }
+        // Always show and update position
+        hoverCard.classList.remove('hover-card-hidden');
+        const vector = new THREE.Vector3();
+        currentlyHovered.getWorldPosition(vector);
+        vector.project(camera);
+        const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
+        const y = (vector.y * -0.5 + 0.5) * window.innerHeight;
+        hoverCard.style.left = `${x + 15}px`;
+        hoverCard.style.top = `${y}px`;
       }
     }
-    
-    if (!foundValidSubCube && currentlyHovered) {
-      // If the mouse is no longer over a valid subcube, start a timer to hide it
-      hoverTimeout = setTimeout(() => {
-        hoverCard.classList.add('hover-card-hidden');
-        currentlyHovered = null; // Clear the selection
-      }, 300); // Hide after a short delay for a smoother experience
+
+    // If no valid cube is being hovered, hide the card
+    if (!foundValidSubCube) {
+      hoverCard.classList.add('hover-card-hidden');
+      currentlyHovered = null; // Clear the selection
     }
   }
-  // --- END: FULLY CORRECTED HOVER LOGIC ---
+  // --- END: PRECISE HOVER LOGIC ---
 
-  // === START: EXISTING ANIMATION LOGIC (RETAINED) ===
+  // === RETAIN ALL OTHER ANIMATION LOGIC ===
   const elapsedTime = clock.getElapsedTime();
   if (controls && controls.enabled) { controls.update(); }
   if (typeof TWEEN !== 'undefined') { TWEEN.update(); }
-
+  
   arcPaths.forEach(path => { if (path.material.isShaderMaterial) { path.material.uniforms.time.value = elapsedTime; } });
-
+  
   countryLabels.forEach(item => {
     const worldPosition = new THREE.Vector3();
     item.block.getWorldPosition(worldPosition);
@@ -1232,16 +1235,15 @@ function animate() {
     item.label.position.copy(labelPosition);
     item.label.lookAt(camera.position);
   });
-
+  
   const explosionStateMap = {
     'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded,
     'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded,
     'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded
   };
-
+  
   const boundaryRadius = 1.0;
   const buffer = 0.02;
-
   if (!isCubeMovementPaused) {
     cubes.forEach((cube, i) => {
       const isExploded = cube.userData.neuralName && explosionStateMap[cube.userData.neuralName];
@@ -1253,7 +1255,7 @@ function animate() {
         }
       }
     });
-
+    
     if (neuralNetworkLines && neuralNetworkLines.visible) {
         const vertices = [];
         const maxDist = 0.6;
@@ -1272,15 +1274,13 @@ function animate() {
             
             neighbors.sort((a, b) => a.dist - b.dist);
             const closest = neighbors.slice(0, connectionsPerCube);
-            
+
             if (closest.length > 1) {
                 for (let k = 0; k < closest.length - 1; k++) {
                     const startNode = cubes[i].position;
                     const neighbor1 = closest[k].cube.position;
                     const neighbor2 = closest[k + 1].cube.position;
-                    vertices.push(startNode.x, startNode.y, startNode.z);
-                    vertices.push(neighbor1.x, neighbor1.y, neighbor1.z);
-                    vertices.push(neighbor2.x, neighbor2.y, neighbor2.z);
+                    vertices.push(startNode.x, startNode.y, startNode.z, neighbor1.x, neighbor1.y, neighbor1.z, neighbor2.x, neighbor2.y, neighbor2.z);
                 }
             }
         }
@@ -1292,8 +1292,8 @@ function animate() {
   }
   
   renderer.render(scene, camera);
-  // === END: EXISTING ANIMATION LOGIC (RETAINED) ===
 }
+
 
 
 // ===
