@@ -591,3 +591,56 @@ body {
 .notification.error {
   background-color: #ff4444;
 }
+#hover-card {
+  position: fixed;
+  background: rgba(20, 20, 30, 0.9);
+  color: white;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #a46bfd;
+  pointer-events: none; /* CRITICAL: This lets mouse clicks pass through to the globe canvas */
+  transition: opacity 0.2s ease-in-out;
+  z-index: 1000;
+  max-width: 250px;
+  font-family: Arial, sans-serif;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+.hover-card-hidden {
+  opacity: 0;
+  display: none; /* Hide it completely when not in use */
+}
+
+#hover-card h4 {
+  margin: 0 0 5px 0;
+  font-size: 16px;
+  color: #a46bfd;
+  font-weight: bold;
+}
+
+#hover-card p {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+#hover-card-buttons button {
+  padding: 6px 10px;
+  margin-right: 8px;
+  border: none;
+  border-radius: 5px;
+  font-size: 12px;
+  background-color: #444;
+  color: #ddd;
+}
+
+#hover-card-buttons button:disabled {
+  background-color: #222;
+  color: #666;
+}
+
+#hover-card-apply-btn:not(:disabled) {
+  background-color: #a46bfd; /* Purple for the active apply button */
+  color: white;
+  font-weight: bold;
+}
