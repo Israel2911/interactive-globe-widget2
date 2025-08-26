@@ -691,15 +691,6 @@ const toggleFunctionMap = {
   'USA': createToggleFunction('USA'), 'India': createToggleFunction('India'),
   'Singapore': createToggleFunction('Singapore'), 'Malaysia': createToggleFunction('Malaysia')
 };
-
-// =================================================================
-// == FULL CORRECTED PART 2
-// =================================================================
-
-// ===
-// ===
-// =============
-// == FULL CORRECTED PART 2
 // =============
 // ===
 // ===
