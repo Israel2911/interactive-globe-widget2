@@ -720,6 +720,38 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
   return new THREE.MeshStandardMaterial({ map: texture, emissive: new THREE.Color(bgColor), emissiveIntensity: 0.6 });
 }
 
+// **** ADD THE NEW FUNCTION RIGHT HERE ****
+/**
+ * Finds the correct university sub-cube by name and changes its material
+ * to a glowing green to indicate a submitted application.
+ * @param {string} universityName - The name of the university to find.
+ */
+function setCubeToAppliedState(universityName) {
+  // Combine all sub-cube arrays into one for easy searching
+  const allSubCubes = [
+    ...europeSubCubes, ...newThailandSubCubes, ...canadaSubCubes, ...ukSubCubes,
+    ...usaSubCubes, ...indiaSubCubes, ...singaporeSubCubes, ...malaysiaSubCubes
+  ];
+
+  // Find the first cube that matches the university name.
+  const targetCube = allSubCubes.find(cube => cube && cube.userData.university === universityName);
+
+  if (targetCube) {
+    console.log("Found cube for " + universityName + ". Changing state to 'Applied'.");
+    
+    targetCube.userData.applied = true;
+    
+    const appliedMaterial = targetCube.material.clone();
+    appliedMaterial.color.set(0x00ff00);       // Set color to bright green
+    appliedMaterial.emissive.set(0x00ff00);    // Set emissive glow to bright green
+    appliedMaterial.emissiveIntensity = 1.5;   // Make it glow intensely
+    targetCube.material = appliedMaterial;
+    
+  } else {
+    console.warn("Could not find a cube matching university: " + universityName);
+  }
+}
+
 // =======
 // TOGGLE FUNCTION CREATION
 // =======
