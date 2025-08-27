@@ -123,55 +123,111 @@ function startAuthStatusPolling() {
 
 
 // ===
+// FINAL, POWERFUL INFO PANEL SYSTEM
+// ===
 async function showInfoPanel(data) {
-    const uniData = allUniversityContent.filter(item => item && item.university === data.university);
-    if (uniData.length === 0) {
-      console.log('❌ No university content found');
-      return;
-    }
-    const mainErasmusLink = uniData[0].erasmusLink;
-    document.getElementById('infoPanelMainCard').innerHTML = `
-      <div class="main-card-details">
-        <img src="${uniData[0].logo}" alt="${data.university}">
-        <h3>${data.university}</h3>
-      </div>
-      <div class="main-card-actions">
-        ${mainErasmusLink ? `<a href="${mainErasmusLink}" target="_blank" class="partner-cta erasmus">Erasmus Info</a>` : ''}
+  // We only need the university name from the clicked cube's data
+  const universityName = data.university;
+  if (!universityName || universityName === 'Unassigned') {
+    console.log('❌ Clicked on an unassigned cube.');
+    return;
+  }
+
+  // Find ALL programs for this university from our master list
+  const uniData = allUniversityContent.filter(item => item && item.university === universityName);
+  
+  if (uniData.length === 0) {
+    console.log(`❌ No content found for ${universityName}`);
+    // Fallback: If for some reason no data is found, do the simple link open
+    const linkToOpen = data.programLink || data.applyLink;
+    if (linkToOpen && linkToOpen !== '#') window.open(linkToOpen, '_blank');
+    return;
+  }
+
+  // --- BUILD THE MAIN CARD (University Level) ---
+  const mainProgram = uniData[0]; // Use the first program for general info
+  document.getElementById('infoPanelMainCard').innerHTML = `
+    <div class="main-card-details">
+      <img src="${mainProgram.logo}" alt="${mainProgram.university} Logo">
+      <h3>${mainProgram.university}</h3>
+    </div>
+    <div class="main-card-actions">
+      ${mainProgram.erasmusLink && mainProgram.erasmusLink !== '#' ? `<button class="partner-cta erasmus" onclick="window.open('${mainProgram.erasmusLink}', '_blank')">Erasmus Info</button>` : ''}
+    </div>
+  `;
+
+  // --- BUILD THE SUBCARDS (One for each program) ---
+  const subcardsContainer = document.getElementById('infoPanelSubcards');
+  subcardsContainer.innerHTML = ''; // Clear previous content
+
+  uniData.forEach(item => {
+    if (!item) return;
+    
+    const infoEnabled = item.programLink && item.programLink !== '#';
+    const applyEnabled = item.applyLink && item.applyLink !== '#';
+    
+    const subcardHTML = `
+      <div class="subcard">
+        <div class="subcard-info">
+          <h4>${item.programName.replace(/\\n/g, ' ')}</h4>
+        </div>
+        <div class="subcard-buttons">
+          <button class="partner-cta info" ${infoEnabled ? '' : `disabled title="No info link available"`} 
+                  onclick="if(${infoEnabled}) window.open('${item.programLink}', '_blank')">
+            University Info
+          </button>
+          <button class="partner-cta apply" ${applyEnabled ? '' : `disabled title="No apply link available"`} 
+                  onclick="if(${applyEnabled}) window.open('${item.applyLink}', '_blank')">
+            Apply Now
+          </button>
+        </div>
       </div>
     `;
-    document.getElementById('infoPanelSubcards').innerHTML = '';
-    uniData.forEach(item => {
-      if (!item) return;
-      const infoEnabled = item.programLink && item.programLink !== '#';
-      const applyEnabled = item.applyLink && item.applyLink !== '#';
-      const subcardHTML = `
-        <div class="subcard">
-          <div class="subcard-info">
-            <img src="${item.logo}" alt="">
-            <h4>${item.programName.replace(/\\n/g, ' ')}</h4>
-          </div>
-          <div class="subcard-buttons">
-            <button class="partner-cta info" ${infoEnabled ? '' : 'disabled'} data-href="${infoEnabled ? item.programLink : ''}">University Info</button>
-            <button class="partner-cta apply" ${applyEnabled ? '' : 'disabled'} data-return="/members/home">Apply Now</button>
-          </div>
-        </div>
-      `;
-      document.getElementById('infoPanelSubcards').insertAdjacentHTML('beforeend', subcardHTML);
-    });
-    const container = document.getElementById('infoPanelSubcards');
-    container.querySelectorAll('.partner-cta.info').forEach(btn => {
-      btn.addEventListener('click', e => {
-        const href = e.currentTarget.getAttribute('data-href');
-        if (href) window.open(href, '_blank');
-      });
-    });
-    container.querySelectorAll('.partner-cta.apply').forEach(btn => {
-      btn.addEventListener('click', e => {
-        window.top.location.href = 'https://www.globaleducarealliance.com/home?promptLogin=1';
-      });
-    });
-    document.getElementById('infoPanelOverlay').style.display = 'flex'; 
+    subcardsContainer.insertAdjacentHTML('beforeend', subcardHTML);
+  });
+
+  // Finally, display the fully built panel
+  document.getElementById('infoPanelOverlay').style.display = 'flex';
+  console.log(`✅ Info panel displayed for ${universityName}`);
 }
+
+function hideInfoPanel() {
+  document.getElementById('infoPanelOverlay').style.display = 'none';
+}
+
+// This function sets up the HTML and CSS for the panel when the page loads.
+function addInfoPanelStyles() {
+  const style = document.createElement('style');
+  // Using the same CSS you already had
+  style.textContent = `
+    #infoPanelOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center; }
+    .info-panel { background: white; padding: 20px; border-radius: 10px; max-width: 600px; max-height: 80vh; overflow-y: auto; }
+    .partner-cta { padding: 8px 16px; margin: 5px; border: none; border-radius: 5px; background: #007bff; color: white; cursor: pointer; }
+    .partner-cta.disabled { background: #ccc; cursor: not-allowed; }
+    .partner-cta:hover:not(.disabled) { background: #0056b3; }
+    .subcard { border: 1px solid #ddd; padding: 10px; margin: 10px 0; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; }
+    .subcard-info h4 { margin: 0; }
+    .main-card-details { display: flex; align-items: center; margin-bottom: 15px; }
+    .main-card-details img { width: 60px; height: 60px; margin-right: 15px; border-radius: 5px; }
+    .main-card-details h3 { margin: 0; font-size: 24px; }
+  `;
+  document.head.appendChild(style);
+
+  const overlay = document.createElement('div');
+  overlay.id = 'infoPanelOverlay';
+  overlay.onclick = hideInfoPanel;
+  overlay.innerHTML = `
+    <div class="info-panel" onclick="event.stopPropagation()">
+      <div id="infoPanelMainCard"></div>
+      <div id="infoPanelSubcards"></div>
+      <button onclick="hideInfoPanel()" style="margin-top: 20px; padding: 10px 20px;">Close</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+}
+
+// This ensures the panel's HTML and CSS are ready when the page loads.
+document.addEventListener('DOMContentLoaded', addInfoPanelStyles);
 
 
 // ---------- If later you allow panel post-login, remove the return above and use builder below ----------
