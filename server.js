@@ -365,7 +365,41 @@ app.get('/api/carousel/data', (req, res) => {
         { category: "Research", img: "https://static.wixstatic.com/media/d77f36_aa9eb498381d4adc897522e38301ae6f~mv2.jpg", title: "Research", text: "Opportunities & links." }
     ]);
 });
+// ===
+// START: NEW NOTIFICATION ROUTES
+// ===
 
+// Endpoint to RECEIVE real-time submission events from Wix
+app.post('/api/application-submitted', (req, res) => {
+    // SECURITY NOTE: Add middleware to verify 'Authorization' header
+    const { userId, universityName } = req.body;
+    if (!userId || !universityName) {
+        return res.status(400).send('Missing required fields.');
+    }
+    if (!pendingNotifications[userId]) {
+        pendingNotifications[userId] = [];
+    }
+    pendingNotifications[userId].push({ universityName });
+    console.log(`✅ Stored notification for user ${userId} for ${universityName}.`);
+    res.status(200).send('Notification received.');
+});
+
+// Endpoint for the globe to POLL for notifications
+app.get('/api/applications/notifications', requireAuth, (req, res) => {
+    const userId = req.session.wixUserId;
+    if (pendingNotifications[userId] && pendingNotifications[userId].length > 0) {
+        console.log(`📬 Delivering ${pendingNotifications[userId].length} notifications to user ${userId}.`);
+        const notifications = pendingNotifications[userId];
+        delete pendingNotifications[userId]; 
+        res.status(200).json({ notifications });
+    } else {
+        res.status(200).json({ notifications: [] });
+    }
+});
+
+// ===
+// END: NEW NOTIFICATION ROUTES
+// ===
 // == SERVER START ==
 app.get('/health', (req, res) => {
     res.json({ status: 'Secure Globe Widget backend running', timestamp: new Date().toISOString() });
