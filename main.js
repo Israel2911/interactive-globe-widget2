@@ -725,7 +725,7 @@ const toggleFunctionMap = {
 };
 
 // =============
-// == FULLY CORRECTED PART 2 (with FINAL "Sticky" Hover Card)
+// == FULL CORRECTED PART 2 (with "Sticky" Hover Card)
 // =============
 // ===
 // CUBE CREATION (Reverted to Original Colors)
@@ -791,7 +791,10 @@ function latLonToVector3(lat, lon, radius) {
   return new THREE.Vector3(x, y, z);
 }
 function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
-  const rainbowExtendedColors = [0xff0000, 0xff7f00, 0xffff00, 0x00ff00, 0x0000ff, 0x4b0082, 0x8a2be2, 0x9400d3, 0x7f00ff];
+  const rainbowExtendedColors = [
+    0xff0000, 0xff7f00, 0xffff00, 0x00ff00, 0x0000ff, 
+    0x4b0082, 0x8a2be2, 0x9400d3, 0x7f00ff
+  ];
   const color = rainbowExtendedColors[arcIndex % rainbowExtendedColors.length];
   const start = new THREE.Vector3(); fromGroup.getWorldPosition(start);
   const end = new THREE.Vector3(); toGroup.getWorldPosition(end);
@@ -814,8 +817,6 @@ function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
   globeGroup.add(path);
   return path;
 }
-
-// NOTE: This assumes `arcParticles` is defined globally in your Part 1 file, e.g. let arcParticles = [];
 function animateArcParticles(arc) {
   const curve = arc.userData.curve;
   if (!curve) return;
@@ -890,10 +891,16 @@ function onCanvasMouseUp(event) {
     const correspondingNeuralCube = neuralCubeMap[countryName];
     const toggleFunc = toggleFunctionMap[countryName];
     if (correspondingNeuralCube && toggleFunc) {
-      const explosionStateMap = {'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded,'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded,'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded};
+      const explosionStateMap = {
+        'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded,
+        'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded,
+        'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded
+      };
       const anyExploded = Object.values(explosionStateMap).some(state => state);
       closeAllExploded();
-      if (typeof TWEEN !== 'undefined') { new TWEEN.Tween(correspondingNeuralCube.scale).to({ x: 1.5, y: 1.5, z: 1.5 }, 200).yoyo(true).repeat(1).start(); }
+      if (typeof TWEEN !== 'undefined') {
+        new TWEEN.Tween(correspondingNeuralCube.scale).to({ x: 1.5, y: 1.5, z: 1.5 }, 200).yoyo(true).repeat(1).start();
+      }
       setTimeout(() => { toggleFunc(); }, anyExploded ? 810 : 400);
     }
     return;
@@ -907,7 +914,12 @@ function onCanvasMouseUp(event) {
     parent = parent.parent;
   }
   
-  const explosionStateMap = {'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded,'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded,'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded};
+  const explosionStateMap = {
+    'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded,
+    'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded,
+    'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded
+  };
+  
   if (neuralName) {
     const isExploded = explosionStateMap[neuralName];
     const toggleFunc = toggleFunctionMap[neuralName];
@@ -968,11 +980,14 @@ function setupEventListeners() {
   renderer.domElement.addEventListener('mouseup', onCanvasMouseUpPan);
   renderer.domElement.addEventListener('mouseenter', () => { if (isPanMode) { renderer.domElement.style.cursor = 'grab'; } });
 
+  // --- START: NEW MOUSE MOVE LISTENER FOR HOVER CARD ---
   window.addEventListener('mousemove', (event) => {
+    // This keeps the `mouse` vector updated for the raycaster in the animate loop
     const canvasRect = renderer.domElement.getBoundingClientRect();
     mouse.x = ((event.clientX - canvasRect.left) / canvasRect.width) * 2 - 1;
     mouse.y = -((event.clientY - canvasRect.top) / canvasRect.height) * 2 + 1;
   });
+  // --- END: NEW MOUSE MOVE LISTENER ---
 
   const panSpeed = 0.1;
   const btnUp = document.getElementById('btn-up'); if (btnUp) { btnUp.addEventListener('click', () => { controls.target.y += panSpeed; controls.update(); }); }
@@ -1136,74 +1151,67 @@ async function createGlobeAndCubes() {
   console.log('✅ Globe and cubes created successfully');
 }
 // ===
-// ANIMATION (with FINAL "Sticky" and Interactive Hover Card)
+// ANIMATION (with "Sticky" Hover Card Logic)
 // ===
 function animate() {
   requestAnimationFrame(animate);
-
-  // --- START: IMPROVED HOVER LOGIC ---
+  
+  // --- START: HOVER CARD LOGIC ---
   if (hoverCard) {
     raycaster.setFromCamera(mouse, camera);
     const intersects = raycaster.intersectObjects(neuronGroup.children, true);
-
+    
     let foundValidSubCube = false;
     if (intersects.length > 0) {
       const firstIntersect = intersects[0].object;
-
+      
       if (firstIntersect.userData.isSubCube && firstIntersect.userData.university !== "Unassigned") {
         foundValidSubCube = true;
-
-        // If we found a cube, clear any pending timeout to hide the card
-        clearTimeout(hoverTimeout);
-        hoverCard.classList.remove('hover-card-hidden');
-
-        // Update card content ONLY if we hover over a NEW cube
+        
         if (currentlyHovered !== firstIntersect) {
           currentlyHovered = firstIntersect;
           const data = firstIntersect.userData;
-
+          
           document.getElementById('hover-card-title').textContent = data.university;
           document.getElementById('hover-card-program').textContent = data.programName.replace(/\\n/g, ' ');
-
+          
           const infoBtn = document.getElementById('hover-card-info-btn');
           const applyBtn = document.getElementById('hover-card-apply-btn');
-
-          // --- MAKE THE BUTTONS CLICKABLE ---
-          infoBtn.onclick = () => { if (!infoBtn.disabled) window.open(data.programLink, '_blank'); };
-          applyBtn.onclick = () => { if (!applyBtn.disabled) window.open(data.applyLink, '_blank'); };
           
           infoBtn.disabled = !data.programLink || data.programLink === '#';
           applyBtn.disabled = !data.applyLink || data.applyLink === '#';
+          
+          hoverCard.classList.remove('hover-card-hidden');
         }
-
-        // Update position based on the currently hovered cube's screen location
-        const vector = new THREE.Vector3();
-        currentlyHovered.getWorldPosition(vector);
-        vector.project(camera);
-        const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
-        const y = (vector.y * -0.5 + 0.5) * window.innerHeight;
-        hoverCard.style.left = `${x + 15}px`;
-        hoverCard.style.top = `${y}px`;
+        
+        // --- "STICKY" POSITIONING LOGIC ---
+        if (currentlyHovered) {
+          const vector = new THREE.Vector3();
+          currentlyHovered.getWorldPosition(vector);
+          vector.project(camera);
+          
+          const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
+          const y = (vector.y * -0.5 + 0.5) * window.innerHeight;
+          
+          hoverCard.style.left = `${x + 15}px`;
+          hoverCard.style.top = `${y}px`;
+        }
       }
     }
-
-    // If we did NOT find a valid cube and one was previously hovered
+    
     if (!foundValidSubCube && currentlyHovered) {
-      // ...start a timer to hide the card after a delay.
-      hoverTimeout = setTimeout(() => {
-        hoverCard.classList.add('hover-card-hidden');
-        currentlyHovered = null; // Clear the selection after the card is hidden
-      }, 3000); // 3-second grace period to move mouse to the card
+      currentlyHovered = null;
+      hoverCard.classList.add('hover-card-hidden');
     }
   }
-  // --- END: IMPROVED HOVER LOGIC ---
+  // --- END: HOVER CARD LOGIC ---
 
   const elapsedTime = clock.getElapsedTime();
   if (controls && controls.enabled) { controls.update(); }
   if (typeof TWEEN !== 'undefined') { TWEEN.update(); }
-
+  
   arcPaths.forEach(path => { if (path.material.isShaderMaterial) { path.material.uniforms.time.value = elapsedTime; } });
-
+  
   countryLabels.forEach(item => {
     const worldPosition = new THREE.Vector3();
     item.block.getWorldPosition(worldPosition);
@@ -1212,13 +1220,13 @@ function animate() {
     item.label.position.copy(labelPosition);
     item.label.lookAt(camera.position);
   });
-
+  
   const explosionStateMap = {
     'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded,
     'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded,
     'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded
   };
-
+  
   const boundaryRadius = 1.0;
   const buffer = 0.02;
   if (!isCubeMovementPaused) {
@@ -1232,13 +1240,14 @@ function animate() {
         }
       }
     });
-
+    
     if (neuralNetworkLines && neuralNetworkLines.visible) {
         const vertices = [];
         const maxDist = 0.6;
         const connectionsPerCube = 3;
         for (let i = 0; i < cubes.length; i++) {
             if (!cubes[i].visible || cubes[i].userData.neuralName) continue;
+            
             let neighbors = [];
             for (let j = i + 1; j < cubes.length; j++) {
                 if (!cubes[j].visible || cubes[j].userData.neuralName) continue;
@@ -1247,8 +1256,10 @@ function animate() {
                     neighbors.push({ dist: dist, cube: cubes[j] });
                 }
             }
+            
             neighbors.sort((a, b) => a.dist - b.dist);
             const closest = neighbors.slice(0, connectionsPerCube);
+            
             if (closest.length > 1) {
                 for (let k = 0; k < closest.length - 1; k++) {
                     const startNode = cubes[i].position;
@@ -1260,12 +1271,13 @@ function animate() {
                 }
             }
         }
+        
         neuralNetworkLines.geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
         neuralNetworkLines.geometry.attributes.position.needsUpdate = true;
         neuralNetworkLines.geometry.computeVertexNormals();
     }
   }
-
+  
   renderer.render(scene, camera);
 }
 // ===
