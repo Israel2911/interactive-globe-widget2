@@ -121,6 +121,8 @@ function startAuthStatusPolling() {
   }, 3000); // Check every 3 seconds
 }
 
+
+
 // vvvvv  PLACE THE NEW FUNCTION RIGHT HERE  vvvvv
 
 
@@ -159,7 +161,6 @@ function startPollingForApplicationUpdates() {
     }, pollInterval);
 }
 
-// ===
 // FINAL, POWERFUL INFO PANEL SYSTEM
 // ===
 async function showInfoPanel(data) {
