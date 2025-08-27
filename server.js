@@ -9,6 +9,8 @@ const cors = require('cors');
 const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 3001;
+// Add this line right here
+const pendingNotifications = {};
 
 // Load Wix credentials from Render Secret Files
 const wixAccountId = fs.readFileSync('/etc/secrets/WIX_ACCOUNT_ID', 'utf-8').trim();
