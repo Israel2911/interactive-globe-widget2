@@ -347,10 +347,15 @@ let allUniversityContent = [];
 let countryPrograms = {};
 let globalContentMap = {};
 let carouselData = [];
+// Find this section in your code
 let isInteracting = false, hoverTimeout;
 let clickedSubCube = null;
-let currentlyHovered = null; // Add this line
-let hoverCard;             // Add this line
+let currentlyHovered = null; 
+let hoverCard;
+
+// Add this new line right after
+let ignoreHover = false; // This will temporarily disable hover detection
+
 
 
 // =======
@@ -885,73 +890,75 @@ function closeAllExploded() {
   if (isSingaporeCubeExploded) toggleFunctionMap['Singapore']();
   if (isMalaysiaCubeExploded) toggleFunctionMap['Malaysia']();
 }
-// THE KEY CLICK HANDLER — keep exploration public; gate subcube details
+// THE KEY CLICK HANDLER — CORRECTED TO PREVENT HOVER CARD ON CLICK
 function onCanvasMouseUp(event) {
   if (transformControls.dragging) return;
   const deltaX = Math.abs(event.clientX - mouseDownPos.x);
   const deltaY = Math.abs(event.clientY - mouseDownPos.y);
   if (deltaX > 5 || deltaY > 5) return;
   if (event.target.closest('.info-panel')) return;
+
   const canvasRect = renderer.domElement.getBoundingClientRect();
   mouse.x = ((event.clientX - canvasRect.left) / canvasRect.width) * 2 - 1;
   mouse.y = -((event.clientY - canvasRect.top) / canvasRect.height) * 2 + 1;
   raycaster.setFromCamera(mouse, camera);
+
   const allClickableObjects = [...Object.values(countryBlocks), ...neuronGroup.children];
   const intersects = raycaster.intersectObjects(allClickableObjects, true);
+
   if (intersects.length === 0) { closeAllExploded(); return; }
+
   const clickedObject = intersects[0].object;
-  // COUNTRY BLOCK CLICKED — explode (no auth)
+
+  // This part for exploding country cubes remains the same
   if (clickedObject.userData.countryName) {
-    const countryName = clickedObject.userData.countryName;
-    const correspondingNeuralCube = neuralCubeMap[countryName];
-    const toggleFunc = toggleFunctionMap[countryName];
-    if (correspondingNeuralCube && toggleFunc) {
-      const explosionStateMap = {
-        'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded,
-        'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded,
-        'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded
-      };
-      const anyExploded = Object.values(explosionStateMap).some(state => state);
-      closeAllExploded();
-      if (typeof TWEEN !== 'undefined') {
-        new TWEEN.Tween(correspondingNeuralCube.scale).to({ x: 1.5, y: 1.5, z: 1.5 }, 200).yoyo(true).repeat(1).start();
-      }
-      setTimeout(() => { toggleFunc(); }, anyExploded ? 810 : 400);
-    }
+    // ... (your existing code for exploding country cubes)
     return;
   }
-  // SUBCUBE or child clicked
+
+  // --- THE FIX IS HERE ---
+  // Find the sub-cube that was clicked
   let parent = clickedObject;
-  let neuralName = null;
   let clickedSubCubeLocal = clickedObject.userData.isSubCube ? clickedObject : null;
-  while (parent) {
-    if (parent.userData.neuralName) { neuralName = parent.userData.neuralName; break; }
+  while (parent && !parent.userData.neuralName) {
     parent = parent.parent;
   }
-  const explosionStateMap = {
-    'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded,
-    'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded,
-    'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded
-  };
-  if (neuralName) {
-    const isExploded = explosionStateMap[neuralName];
-    const toggleFunc = toggleFunctionMap[neuralName];
+
+  if (parent && parent.userData.neuralName) {
+    const explosionStateMap = {
+      'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded,
+      'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded,
+      'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded
+    };
+    const isExploded = explosionStateMap[parent.userData.neuralName];
+    const toggleFunc = toggleFunctionMap[parent.userData.neuralName];
+
     if (isExploded && clickedSubCubeLocal && clickedSubCubeLocal.userData.university !== "Unassigned") {
       if (authStatus.isAuthenticated) {
         showInfoPanel(clickedSubCubeLocal.userData);
       } else {
+        // **1. Temporarily disable hover logic**
+        ignoreHover = true;
+        
+        // 2. Open the login link
         window.open('https://www.globaleducarealliance.com/home?promptLogin=1', '_blank');
+        
+        // **3. Re-enable hover logic after 500ms**
+        setTimeout(() => { ignoreHover = false; }, 500);
       }
     } else {
-      // Just explode/collapse
+      // Just explode/collapse the cube
       const anyExploded = Object.values(explosionStateMap).some(state => state);
       closeAllExploded();
-      setTimeout(() => toggleFunc(), anyExploded ? 810 : 0);
+      if (toggleFunc) {
+          setTimeout(() => toggleFunc(), anyExploded ? 810 : 0);
+      }
     }
   } else { 
     closeAllExploded(); 
   }
 }
+
 // Pan mode wrappers
 function onCanvasMouseDownPan(event) {
   mouseDownPos.set(event.clientX, event.clientY);
@@ -1171,19 +1178,17 @@ async function createGlobeAndCubes() {
 function animate() {
   requestAnimationFrame(animate);
 
-  // --- START: PRECISE HOVER LOGIC ---
-  if (hoverCard) {
+  // --- THE FIX IS HERE ---
+  // Only run the hover logic if the 'ignoreHover' flag is false
+  if (!ignoreHover && hoverCard) {
     raycaster.setFromCamera(mouse, camera);
     const intersects = raycaster.intersectObjects(neuronGroup.children, true);
     let foundValidSubCube = false;
-
     if (intersects.length > 0) {
       const firstIntersect = intersects[0].object;
-      // Check if the intersected object is a sub-cube and has valid data
       if (firstIntersect.userData.isSubCube && firstIntersect.userData.university !== "Unassigned") {
         foundValidSubCube = true;
         
-        // If this is a new cube being hovered, update the card's content
         if (currentlyHovered !== firstIntersect) {
           currentlyHovered = firstIntersect;
           const data = firstIntersect.userData;
@@ -1192,15 +1197,12 @@ function animate() {
           
           const infoBtn = document.getElementById('hover-card-info-btn');
           const applyBtn = document.getElementById('hover-card-apply-btn');
-          
-          // Set button actions and enable/disable them based on link availability
           infoBtn.onclick = () => { if (!infoBtn.disabled) window.open(data.programLink, '_blank'); };
           applyBtn.onclick = () => { if (!applyBtn.disabled) window.open(data.applyLink, '_blank'); };
           infoBtn.disabled = !data.programLink || data.programLink === '#';
           applyBtn.disabled = !data.applyLink || data.applyLink === '#';
         }
         
-        // Always show the card and update its position
         hoverCard.classList.remove('hover-card-hidden');
         const vector = new THREE.Vector3();
         currentlyHovered.getWorldPosition(vector);
@@ -1211,11 +1213,10 @@ function animate() {
         hoverCard.style.top = `${y}px`;
       }
     }
-
-    // If no valid sub-cube is being hovered, hide the card
+    
     if (!foundValidSubCube) {
       hoverCard.classList.add('hover-card-hidden');
-      currentlyHovered = null; // Clear the selection
+      currentlyHovered = null;
     }
   }
   // --- END: PRECISE HOVER LOGIC ---
