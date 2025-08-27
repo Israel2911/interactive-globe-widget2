@@ -121,6 +121,43 @@ function startAuthStatusPolling() {
   }, 3000); // Check every 3 seconds
 }
 
+// vvvvv  PLACE THE NEW FUNCTION RIGHT HERE  vvvvv
+
+
+/**
+ * Periodically polls the server to check for notifications about
+ * successful application submissions for the authenticated user.
+ */
+function startPollingForApplicationUpdates() {
+    // Set an interval to check for updates (e.g., every 15 seconds)
+    const pollInterval = 15000; 
+
+    setInterval(async () => {
+        // Only poll if the user is logged in
+        if (!authStatus.isAuthenticated) {
+            return;
+        }
+
+        try {
+            // Use your existing safeFetch wrapper for authenticated requests
+            const data = await safeFetch('/api/applications/notifications');
+            
+            // If the server sends back new notifications, process them
+            if (data && data.notifications && data.notifications.length > 0) {
+                console.log(`✅ Received ${data.notifications.length} new application updates.`);
+                
+                data.notifications.forEach(notification => {
+                    if (notification.universityName) {
+                        // This triggers the visual change on the globe
+                        setCubeToAppliedState(notification.universityName);
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('❌ Error during application notification polling:', error);
+        }
+    }, pollInterval);
+}
 
 // ===
 // FINAL, POWERFUL INFO PANEL SYSTEM
