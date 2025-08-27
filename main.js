@@ -730,6 +730,9 @@ const toggleFunctionMap = {
 // ===
 // CUBE CREATION (Reverted to Original Colors)
 // ===
+// ===
+// CUBE CREATION (Reverted to Original Colors)
+// ===
 function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
   let contentIdx = 0;
   const cubeObject = new THREE.Group();
@@ -739,7 +742,8 @@ function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
         const item = content[contentIdx];
         let material, userData;
         if (item) {
-          // Reverted to use the default country color for all cubes
+          // --- THIS IS THE REVERTED LOGIC ---
+          // We are now simply using the 'color' passed into the function for all cubes.
           material = createTexture(item.programName, item.logo, color);
           userData = item;
         } else {
@@ -767,6 +771,7 @@ function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
       }
   return cubeObject;
 }
+
 // CORRECTED: Creates a Mesh for the membrane effect
 function createNeuralNetwork() {
   const geometry = new THREE.BufferGeometry();
