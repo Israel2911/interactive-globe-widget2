@@ -1443,24 +1443,22 @@ function showNotification(message, isSuccess = true) {
   document.body.appendChild(div);
   setTimeout(() => div.remove(), 5000);
 }
-// ===
 document.addEventListener('DOMContentLoaded', async () => {
-
   // --- NEW: Handle success redirect from application form ---
+  let suppressLoginSuccessMsg = false;      // <--- ADD THIS LINE
   const params = new URLSearchParams(window.location.search);
- if (
-  params.get('applicationSuccess') === "1" &&
-  params.get('appliedUniversity')
-) {
-  showNotification(
-    `Application submitted for ${params.get('appliedUniversity')}! Cube updated.`, true
-  );
-  // Highlight the cube after a 1 second delay (change 1000 to any ms you want)
-  setTimeout(() => {
-    setCubeToAppliedState(params.get('appliedUniversity'));
-  }, 1000);
-}
-
+  if (
+    params.get('applicationSuccess') === "1" &&
+    params.get('appliedUniversity')
+  ) {
+    suppressLoginSuccessMsg = true;         // <--- SET FLAG IF REDIRECT
+    showNotification(
+      `Application submitted for ${params.get('appliedUniversity')}! Cube updated.`, true
+    );
+    setTimeout(() => {
+      setCubeToAppliedState(params.get('appliedUniversity'));
+    }, 1000);
+  }
   // --- END NEW BLOCK ---
 
   hoverCard = document.getElementById('hover-card'); // Initialize the hover card
@@ -1477,6 +1475,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (authStatus.isAuthenticated) {
       console.log('🎮 Activating cubes for authenticated user!');
       setTimeout(() => {
+        // --- SUPPRESS LOGIN SUCCESS MESSAGE IF NEEDED ---
+        if (!suppressLoginSuccessMsg) {
+          showNotification("All cubes unlocked! Explore programs.", true);
+        }
         activateAllCubes();
       }, 500);
     }
@@ -1492,4 +1494,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   } catch (error) {
     console.error('❌ Error during initialization:', error);
   }
+});
+
 });
