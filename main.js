@@ -1445,6 +1445,20 @@ function showNotification(message, isSuccess = true) {
 }
 // ===
 document.addEventListener('DOMContentLoaded', async () => {
+
+  // --- NEW: Handle success redirect from application form ---
+  const params = new URLSearchParams(window.location.search);
+  if (
+    params.get('applicationSuccess') === "1" &&
+    params.get('appliedUniversity')
+  ) {
+    showNotification(
+      `Application submitted for ${params.get('appliedUniversity')}! Cube updated.`, true
+    );
+    setCubeToAppliedState(params.get('appliedUniversity'));
+  }
+  // --- END NEW BLOCK ---
+
   hoverCard = document.getElementById('hover-card'); // Initialize the hover card
   console.log('🚀 Loading Interactive Globe Widget...');
   try {
