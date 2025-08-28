@@ -770,10 +770,23 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
  * @param {string} universityName - The name of the university to find.
  */
 function setCubeToAppliedState(universityName, programName) {
+  // Log the incoming highlight request for debugging
+  console.log('Highlight requested for:', universityName, '|', programName);
+
+  // Aggregate all sub-cubes into one list
   const allSubCubes = [
     ...europeSubCubes, ...newThailandSubCubes, ...canadaSubCubes, ...ukSubCubes,
     ...usaSubCubes, ...indiaSubCubes, ...singaporeSubCubes, ...malaysiaSubCubes
   ];
+
+  // Log all available cubes with their university and program
+  allSubCubes.forEach(cube => {
+    if (cube && cube.userData && cube.userData.university && cube.userData.programName) {
+      console.log('Cube:', cube.userData.university, '|', cube.userData.programName);
+    }
+  });
+
+  // Normalized matching for robust selection
   const cubesToHighlight = allSubCubes.filter(
     cube =>
       cube &&
@@ -782,7 +795,13 @@ function setCubeToAppliedState(universityName, programName) {
       cube.userData.university.trim().toLowerCase() === universityName.trim().toLowerCase() &&
       cube.userData.programName.trim().toLowerCase() === programName.trim().toLowerCase()
   );
+
+  // Log how many cubes matched (should be 1)
+  console.log('Matching cubes found:', cubesToHighlight.length);
+
+  // Highlight the found cubes (should be only the right one)
   cubesToHighlight.forEach(targetCube => {
+    // Use a distinctive color-blink animation (yellow <-> white)
     const highlightMaterial = new THREE.MeshStandardMaterial({
       color: 0xffff00, // yellow
       emissive: 0xffff00,
@@ -793,16 +812,16 @@ function setCubeToAppliedState(universityName, programName) {
     let blinkState = false, blinkCount = 0;
     const interval = setInterval(() => {
       if (blinkState) {
-        highlightMaterial.color.set(0xffff00); // yellow
+        highlightMaterial.color.set(0xffff00);
         highlightMaterial.emissive.set(0xffff00);
       } else {
-        highlightMaterial.color.set(0xffffff); // white
+        highlightMaterial.color.set(0xffffff);
         highlightMaterial.emissive.set(0xffffff);
       }
       blinkState = !blinkState;
       blinkCount++;
       if (blinkCount > 6) {
-        highlightMaterial.color.set(0xffff00); // settle back to yellow
+        highlightMaterial.color.set(0xffff00); // settle at yellow
         highlightMaterial.emissive.set(0xffff00);
         clearInterval(interval);
       }
@@ -1470,20 +1489,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   const params = new URLSearchParams(window.location.search);
   const universityName = params.get('appliedUniversity');
   const programName = params.get('appliedProgram');
-  if (
-    params.get('applicationSuccess') === "1" &&
-    universityName &&
-    programName
-  ) {
-    suppressLoginSuccessMsg = true;
-    showNotification(
-      `Application submitted for ${universityName} (${programName})! Cube updated.`, true
-    );
-    setTimeout(() => {
-      setCubeToAppliedState(universityName, programName);
-    }, 1000);
-  }
-  // --- END NEW BLOCK ---
+ if (
+  params.get('applicationSuccess') === "1" &&
+  universityName &&
+  programName
+) {
+  suppressLoginSuccessMsg = true;
+  showNotification(
+    `Application submitted for ${universityName} (${programName})! Cube updated.`, true
+  );
+  setTimeout(() => {
+    setCubeToAppliedState(universityName, programName);
+  }, 1000);
+}
+
 
   // (Rest of your initialization logic...)
   hoverCard = document.getElementById('hover-card');
