@@ -14,26 +14,31 @@ async function uploadDocument() { await requireLoginAndGo(); }
 
 // ===
 // AUTH-DEPENDENT ACTIVATION (UI visual only — still allowed for engagement)
-// ===
-function activateAllCubes() {
+function activateAllCubes(options = {}) {
+  const suppressNotification = options.suppressNotification || false;
   console.log('🎮 Activating all university cubes for authenticated member');
   Object.entries(countryBlocks).forEach(([country, group]) => {
     group.userData.isClickable = true;
     group.material.opacity = 1.0;
     group.material.emissiveIntensity = 1.2;
   });
-  [europeSubCubes, newThailandSubCubes, canadaSubCubes, ukSubCubes, 
-   usaSubCubes, indiaSubCubes, singaporeSubCubes, malaysiaSubCubes].forEach(subCubeArray => {
-      subCubeArray.forEach(subCube => {
-        if (subCube && subCube.userData) {
-          subCube.userData.isClickable = true;
-          subCube.material.opacity = 1.0;
-          subCube.material.emissiveIntensity = 0.8;
-        }
-      });
+  [
+    europeSubCubes, newThailandSubCubes, canadaSubCubes, ukSubCubes, 
+    usaSubCubes, indiaSubCubes, singaporeSubCubes, malaysiaSubCubes
+  ].forEach(subCubeArray => {
+    subCubeArray.forEach(subCube => {
+      if (subCube && subCube.userData) {
+        subCube.userData.isClickable = true;
+        subCube.material.opacity = 1.0;
+        subCube.material.emissiveIntensity = 0.8;
+      }
+    });
   });
-  showNotification('Success! You now have access to all university programs.');
+  if (!suppressNotification) {
+    showNotification('Success! You now have access to all university programs.');
+  }
 }
+
 
 // ===
 // SAFE FETCH WRAPPER - NEW ADDITION
@@ -765,30 +770,34 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
  * @param {string} universityName - The name of the university to find.
  */
 function setCubeToAppliedState(universityName) {
-  // Combine all sub-cube arrays into one for easy searching
   const allSubCubes = [
     ...europeSubCubes, ...newThailandSubCubes, ...canadaSubCubes, ...ukSubCubes,
     ...usaSubCubes, ...indiaSubCubes, ...singaporeSubCubes, ...malaysiaSubCubes
   ];
-
-  // Find the first cube that matches the university name.
-  const targetCube = allSubCubes.find(cube => cube && cube.userData.university === universityName);
-
-  if (targetCube) {
-    console.log("Found cube for " + universityName + ". Changing state to 'Applied'.");
-    
-    targetCube.userData.applied = true;
-    
+  const cubesToHighlight = allSubCubes.filter(
+    cube => cube && cube.userData.university === universityName
+  );
+  cubesToHighlight.forEach(targetCube => {
+    if (!targetCube) return;
     const appliedMaterial = targetCube.material.clone();
-    appliedMaterial.color.set(0x00ff00);       // Set color to bright green
-    appliedMaterial.emissive.set(0x00ff00);    // Set emissive glow to bright green
-    appliedMaterial.emissiveIntensity = 1.5;   // Make it glow intensely
+    appliedMaterial.color.set(0x00ff00); // Green
+    appliedMaterial.emissive.set(0x00ff00); // Green glow
+    appliedMaterial.emissiveIntensity = 2.5;
     targetCube.material = appliedMaterial;
-    
-  } else {
-    console.warn("Could not find a cube matching university: " + universityName);
-  }
+    // Blink animation
+    let blinkCount = 0, blinkState = false;
+    const interval = setInterval(() => {
+      appliedMaterial.emissiveIntensity = blinkState ? 1.2 : 2.5;
+      blinkState = !blinkState;
+      blinkCount++;
+      if (blinkCount > 6) { // 3 cycles
+        appliedMaterial.emissiveIntensity = 1.5; // settle at glow
+        clearInterval(interval);
+      }
+    }, 220);
+  });
 }
+
 
 // =======
 // TOGGLE FUNCTION CREATION
@@ -1472,16 +1481,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     initializeThreeJS();
     setupEventListeners();
     await createGlobeAndCubes();
-    if (authStatus.isAuthenticated) {
-      console.log('🎮 Activating cubes for authenticated user!');
-      setTimeout(() => {
-        // --- SUPPRESS LOGIN SUCCESS MESSAGE IF NEEDED ---
-        if (!suppressLoginSuccessMsg) {
-          showNotification("All cubes unlocked! Explore programs.", true);
-        }
-        activateAllCubes();
-      }, 500);
-    }
+   if (authStatus.isAuthenticated) {
+  console.log('🎮 Activating cubes for authenticated user!');
+  setTimeout(() => {
+    activateAllCubes({
+      suppressNotification: suppressLoginSuccessMsg
+    });
+  }, 500);
+}
+
     await populateCarousel();
     animate();
     startAuthStatusPolling();
