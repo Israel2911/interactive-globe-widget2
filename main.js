@@ -770,60 +770,48 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
  * @param {string} universityName - The name of the university to find.
  */
 function setCubeToAppliedState(universityName) {
-  console.log('Trying to highlight:', universityName);
-
   const allSubCubes = [
     ...europeSubCubes, ...newThailandSubCubes, ...canadaSubCubes, ...ukSubCubes,
     ...usaSubCubes, ...indiaSubCubes, ...singaporeSubCubes, ...malaysiaSubCubes
   ];
+  // (Add normalization logic if you want)
 
-  // List all available cube names (only once per page load)
-  if (!window._cubeNamesLogged) {
-    allSubCubes.forEach(cube => {
-      if (cube && cube.userData && cube.userData.university) {
-        console.log('Available cube:', cube.userData.university);
-      }
-    });
-    window._cubeNamesLogged = true;
-  }
-
-  // Robust matching (ignores case and spaces)
   const cubesToHighlight = allSubCubes.filter(
     cube =>
       cube &&
       cube.userData.university &&
       cube.userData.university.trim().toLowerCase() === universityName.trim().toLowerCase()
   );
-
-  console.log('Found cubes to highlight:', cubesToHighlight.length);
-
-  if (cubesToHighlight.length === 0) {
-    console.warn('No cube matched for', universityName);
-    return;
-  }
-
   cubesToHighlight.forEach(targetCube => {
-    // Test: Try a plain green mesh as a visibility check.
+    // Replace material with a high-contrast highlight one
     const highlightMaterial = new THREE.MeshStandardMaterial({
-      color: 0x00ff00,
-      emissive: 0x00ff00,
+      color: 0xffff00, // start with yellow
+      emissive: 0xffff00,
       emissiveIntensity: 2.5,
       opacity: 1.0,
       transparent: false
     });
     targetCube.material = highlightMaterial;
 
-    // Add glow/blink (optional)
-    let blinkCount = 0, blinkState = false;
+    // --- INSERT THIS BLINKING BLOCK HERE ---
+    let blinkState = false, blinkCount = 0;
     const interval = setInterval(() => {
-      highlightMaterial.emissiveIntensity = blinkState ? 1.2 : 2.5;
+      if (blinkState) {
+        highlightMaterial.color.set(0xffff00); // yellow
+        highlightMaterial.emissive.set(0xffff00);
+      } else {
+        highlightMaterial.color.set(0xffffff); // white
+        highlightMaterial.emissive.set(0xffffff);
+      }
       blinkState = !blinkState;
       blinkCount++;
-      if (blinkCount > 6) {
-        highlightMaterial.emissiveIntensity = 1.5;
+      if (blinkCount > 6) { // three color cycles
+        highlightMaterial.color.set(0xffff00); // land at yellow
+        highlightMaterial.emissive.set(0xffff00);
         clearInterval(interval);
       }
-    }, 220);
+    }, 180);
+    // --- END INSERT ---
   });
 }
 
