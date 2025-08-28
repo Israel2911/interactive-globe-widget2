@@ -1496,4 +1496,4 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 });
 
-});
+
