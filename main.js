@@ -769,31 +769,27 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
  * to a glowing green to indicate a submitted application.
  * @param {string} universityName - The name of the university to find.
  */
-function setCubeToAppliedState(universityName) {
+function setCubeToAppliedState(universityName, programName) {
   const allSubCubes = [
     ...europeSubCubes, ...newThailandSubCubes, ...canadaSubCubes, ...ukSubCubes,
     ...usaSubCubes, ...indiaSubCubes, ...singaporeSubCubes, ...malaysiaSubCubes
   ];
-  // (Add normalization logic if you want)
-
   const cubesToHighlight = allSubCubes.filter(
     cube =>
       cube &&
       cube.userData.university &&
-      cube.userData.university.trim().toLowerCase() === universityName.trim().toLowerCase()
+      cube.userData.programName &&
+      cube.userData.university.trim().toLowerCase() === universityName.trim().toLowerCase() &&
+      cube.userData.programName.trim().toLowerCase() === programName.trim().toLowerCase()
   );
   cubesToHighlight.forEach(targetCube => {
-    // Replace material with a high-contrast highlight one
     const highlightMaterial = new THREE.MeshStandardMaterial({
-      color: 0xffff00, // start with yellow
+      color: 0xffff00, // yellow
       emissive: 0xffff00,
-      emissiveIntensity: 2.5,
-      opacity: 1.0,
-      transparent: false
+      emissiveIntensity: 2.5
     });
     targetCube.material = highlightMaterial;
 
-    // --- INSERT THIS BLINKING BLOCK HERE ---
     let blinkState = false, blinkCount = 0;
     const interval = setInterval(() => {
       if (blinkState) {
@@ -805,13 +801,12 @@ function setCubeToAppliedState(universityName) {
       }
       blinkState = !blinkState;
       blinkCount++;
-      if (blinkCount > 6) { // three color cycles
-        highlightMaterial.color.set(0xffff00); // land at yellow
+      if (blinkCount > 6) {
+        highlightMaterial.color.set(0xffff00); // settle back to yellow
         highlightMaterial.emissive.set(0xffff00);
         clearInterval(interval);
       }
     }, 180);
-    // --- END INSERT ---
   });
 }
 
@@ -1470,24 +1465,28 @@ function showNotification(message, isSuccess = true) {
   setTimeout(() => div.remove(), 5000);
 }
 document.addEventListener('DOMContentLoaded', async () => {
-  // --- NEW: Handle success redirect from application form ---
-  let suppressLoginSuccessMsg = false;      // <--- ADD THIS LINE
+  // --- Step 1: NEW - Parse redirect parameters for application success ---
+  let suppressLoginSuccessMsg = false;
   const params = new URLSearchParams(window.location.search);
+  const universityName = params.get('appliedUniversity');
+  const programName = params.get('appliedProgram');
   if (
     params.get('applicationSuccess') === "1" &&
-    params.get('appliedUniversity')
+    universityName &&
+    programName
   ) {
-    suppressLoginSuccessMsg = true;         // <--- SET FLAG IF REDIRECT
+    suppressLoginSuccessMsg = true;
     showNotification(
-      `Application submitted for ${params.get('appliedUniversity')}! Cube updated.`, true
+      `Application submitted for ${universityName} (${programName})! Cube updated.`, true
     );
     setTimeout(() => {
-      setCubeToAppliedState(params.get('appliedUniversity'));
+      setCubeToAppliedState(universityName, programName);
     }, 1000);
   }
   // --- END NEW BLOCK ---
 
-  hoverCard = document.getElementById('hover-card'); // Initialize the hover card
+  // (Rest of your initialization logic...)
+  hoverCard = document.getElementById('hover-card');
   console.log('🚀 Loading Interactive Globe Widget...');
   try {
     await fetchAuthStatus();
@@ -1498,27 +1497,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     initializeThreeJS();
     setupEventListeners();
     await createGlobeAndCubes();
-   if (authStatus.isAuthenticated) {
-  console.log('🎮 Activating cubes for authenticated user!');
-  setTimeout(() => {
-    activateAllCubes({
-      suppressNotification: suppressLoginSuccessMsg
-    });
-  }, 500);
-}
-
+    if (authStatus.isAuthenticated) {
+      console.log('🎮 Activating cubes for authenticated user!');
+      setTimeout(() => {
+        activateAllCubes({
+          suppressNotification: suppressLoginSuccessMsg
+        });
+      }, 500);
+    }
     await populateCarousel();
     animate();
     startAuthStatusPolling();
-    const leftBtn = document.getElementById('carouselScrollLeft');
-    const rightBtn = document.getElementById('carouselScrollRight');
-    if (leftBtn) leftBtn.onclick = () => scrollCarousel(-1);
-    if (rightBtn) rightBtn.onclick = () => scrollCarousel(1);
+    // ...rest of your setup...
     updateCanvasSize();
     console.log('✅ Globe Widget loaded successfully!');
   } catch (error) {
     console.error('❌ Error during initialization:', error);
   }
 });
+
 
 
