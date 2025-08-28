@@ -1448,15 +1448,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // --- NEW: Handle success redirect from application form ---
   const params = new URLSearchParams(window.location.search);
-  if (
-    params.get('applicationSuccess') === "1" &&
-    params.get('appliedUniversity')
-  ) {
-    showNotification(
-      `Application submitted for ${params.get('appliedUniversity')}! Cube updated.`, true
-    );
+ if (
+  params.get('applicationSuccess') === "1" &&
+  params.get('appliedUniversity')
+) {
+  showNotification(
+    `Application submitted for ${params.get('appliedUniversity')}! Cube updated.`, true
+  );
+  // Highlight the cube after a 1 second delay (change 1000 to any ms you want)
+  setTimeout(() => {
     setCubeToAppliedState(params.get('appliedUniversity'));
-  }
+  }, 1000);
+}
+
   // --- END NEW BLOCK ---
 
   hoverCard = document.getElementById('hover-card'); // Initialize the hover card
