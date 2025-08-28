@@ -764,46 +764,30 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
 }
 
 // **** ADD THE NEW FUNCTION RIGHT HERE ****
-/**
- * Finds the correct university sub-cube by name and changes its material
- * to a glowing green to indicate a submitted application.
- * @param {string} universityName - The name of the university to find.
- */
-function setCubeToAppliedState(universityName, programName) {
-  // Log the incoming highlight request for debugging
-  console.log('Highlight requested for:', universityName, '|', programName);
+function setCubeToAppliedState(programName) {
+  console.log('Highlight requested for program:', programName);
 
-  // Aggregate all sub-cubes into one list
   const allSubCubes = [
     ...europeSubCubes, ...newThailandSubCubes, ...canadaSubCubes, ...ukSubCubes,
     ...usaSubCubes, ...indiaSubCubes, ...singaporeSubCubes, ...malaysiaSubCubes
   ];
-
-  // Log all available cubes with their university and program
   allSubCubes.forEach(cube => {
-    if (cube && cube.userData && cube.userData.university && cube.userData.programName) {
-      console.log('Cube:', cube.userData.university, '|', cube.userData.programName);
+    if (cube && cube.userData && cube.userData.programName) {
+      console.log('Cube:', cube.userData.programName);
     }
   });
 
-  // Normalized matching for robust selection
   const cubesToHighlight = allSubCubes.filter(
     cube =>
       cube &&
-      cube.userData.university &&
       cube.userData.programName &&
-      cube.userData.university.trim().toLowerCase() === universityName.trim().toLowerCase() &&
       cube.userData.programName.trim().toLowerCase() === programName.trim().toLowerCase()
   );
+  console.log('Found cubes:', cubesToHighlight.length, 'for program:', programName);
 
-  // Log how many cubes matched (should be 1)
-  console.log('Matching cubes found:', cubesToHighlight.length);
-
-  // Highlight the found cubes (should be only the right one)
   cubesToHighlight.forEach(targetCube => {
-    // Use a distinctive color-blink animation (yellow <-> white)
     const highlightMaterial = new THREE.MeshStandardMaterial({
-      color: 0xffff00, // yellow
+      color: 0xffff00,
       emissive: 0xffff00,
       emissiveIntensity: 2.5
     });
@@ -821,13 +805,16 @@ function setCubeToAppliedState(universityName, programName) {
       blinkState = !blinkState;
       blinkCount++;
       if (blinkCount > 6) {
-        highlightMaterial.color.set(0xffff00); // settle at yellow
+        highlightMaterial.color.set(0xffff00);
         highlightMaterial.emissive.set(0xffff00);
         clearInterval(interval);
       }
     }, 180);
   });
 }
+
+
+
 
 
 // =======
@@ -1484,27 +1471,24 @@ function showNotification(message, isSuccess = true) {
   setTimeout(() => div.remove(), 5000);
 }
 document.addEventListener('DOMContentLoaded', async () => {
-  // --- Step 1: NEW - Parse redirect parameters for application success ---
+  // Handle program-based highlight on redirect after submission
   let suppressLoginSuccessMsg = false;
   const params = new URLSearchParams(window.location.search);
-  const universityName = params.get('appliedUniversity');
   const programName = params.get('appliedProgram');
- if (
-  params.get('applicationSuccess') === "1" &&
-  universityName &&
-  programName
-) {
-  suppressLoginSuccessMsg = true;
-  showNotification(
-    `Application submitted for ${universityName} (${programName})! Cube updated.`, true
-  );
-  setTimeout(() => {
-    setCubeToAppliedState(universityName, programName);
-  }, 1000);
-}
+  if (
+    params.get('applicationSuccess') === "1" &&
+    programName
+  ) {
+    suppressLoginSuccessMsg = true;
+    showNotification(
+      `Application submitted for ${programName}! Cube updated.`, true
+    );
+    setTimeout(() => {
+      setCubeToAppliedState(programName);
+    }, 1000);
+  }
 
-
-  // (Rest of your initialization logic...)
+  // ---- Normal globe widget initialization below ----
   hoverCard = document.getElementById('hover-card');
   console.log('🚀 Loading Interactive Globe Widget...');
   try {
@@ -1527,13 +1511,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     await populateCarousel();
     animate();
     startAuthStatusPolling();
-    // ...rest of your setup...
     updateCanvasSize();
     console.log('✅ Globe Widget loaded successfully!');
   } catch (error) {
     console.error('❌ Error during initialization:', error);
   }
 });
-
 
 
