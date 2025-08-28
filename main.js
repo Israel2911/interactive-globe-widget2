@@ -770,28 +770,57 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
  * @param {string} universityName - The name of the university to find.
  */
 function setCubeToAppliedState(universityName) {
+  console.log('Trying to highlight:', universityName);
+
   const allSubCubes = [
     ...europeSubCubes, ...newThailandSubCubes, ...canadaSubCubes, ...ukSubCubes,
     ...usaSubCubes, ...indiaSubCubes, ...singaporeSubCubes, ...malaysiaSubCubes
   ];
+
+  // List all available cube names (only once per page load)
+  if (!window._cubeNamesLogged) {
+    allSubCubes.forEach(cube => {
+      if (cube && cube.userData && cube.userData.university) {
+        console.log('Available cube:', cube.userData.university);
+      }
+    });
+    window._cubeNamesLogged = true;
+  }
+
+  // Robust matching (ignores case and spaces)
   const cubesToHighlight = allSubCubes.filter(
-    cube => cube && cube.userData.university === universityName
+    cube =>
+      cube &&
+      cube.userData.university &&
+      cube.userData.university.trim().toLowerCase() === universityName.trim().toLowerCase()
   );
+
+  console.log('Found cubes to highlight:', cubesToHighlight.length);
+
+  if (cubesToHighlight.length === 0) {
+    console.warn('No cube matched for', universityName);
+    return;
+  }
+
   cubesToHighlight.forEach(targetCube => {
-    if (!targetCube) return;
-    const appliedMaterial = targetCube.material.clone();
-    appliedMaterial.color.set(0x00ff00); // Green
-    appliedMaterial.emissive.set(0x00ff00); // Green glow
-    appliedMaterial.emissiveIntensity = 2.5;
-    targetCube.material = appliedMaterial;
-    // Blink animation
+    // Test: Try a plain green mesh as a visibility check.
+    const highlightMaterial = new THREE.MeshStandardMaterial({
+      color: 0x00ff00,
+      emissive: 0x00ff00,
+      emissiveIntensity: 2.5,
+      opacity: 1.0,
+      transparent: false
+    });
+    targetCube.material = highlightMaterial;
+
+    // Add glow/blink (optional)
     let blinkCount = 0, blinkState = false;
     const interval = setInterval(() => {
-      appliedMaterial.emissiveIntensity = blinkState ? 1.2 : 2.5;
+      highlightMaterial.emissiveIntensity = blinkState ? 1.2 : 2.5;
       blinkState = !blinkState;
       blinkCount++;
-      if (blinkCount > 6) { // 3 cycles
-        appliedMaterial.emissiveIntensity = 1.5; // settle at glow
+      if (blinkCount > 6) {
+        highlightMaterial.emissiveIntensity = 1.5;
         clearInterval(interval);
       }
     }, 220);
