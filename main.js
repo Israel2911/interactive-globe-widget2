@@ -764,31 +764,61 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
  * to a glowing green to indicate a submitted application.
  * @param {string} universityName - The name of the university to find.
  */
-function setCubeToAppliedState(universityName) {
-  // Combine all sub-cube arrays into one for easy searching
+function setCubeToAppliedState(programName) {
+  console.log('Highlight requested for program:', programName);
+
   const allSubCubes = [
     ...europeSubCubes, ...newThailandSubCubes, ...canadaSubCubes, ...ukSubCubes,
     ...usaSubCubes, ...indiaSubCubes, ...singaporeSubCubes, ...malaysiaSubCubes
   ];
 
-  // Find the first cube that matches the university name.
-  const targetCube = allSubCubes.find(cube => cube && cube.userData.university === universityName);
+  // Debug: log all available program names for diagnostics
+  console.log('Available cube programs:');
+  allSubCubes.forEach(cube => {
+    if (cube && cube.userData && cube.userData.programName) {
+      console.log(`"${cube.userData.programName}"`);
+    }
+  });
+  console.log('Requested (trim/lower):', `"${programName.trim().toLowerCase()}"`);
 
-  if (targetCube) {
-    console.log("Found cube for " + universityName + ". Changing state to 'Applied'.");
-    
-    targetCube.userData.applied = true;
-    
-    const appliedMaterial = targetCube.material.clone();
-    appliedMaterial.color.set(0x00ff00);       // Set color to bright green
-    appliedMaterial.emissive.set(0x00ff00);    // Set emissive glow to bright green
-    appliedMaterial.emissiveIntensity = 1.5;   // Make it glow intensely
-    targetCube.material = appliedMaterial;
-    
-  } else {
-    console.warn("Could not find a cube matching university: " + universityName);
-  }
+  // Flexible: normalize whitespace/case for the match
+  const cubesToHighlight = allSubCubes.filter(
+    cube =>
+      cube &&
+      cube.userData.programName &&
+      cube.userData.programName.trim().toLowerCase() === programName.trim().toLowerCase()
+  );
+
+  console.log('Found cubes:', cubesToHighlight.length, 'for program:', programName);
+
+  cubesToHighlight.forEach(targetCube => {
+    // Highlight in yellow (blinking effect)
+    const highlightMaterial = new THREE.MeshStandardMaterial({
+      color: 0xffff00,
+      emissive: 0xffff00,
+      emissiveIntensity: 2.5
+    });
+    targetCube.material = highlightMaterial;
+    let blinkState = false, blinkCount = 0;
+    const interval = setInterval(() => {
+      if (blinkState) {
+        highlightMaterial.color.set(0xffff00);
+        highlightMaterial.emissive.set(0xffff00);
+      } else {
+        highlightMaterial.color.set(0xffffff);
+        highlightMaterial.emissive.set(0xffffff);
+      }
+      blinkState = !blinkState;
+      blinkCount++;
+      if (blinkCount > 6) {
+        highlightMaterial.color.set(0xffff00);
+        highlightMaterial.emissive.set(0xffff00);
+        clearInterval(interval);
+      }
+    }, 180);
+  });
 }
+
 
 // =======
 // TOGGLE FUNCTION CREATION
