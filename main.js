@@ -14,31 +14,26 @@ async function uploadDocument() { await requireLoginAndGo(); }
 
 // ===
 // AUTH-DEPENDENT ACTIVATION (UI visual only — still allowed for engagement)
-function activateAllCubes(options = {}) {
-  const suppressNotification = options.suppressNotification || false;
+// ===
+function activateAllCubes() {
   console.log('🎮 Activating all university cubes for authenticated member');
   Object.entries(countryBlocks).forEach(([country, group]) => {
     group.userData.isClickable = true;
     group.material.opacity = 1.0;
     group.material.emissiveIntensity = 1.2;
   });
-  [
-    europeSubCubes, newThailandSubCubes, canadaSubCubes, ukSubCubes, 
-    usaSubCubes, indiaSubCubes, singaporeSubCubes, malaysiaSubCubes
-  ].forEach(subCubeArray => {
-    subCubeArray.forEach(subCube => {
-      if (subCube && subCube.userData) {
-        subCube.userData.isClickable = true;
-        subCube.material.opacity = 1.0;
-        subCube.material.emissiveIntensity = 0.8;
-      }
-    });
+  [europeSubCubes, newThailandSubCubes, canadaSubCubes, ukSubCubes, 
+   usaSubCubes, indiaSubCubes, singaporeSubCubes, malaysiaSubCubes].forEach(subCubeArray => {
+      subCubeArray.forEach(subCube => {
+        if (subCube && subCube.userData) {
+          subCube.userData.isClickable = true;
+          subCube.material.opacity = 1.0;
+          subCube.material.emissiveIntensity = 0.8;
+        }
+      });
   });
-  if (!suppressNotification) {
-    showNotification('Success! You now have access to all university programs.');
-  }
+  showNotification('Success! You now have access to all university programs.');
 }
-
 
 // ===
 // SAFE FETCH WRAPPER - NEW ADDITION
@@ -167,7 +162,6 @@ function startPollingForApplicationUpdates() {
 }
 
 // FINAL, POWERFUL INFO PANEL SYSTEM
-// FINAL, POWERFUL INFO PANEL SYSTEM
 // ===
 async function showInfoPanel(data) {
   // We only need the university name from the clicked cube's data
@@ -176,8 +170,10 @@ async function showInfoPanel(data) {
     console.log('❌ Clicked on an unassigned cube.');
     return;
   }
+
   // Find ALL programs for this university from our master list
   const uniData = allUniversityContent.filter(item => item && item.university === universityName);
+  
   if (uniData.length === 0) {
     console.log(`❌ No content found for ${universityName}`);
     // Fallback: If for some reason no data is found, do the simple link open
@@ -185,6 +181,7 @@ async function showInfoPanel(data) {
     if (linkToOpen && linkToOpen !== '#') window.open(linkToOpen, '_blank');
     return;
   }
+
   // --- BUILD THE MAIN CARD (University Level) ---
   const mainProgram = uniData[0]; // Use the first program for general info
   document.getElementById('infoPanelMainCard').innerHTML = `
@@ -203,53 +200,43 @@ async function showInfoPanel(data) {
 
   uniData.forEach(item => {
     if (!item) return;
+    
     const infoEnabled = item.programLink && item.programLink !== '#';
     const applyEnabled = item.applyLink && item.applyLink !== '#';
-    const subcardDiv = document.createElement('div');
-    subcardDiv.className = "subcard";
-    subcardDiv.innerHTML = `
-      <div class="subcard-info">
-        <h4>${item.programName.replace(/\n/g, ' ')}</h4>
-      </div>
-      <div class="subcard-buttons">
-        <button class="partner-cta info" ${infoEnabled ? '' : `disabled title="No info link available"`}>
-          University Info
-        </button>
-        <button class="partner-cta apply" ${applyEnabled ? '' : `disabled title="No apply link available"`}>
-          Apply Now
-        </button>
+    
+    const subcardHTML = `
+      <div class="subcard">
+        <div class="subcard-info">
+          <h4>${item.programName.replace(/\\n/g, ' ')}</h4>
+        </div>
+        <div class="subcard-buttons">
+          <button class="partner-cta info" ${infoEnabled ? '' : `disabled title="No info link available"`} 
+                  onclick="if(${infoEnabled}) window.open('${item.programLink}', '_blank')">
+            University Info
+          </button>
+          <button class="partner-cta apply" ${applyEnabled ? '' : `disabled title="No apply link available"`} 
+                  onclick="if(${applyEnabled}) window.open('${item.applyLink}', '_blank')">
+            Apply Now
+          </button>
+        </div>
       </div>
     `;
-
-    // Event: University Info
-    subcardDiv.querySelector('.partner-cta.info').onclick = function() {
-      if (infoEnabled) window.open(item.programLink, '_blank');
-    };
-
-    // Event: Apply Now (intent tracking AND navigation)
-    subcardDiv.querySelector('.partner-cta.apply').onclick = function() {
-      sessionStorage.setItem("pendingHighlightCube", JSON.stringify({
-        programName: item.programName  // Or use a more robust identifier
-      }));
-      if (applyEnabled) window.open(item.applyLink, '_blank'); // <-- navigate to the form!
-    };
-
-    subcardsContainer.appendChild(subcardDiv);
+    subcardsContainer.insertAdjacentHTML('beforeend', subcardHTML);
   });
 
-  // Display the fully built info panel
+  // Finally, display the fully built panel
   document.getElementById('infoPanelOverlay').style.display = 'flex';
   console.log(`✅ Info panel displayed for ${universityName}`);
 }
-
 
 function hideInfoPanel() {
   document.getElementById('infoPanelOverlay').style.display = 'none';
 }
 
-// CSS/HTML scaffold remains unchanged...
+// This function sets up the HTML and CSS for the panel when the page loads.
 function addInfoPanelStyles() {
   const style = document.createElement('style');
+  // Using the same CSS you already had
   style.textContent = `
     #infoPanelOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center; }
     .info-panel { background: white; padding: 20px; border-radius: 10px; max-width: 600px; max-height: 80vh; overflow-y: auto; }
@@ -261,6 +248,138 @@ function addInfoPanelStyles() {
     .main-card-details { display: flex; align-items: center; margin-bottom: 15px; }
     .main-card-details img { width: 60px; height: 60px; margin-right: 15px; border-radius: 5px; }
     .main-card-details h3 { margin: 0; font-size: 24px; }
+  `;
+  document.head.appendChild(style);
+
+  const overlay = document.createElement('div');
+  overlay.id = 'infoPanelOverlay';
+  overlay.onclick = hideInfoPanel;
+  overlay.innerHTML = `
+    <div class="info-panel" onclick="event.stopPropagation()">
+      <div id="infoPanelMainCard"></div>
+      <div id="infoPanelSubcards"></div>
+      <button onclick="hideInfoPanel()" style="margin-top: 20px; padding: 10px 20px;">Close</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+}
+
+// This ensures the panel's HTML and CSS are ready when the page loads.
+document.addEventListener('DOMContentLoaded', addInfoPanelStyles);
+
+
+// ---------- If later you allow panel post-login, remove the return above and use builder below ----------
+/*
+const uniData = allUniversityContent.filter(item => item && item.university === data.university);
+if (uniData.length === 0) {
+  console.log('❌ No university content found');
+  return;
+}
+const mainErasmusLink = uniData[0].erasmusLink;
+document.getElementById('infoPanelMainCard').innerHTML = `
+  <div class="main-card-details">
+    <img src="${uniData.logo}" alt="${data.university}">
+    <h3>${data.university}</h3>
+  </div>
+  <div class="main-card-actions">
+    ${mainErasmusLink ? `<a href="${mainErasmusLink}" target="_blank" class="partner-cta erasmus">Erasmus Info</a>` : ''}
+  </div>
+`;
+document.getElementById('infoPanelSubcards').innerHTML = '';
+uniData.forEach(item => {
+  if (!item) return;
+  const infoEnabled = item.programLink && item.programLink !== '#';
+  const applyEnabled = item.applyLink && item.applyLink !== '#';
+  const subcardHTML = `
+    <div class="subcard">
+      <div class="subcard-info">
+        <img src="${item.logo}" alt="">
+        <h4>${item.programName.replace(/\\n/g, ' ')}</h4>
+      </div>
+      <div class="subcard-buttons">
+        <button class="partner-cta info" ${infoEnabled ? '' : 'disabled'} data-href="${infoEnabled ? item.programLink : ''}">University Info</button>
+        <button class="partner-cta apply" ${applyEnabled ? '' : 'disabled'} data-return="/members/home">Apply Now</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('infoPanelSubcards').insertAdjacentHTML('beforeend', subcardHTML);
+});
+const container = document.getElementById('infoPanelSubcards');
+container.querySelectorAll('.partner-cta.info').forEach(btn => {
+  btn.addEventListener('click', e => {
+    const href = e.currentTarget.getAttribute('data-href');
+    if (href) window.open(href, '_blank');
+  });
+});
+container.querySelectorAll('.partner-cta.apply').forEach(btn => {
+  btn.addEventListener('click', e => {
+    window.top.location.href = 'https://www.globaleducarealliance.com/home?promptLogin=1';
+  });
+});
+document.getElementById('infoPanelOverlay').style.display = 'flex';
+console.log('✅ Info panel displayed with both university and application links');
+*/
+
+function hideInfoPanel() {
+  document.getElementById('infoPanelOverlay').style.display = 'none';
+}
+
+// Add info panel styles and HTML (kept in case you re-enable the panel)
+function addInfoPanelStyles() {
+  const style = document.createElement('style');
+  style.textContent = `
+    #infoPanelOverlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      z-index: 10000;
+      justify-content: center;
+      align-items: center;
+    }
+    .info-panel {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 600px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    .partner-cta {
+      padding: 8px 16px;
+      margin: 5px;
+      border: none;
+      border-radius: 5px;
+      background: #007bff;
+      color: white;
+      cursor: pointer;
+    }
+    .partner-cta.disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    .partner-cta:hover:not(.disabled) {
+      background: #0056b3;
+    }
+    .subcard {
+      border: 1px solid #ddd;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+    }
+    .subcard-info img {
+      width: 40px;
+      height: 40px;
+      margin-right: 10px;
+    }
+    .main-card-details img {
+      width: 60px;
+      height: 60px;
+      margin-right: 15px;
+    }
   `;
   document.head.appendChild(style);
   const overlay = document.createElement('div');
@@ -275,6 +394,8 @@ function addInfoPanelStyles() {
   `;
   document.body.appendChild(overlay);
 }
+
+// Initialize info panel scaffolding on load (safe to keep)
 document.addEventListener('DOMContentLoaded', addInfoPanelStyles);
 
 
@@ -638,58 +759,36 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
 }
 
 // **** ADD THE NEW FUNCTION RIGHT HERE ****
-function setCubeToAppliedState(programName) {
-  console.log('Highlight requested for program:', programName);
-
+/**
+ * Finds the correct university sub-cube by name and changes its material
+ * to a glowing green to indicate a submitted application.
+ * @param {string} universityName - The name of the university to find.
+ */
+function setCubeToAppliedState(universityName) {
+  // Combine all sub-cube arrays into one for easy searching
   const allSubCubes = [
     ...europeSubCubes, ...newThailandSubCubes, ...canadaSubCubes, ...ukSubCubes,
     ...usaSubCubes, ...indiaSubCubes, ...singaporeSubCubes, ...malaysiaSubCubes
   ];
-  allSubCubes.forEach(cube => {
-    if (cube && cube.userData && cube.userData.programName) {
-      console.log('Cube:', cube.userData.programName);
-    }
-  });
 
-  const cubesToHighlight = allSubCubes.filter(
-    cube =>
-      cube &&
-      cube.userData.programName &&
-      cube.userData.programName.trim().toLowerCase() === programName.trim().toLowerCase()
-  );
-  console.log('Found cubes:', cubesToHighlight.length, 'for program:', programName);
+  // Find the first cube that matches the university name.
+  const targetCube = allSubCubes.find(cube => cube && cube.userData.university === universityName);
 
-  cubesToHighlight.forEach(targetCube => {
-    const highlightMaterial = new THREE.MeshStandardMaterial({
-      color: 0xffff00,
-      emissive: 0xffff00,
-      emissiveIntensity: 2.5
-    });
-    targetCube.material = highlightMaterial;
-
-    let blinkState = false, blinkCount = 0;
-    const interval = setInterval(() => {
-      if (blinkState) {
-        highlightMaterial.color.set(0xffff00);
-        highlightMaterial.emissive.set(0xffff00);
-      } else {
-        highlightMaterial.color.set(0xffffff);
-        highlightMaterial.emissive.set(0xffffff);
-      }
-      blinkState = !blinkState;
-      blinkCount++;
-      if (blinkCount > 6) {
-        highlightMaterial.color.set(0xffff00);
-        highlightMaterial.emissive.set(0xffff00);
-        clearInterval(interval);
-      }
-    }, 180);
-  });
+  if (targetCube) {
+    console.log("Found cube for " + universityName + ". Changing state to 'Applied'.");
+    
+    targetCube.userData.applied = true;
+    
+    const appliedMaterial = targetCube.material.clone();
+    appliedMaterial.color.set(0x00ff00);       // Set color to bright green
+    appliedMaterial.emissive.set(0x00ff00);    // Set emissive glow to bright green
+    appliedMaterial.emissiveIntensity = 1.5;   // Make it glow intensely
+    targetCube.material = appliedMaterial;
+    
+  } else {
+    console.warn("Could not find a cube matching university: " + universityName);
+  }
 }
-
-
-
-
 
 // =======
 // TOGGLE FUNCTION CREATION
@@ -1344,27 +1443,25 @@ function showNotification(message, isSuccess = true) {
   document.body.appendChild(div);
   setTimeout(() => div.remove(), 5000);
 }
-
-
-let programNameToHighlight = null;
-
 document.addEventListener('DOMContentLoaded', async () => {
-  // Handle program-based highlight on redirect after submission
-  let suppressLoginSuccessMsg = false;
+  // --- NEW: Handle success redirect from application form ---
+  let suppressLoginSuccessMsg = false;      // <--- ADD THIS LINE
   const params = new URLSearchParams(window.location.search);
-  const programName = params.get('appliedProgram');
   if (
     params.get('applicationSuccess') === "1" &&
-    programName
+    params.get('appliedUniversity')
   ) {
-    suppressLoginSuccessMsg = true;
-    programNameToHighlight = programName;
+    suppressLoginSuccessMsg = true;         // <--- SET FLAG IF REDIRECT
     showNotification(
-      `Application submitted for ${programName}! Cube updated.`, true
+      `Application submitted for ${params.get('appliedUniversity')}! Cube updated.`, true
     );
+    setTimeout(() => {
+      setCubeToAppliedState(params.get('appliedUniversity'));
+    }, 1000);
   }
-  // ---- Normal globe widget initialization below ----
-  hoverCard = document.getElementById('hover-card');
+  // --- END NEW BLOCK ---
+
+  hoverCard = document.getElementById('hover-card'); // Initialize the hover card
   console.log('🚀 Loading Interactive Globe Widget...');
   try {
     await fetchAuthStatus();
@@ -1378,26 +1475,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (authStatus.isAuthenticated) {
       console.log('🎮 Activating cubes for authenticated user!');
       setTimeout(() => {
-        activateAllCubes({
-          suppressNotification: suppressLoginSuccessMsg
-        });
+        // --- SUPPRESS LOGIN SUCCESS MESSAGE IF NEEDED ---
+        if (!suppressLoginSuccessMsg) {
+          showNotification("All cubes unlocked! Explore programs.", true);
+        }
+        activateAllCubes();
       }, 500);
-    }
-    // --- RUN HIGHLIGHT NOW, after cubes exist ---
-    if (programNameToHighlight) {
-      setTimeout(() => {
-        setCubeToAppliedState(programNameToHighlight);
-      }, 800);
     }
     await populateCarousel();
     animate();
     startAuthStatusPolling();
+    const leftBtn = document.getElementById('carouselScrollLeft');
+    const rightBtn = document.getElementById('carouselScrollRight');
+    if (leftBtn) leftBtn.onclick = () => scrollCarousel(-1);
+    if (rightBtn) rightBtn.onclick = () => scrollCarousel(1);
     updateCanvasSize();
     console.log('✅ Globe Widget loaded successfully!');
   } catch (error) {
     console.error('❌ Error during initialization:', error);
   }
 });
-
-
 
