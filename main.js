@@ -196,6 +196,7 @@ async function showInfoPanel(data) {
       ${mainProgram.erasmusLink && mainProgram.erasmusLink !== '#' ? `<button class="partner-cta erasmus" onclick="window.open('${mainProgram.erasmusLink}', '_blank')">Erasmus Info</button>` : ''}
     </div>
   `;
+
   // --- BUILD THE SUBCARDS (One for each program) ---
   const subcardsContainer = document.getElementById('infoPanelSubcards');
   subcardsContainer.innerHTML = ''; // Clear previous content
@@ -205,7 +206,6 @@ async function showInfoPanel(data) {
     const infoEnabled = item.programLink && item.programLink !== '#';
     const applyEnabled = item.applyLink && item.applyLink !== '#';
 
-    // ---- MANUALLY construct subcard for fine control ----
     const subcardDiv = document.createElement('div');
     subcardDiv.className = "subcard";
     subcardDiv.innerHTML = `
@@ -222,24 +222,23 @@ async function showInfoPanel(data) {
       </div>
     `;
 
-    // Add event logic (NO URLS in main.js)
-    // University Info
+    // Event: University Info
     subcardDiv.querySelector('.partner-cta.info').onclick = function() {
       if (infoEnabled) window.open(item.programLink, '_blank');
     };
 
-    // Apply Now: ONLY LOG WHICH CUBE WAS CLICKED!
+    // Event: Apply Now (intent tracking! — no URL or navigation code here)
     subcardDiv.querySelector('.partner-cta.apply').onclick = function() {
       sessionStorage.setItem("pendingHighlightCube", JSON.stringify({
-        programName: item.programName // or use an internal ID if you want
+        programName: item.programName  // Or use a more robust identifier
       }));
-      // NO URL or redirect here; handled by Wix Editor/properties
+      // Real navigation is handled by the Wix Editor's link property, not JS!
     };
 
     subcardsContainer.appendChild(subcardDiv);
   });
 
-  // Finally, display the panel
+  // Display the fully built info panel
   document.getElementById('infoPanelOverlay').style.display = 'flex';
   console.log(`✅ Info panel displayed for ${universityName}`);
 }
@@ -248,7 +247,7 @@ function hideInfoPanel() {
   document.getElementById('infoPanelOverlay').style.display = 'none';
 }
 
-// This function sets up the HTML and CSS for the panel when the page loads.
+// CSS/HTML scaffold remains unchanged...
 function addInfoPanelStyles() {
   const style = document.createElement('style');
   style.textContent = `
@@ -276,8 +275,6 @@ function addInfoPanelStyles() {
   `;
   document.body.appendChild(overlay);
 }
-
-// This ensures the panel's HTML and CSS are ready when the page loads.
 document.addEventListener('DOMContentLoaded', addInfoPanelStyles);
 
 
@@ -1347,6 +1344,8 @@ function showNotification(message, isSuccess = true) {
   document.body.appendChild(div);
   setTimeout(() => div.remove(), 5000);
 }
+
+
 document.addEventListener('DOMContentLoaded', async () => {
   // Handle program-based highlight on redirect after submission
   let suppressLoginSuccessMsg = false;
