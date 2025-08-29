@@ -205,7 +205,6 @@ async function showInfoPanel(data) {
     if (!item) return;
     const infoEnabled = item.programLink && item.programLink !== '#';
     const applyEnabled = item.applyLink && item.applyLink !== '#';
-
     const subcardDiv = document.createElement('div');
     subcardDiv.className = "subcard";
     subcardDiv.innerHTML = `
@@ -227,12 +226,12 @@ async function showInfoPanel(data) {
       if (infoEnabled) window.open(item.programLink, '_blank');
     };
 
-    // Event: Apply Now (intent tracking! — no URL or navigation code here)
+    // Event: Apply Now (intent tracking AND navigation)
     subcardDiv.querySelector('.partner-cta.apply').onclick = function() {
       sessionStorage.setItem("pendingHighlightCube", JSON.stringify({
         programName: item.programName  // Or use a more robust identifier
       }));
-      // Real navigation is handled by the Wix Editor's link property, not JS!
+      if (applyEnabled) window.open(item.applyLink, '_blank'); // <-- navigate to the form!
     };
 
     subcardsContainer.appendChild(subcardDiv);
@@ -242,6 +241,7 @@ async function showInfoPanel(data) {
   document.getElementById('infoPanelOverlay').style.display = 'flex';
   console.log(`✅ Info panel displayed for ${universityName}`);
 }
+
 
 function hideInfoPanel() {
   document.getElementById('infoPanelOverlay').style.display = 'none';
