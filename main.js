@@ -1346,6 +1346,8 @@ function showNotification(message, isSuccess = true) {
 }
 
 
+let programNameToHighlight = null;
+
 document.addEventListener('DOMContentLoaded', async () => {
   // Handle program-based highlight on redirect after submission
   let suppressLoginSuccessMsg = false;
@@ -1356,14 +1358,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     programName
   ) {
     suppressLoginSuccessMsg = true;
+    programNameToHighlight = programName;
     showNotification(
       `Application submitted for ${programName}! Cube updated.`, true
     );
-    setTimeout(() => {
-      setCubeToAppliedState(programName);
-    }, 1000);
   }
-
   // ---- Normal globe widget initialization below ----
   hoverCard = document.getElementById('hover-card');
   console.log('🚀 Loading Interactive Globe Widget...');
@@ -1384,6 +1383,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
       }, 500);
     }
+    // --- RUN HIGHLIGHT NOW, after cubes exist ---
+    if (programNameToHighlight) {
+      setTimeout(() => {
+        setCubeToAppliedState(programNameToHighlight);
+      }, 800);
+    }
     await populateCarousel();
     animate();
     startAuthStatusPolling();
@@ -1393,5 +1398,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.error('❌ Error during initialization:', error);
   }
 });
+
 
 
