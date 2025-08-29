@@ -759,44 +759,36 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
 }
 
 // **** ADD THE NEW FUNCTION RIGHT HERE ****
-/**
- * Finds the correct university sub-cube by name and changes its material
- * to a glowing green to indicate a submitted application.
- * @param {string} universityName - The name of the university to find.
- */
-function setCubeToAppliedState(programName) {
-  console.log('Highlight requested for program:', programName);
+function setCubeToAppliedState(programOrUniName) {
+  console.log('Highlight requested for:', programOrUniName);
 
   const allSubCubes = [
     ...europeSubCubes, ...newThailandSubCubes, ...canadaSubCubes, ...ukSubCubes,
     ...usaSubCubes, ...indiaSubCubes, ...singaporeSubCubes, ...malaysiaSubCubes
   ];
 
-  // Debug: log all available program names for diagnostics
-  console.log('Available cube programs:');
-  allSubCubes.forEach(cube => {
-    if (cube && cube.userData && cube.userData.programName) {
-      console.log(`"${cube.userData.programName}"`);
-    }
-  });
-  console.log('Requested (trim/lower):', `"${programName.trim().toLowerCase()}"`);
-
-  // Flexible: normalize whitespace/case for the match
-  const cubesToHighlight = allSubCubes.filter(
+  // Try to match program name first, then fallback to university if needed
+  let cubesToHighlight = allSubCubes.filter(
     cube =>
       cube &&
       cube.userData.programName &&
-      cube.userData.programName.trim().toLowerCase() === programName.trim().toLowerCase()
+      cube.userData.programName.trim().toLowerCase() === programOrUniName.trim().toLowerCase()
   );
 
-  console.log('Found cubes:', cubesToHighlight.length, 'for program:', programName);
+  if (cubesToHighlight.length === 0) {
+    cubesToHighlight = allSubCubes.filter(
+      cube =>
+        cube &&
+        cube.userData.university &&
+        cube.userData.university.trim().toLowerCase() === programOrUniName.trim().toLowerCase()
+    );
+  }
+
+  console.log('Found cubes:', cubesToHighlight.length, 'for:', programOrUniName);
 
   cubesToHighlight.forEach(targetCube => {
-    // Highlight in yellow (blinking effect)
     const highlightMaterial = new THREE.MeshStandardMaterial({
-      color: 0xffff00,
-      emissive: 0xffff00,
-      emissiveIntensity: 2.5
+      color: 0xffff00, emissive: 0xffff00, emissiveIntensity: 2.5
     });
     targetCube.material = highlightMaterial;
     let blinkState = false, blinkCount = 0;
