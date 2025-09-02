@@ -9,46 +9,40 @@ const cors = require('cors');
 const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 3001;
-// Add this line right here
 const pendingNotifications = {};
 
-// Load Wix credentials from Render Secret Files
 const wixAccountId = fs.readFileSync('/etc/secrets/WIX_ACCOUNT_ID', 'utf-8').trim();
 const wixApiKey = fs.readFileSync('/etc/secrets/WIX_API_KEY', 'utf-8').trim();
 
-// ===
-// CRITICAL FIX: Trust proxy for Render.com deployment
-// ===
+// === CRITICAL FIX: Trust proxy for Render.com deployment ===
 app.set('trust proxy', 1);
 
-// ===
-// UPDATED CORS - Enable credentials for cookies
-// ===
+// === UPDATED CORS - Enable credentials for cookies ===
 app.use(cors({ 
-    origin: 'https://www.globaleducarealliance.com', 
+    origin: [
+        'https://www.globaleducarealliance.com',
+        'https://globaleducarealliance-com.filesusr.com'
+    ],
     credentials: true 
 }));
 
-// ===
-// MIDDLEWARE SETUP (CORRECT ORDER!)
-// ===
+// === MIDDLEWARE SETUP (CORRECT ORDER!) ===
 app.use(express.json());
 app.use(cookieParser());
 
-// ===
-// FIXED SESSION CONFIGURATION (BEFORE EMAIL MIDDLEWARE!)
-// ===
+// === FIXED SESSION CONFIGURATION (FOR CROSS-SITE IFRAME/PROD) ===
 app.use(session({
     secret: process.env.SESSION_SECRET || 'a-new-super-strong-secret-for-sso',
     resave: false,
     saveUninitialized: false,
     cookie: {
-        secure: false, // Critical: false for HTTP development
+        secure: true,        // MUST be true in production (HTTPS required)
         httpOnly: true,
-        sameSite: 'lax',
+        sameSite: 'none',    // 'none' permits third-party (iframe) cookies
         maxAge: 7 * 24 * 60 * 60 * 1000
     }
 }));
+
 
 // ===
 // EMAIL-BASED AUTHENTICATION MIDDLEWARE (BEFORE STATIC FILES!)
