@@ -1470,10 +1470,7 @@ function showNotification(message, isSuccess = true) {
 }
 
 window.addEventListener('message', (event) => {
-  // Log the real message origin and contents every time
   console.log('GLOBE WIDGET got postMessage:', event.origin, event.data);
-  
-  // Relaxed: do NOT check event.origin, allow unlock from any parent
   const { unlock, userEmail } = event.data || {};
   if (unlock && userEmail) {
     if (typeof activateAllCubes === 'function' && Array.isArray(cubes) && cubes.length > 0) {
@@ -1481,11 +1478,26 @@ window.addEventListener('message', (event) => {
       showNotification("All cubes unlocked for: " + userEmail, true);
       window.authStatus = { isAuthenticated: true, user: { email: userEmail }};
       console.log('Cubes unlocked by external message for', userEmail);
+
+      // Place this POST fetch exactly here, INSIDE the unlock handler:
+      fetch('/api/unlock-user-links', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ userEmail })
+      })
+        .then(res => res.json())
+        .then(data => {
+          console.log('🔗 Backend responded (links unlocked?):', data);
+          // Optionally update local UI with new links
+        })
+        .catch(err => console.error('❌ Error unlocking server links:', err));
     } else {
       pendingUnlockUserEmail = userEmail;
     }
   }
 });
+
 
 
 document.addEventListener('DOMContentLoaded', async () => {
