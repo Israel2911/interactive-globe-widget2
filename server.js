@@ -213,6 +213,16 @@ const countryPrograms = { "India": ["UG", "PG", "Mobility", "Research"], "Europe
 
 const countryConfigs = [{"name": "India", "lat": 22, "lon": 78, "color": 0xFF9933}, {"name": "Europe", "lat": 48.8566, "lon": 2.3522, "color": 0x0000FF}, {"name": "UK", "lat": 53, "lon": -0.1276, "color": 0x191970}, {"name": "Singapore", "lat": 1.35, "lon": 103.8, "color": 0xff0000}, {"name": "Malaysia", "lat": 4, "lon": 102, "color": 0x0000ff}, {"name": "Thailand", "lat": 13.7563, "lon": 100.5018, "color": 0xffcc00}, {"name": "Canada", "lat": 56.1304, "lon": -106.3468, "color": 0xff0000}, {"name": "USA", "lat": 39.8283, "lon": -98.5795, "color": 0x003366}];
 
+app.post('/api/unlock-user-links', (req, res) => {
+    const { userEmail } = req.body;
+    if (!userEmail) return res.status(400).json({ error: 'Missing email' });
+    req.session.isLoggedIn = true;
+    req.session.userEmail = userEmail;
+    req.session.userName = userEmail.split('@')[0];
+    req.session.authMethod = 'client_unlock';
+    res.json({ success: true, userEmail });
+});
+
 // ===
 // AUTHENTICATION ENDPOINTS (SSO FLOW) - Keep existing endpoints
 // ===
