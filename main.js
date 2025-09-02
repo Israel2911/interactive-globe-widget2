@@ -1483,7 +1483,6 @@ window.addEventListener('message', (event) => {
 });
 
 
-// --- Your normal app initialization ---
 document.addEventListener('DOMContentLoaded', async () => {
   let suppressLoginSuccessMsg = false;
   const params = new URLSearchParams(window.location.search);
@@ -1507,6 +1506,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     initializeThreeJS();
     setupEventListeners();
     await createGlobeAndCubes();
+
+    // --- PATCH: Apply any queued unlock here ---
+    if (pendingUnlockUserEmail) {
+      activateAllCubes();
+      showNotification("All cubes unlocked for: " + pendingUnlockUserEmail, true);
+      window.authStatus = { isAuthenticated: true, user: { email: pendingUnlockUserEmail }};
+      pendingUnlockUserEmail = null;
+    }
+    // --- end patch ---
+
     if (authStatus.isAuthenticated) {
       console.log('🎮 Activating cubes for authenticated user!');
       setTimeout(() => {
