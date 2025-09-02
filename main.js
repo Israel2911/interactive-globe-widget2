@@ -98,7 +98,10 @@ async function fetchAuthStatus() {
 }
 
 / --- PLACE THE NEW POSTMESSAGE LISTENER HERE --- //
+// For debugging, accept all origins (remove this for production or list all trusted origins)
 window.addEventListener("message", event => {
+  // if (
+  //   event.origin === "https://www.globaleducarealliance.com" && // restrict in production!
   if (
     event.data &&
     event.data.type === "SET_CUBE_COLOR" &&
@@ -110,6 +113,7 @@ window.addEventListener("message", event => {
     );
   }
 });
+
 
 // ===
 // ===
@@ -1513,8 +1517,9 @@ window.addEventListener('message', (event) => {
 
 
 
+let suppressLoginSuccessMsg = false;
+
 document.addEventListener('DOMContentLoaded', async () => {
-  let suppressLoginSuccessMsg = false;
   const params = new URLSearchParams(window.location.search);
   if (
     params.get('applicationSuccess') === "1" &&
@@ -1528,19 +1533,27 @@ document.addEventListener('DOMContentLoaded', async () => {
       setCubeToAppliedState(params.get('appliedUniversity'));
     }, 1000);
   }
+
+  // Grab hover card element for later use
   hoverCard = document.getElementById('hover-card');
   console.log('🚀 Loading Interactive Globe Widget...');
   try {
+    // 1. Check auth status
     await fetchAuthStatus();
     if (authStatus.isAuthenticated) {
       console.log('✅ User is already authenticated on load!');
     }
+
+    // 2. Fetch all program/cube content data
     await fetchDataFromBackend();
+    // 3. Initialize the Three.js engine and globe scene
     initializeThreeJS();
+    // 4. Setup all user input/event listeners for globe controls, hover, etc.
     setupEventListeners();
+    // 5. Create the globe and all university cubes
     await createGlobeAndCubes();
 
-    // PATCH: Apply any queued unlock here
+    // 6. Apply any pending "all cubes unlocked" logic (legacy/SSO flows)
     if (pendingUnlockUserEmail) {
       activateAllCubes();
       showNotification("All cubes unlocked for: " + pendingUnlockUserEmail, true);
@@ -1548,6 +1561,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       pendingUnlockUserEmail = null;
     }
 
+    // 7. On authenticated reload, do not show the global unlock message if suppressed
     if (authStatus.isAuthenticated) {
       console.log('🎮 Activating cubes for authenticated user!');
       setTimeout(() => {
@@ -1557,16 +1571,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         activateAllCubes();
       }, 500);
     }
+
+    // 8. Populate carousel for program levels/categories
     await populateCarousel();
+    // 9. Start animation/render loop
     animate();
+    // 10. Begin polling for authentication status changes
     startAuthStatusPolling();
+
+    // 11. Hook buttons for carousel nav (if present)
     const leftBtn = document.getElementById('carouselScrollLeft');
     const rightBtn = document.getElementById('carouselScrollRight');
     if (leftBtn) leftBtn.onclick = () => scrollCarousel(-1);
     if (rightBtn) rightBtn.onclick = () => scrollCarousel(1);
+
+    // 12. Adjust canvas/globe size for UI headers/footers
     updateCanvasSize();
+
     console.log('✅ Globe Widget loaded successfully!');
   } catch (error) {
     console.error('❌ Error during initialization:', error);
   }
 });
+
