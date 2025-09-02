@@ -1470,18 +1470,23 @@ function showNotification(message, isSuccess = true) {
 }
 
 window.addEventListener('message', (event) => {
-  if (event.origin !== "https://www.globaleducarealliance.com") return;
+  // Log the real message origin and contents every time
+  console.log('GLOBE WIDGET got postMessage:', event.origin, event.data);
+  
+  // Relaxed: do NOT check event.origin, allow unlock from any parent
   const { unlock, userEmail } = event.data || {};
   if (unlock && userEmail) {
     if (typeof activateAllCubes === 'function' && Array.isArray(cubes) && cubes.length > 0) {
       activateAllCubes();
       showNotification("All cubes unlocked for: " + userEmail, true);
       window.authStatus = { isAuthenticated: true, user: { email: userEmail }};
+      console.log('Cubes unlocked by external message for', userEmail);
     } else {
       pendingUnlockUserEmail = userEmail;
     }
   }
 });
+
 
 document.addEventListener('DOMContentLoaded', async () => {
   let suppressLoginSuccessMsg = false;
