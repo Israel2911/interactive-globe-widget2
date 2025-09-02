@@ -97,6 +97,20 @@ async function fetchAuthStatus() {
   }
 }
 
+/ --- PLACE THE NEW POSTMESSAGE LISTENER HERE --- //
+window.addEventListener("message", event => {
+  if (
+    event.data &&
+    event.data.type === "SET_CUBE_COLOR" &&
+    event.data.universityName
+  ) {
+    setCubeToAppliedState(event.data.universityName);
+    showNotification(
+      `Application submitted for ${event.data.universityName}! Cube updated.`, true
+    );
+  }
+});
+
 // ===
 // ===
 // AUTH STATUS POLLING - IMPROVED WITH SAFER FETCH
@@ -758,15 +772,12 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
   return new THREE.MeshStandardMaterial({ map: texture, emissive: new THREE.Color(bgColor), emissiveIntensity: 0.6 });
 }
 
-// **** ADD THE NEW FUNCTION RIGHT HERE ****
 function setCubeToAppliedState(programOrUniName) {
   console.log('Highlight requested for:', programOrUniName);
-
   const allSubCubes = [
     ...europeSubCubes, ...newThailandSubCubes, ...canadaSubCubes, ...ukSubCubes,
     ...usaSubCubes, ...indiaSubCubes, ...singaporeSubCubes, ...malaysiaSubCubes
   ];
-
   // Try to match program name first, then fallback to university if needed
   let cubesToHighlight = allSubCubes.filter(
     cube =>
@@ -774,7 +785,6 @@ function setCubeToAppliedState(programOrUniName) {
       cube.userData.programName &&
       cube.userData.programName.trim().toLowerCase() === programOrUniName.trim().toLowerCase()
   );
-
   if (cubesToHighlight.length === 0) {
     cubesToHighlight = allSubCubes.filter(
       cube =>
@@ -783,9 +793,11 @@ function setCubeToAppliedState(programOrUniName) {
         cube.userData.university.trim().toLowerCase() === programOrUniName.trim().toLowerCase()
     );
   }
-
   console.log('Found cubes:', cubesToHighlight.length, 'for:', programOrUniName);
-
+  if (cubesToHighlight.length === 0) {
+    console.warn('No cubes were highlighted for:', programOrUniName);
+    showNotification(`Warning: No cubes found for "${programOrUniName}"`, false);
+  }
   cubesToHighlight.forEach(targetCube => {
     const highlightMaterial = new THREE.MeshStandardMaterial({
       color: 0xffff00, emissive: 0xffff00, emissiveIntensity: 2.5
@@ -810,6 +822,7 @@ function setCubeToAppliedState(programOrUniName) {
     }, 180);
   });
 }
+
 
 
 // =======
