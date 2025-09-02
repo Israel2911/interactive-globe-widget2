@@ -1453,6 +1453,9 @@ window.addEventListener('load', () => {
   }, 2000);
 });
 // Notification helpers
+let pendingUnlockUserEmail = null;
+
+// Notification helpers
 function showNotification(message, isSuccess = true) {
   const div = document.createElement('div');
   const icon = isSuccess ? '✅' : '❌';
@@ -1465,15 +1468,29 @@ function showNotification(message, isSuccess = true) {
   document.body.appendChild(div);
   setTimeout(() => div.remove(), 5000);
 }
+
+window.addEventListener('message', (event) => {
+  if (event.origin !== "https://www.globaleducarealliance.com") return;
+  const { unlock, userEmail } = event.data || {};
+  if (unlock && userEmail) {
+    if (typeof activateAllCubes === 'function' && Array.isArray(cubes) && cubes.length > 0) {
+      activateAllCubes();
+      showNotification("All cubes unlocked for: " + userEmail, true);
+      window.authStatus = { isAuthenticated: true, user: { email: userEmail }};
+    } else {
+      pendingUnlockUserEmail = userEmail;
+    }
+  }
+});
+
 document.addEventListener('DOMContentLoaded', async () => {
-  // --- NEW: Handle success redirect from application form ---
-  let suppressLoginSuccessMsg = false;      // <--- ADD THIS LINE
+  let suppressLoginSuccessMsg = false;
   const params = new URLSearchParams(window.location.search);
   if (
     params.get('applicationSuccess') === "1" &&
     params.get('appliedUniversity')
   ) {
-    suppressLoginSuccessMsg = true;         // <--- SET FLAG IF REDIRECT
+    suppressLoginSuccessMsg = true;
     showNotification(
       `Application submitted for ${params.get('appliedUniversity')}! Cube updated.`, true
     );
@@ -1481,9 +1498,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       setCubeToAppliedState(params.get('appliedUniversity'));
     }, 1000);
   }
-  // --- END NEW BLOCK ---
-
-  hoverCard = document.getElementById('hover-card'); // Initialize the hover card
+  hoverCard = document.getElementById('hover-card');
   console.log('🚀 Loading Interactive Globe Widget...');
   try {
     await fetchAuthStatus();
@@ -1494,10 +1509,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     initializeThreeJS();
     setupEventListeners();
     await createGlobeAndCubes();
+
+    // PATCH: Apply any queued unlock here
+    if (pendingUnlockUserEmail) {
+      activateAllCubes();
+      showNotification("All cubes unlocked for: " + pendingUnlockUserEmail, true);
+      window.authStatus = { isAuthenticated: true, user: { email: pendingUnlockUserEmail }};
+      pendingUnlockUserEmail = null;
+    }
+
     if (authStatus.isAuthenticated) {
       console.log('🎮 Activating cubes for authenticated user!');
       setTimeout(() => {
-        // --- SUPPRESS LOGIN SUCCESS MESSAGE IF NEEDED ---
         if (!suppressLoginSuccessMsg) {
           showNotification("All cubes unlocked! Explore programs.", true);
         }
