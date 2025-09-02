@@ -1467,16 +1467,21 @@ function showNotification(message, isSuccess = true) {
 }
 // --- Listen for unlock requests from the Wix portal page ---
 window.addEventListener('message', (event) => {
-  // Only accept messages from your Wix site domain:
   if (event.origin !== "https://www.globaleducarealliance.com") return;
   const { unlock, userEmail } = event.data || {};
   if (unlock && userEmail) {
-    activateAllCubes();
-    showNotification("All cubes unlocked for: " + userEmail, true);
-    window.authStatus = { isAuthenticated: true, user: { email: userEmail }};
-    // ...trigger any UI/auth refresh as needed
+    // Safely handle unlock timing:
+    if (typeof activateAllCubes === 'function' && Array.isArray(cubes) && cubes.length > 0) {
+      activateAllCubes();
+      showNotification("All cubes unlocked for: " + userEmail, true);
+      window.authStatus = { isAuthenticated: true, user: { email: userEmail }};
+    } else {
+      // 🟢 Save for after cube creation
+      pendingUnlockUserEmail = userEmail;
+    }
   }
 });
+
 
 // --- Your normal app initialization ---
 document.addEventListener('DOMContentLoaded', async () => {
