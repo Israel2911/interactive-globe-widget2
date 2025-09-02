@@ -1465,15 +1465,25 @@ function showNotification(message, isSuccess = true) {
   document.body.appendChild(div);
   setTimeout(() => div.remove(), 5000);
 }
+// --- Listen for unlock requests from the Wix portal page ---
+window.addEventListener('message', (event) => {
+  // Only accept messages from your Wix site domain:
+  if (event.origin !== "https://www.globaleducarealliance.com") return;
+  const { unlock, userEmail } = event.data || {};
+  if (unlock && userEmail) {
+    activateAllCubes();
+    showNotification("All cubes unlocked for: " + userEmail, true);
+    window.authStatus = { isAuthenticated: true, user: { email: userEmail }};
+    // ...trigger any UI/auth refresh as needed
+  }
+});
+
+// --- Your normal app initialization ---
 document.addEventListener('DOMContentLoaded', async () => {
-  // --- NEW: Handle success redirect from application form ---
-  let suppressLoginSuccessMsg = false;      // <--- ADD THIS LINE
+  let suppressLoginSuccessMsg = false;
   const params = new URLSearchParams(window.location.search);
-  if (
-    params.get('applicationSuccess') === "1" &&
-    params.get('appliedUniversity')
-  ) {
-    suppressLoginSuccessMsg = true;         // <--- SET FLAG IF REDIRECT
+  if (params.get('applicationSuccess') === "1" && params.get('appliedUniversity')) {
+    suppressLoginSuccessMsg = true;
     showNotification(
       `Application submitted for ${params.get('appliedUniversity')}! Cube updated.`, true
     );
@@ -1481,9 +1491,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       setCubeToAppliedState(params.get('appliedUniversity'));
     }, 1000);
   }
-  // --- END NEW BLOCK ---
-
-  hoverCard = document.getElementById('hover-card'); // Initialize the hover card
+  hoverCard = document.getElementById('hover-card');
   console.log('🚀 Loading Interactive Globe Widget...');
   try {
     await fetchAuthStatus();
@@ -1497,7 +1505,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (authStatus.isAuthenticated) {
       console.log('🎮 Activating cubes for authenticated user!');
       setTimeout(() => {
-        // --- SUPPRESS LOGIN SUCCESS MESSAGE IF NEEDED ---
         if (!suppressLoginSuccessMsg) {
           showNotification("All cubes unlocked! Explore programs.", true);
         }
