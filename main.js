@@ -1465,6 +1465,9 @@ function showNotification(message, isSuccess = true) {
   document.body.appendChild(div);
   setTimeout(() => div.remove(), 5000);
 }
+// --- Top of your JS file ---
+let pendingUnlockUserEmail = null;
+
 // --- Listen for unlock requests from the Wix portal page ---
 window.addEventListener('message', (event) => {
   if (event.origin !== "https://www.globaleducarealliance.com") return;
@@ -1476,13 +1479,13 @@ window.addEventListener('message', (event) => {
       showNotification("All cubes unlocked for: " + userEmail, true);
       window.authStatus = { isAuthenticated: true, user: { email: userEmail }};
     } else {
-      // 🟢 Save for after cube creation
+      // Save for after cube creation
       pendingUnlockUserEmail = userEmail;
     }
   }
 });
 
-
+// --- Your normal app initialization ---
 document.addEventListener('DOMContentLoaded', async () => {
   let suppressLoginSuccessMsg = false;
   const params = new URLSearchParams(window.location.search);
