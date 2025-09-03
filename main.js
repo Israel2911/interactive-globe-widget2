@@ -1489,7 +1489,6 @@ function showNotification(message, isSuccess = true) {
 window.addEventListener('message', (event) => {
   console.log('GLOBE WIDGET got postMessage:', event.origin, event.data);
 
-  // --- Add this block to handle SET_CUBE_COLOR messages ---
   if (
     event.data &&
     event.data.type === "SET_CUBE_COLOR" &&
@@ -1500,9 +1499,37 @@ window.addEventListener('message', (event) => {
     showNotification(
       `Application submitted for ${event.data.universityName}! Cube updated.`, true
     );
-    return; // Skip the rest; don't process as legacy unlock message
+    return;
   }
-  // --------------------------------------------------------
+
+  const { unlock, userEmail } = event.data || {};
+  if (unlock && userEmail) {
+    if (typeof activateAllCubes === 'function' && Array.isArray(cubes) && cubes.length > 0) {
+      activateAllCubes();
+      showNotification("All cubes unlocked for: " + userEmail, true);
+      window.authStatus = { isAuthenticated: true, user: { email: userEmail }};
+      console.log('Cubes unlocked by external message for', userEmail);
+      fetch('/api/unlock-user-links', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userEmail })
+      })
+        .then(res => res.json())
+        .then(data => {
+          console.log('🔗 Backend responded (links unlocked?):', data);
+        })
+        .catch(err => console.error('❌ Error unlocking server links:', err));
+    } else {
+      pendingUnlockUserEmail = userEmail;
+    }
+    return;
+  }
+
+  // ADDED: Log unhandled postMessages for debugging
+  console.warn('GLOBE WIDGET received unknown or unsupported postMessage:', event.data);
+});
+---------------------------------------------------
 
   // Existing legacy unlock logic
   const { unlock, userEmail } = event.data || {};
