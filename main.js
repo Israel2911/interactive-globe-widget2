@@ -1469,26 +1469,25 @@ window.addEventListener('load', () => {
     }
   }, 2000);
 });
-// Notification helpers
+// ===== Notification helpers =====
 let pendingUnlockUserEmail = null;
 
-// Notification helpers
 function showNotification(message, isSuccess = true) {
   const div = document.createElement('div');
   const icon = isSuccess ? '✅' : '❌';
   const cssClass = isSuccess ? 'notification' : 'notification error';
-  div.innerHTML = `
-    <div class="${cssClass}" onclick="this.remove()">
+  div.innerHTML = `<div class="${cssClass}" onclick="this.remove()">
       ${icon} ${message}
-    </div>
-  `;
+    </div>`;
   document.body.appendChild(div);
   setTimeout(() => div.remove(), 5000);
 }
 
+// ===== SINGLE postMessage handler for all cases =====
 window.addEventListener('message', (event) => {
   console.log('GLOBE WIDGET got postMessage:', event.origin, event.data);
 
+  // --- Application Cube Color Logic ---
   if (
     event.data &&
     event.data.type === "SET_CUBE_COLOR" &&
@@ -1502,6 +1501,7 @@ window.addEventListener('message', (event) => {
     return;
   }
 
+  // --- Legacy unlock logic ---
   const { unlock, userEmail } = event.data || {};
   if (unlock && userEmail) {
     if (typeof activateAllCubes === 'function' && Array.isArray(cubes) && cubes.length > 0) {
@@ -1526,41 +1526,12 @@ window.addEventListener('message', (event) => {
     return;
   }
 
-  // ADDED: Log unhandled postMessages for debugging
+  // Fallback log for unexpected messages
   console.warn('GLOBE WIDGET received unknown or unsupported postMessage:', event.data);
 });
----------------------------------------------------
 
-  // Existing legacy unlock logic
-  const { unlock, userEmail } = event.data || {};
-  if (unlock && userEmail) {
-    if (typeof activateAllCubes === 'function' && Array.isArray(cubes) && cubes.length > 0) {
-      activateAllCubes();
-      showNotification("All cubes unlocked for: " + userEmail, true);
-      window.authStatus = { isAuthenticated: true, user: { email: userEmail }};
-      console.log('Cubes unlocked by external message for', userEmail);
-      fetch('/api/unlock-user-links', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userEmail })
-      })
-        .then(res => res.json())
-        .then(data => {
-          console.log('🔗 Backend responded (links unlocked?):', data);
-        })
-        .catch(err => console.error('❌ Error unlocking server links:', err));
-    } else {
-      pendingUnlockUserEmail = userEmail;
-    }
-  }
-});
-
-
-
-
+// ===== DOMContentLoaded + app startup logic =====
 let suppressLoginSuccessMsg = false;
-
 document.addEventListener('DOMContentLoaded', async () => {
   const params = new URLSearchParams(window.location.search);
   if (
@@ -1576,7 +1547,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }, 1000);
   }
 
-  // Grab hover card element for later use
   hoverCard = document.getElementById('hover-card');
   console.log('🚀 Loading Interactive Globe Widget...');
   try {
@@ -1585,7 +1555,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (authStatus.isAuthenticated) {
       console.log('✅ User is already authenticated on load!');
     }
-
     // 2. Fetch all program/cube content data
     await fetchDataFromBackend();
     // 3. Initialize the Three.js engine and globe scene
@@ -1594,7 +1563,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupEventListeners();
     // 5. Create the globe and all university cubes
     await createGlobeAndCubes();
-
     // 6. Apply any pending "all cubes unlocked" logic (legacy/SSO flows)
     if (pendingUnlockUserEmail) {
       activateAllCubes();
@@ -1602,7 +1570,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       window.authStatus = { isAuthenticated: true, user: { email: pendingUnlockUserEmail }};
       pendingUnlockUserEmail = null;
     }
-
     // 7. On authenticated reload, do not show the global unlock message if suppressed
     if (authStatus.isAuthenticated) {
       console.log('🎮 Activating cubes for authenticated user!');
@@ -1613,26 +1580,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         activateAllCubes();
       }, 500);
     }
-
     // 8. Populate carousel for program levels/categories
     await populateCarousel();
     // 9. Start animation/render loop
     animate();
     // 10. Begin polling for authentication status changes
     startAuthStatusPolling();
-
     // 11. Hook buttons for carousel nav (if present)
     const leftBtn = document.getElementById('carouselScrollLeft');
     const rightBtn = document.getElementById('carouselScrollRight');
     if (leftBtn) leftBtn.onclick = () => scrollCarousel(-1);
     if (rightBtn) rightBtn.onclick = () => scrollCarousel(1);
-
     // 12. Adjust canvas/globe size for UI headers/footers
     updateCanvasSize();
-
     console.log('✅ Globe Widget loaded successfully!');
   } catch (error) {
     console.error('❌ Error during initialization:', error);
   }
 });
+
+
+
+
+
 
