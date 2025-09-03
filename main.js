@@ -1546,7 +1546,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       setCubeToAppliedState(params.get('appliedUniversity'));
     }, 1000);
   }
-
   hoverCard = document.getElementById('hover-card');
   console.log('🚀 Loading Interactive Globe Widget...');
   try {
@@ -1597,6 +1596,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   } catch (error) {
     console.error('❌ Error during initialization:', error);
   }
+  
+  // === Only now, after absolutely everything is ready, fire the handshake
   window.parent.postMessage({ type: 'GLOBE_WIDGET_READY' }, '*');
 });
 
