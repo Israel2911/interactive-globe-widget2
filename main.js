@@ -1597,6 +1597,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   } catch (error) {
     console.error('❌ Error during initialization:', error);
   }
+  window.parent.postMessage({ type: 'GLOBE_WIDGET_READY' }, '*');
 });
 
 
