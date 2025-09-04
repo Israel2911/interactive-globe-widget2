@@ -1504,20 +1504,13 @@ function showNotification(message, isSuccess = true) {
 // ===== SINGLE postMessage handler for all cases =====
 window.addEventListener('message', (event) => {
   console.log('[GLOBE] Received postMessage:', event.data);
+if (event.data && event.data.type === 'SSO_TOKEN' && event.data.token) {
+  window.ssoToken = event.data.token;
+  console.log("[GLOBE] SSO_TOKEN received and stored:", window.ssoToken);
+  fetchAuthStatus(); // <-- This updates authStatus, triggers unlock and updates UI!
+  return;
+}
 
-  // SSO_TOKEN (JWT fallback for Safari/Firefox)
-  if (event.data && event.data.type === 'SSO_TOKEN' && event.data.token) {
-    window.ssoToken = event.data.token;
-    console.log("[GLOBE] SSO_TOKEN received and stored:", window.ssoToken);
-    // Trigger immediate fetch to update the auth status
-    fetch('/api/auth/status', {
-      headers: { Authorization: 'Bearer ' + window.ssoToken },
-      credentials: 'include'
-    })
-    .then(res => res.json())
-    .then(data => console.log("[GLOBE] /api/auth/status after SSO_TOKEN:", data));
-    return;
-  }
 
   // SET_CUBE_COLOR - unlock cube highlight
   if (event.data && event.data.type === "SET_CUBE_COLOR" && event.data.universityName) {
