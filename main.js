@@ -103,6 +103,8 @@ async function fetchAuthStatus() {
 / --- PLACE THE NEW POSTMESSAGE LISTENER HERE --- //
 // For debugging, accept all origins (remove this for production or list all trusted origins)
 window.addEventListener("message", event => {
+  console.log("[GLOBE] Received postMessage:", event.data); // <--- ADD THIS LINE
+
   // if (
   //   event.origin === "https://www.globaleducarealliance.com" && // restrict in production!
   if (
@@ -116,6 +118,7 @@ window.addEventListener("message", event => {
     );
   }
 });
+
 
 
 // ===
