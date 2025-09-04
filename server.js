@@ -284,18 +284,36 @@ app.post('/api/auth/logout', noCache, (req, res) => {
 // ===
 // DATA & PROTECTED ENDPOINTS - Keep all your existing endpoints
 // ===
+
 function requireAuth(req, res, next) {
     if (req.session && req.session.isLoggedIn) {
-        next();
-    } else {
-        res.status(401).json({ error: 'Authentication required' });
+        console.log("[AUTH] Session authenticated:", req.session.userEmail);
+        return next();
     }
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+        try {
+            const token = authHeader.slice(7);
+            const decoded = jwt.verify(token, process.env.JWT_SECRET || 'a-new-super-strong-secret-for-sso');
+            req.session = req.session || {};
+            req.session.isLoggedIn = true;
+            req.session.userEmail = decoded.email || decoded.userEmail;
+            req.session.userName = (decoded.email || '').split('@')[0];
+            req.session.authMethod = 'jwt';
+            console.log("[AUTH] JWT authenticated:", req.session.userEmail);
+            return next();
+        } catch (err) {
+            console.error('[AUTH] JWT error:', err);
+            return res.status(401).json({ error: 'Invalid token' });
+        }
+    }
+    console.log("[AUTH] Not authenticated");
+    res.status(401).json({ error: 'Authentication required' });
 }
 
 app.get('/api/student/profile', requireAuth, (req, res) => {
     res.json({ id: req.session.wixUserId, email: req.session.userEmail, name: req.session.userName });
 });
-
 const upload = multer({ 
     dest: 'uploads/',
     limits: { fileSize: 10 * 1024 * 1024 },
@@ -305,13 +323,11 @@ const upload = multer({
         cb(new Error('Only documents and images are allowed'));
     }
 });
-
 app.post('/api/student/documents', requireAuth, upload.single('document'), (req, res) => {
     if (!req.file) { return res.status(400).json({ error: 'No file uploaded' }); }
     console.log(`Document uploaded for user ${req.session.wixUserId}: ${req.file.originalname}`);
     res.json({ success: true, document: { id: req.file.filename, name: req.file.originalname, size: req.file.size }});
 });
-
 app.get('/api/student/applications', requireAuth, (req, res) => {
     res.json({
         applications: [],
