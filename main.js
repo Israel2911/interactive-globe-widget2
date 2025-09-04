@@ -476,14 +476,24 @@ let ignoreHover = false; // This will temporarily disable hover detection
 
 
 // ====== SSO TOKEN LISTENER GOES HERE ======
+// ====== SSO TOKEN LISTENER GOES HERE ======
 window.ssoToken = null;
 window.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SSO_TOKEN' && event.data.token) {
     window.ssoToken = event.data.token;
-    console.log("[GLOBE] SSO_TOKEN received and stored.");
-    // Optionally: fetchAuthStatus(); // If you want to re-check backend login
+    console.log("[GLOBE] SSO_TOKEN received and stored:", window.ssoToken);
+
+    // --- DEBUG: Call backend with token to verify!
+    fetch('/api/auth/status', {
+      headers: { Authorization: 'Bearer ' + window.ssoToken },
+      credentials: 'include'
+    })
+    .then(res => res.json())
+    .then(data => console.log("[GLOBE] /api/auth/status after SSO_TOKEN:", data));
   }
 });
+
+
 // =======
 // PUBLIC DATA FETCH
 // =======
