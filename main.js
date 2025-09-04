@@ -482,16 +482,10 @@ window.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SSO_TOKEN' && event.data.token) {
     window.ssoToken = event.data.token;
     console.log("[GLOBE] SSO_TOKEN received and stored:", window.ssoToken);
-
-    // --- DEBUG: Call backend with token to verify!
-    fetch('/api/auth/status', {
-      headers: { Authorization: 'Bearer ' + window.ssoToken },
-      credentials: 'include'
-    })
-    .then(res => res.json())
-    .then(data => console.log("[GLOBE] /api/auth/status after SSO_TOKEN:", data));
+    fetchAuthStatus(); // ← Updates authStatus, triggering unlock if success
   }
 });
+
 
 
 // =======
