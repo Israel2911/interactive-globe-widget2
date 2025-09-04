@@ -1509,15 +1509,24 @@ function showNotification(message, isSuccess = true) {
 
 // ===== SINGLE postMessage handler for all cases =====
 window.addEventListener('message', (event) => {
-  console.log('GLOBE WIDGET got postMessage:', event.origin, event.data);
+  console.log('[GLOBE] Received postMessage:', event.data);
 
-  // --- Application Cube Color Logic ---
-  if (
-    event.data &&
-    event.data.type === "SET_CUBE_COLOR" &&
-    event.data.universityName
-  ) {
-    console.log('Processing SET_CUBE_COLOR event:', event.data.universityName);
+  // SSO_TOKEN (JWT fallback for Safari/Firefox)
+  if (event.data && event.data.type === 'SSO_TOKEN' && event.data.token) {
+    window.ssoToken = event.data.token;
+    console.log("[GLOBE] SSO_TOKEN received and stored:", window.ssoToken);
+    // Trigger immediate fetch to update the auth status
+    fetch('/api/auth/status', {
+      headers: { Authorization: 'Bearer ' + window.ssoToken },
+      credentials: 'include'
+    })
+    .then(res => res.json())
+    .then(data => console.log("[GLOBE] /api/auth/status after SSO_TOKEN:", data));
+    return;
+  }
+
+  // SET_CUBE_COLOR - unlock cube highlight
+  if (event.data && event.data.type === "SET_CUBE_COLOR" && event.data.universityName) {
     setCubeToAppliedState(event.data.universityName);
     showNotification(
       `Application submitted for ${event.data.universityName}! Cube updated.`, true
@@ -1525,7 +1534,7 @@ window.addEventListener('message', (event) => {
     return;
   }
 
-  // --- Legacy unlock logic ---
+  // Legacy unlock (cookie/session)
   const { unlock, userEmail } = event.data || {};
   if (unlock && userEmail) {
     if (typeof activateAllCubes === 'function' && Array.isArray(cubes) && cubes.length > 0) {
@@ -1550,9 +1559,10 @@ window.addEventListener('message', (event) => {
     return;
   }
 
-  // Fallback log for unexpected messages
+  // Unknown messages
   console.warn('GLOBE WIDGET received unknown or unsupported postMessage:', event.data);
 });
+
 
 // ===== DOMContentLoaded + app startup logic =====
 let suppressLoginSuccessMsg = false;
