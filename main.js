@@ -72,7 +72,6 @@ let authStatus = { isAuthenticated: false, user: null };
 
 // ===
 // IMPROVED FETCH AUTH STATUS WITH ERROR HANDLING
-// ===
 async function fetchAuthStatus() {
   try {
     console.log('🔍 Fetching auth status...');
@@ -80,25 +79,26 @@ async function fetchAuthStatus() {
       credentials: 'include', 
       cache: 'no-store',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        ...(window.ssoToken ? { 'Authorization': 'Bearer ' + window.ssoToken } : {})
       }
     });
-    
+
     if (!res.ok) {
       console.error(`❌ Auth status fetch failed: ${res.status} ${res.statusText}`);
       authStatus = { isAuthenticated: false, user: null };
       return;
     }
-    
     const data = await res.json();
     authStatus = { isAuthenticated: !!data.isAuthenticated, user: data.user || null };
     console.log('✅ Auth status updated:', authStatus);
-    
+
   } catch (e) {
     console.error('❌ Auth status fetch error:', e);
     authStatus = { isAuthenticated: false, user: null };
   }
 }
+
 
 / --- PLACE THE NEW POSTMESSAGE LISTENER HERE --- //
 // For debugging, accept all origins (remove this for production or list all trusted origins)
