@@ -37,27 +37,30 @@ function activateAllCubes() {
 
 // ===
 // SAFE FETCH WRAPPER - NEW ADDITION
-// ===
 async function safeFetch(url, options = {}) {
   try {
     console.log(`🌐 Fetching: ${url}`);
+    let headers = {
+      'Content-Type': 'application/json',
+      ...(options.headers || {})
+    };
+    if (window.ssoToken) {
+      headers['Authorization'] = 'Bearer ' + window.ssoToken;
+    }
     const response = await fetch(url, {
+      ...options,
       credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      ...options
+      headers
     });
-    
+
     if (!response.ok) {
       console.error(`❌ HTTP Error ${response.status}: ${response.statusText} for ${url}`);
       return null;
     }
-    
     const data = await response.json();
     console.log(`✅ Success fetching: ${url}`);
     return data;
-    
+
   } catch (error) {
     console.error(`❌ Network Error fetching ${url}:`, error);
     return null;
@@ -469,7 +472,15 @@ let hoverCard;
 let ignoreHover = false; // This will temporarily disable hover detection
 
 
-
+// ====== SSO TOKEN LISTENER GOES HERE ======
+window.ssoToken = null;
+window.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SSO_TOKEN' && event.data.token) {
+    window.ssoToken = event.data.token;
+    console.log("[GLOBE] SSO_TOKEN received and stored.");
+    // Optionally: fetchAuthStatus(); // If you want to re-check backend login
+  }
+});
 // =======
 // PUBLIC DATA FETCH
 // =======
