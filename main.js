@@ -69,7 +69,7 @@ async function safeFetch(url, options = {}) {
 
 // Info panel — fully gated behind server auth status
 let authStatus = { isAuthenticated: false, user: null };
-
+let alreadyActivated = false; // <--- ADD THIS LINE HERE
 // ===
 // IMPROVED FETCH AUTH STATUS WITH ERROR HANDLING
 async function fetchAuthStatus() {
@@ -129,22 +129,22 @@ function startAuthStatusPolling() {
   setInterval(async () => {
     const oldStatus = authStatus.isAuthenticated;
     await fetchAuthStatus();
-    
-    // Check if user just logged in
-    if (!oldStatus && authStatus.isAuthenticated) {
+
+    // Unlock only once on first authentication
+    if (!oldStatus && authStatus.isAuthenticated && !alreadyActivated) {
       console.log('🎉 User authentication detected - activating cubes!');
-      activateAllCubes(); // This already shows the notification
-      // REMOVED: showNotification('Congratulations! All university programs are now available.', true);
+      activateAllCubes();
+      alreadyActivated = true;
     }
-    
-    // Optional: Check if user logged out
+
+    // Optional: Check if user logged out, re-enable unlock for re-login
     if (oldStatus && !authStatus.isAuthenticated) {
       console.log('👋 User logged out');
       showNotification('Logged out successfully', false);
+      alreadyActivated = false; // Allow cubes to unlock again on next login
     }
   }, 3000); // Check every 3 seconds
 }
-
 
 
 // vvvvv  PLACE THE NEW FUNCTION RIGHT HERE  vvvvv
@@ -476,13 +476,12 @@ let ignoreHover = false; // This will temporarily disable hover detection
 
 
 // ====== SSO TOKEN LISTENER GOES HERE ======
-// ====== SSO TOKEN LISTENER GOES HERE ======
 window.ssoToken = null;
 window.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SSO_TOKEN' && event.data.token) {
     window.ssoToken = event.data.token;
     console.log("[GLOBE] SSO_TOKEN received and stored:", window.ssoToken);
-    fetchAuthStatus(); // ← Updates authStatus, triggering unlock if success
+    fetchAuthStatus(); // ← Updates authStatus, triggers unlock if authenticated
   }
 });
 
