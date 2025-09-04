@@ -249,6 +249,23 @@ app.post('/api/verify-sso-token', noCache, async (req, res) => {
     }
 });
 
+
+
+// === JWT/Fallback Token Generation (CRITICAL for SSO unlock) ===
+app.get('/api/generate-token', noCache, (req, res) => {
+    const email = req.query.email;
+    if (!email) {
+        return res.status(400).json({ error: 'Email required' });
+    }
+    const jwtSecret = process.env.JWT_SECRET || 'a-new-super-strong-secret-for-sso';
+    const token = jwt.sign(
+        { email },
+        jwtSecret,
+        { expiresIn: '1h' }
+    );
+    res.json({ token });
+});
+
 // ===
 // UPDATED: Auth status endpoint with enhanced debug logs
 // ===
