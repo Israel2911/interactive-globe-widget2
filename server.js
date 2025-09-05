@@ -309,16 +309,20 @@ app.get('/api/auth/status', noCache, (req, res) => {
 // ===
 // DATA & PROTECTED ENDPOINTS - Keep all your existing endpoints
 // ===
-
 function requireAuth(req, res, next) {
     if (req.session && req.session.isLoggedIn) {
         console.log("[AUTH] Session authenticated:", req.session.userEmail);
         return next();
     }
+    let token;
     const authHeader = req.headers.authorization;
     if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.slice(7);
+    } else if (req.query.token) {
+        token = req.query.token;
+    }
+    if (token) {
         try {
-            const token = authHeader.slice(7);
             const decoded = jwt.verify(token, process.env.JWT_SECRET || 'a-new-super-strong-secret-for-sso');
             req.session = req.session || {};
             req.session.isLoggedIn = true;
@@ -335,6 +339,7 @@ function requireAuth(req, res, next) {
     console.log("[AUTH] Not authenticated");
     res.status(401).json({ error: 'Authentication required' });
 }
+
 
 app.get('/api/student/profile', requireAuth, (req, res) => {
     res.json({ id: req.session.wixUserId, email: req.session.userEmail, name: req.session.userName });
