@@ -186,60 +186,64 @@ function startPollingForApplicationUpdates() {
 }
 
 // FINAL, POWERFUL INFO PANEL SYSTEM
-// ===
+function buildLinkWithToken(baseUrl) {
+  if (!baseUrl || baseUrl === "#") return baseUrl;
+  if (window.ssoToken && baseUrl.startsWith('/api/link/')) {
+    return baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(window.ssoToken);
+  }
+  return baseUrl;
+}
+
 async function showInfoPanel(data) {
-  // We only need the university name from the clicked cube's data
+  // Only need the university name from clicked cube
   const universityName = data.university;
   if (!universityName || universityName === 'Unassigned') {
     console.log('❌ Clicked on an unassigned cube.');
     return;
   }
-
-  // Find ALL programs for this university from our master list
+  // All programs for this university
   const uniData = allUniversityContent.filter(item => item && item.university === universityName);
-  
   if (uniData.length === 0) {
     console.log(`❌ No content found for ${universityName}`);
-    // Fallback: If for some reason no data is found, do the simple link open
+    // Fallback: open whichever link is present
     const linkToOpen = data.programLink || data.applyLink;
-    if (linkToOpen && linkToOpen !== '#') window.open(linkToOpen, '_blank');
+    if (linkToOpen && linkToOpen !== '#') window.open(buildLinkWithToken(linkToOpen), '_blank');
     return;
   }
-
-  // --- BUILD THE MAIN CARD (University Level) ---
-  const mainProgram = uniData[0]; // Use the first program for general info
+  // --- MAIN CARD ---
+  const mainProgram = uniData[0];
   document.getElementById('infoPanelMainCard').innerHTML = `
     <div class="main-card-details">
       <img src="${mainProgram.logo}" alt="${mainProgram.university} Logo">
       <h3>${mainProgram.university}</h3>
     </div>
     <div class="main-card-actions">
-      ${mainProgram.erasmusLink && mainProgram.erasmusLink !== '#' ? `<button class="partner-cta erasmus" onclick="window.open('${mainProgram.erasmusLink}', '_blank')">Erasmus Info</button>` : ''}
+      ${mainProgram.erasmusLink && mainProgram.erasmusLink !== '#' ? `<button class="partner-cta erasmus" onclick="window.open('${buildLinkWithToken(mainProgram.erasmusLink)}', '_blank')">Erasmus Info</button>` : ''}
     </div>
   `;
-
-  // --- BUILD THE SUBCARDS (One for each program) ---
+  // --- SUBCARDS ---
   const subcardsContainer = document.getElementById('infoPanelSubcards');
-  subcardsContainer.innerHTML = ''; // Clear previous content
-
+  subcardsContainer.innerHTML = '';
   uniData.forEach(item => {
     if (!item) return;
-    
     const infoEnabled = item.programLink && item.programLink !== '#';
     const applyEnabled = item.applyLink && item.applyLink !== '#';
-    
+
+    const infoLink = buildLinkWithToken(item.programLink);
+    const applyLink = buildLinkWithToken(item.applyLink);
+
     const subcardHTML = `
       <div class="subcard">
         <div class="subcard-info">
-          <h4>${item.programName.replace(/\\n/g, ' ')}</h4>
+          <h4>${item.programName.replace(/\n/g, ' ')}</h4>
         </div>
         <div class="subcard-buttons">
           <button class="partner-cta info" ${infoEnabled ? '' : `disabled title="No info link available"`} 
-                  onclick="if(${infoEnabled}) window.open('${item.programLink}', '_blank')">
+                  onclick="if(${infoEnabled}) window.open('${infoLink}', '_blank')">
             University Info
           </button>
           <button class="partner-cta apply" ${applyEnabled ? '' : `disabled title="No apply link available"`} 
-                  onclick="if(${applyEnabled}) window.open('${item.applyLink}', '_blank')">
+                  onclick="if(${applyEnabled}) window.open('${applyLink}', '_blank')">
             Apply Now
           </button>
         </div>
@@ -247,11 +251,10 @@ async function showInfoPanel(data) {
     `;
     subcardsContainer.insertAdjacentHTML('beforeend', subcardHTML);
   });
-
-  // Finally, display the fully built panel
   document.getElementById('infoPanelOverlay').style.display = 'flex';
   console.log(`✅ Info panel displayed for ${universityName}`);
 }
+
 
 function hideInfoPanel() {
   document.getElementById('infoPanelOverlay').style.display = 'none';
