@@ -819,44 +819,46 @@ function setCubeToAppliedState(programOrUniName) {
   }
   console.log('Found cubes:', cubesToHighlight.length, 'for:', programOrUniName);
   if (cubesToHighlight.length === 0) {
-    console.warn('No cubes were highlighted for:', programOrUniName);
     showNotification(`Warning: No cubes found for "${programOrUniName}"`, false);
     return;
   }
   cubesToHighlight.forEach(targetCube => {
-    // Use two bright greens for blinking effect
-    const greenMain = 0x00ff80;   // Lime green
-    const greenBlink = 0x39ff14;  // Laser green
+    // Max neon green and max brightness for blinking
+    const neon1 = 0x00ff00;   // True laser green
+    const neon2 = 0x39ff14;   // Slightly bluer neon lime
     const highlightMaterial = new THREE.MeshStandardMaterial({
-      color: greenMain,
-      emissive: greenBlink,
-      emissiveIntensity: 3.2,
-      metalness: 0.2,
-      roughness: 0.14
+      color: neon1,
+      emissive: neon1,
+      emissiveIntensity: 8.0,
+      metalness: 0.1,
+      roughness: 0.11
     });
     targetCube.material = highlightMaterial;
     let blinkState = false, blinkCount = 0;
     const interval = setInterval(() => {
       if (blinkState) {
-        highlightMaterial.color.set(greenMain);
-        highlightMaterial.emissive.set(greenBlink);
-        highlightMaterial.emissiveIntensity = 4.8;
+        highlightMaterial.color.set(neon2);
+        highlightMaterial.emissive.set(neon2);
+        highlightMaterial.emissiveIntensity = 10.0;
       } else {
-        highlightMaterial.color.set(greenBlink);
-        highlightMaterial.emissive.set(greenMain);
-        highlightMaterial.emissiveIntensity = 2.7;
+        highlightMaterial.color.set(neon1);
+        highlightMaterial.emissive.set(neon1);
+        highlightMaterial.emissiveIntensity = 20.0;
       }
       blinkState = !blinkState;
       blinkCount++;
-      if (blinkCount > 8) {
-        highlightMaterial.color.set(greenBlink);
-        highlightMaterial.emissive.set(greenBlink);
-        highlightMaterial.emissiveIntensity = 3.5;
+      if (blinkCount > 10) {
+        // After blinking, settle on brightest green
+        highlightMaterial.color.set(neon1);
+        highlightMaterial.emissive.set(neon1);
+        highlightMaterial.emissiveIntensity = 9.0;
         clearInterval(interval);
       }
-    }, 140);
+    }, 110); // Fast, high-energy blink (~1s total)
   });
+  showNotification('Strong neon green blink applied!', true);
 }
+
 
 
 // =======
