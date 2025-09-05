@@ -985,10 +985,17 @@ function latLonToVector3(lat, lon, radius) {
   return new THREE.Vector3(x, y, z);
 }
 function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
-  const rainbowExtendedColors = [
-    0xff0000, 0xff7f00, 0xffff00, 0x00ff00, 0x0000ff, 
-    0x4b0082, 0x8a2be2, 0x9400d3, 0x7f00ff
-  ];
+ const rainbowExtendedColors = [
+  0xffff00, // bright yellow
+  0x39ff14, // neon green
+  0x00ffff, // electric cyan
+  0xff00ff, // magenta
+  0xffffff, // white
+  0xff0000, // red
+  0x0040ff, // laser blue
+  0xff8000, // orange
+];
+
   const color = rainbowExtendedColors[arcIndex % rainbowExtendedColors.length];
   const start = new THREE.Vector3(); fromGroup.getWorldPosition(start);
   const end = new THREE.Vector3(); toGroup.getWorldPosition(end);
@@ -1000,7 +1007,18 @@ function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
   const curve = new THREE.QuadraticBezierCurve3(offsetStart, mid, offsetEnd);
   const geometry = new THREE.TubeGeometry(curve, 64, 0.008, 24, false);
   const vertexShader = `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
-  const fragmentShader = `varying vec2 vUv; uniform float time; uniform vec3 color; void main() { float glow = sin(time * 2.0 + vUv.x * 10.0) * 0.5 + 0.5; float intensity = (1.0 - abs(vUv.y - 0.5) * 2.0) * glow; gl_FragColor = vec4(color, intensity * 0.8); }`;
+  const fragmentShader = `
+  varying vec2 vUv;
+  uniform float time;
+  uniform vec3 color;
+  void main() {
+    float glow = sin(time * 2.7 + vUv.x * 13.0) * 0.5 + 0.75; // "wave" effect, higher average
+    float strength = (1.0 - abs(vUv.y - 0.5) * 2.0);           // core highlight
+    float intensity = strength * glow * 2.4;                   // BOOST UP!
+    gl_FragColor = vec4(color, intensity);
+  }
+`;
+
   const material = new THREE.ShaderMaterial({
     uniforms: { time: { value: 0 }, color: { value: new THREE.Color(color) } },
     vertexShader, fragmentShader, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
@@ -1018,9 +1036,10 @@ function animateArcParticles(arc) {
   const speed = 0.5;
   for (let i = 0; i < particleCount; i++) {
     const particle = new THREE.Mesh(
-      new THREE.SphereGeometry(0.01, 8, 8),
-      new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.7 })
-    );
+  new THREE.SphereGeometry(0.022, 16, 16), 
+  new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 1.0 })
+)
+
     particle.userData = {
       t: Math.random(),
       speed: speed * (0.8 + Math.random() * 0.4),
