@@ -802,62 +802,58 @@ function setCubeToAppliedState(programOrUniName) {
     ...europeSubCubes, ...newThailandSubCubes, ...canadaSubCubes, ...ukSubCubes,
     ...usaSubCubes, ...indiaSubCubes, ...singaporeSubCubes, ...malaysiaSubCubes
   ];
-  // Try to match program name first, then fallback to university if needed
   let cubesToHighlight = allSubCubes.filter(
     cube =>
       cube &&
-      cube.userData.programName &&
-      cube.userData.programName.trim().toLowerCase() === programOrUniName.trim().toLowerCase()
+      cube.userData.university &&
+      cube.userData.university.trim().toLowerCase() === programOrUniName.trim().toLowerCase()
   );
-  if (cubesToHighlight.length === 0) {
-    cubesToHighlight = allSubCubes.filter(
-      cube =>
-        cube &&
-        cube.userData.university &&
-        cube.userData.university.trim().toLowerCase() === programOrUniName.trim().toLowerCase()
-    );
-  }
   console.log('Found cubes:', cubesToHighlight.length, 'for:', programOrUniName);
   if (cubesToHighlight.length === 0) {
-    showNotification(`Warning: No cubes found for "${programOrUniName}"`, false);
+    showNotification(`No cube found for "${programOrUniName}"`, false);
     return;
   }
   cubesToHighlight.forEach(targetCube => {
-    // Max neon green and max brightness for blinking
-    const neon1 = 0x00ff00;   // True laser green
-    const neon2 = 0x39ff14;   // Slightly bluer neon lime
+    const neonGreen = 0x39ff14;  // Neon/laser green
+    const blinkDark = 0x000000;  // Black for extreme contrast
+
+    // Assign new material
     const highlightMaterial = new THREE.MeshStandardMaterial({
-      color: neon1,
-      emissive: neon1,
-      emissiveIntensity: 8.0,
-      metalness: 0.1,
-      roughness: 0.11
+      color: neonGreen,
+      emissive: neonGreen,
+      emissiveIntensity: 7,
+      metalness: 0.15,
+      roughness: 0.08
     });
     targetCube.material = highlightMaterial;
     let blinkState = false, blinkCount = 0;
+
     const interval = setInterval(() => {
       if (blinkState) {
-        highlightMaterial.color.set(neon2);
-        highlightMaterial.emissive.set(neon2);
-        highlightMaterial.emissiveIntensity = 10.0;
+        highlightMaterial.color.set(neonGreen);
+        highlightMaterial.emissive.set(neonGreen);
+        highlightMaterial.emissiveIntensity = 7.5;
+        console.log("Blink: neon green ON");
       } else {
-        highlightMaterial.color.set(neon1);
-        highlightMaterial.emissive.set(neon1);
-        highlightMaterial.emissiveIntensity = 20.0;
+        highlightMaterial.color.set(blinkDark);
+        highlightMaterial.emissive.set(blinkDark);
+        highlightMaterial.emissiveIntensity = 0.3;
+        console.log("Blink: black (OFF)");
       }
       blinkState = !blinkState;
       blinkCount++;
-      if (blinkCount > 10) {
-        // After blinking, settle on brightest green
-        highlightMaterial.color.set(neon1);
-        highlightMaterial.emissive.set(neon1);
-        highlightMaterial.emissiveIntensity = 9.0;
+      if (blinkCount > 10) { // ~1 second total
+        highlightMaterial.color.set(neonGreen);
+        highlightMaterial.emissive.set(neonGreen);
+        highlightMaterial.emissiveIntensity = 5.0;
         clearInterval(interval);
+        console.log("Blink complete: steady green.");
       }
-    }, 110); // Fast, high-energy blink (~1s total)
+    }, 120);
   });
-  showNotification('Strong neon green blink applied!', true);
+  showNotification('Super neon blink applied!', true);
 }
+
 
 
 
