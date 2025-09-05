@@ -815,19 +815,18 @@ function setCubeToAppliedState(programOrUniName) {
   }
   cubesToHighlight.forEach(targetCube => {
     const neonGreen = 0x39ff14;  // Neon/laser green
-    const blinkDark = 0x000000;  // Black for extreme contrast
-
-    // Assign new material
+    const blinkDark = 0x000000;  // Black for high contrast
+    // Assign new material, guaranteed no textures
     const highlightMaterial = new THREE.MeshStandardMaterial({
       color: neonGreen,
       emissive: neonGreen,
       emissiveIntensity: 7,
       metalness: 0.15,
-      roughness: 0.08
+      roughness: 0.08,
+      map: null
     });
     targetCube.material = highlightMaterial;
     let blinkState = false, blinkCount = 0;
-
     const interval = setInterval(() => {
       if (blinkState) {
         highlightMaterial.color.set(neonGreen);
@@ -842,7 +841,7 @@ function setCubeToAppliedState(programOrUniName) {
       }
       blinkState = !blinkState;
       blinkCount++;
-      if (blinkCount > 10) { // ~1 second total
+      if (blinkCount > 10) {
         highlightMaterial.color.set(neonGreen);
         highlightMaterial.emissive.set(neonGreen);
         highlightMaterial.emissiveIntensity = 5.0;
@@ -853,7 +852,6 @@ function setCubeToAppliedState(programOrUniName) {
   });
   showNotification('Super neon blink applied!', true);
 }
-
 
 
 
