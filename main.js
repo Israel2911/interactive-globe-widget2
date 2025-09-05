@@ -1001,7 +1001,7 @@ const arcRouteColors = {
   "thailand-singapore":  0xe100ff, // Violet
   "singapore-thailand":  0xe100ff, // Violet
   "india-thailand":      0x7d00ff, // Indigo
-  "thailand-india":      0x7d00ff  // Indigo (optional for bidirectional)
+  "thailand-india":      0x00aaff, // Pure Electric Blue (your screenshot)
   // Add new routes here as needed!
 };
 
