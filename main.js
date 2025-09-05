@@ -992,7 +992,7 @@ const arcRouteColors = {
   "canada-india":        0xff0033, // Red
   "thailand-usa":        0xe100ff, // Violet
   "usa-thailand":        0xe100ff, // Violet
-  "thailand-canada":     0xff8800, // Orange
+  "thailand-canada":     0x7d00ff, // Indigo
   "canada-thailand":     0xff8800, // Orange
   "thailand-europe":     0x7d00ff, // Indigo
   "europe-thailand":     0x7d00ff, // Indigo
