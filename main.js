@@ -984,16 +984,16 @@ function latLonToVector3(lat, lon, radius) {
   const y = (radius * Math.cos(phi));
   return new THREE.Vector3(x, y, z);
 }
-// 1. Add this at the top of your file (or above createConnectionPath)
+// 1. At the top of your file:
 const arcRouteColors = {
   "india-europe":        0x0000ff, // Blue
   "europe-india":        0x0000ff, // Blue
   "india-canada":        0xff0033, // Red
   "canada-india":        0xff0033, // Red
   "thailand-usa":        0x39ff14, // Green
-  "usa-thailand":        0x00aaff, // Pure Electric Blue (your screenshot)
+  "usa-thailand":        0x00aaff, // Pure Electric Blue
   "thailand-canada":     0x7d00ff, // Indigo
-  "canada-thailand":     0xff8800, // Orange
+  "canada-thailand":     0xff8800, // Orange (this is the explicit orange mapping!)
   "thailand-europe":     0x7d00ff, // Indigo
   "europe-thailand":     0x7d00ff, // Indigo
   "malaysia-singapore":  0xffff00, // Yellow
@@ -1001,34 +1001,54 @@ const arcRouteColors = {
   "thailand-singapore":  0xe100ff, // Violet
   "singapore-thailand":  0xe100ff, // Violet
   "india-thailand":      0x7d00ff, // Indigo
-  "thailand-india":      0x00aaff, // Pure Electric Blue (your screenshot)
-   "europe-canada":      0xff8800, // Orange
-  // Add new routes here as needed!
+  "thailand-india":      0x00aaff, // Pure Electric Blue
+  "europe-canada":       0xff8800  // Orange
+  // Add new routes as needed!
 };
 
-// 2. Your arc creation code:
-function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
-  // Fallback: 7-step classic neon rainbow
- const rainbowExtendedColors = [
+const rainbowExtendedColors = [
   0xff0033, // Red
   0xff8800, // Orange
   0xffff00, // Yellow
   0x39ff14, // Green
   0x00cfff, // Neon Sky Blue
-  0x00aaff, // Pure Electric Blue (your screenshot)
+  0x00aaff, // Pure Electric Blue
   0x7d00ff, // Indigo
   0xe100ff  // Violet
 ];
 
-  // Retrieve lowercase country names for mapping
+// 2. Use this for scalable arc connection drawing:
+const arcPairs = [
+  ["Thailand", "India"],
+  ["Thailand", "Europe"],
+  ["Thailand", "UK"],
+  ["Thailand", "Canada"],
+  ["Thailand", "USA"],
+  ["Thailand", "Singapore"],
+  ["Thailand", "Malaysia"],
+  ["India", "Europe"],
+  ["India", "Canada"],
+  ["India", "Thailand"],
+  ["Europe", "India"],
+  ["Europe", "Canada"],
+  ["Europe", "Thailand"],
+  ["Canada", "USA"],
+  ["Canada", "Thailand"],    // <-- This triggers the explicit orange arc!
+  ["USA", "Thailand"],
+  ["Malaysia", "Singapore"],
+  ["Singapore", "Malaysia"],
+  ["Singapore", "Thailand"]
+  // Add more as needed!
+];
+
+// 3. Your arc creation code (no changes except for how arcPairs is fed in):
+function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
   const fromName = (fromGroup.userData.countryName || '').toLowerCase();
   const toName = (toGroup.userData.countryName || '').toLowerCase();
   const routeKey = `${fromName}-${toName}`;
-  // Use route-specific color if defined, else fallback by arcIndex
   const color = arcRouteColors[routeKey] !== undefined
     ? arcRouteColors[routeKey]
     : rainbowExtendedColors[arcIndex % rainbowExtendedColors.length];
-  
   const start = new THREE.Vector3(); fromGroup.getWorldPosition(start);
   const end = new THREE.Vector3(); toGroup.getWorldPosition(end);
   const globeRadius = 1.0; const arcOffset = 0.05;
@@ -1056,6 +1076,7 @@ function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
   return path;
 }
 
+// 4. (unchanged)
 function animateArcParticles(arc) {
   const curve = arc.userData.curve;
   if (!curve) return;
@@ -1076,19 +1097,13 @@ function animateArcParticles(arc) {
   }
 }
 
+// 5. Use arcPairs for all arc generation:
 function drawAllConnections() {
-  const countryNames = ["India", "Europe", "UK", "Canada", "USA", "Singapore", "Malaysia"];
-  const originalPairs = countryNames.map(country => ["Thailand", country]);
-  const additionalPairs = [
-    ["India", "Canada"],
-    ["India", "Europe"],
-    ["Canada", "USA"]
-  ];
-  const allPairs = [...originalPairs, ...additionalPairs];
-  arcPaths = allPairs.map(([from, to], index) => {
+  arcPaths = arcPairs.map(([from, to], index) => {
     const fromBlock = countryBlocks[from];
     const toBlock = countryBlocks[to];
     if (fromBlock && toBlock) return createConnectionPath(fromBlock, toBlock, index);
+    return null;
   }).filter(Boolean);
   arcPaths.forEach(animateArcParticles);
 }
