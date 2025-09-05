@@ -985,9 +985,15 @@ function latLonToVector3(lat, lon, radius) {
   return new THREE.Vector3(x, y, z);
 }
 function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
+  // ROYGBIV neon rainbow
   const rainbowExtendedColors = [
-    0xff0000, 0xff7f00, 0xffff00, 0x00ff00, 0x0000ff, 
-    0x4b0082, 0x8a2be2, 0x9400d3, 0x7f00ff
+    0xff0033, // Red
+    0xff8800, // Orange
+    0xffff00, // Yellow
+    0x39ff14, // Green
+    0x00cfff, // Blue
+    0x7d00ff, // Indigo
+    0xe100ff  // Violet
   ];
   const color = rainbowExtendedColors[arcIndex % rainbowExtendedColors.length];
   const start = new THREE.Vector3(); fromGroup.getWorldPosition(start);
@@ -1000,7 +1006,11 @@ function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
   const curve = new THREE.QuadraticBezierCurve3(offsetStart, mid, offsetEnd);
   const geometry = new THREE.TubeGeometry(curve, 64, 0.008, 24, false);
   const vertexShader = `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
-  const fragmentShader = `varying vec2 vUv; uniform float time; uniform vec3 color; void main() { float glow = sin(time * 2.0 + vUv.x * 10.0) * 0.5 + 0.5; float intensity = (1.0 - abs(vUv.y - 0.5) * 2.0) * glow; gl_FragColor = vec4(color, intensity * 0.8); }`;
+  const fragmentShader = `varying vec2 vUv; uniform float time; uniform vec3 color; void main() {
+    float glow = sin(time * 2.0 + vUv.x * 10.0) * 0.5 + 0.5;
+    float intensity = (1.0 - abs(vUv.y - 0.5) * 2.0) * glow;
+    gl_FragColor = vec4(color, intensity * 0.8);
+  }`;
   const material = new THREE.ShaderMaterial({
     uniforms: { time: { value: 0 }, color: { value: new THREE.Color(color) } },
     vertexShader, fragmentShader, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
@@ -1011,6 +1021,7 @@ function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
   globeGroup.add(path);
   return path;
 }
+
 function animateArcParticles(arc) {
   const curve = arc.userData.curve;
   if (!curve) return;
@@ -1030,6 +1041,7 @@ function animateArcParticles(arc) {
     arcParticles.push(particle);
   }
 }
+
 function drawAllConnections() {
   const countryNames = ["India", "Europe", "UK", "Canada", "USA", "Singapore", "Malaysia"];
   const originalPairs = countryNames.map(country => ["Thailand", country]);
@@ -1046,6 +1058,7 @@ function drawAllConnections() {
   }).filter(Boolean);
   arcPaths.forEach(animateArcParticles);
 }
+
 // ===
 // MOUSE EVENT HANDLERS
 // ===
