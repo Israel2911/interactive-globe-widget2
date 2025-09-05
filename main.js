@@ -814,43 +814,41 @@ function setCubeToAppliedState(programOrUniName) {
     return;
   }
   cubesToHighlight.forEach(targetCube => {
-    const neonGreen = 0x39ff14;  // Neon/laser green
-    const blinkDark = 0x000000;  // Black for high contrast
-    // Assign new material, guaranteed no textures
-    const highlightMaterial = new THREE.MeshStandardMaterial({
-      color: neonGreen,
-      emissive: neonGreen,
-      emissiveIntensity: 7,
-      metalness: 0.15,
-      roughness: 0.08,
-      map: null
+    // Some cubes are single Mesh, some are Groups with children Meshes
+    let meshes = [];
+    if (targetCube.isMesh) {
+      meshes = [targetCube];
+    } else if (targetCube.type === "Group" && targetCube.children) {
+      meshes = targetCube.children.filter(child => child.isMesh);
+    }
+    meshes.forEach(mesh => {
+      // Assign a fresh green material with no texture
+      mesh.material = new THREE.MeshStandardMaterial({
+        color: 0x39ff14,
+        emissive: 0x39ff14,
+        emissiveIntensity: 5,
+        metalness: 0.15,
+        roughness: 0.08,
+        map: null
+      });
+      // Start blinking
+      let blinkState = false, blinkCount = 0;
+      const interval = setInterval(() => {
+        mesh.material.color.set(blinkState ? 0x39ff14 : 0x000000);
+        mesh.material.emissive.set(blinkState ? 0x39ff14 : 0x000000);
+        mesh.material.emissiveIntensity = blinkState ? 8 : 0.4;
+        blinkState = !blinkState;
+        blinkCount++;
+        if (blinkCount > 10) {
+          mesh.material.color.set(0x39ff14);
+          mesh.material.emissive.set(0x39ff14);
+          mesh.material.emissiveIntensity = 6;
+          clearInterval(interval);
+        }
+      }, 120);
     });
-    targetCube.material = highlightMaterial;
-    let blinkState = false, blinkCount = 0;
-    const interval = setInterval(() => {
-      if (blinkState) {
-        highlightMaterial.color.set(neonGreen);
-        highlightMaterial.emissive.set(neonGreen);
-        highlightMaterial.emissiveIntensity = 7.5;
-        console.log("Blink: neon green ON");
-      } else {
-        highlightMaterial.color.set(blinkDark);
-        highlightMaterial.emissive.set(blinkDark);
-        highlightMaterial.emissiveIntensity = 0.3;
-        console.log("Blink: black (OFF)");
-      }
-      blinkState = !blinkState;
-      blinkCount++;
-      if (blinkCount > 10) {
-        highlightMaterial.color.set(neonGreen);
-        highlightMaterial.emissive.set(neonGreen);
-        highlightMaterial.emissiveIntensity = 5.0;
-        clearInterval(interval);
-        console.log("Blink complete: steady green.");
-      }
-    }, 120);
   });
-  showNotification('Super neon blink applied!', true);
+  showNotification('Super neon green blink applied!', true);
 }
 
 
