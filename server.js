@@ -268,13 +268,14 @@ app.get('/api/generate-token', noCache, (req, res) => {
 
 // ===
 // UPDATED: Auth status endpoint with enhanced debug logs
-// ===
 app.get('/api/auth/status', noCache, (req, res) => {
+    // Enhanced debug logs
     console.log('📊 Auth status check - Session ID:', req.sessionID);
     console.log('📊 Auth status check - Session:', req.session);
     console.log('📊 isLoggedIn:', req.session?.isLoggedIn);
     console.log('📊 userEmail:', req.session?.userEmail);
-    
+
+    // 1. Session (classic) method
     if (req.session && req.session.isLoggedIn) {
         return res.json({
             isAuthenticated: true,
@@ -285,18 +286,25 @@ app.get('/api/auth/status', noCache, (req, res) => {
             }
         });
     }
+    // 2. JWT (SSO_TOKEN) fallback for Safari/Firefox/strict browsers
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+        try {
+            const token = authHeader.slice(7);
+            const decoded = jwt.verify(token, process.env.JWT_SECRET || 'a-new-super-strong-secret-for-sso');
+            return res.json({
+                isAuthenticated: true,
+                user: { id: decoded.email, email: decoded.email, name: (decoded.email || '').split('@')[0] }
+            });
+        } catch (err) {
+            console.error('[SSO status check] JWT error:', err);
+            // JWT invalid or expired, will fall through to unauthenticated
+        }
+    }
+    // 3. Not authenticated
     res.json({ isAuthenticated: false, user: null });
 });
 
-app.post('/api/auth/logout', noCache, (req, res) => {
-    req.session.destroy((err) => {
-        if (err) {
-            return res.status(500).json({ error: 'Logout failed' });
-        }
-        res.clearCookie('connect.sid');
-        res.json({ success: true, message: 'Session destroyed.' });
-    });
-});
 
 // ===
 // DATA & PROTECTED ENDPOINTS - Keep all your existing endpoints
