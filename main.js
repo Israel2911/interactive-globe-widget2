@@ -821,32 +821,42 @@ function setCubeToAppliedState(programOrUniName) {
   if (cubesToHighlight.length === 0) {
     console.warn('No cubes were highlighted for:', programOrUniName);
     showNotification(`Warning: No cubes found for "${programOrUniName}"`, false);
+    return;
   }
   cubesToHighlight.forEach(targetCube => {
+    // Use two bright greens for blinking effect
+    const greenMain = 0x00ff80;   // Lime green
+    const greenBlink = 0x39ff14;  // Laser green
     const highlightMaterial = new THREE.MeshStandardMaterial({
-      color: 0xffff00, emissive: 0xffff00, emissiveIntensity: 2.5
+      color: greenMain,
+      emissive: greenBlink,
+      emissiveIntensity: 3.2,
+      metalness: 0.2,
+      roughness: 0.14
     });
     targetCube.material = highlightMaterial;
     let blinkState = false, blinkCount = 0;
     const interval = setInterval(() => {
       if (blinkState) {
-        highlightMaterial.color.set(0xffff00);
-        highlightMaterial.emissive.set(0xffff00);
+        highlightMaterial.color.set(greenMain);
+        highlightMaterial.emissive.set(greenBlink);
+        highlightMaterial.emissiveIntensity = 4.8;
       } else {
-        highlightMaterial.color.set(0xffffff);
-        highlightMaterial.emissive.set(0xffffff);
+        highlightMaterial.color.set(greenBlink);
+        highlightMaterial.emissive.set(greenMain);
+        highlightMaterial.emissiveIntensity = 2.7;
       }
       blinkState = !blinkState;
       blinkCount++;
-      if (blinkCount > 6) {
-        highlightMaterial.color.set(0xffff00);
-        highlightMaterial.emissive.set(0xffff00);
+      if (blinkCount > 8) {
+        highlightMaterial.color.set(greenBlink);
+        highlightMaterial.emissive.set(greenBlink);
+        highlightMaterial.emissiveIntensity = 3.5;
         clearInterval(interval);
       }
-    }, 180);
+    }, 140);
   });
 }
-
 
 
 // =======
