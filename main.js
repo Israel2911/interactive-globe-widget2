@@ -990,8 +990,8 @@ const arcRouteColors = {
   "europe-india":        0x0000ff, // Blue
   "india-canada":        0xff0033, // Red
   "canada-india":        0xff0033, // Red
-  "thailand-usa":        0xe100ff, // Violet
-  "usa-thailand":        0xe100ff, // Violet
+  "thailand-usa":        0x39ff14, // Green
+  "usa-thailand":        0x00aaff, // Pure Electric Blue (your screenshot)
   "thailand-canada":     0x7d00ff, // Indigo
   "canada-thailand":     0xff8800, // Orange
   "thailand-europe":     0x7d00ff, // Indigo
@@ -1008,15 +1008,17 @@ const arcRouteColors = {
 // 2. Your arc creation code:
 function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
   // Fallback: 7-step classic neon rainbow
-  const rainbowExtendedColors = [
-    0xff0033, // Red
-    0xff8800, // Orange
-    0xffff00, // Yellow
-    0x39ff14, // Green
-    0x00cfff, // Blue
-    0x7d00ff, // Indigo
-    0xe100ff  // Violet
-  ];
+ const rainbowExtendedColors = [
+  0xff0033, // Red
+  0xff8800, // Orange
+  0xffff00, // Yellow
+  0x39ff14, // Green
+  0x00cfff, // Neon Sky Blue
+  0x00aaff, // Pure Electric Blue (your screenshot)
+  0x7d00ff, // Indigo
+  0xe100ff  // Violet
+];
+
   // Retrieve lowercase country names for mapping
   const fromName = (fromGroup.userData.countryName || '').toLowerCase();
   const toName = (toGroup.userData.countryName || '').toLowerCase();
