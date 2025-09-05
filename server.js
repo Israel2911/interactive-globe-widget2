@@ -103,7 +103,7 @@ app.use((req, res, next) => {
       return; // Important: return here to prevent double response
     }
     
-    // No email found, continue normally
+  
     next();
   } catch (e) {
     console.error('❌ Email processing error:', e.message);
@@ -403,8 +403,7 @@ app.get('/api/carousel/data', (req, res) => {
     ]);
 });
 // ===
-// START: NEW NOTIFICATION ROUTES
-// ===
+
 
 // Endpoint to RECEIVE real-time submission events from Wix
 app.post('/api/application-submitted', (req, res) => {
@@ -434,9 +433,7 @@ app.get('/api/applications/notifications', requireAuth, (req, res) => {
     }
 });
 
-// ===
-// END: NEW NOTIFICATION ROUTES
-// ===
+
 // == SERVER START ==
 app.get('/health', (req, res) => {
     res.json({ status: 'Secure Globe Widget backend running', timestamp: new Date().toISOString() });
