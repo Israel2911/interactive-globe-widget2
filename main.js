@@ -984,8 +984,30 @@ function latLonToVector3(lat, lon, radius) {
   const y = (radius * Math.cos(phi));
   return new THREE.Vector3(x, y, z);
 }
+// 1. Add this at the top of your file (or above createConnectionPath)
+const arcRouteColors = {
+  "india-europe":        0x0000ff, // Blue
+  "europe-india":        0x0000ff, // Blue
+  "india-canada":        0xff0033, // Red
+  "canada-india":        0xff0033, // Red
+  "thailand-usa":        0xe100ff, // Violet
+  "usa-thailand":        0xe100ff, // Violet
+  "thailand-canada":     0xff8800, // Orange
+  "canada-thailand":     0xff8800, // Orange
+  "thailand-europe":     0x7d00ff, // Indigo
+  "europe-thailand":     0x7d00ff, // Indigo
+  "malaysia-singapore":  0xffff00, // Yellow
+  "singapore-malaysia":  0xffff00, // Yellow
+  "thailand-singapore":  0xe100ff, // Violet
+  "singapore-thailand":  0xe100ff, // Violet
+  "india-thailand":      0x7d00ff, // Indigo
+  "thailand-india":      0x7d00ff  // Indigo (optional for bidirectional)
+  // Add new routes here as needed!
+};
+
+// 2. Your arc creation code:
 function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
-  // ROYGBIV neon rainbow
+  // Fallback: 7-step classic neon rainbow
   const rainbowExtendedColors = [
     0xff0033, // Red
     0xff8800, // Orange
@@ -995,14 +1017,23 @@ function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
     0x7d00ff, // Indigo
     0xe100ff  // Violet
   ];
-  const color = rainbowExtendedColors[arcIndex % rainbowExtendedColors.length];
+  // Retrieve lowercase country names for mapping
+  const fromName = (fromGroup.userData.countryName || '').toLowerCase();
+  const toName = (toGroup.userData.countryName || '').toLowerCase();
+  const routeKey = `${fromName}-${toName}`;
+  // Use route-specific color if defined, else fallback by arcIndex
+  const color = arcRouteColors[routeKey] !== undefined
+    ? arcRouteColors[routeKey]
+    : rainbowExtendedColors[arcIndex % rainbowExtendedColors.length];
+  
   const start = new THREE.Vector3(); fromGroup.getWorldPosition(start);
   const end = new THREE.Vector3(); toGroup.getWorldPosition(end);
   const globeRadius = 1.0; const arcOffset = 0.05;
   const distance = start.distanceTo(end); const arcElevation = distance * 0.4;
   const offsetStart = start.clone().normalize().multiplyScalar(globeRadius + arcOffset);
   const offsetEnd = end.clone().normalize().multiplyScalar(globeRadius + arcOffset);
-  const mid = offsetStart.clone().add(offsetEnd).multiplyScalar(0.5).normalize().multiplyScalar(globeRadius + arcOffset + arcElevation);
+  const mid = offsetStart.clone().add(offsetEnd).multiplyScalar(0.5)
+    .normalize().multiplyScalar(globeRadius + arcOffset + arcElevation);
   const curve = new THREE.QuadraticBezierCurve3(offsetStart, mid, offsetEnd);
   const geometry = new THREE.TubeGeometry(curve, 64, 0.008, 24, false);
   const vertexShader = `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
@@ -1058,6 +1089,7 @@ function drawAllConnections() {
   }).filter(Boolean);
   arcPaths.forEach(animateArcParticles);
 }
+
 
 // ===
 // MOUSE EVENT HANDLERS
