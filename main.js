@@ -1393,6 +1393,9 @@ function setupEventListeners() {
 // ===
 // GLOBE AND CUBES CREATION
 // ===
+// =======
+// GLOBE AND CUBES CREATION
+// =======
 async function createGlobeAndCubes() {
   console.log('🔄 Creating globe and cubes...');
   createNeuralNetwork();
@@ -1455,9 +1458,47 @@ async function createGlobeAndCubes() {
     });
     drawAllConnections();
     setTimeout(() => { highlightCountriesByProgram("UG"); }, 500);
+
+    // === INTEGRATED: RED COUNTRY-TO-COUNTRY WEB ===
+    drawCountryToCountryWeb(Object.values(countryBlocks), 0xff2222, 0.11);
+
   });
   console.log('✅ Globe and cubes created successfully');
 }
+
+// Utility function: place near your other mesh utilities
+function drawCountryToCountryWeb(countryCubesArray, webColor = 0xff2222, webOpacity = 0.11) {
+  if (globeGroup.userData.countryCountryWeb) {
+    globeGroup.remove(globeGroup.userData.countryCountryWeb);
+    globeGroup.userData.countryCountryWeb.geometry.dispose();
+    globeGroup.userData.countryCountryWeb.material.dispose();
+    globeGroup.userData.countryCountryWeb = null;
+  }
+  const positions = countryCubesArray.map(cube =>
+    cube.getWorldPosition(new THREE.Vector3())
+  );
+  const lines = [];
+  for (let i = 0; i < positions.length; i++) {
+    for (let j = i + 1; j < positions.length; j++) {
+      lines.push(positions[i].x, positions[i].y, positions[i].z,
+                 positions[j].x, positions[j].y, positions[j].z);
+    }
+  }
+  if (lines.length < 6) return;
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(lines, 3));
+  const mat = new THREE.LineBasicMaterial({
+    color: webColor,
+    transparent: true,
+    opacity: webOpacity,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending
+  });
+  const mesh = new THREE.LineSegments(geo, mat);
+  globeGroup.userData.countryCountryWeb = mesh;
+  globeGroup.add(mesh);
+}
+
 // ===
 // ANIMATION (with "Sticky" Hover Card Logic)
 // ===
