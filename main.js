@@ -1047,12 +1047,11 @@ function getCenterSubCube(subCubeArray) {
 }
 
 
-function drawCountryNeuralMembraneCountryCubes(color = 0xff0000, opacity = 1.0) {
+function drawCountryNeuralMembraneCountryCubes(color = 0xff0000, opacity = 0.85) {
   const mainCountryCubes = [
     europeCube, newThailandCube, canadaCube, ukCube, usaCube, indiaCube, singaporeCube, malaysiaCube
   ].filter(Boolean);
 
-  // Remove old mesh if present
   if (globeGroup.userData.countryNeuralMembrane) {
     globeGroup.remove(globeGroup.userData.countryNeuralMembrane);
     if (globeGroup.userData.countryNeuralMembrane.geometry) globeGroup.userData.countryNeuralMembrane.geometry.dispose();
@@ -1061,8 +1060,9 @@ function drawCountryNeuralMembraneCountryCubes(color = 0xff0000, opacity = 1.0) 
   }
 
   const vertices = [];
-  const maxDist = 2.0;
+  const maxDist = 2.5; // bump up if needed for large spread
   const connectionsPerCube = 3;
+
   for (let i = 0; i < mainCountryCubes.length; i++) {
     if (!mainCountryCubes[i].visible) continue;
     let neighbors = [];
@@ -1094,14 +1094,16 @@ function drawCountryNeuralMembraneCountryCubes(color = 0xff0000, opacity = 1.0) 
       side: THREE.DoubleSide,
       transparent: true,
       opacity,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false
+      blending: THREE.NormalBlending,   // <<---- Make visible on all backgrounds
+      depthWrite: false,
+      depthTest: false                  // <<---- Always draw "on top"
     });
     const mesh = new THREE.Mesh(geometry, material);
     globeGroup.userData.countryNeuralMembrane = mesh;
     globeGroup.add(mesh);
   }
 }
+
 
 
 
