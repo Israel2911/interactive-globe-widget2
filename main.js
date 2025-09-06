@@ -856,8 +856,6 @@ function setCubeToAppliedState(programOrUniName) {
 
 
 // =======
-// TOGGLE FUNCTION CREATION
-// =======
 function createToggleFunction(cubeName) {
   return function() {
     const explosionStateMap = {
@@ -884,7 +882,6 @@ function createToggleFunction(cubeName) {
       'UK': ukExplodedPositions, 'USA': usaExplodedPositions, 'India': indiaExplodedPositions,
       'Singapore': singaporeExplodedPositions, 'Malaysia': malaysiaExplodedPositions
     };
-
     const isExploded = explosionStateMap[cubeName];
     const setExploded = setExplosionStateMap[cubeName];
     const cube = cubeMap[cubeName];
@@ -894,6 +891,7 @@ function createToggleFunction(cubeName) {
 
     setExploded(shouldBeExploded);
     if (!cube) return;
+
     const targetPosition = new THREE.Vector3();
     if (shouldBeExploded) {
       cube.getWorldPosition(targetPosition);
@@ -909,46 +907,30 @@ function createToggleFunction(cubeName) {
       new TWEEN.Tween(subCube.position).to(targetPos, 800).easing(TWEEN.Easing.Exponential.InOut).start();
     });
 
-    // Clean up previous global membrane (if any)
-    if (globeGroup.userData.countryAnchorMembrane) {
-      globeGroup.remove(globeGroup.userData.countryAnchorMembrane);
-      globeGroup.userData.countryAnchorMembrane.children.forEach(c => {
-        c.geometry.dispose();
-        c.material.dispose();
-      });
-      globeGroup.userData.countryAnchorMembrane = null;
+    // ---------- MACRO NEURAL MEMBRANE ----------
+    if (globeGroup.userData.countryNeuralMembrane) {
+      globeGroup.remove(globeGroup.userData.countryNeuralMembrane);
+      if (globeGroup.userData.countryNeuralMembrane.geometry) globeGroup.userData.countryNeuralMembrane.geometry.dispose();
+      if (globeGroup.userData.countryNeuralMembrane.material) globeGroup.userData.countryNeuralMembrane.material.dispose();
+      globeGroup.userData.countryNeuralMembrane = null;
     }
+    drawCountryNeuralMembraneCountryCubes(0xff0000, 1.0);
+    // -------------------------------------------
 
-    // If all countries are exploded, draw the membrane
-    if (
-      isEuropeCubeExploded && isNewThailandCubeExploded && isCanadaCubeExploded && isUkCubeExploded &&
-      isUsaCubeExploded && isIndiaCubeExploded && isSingaporeCubeExploded && isMalaysiaCubeExploded
-    ) {
-      const anchorSubCubes = [
-        getCenterSubCube(europeSubCubes),
-        getCenterSubCube(newThailandSubCubes),
-        getCenterSubCube(canadaSubCubes),
-        getCenterSubCube(ukSubCubes),
-        getCenterSubCube(usaSubCubes),
-        getCenterSubCube(indiaSubCubes),
-        getCenterSubCube(singaporeSubCubes),
-        getCenterSubCube(malaysiaSubCubes)
-      ].filter(Boolean);
-      drawCountryAnchorMembrane(anchorSubCubes, 0xff2222, 0.18);
-    }
-
+    // Per-country web (exploded blanket)
     if (shouldBeExploded) {
-      drawCountryWeb(subCubes, cube, 0xff2222, 0.13); // reddish blanket for that country
+      drawCountryWeb(subCubes, cube, 0xff2222, 0.13);
     } else {
       if (cube.userData.countryWebLine) {
         globeGroup.remove(cube.userData.countryWebLine);
-        cube.userData.countryWebLine.geometry.dispose();
-        cube.userData.countryWebLine.material.dispose();
+        if (cube.userData.countryWebLine.geometry) cube.userData.countryWebLine.geometry.dispose();
+        if (cube.userData.countryWebLine.material) cube.userData.countryWebLine.material.dispose();
         cube.userData.countryWebLine = null;
       }
     }
   };
 }
+
 
 
 const toggleFunctionMap = {
