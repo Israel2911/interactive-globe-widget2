@@ -1048,11 +1048,11 @@ function getCenterSubCube(subCubeArray) {
 
 
 function drawCountryNeuralMembraneCountryCubes(color = 0xff0000, opacity = 1.0) {
-  // Use the actual main country cubes!
   const mainCountryCubes = [
     europeCube, newThailandCube, canadaCube, ukCube, usaCube, indiaCube, singaporeCube, malaysiaCube
   ].filter(Boolean);
 
+  // Remove old mesh if present
   if (globeGroup.userData.countryNeuralMembrane) {
     globeGroup.remove(globeGroup.userData.countryNeuralMembrane);
     if (globeGroup.userData.countryNeuralMembrane.geometry) globeGroup.userData.countryNeuralMembrane.geometry.dispose();
@@ -1061,9 +1061,8 @@ function drawCountryNeuralMembraneCountryCubes(color = 0xff0000, opacity = 1.0) 
   }
 
   const vertices = [];
-  const maxDist = 2.0; // Wide enough to link all countries (tweak if desired)
-  const connectionsPerCube = 3; // Fewer = sparser web
-
+  const maxDist = 2.0;
+  const connectionsPerCube = 3;
   for (let i = 0; i < mainCountryCubes.length; i++) {
     if (!mainCountryCubes[i].visible) continue;
     let neighbors = [];
@@ -1103,6 +1102,7 @@ function drawCountryNeuralMembraneCountryCubes(color = 0xff0000, opacity = 1.0) 
     globeGroup.add(mesh);
   }
 }
+
 
 
 // CORRECTED: Creates a Mesh for the membrane effect
@@ -1578,33 +1578,24 @@ function updateArcParticles(dt) {
   }
 }
 
-// ===
-// ANIMATION (with "Sticky" Hover Card Logic)
-// ===
 function animate() {
   // Main animation frame request
   requestAnimationFrame(animate);
-
   // --- TIME CONTROL ---
   const dt = clock.getDelta();             // Delta time: use for particle motion, tweens, etc.
   const elapsedTime = clock.getElapsedTime();
-
   // --- INPUT CONTROLS ---
   if (controls && controls.enabled) controls.update();
-
   // --- ANIMATION LIBRARIES (TWEEN) ---
   if (typeof TWEEN !== 'undefined') TWEEN.update();
-
   // --- ARC ANIMATION SHADERS ---
   arcPaths.forEach(path => {
     if (path.material.isShaderMaterial) {
       path.material.uniforms.time.value = elapsedTime;
     }
   });
-
   // --- ARC PARTICLE MOTION (NEW!) ---
   updateArcParticles(dt);
-
   // --- HOVER CARD LOGIC ---
   if (hoverCard) {
     raycaster.setFromCamera(mouse, camera);
@@ -1642,7 +1633,6 @@ function animate() {
       hoverCard.classList.add('hover-card-hidden');
     }
   }
-
   // --- LABEL POSITION UPDATES ---
   countryLabels.forEach(item => {
     const worldPosition = new THREE.Vector3();
@@ -1652,7 +1642,6 @@ function animate() {
     item.label.position.copy(labelPosition);
     item.label.lookAt(camera.position);
   });
-
   // --- CUBE PHYSICS / MOTION ---
   const explosionStateMap = {
     'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded,
@@ -1672,8 +1661,8 @@ function animate() {
         }
       }
     });
-
     // --- 3D MEMBRANE ("neural network lines") ---
+    // 1. Small neuronal web - original code:
     if (neuralNetworkLines && neuralNetworkLines.visible) {
       const vertices = [];
       const maxDist = 0.6;
@@ -1705,8 +1694,9 @@ function animate() {
       neuralNetworkLines.geometry.attributes.position.needsUpdate = true;
       neuralNetworkLines.geometry.computeVertexNormals();
     }
+    // 2. MACRO COUNTRY MEMBRANE - new code:
+    drawCountryNeuralMembraneCountryCubes(0xff0000, 1.0);
   }
-
   // --- MAIN RENDER ---
   renderer.render(scene, camera);
 }
