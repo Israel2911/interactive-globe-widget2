@@ -978,45 +978,46 @@ function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
   return cubeObject;
 }
 
-function drawCountryToCountryWeb(countryCubesArray, webColor = 0xff2222, webOpacity = 0.11) {
-  // Debug: log function usage and node count
-  console.log("DRAWING COUNTRY WEB", countryCubesArray.length, "nodes");
-  
+function createCurvedWebSegment(start, end, color = 0xff2222, opacity = 0.22) {
+  // Calculate a lifted midpoint for a soft curve
+  const mid = start.clone().add(end).multiplyScalar(0.5)
+              .normalize().multiplyScalar(start.length() + 0.13);
+  const curve = new THREE.QuadraticBezierCurve3(start, mid, end);
+  // Thin tube, not visually overpowering—tweak as desired
+  const geometry = new THREE.TubeGeometry(curve, 16, 0.006, 8, false);
+  const material = new THREE.MeshBasicMaterial({
+    color,
+    opacity,
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.renderOrder = 1000;
+  return mesh;
+}
+
+
+function drawCountryToCountryWeb(countryCubesArray, webColor = 0xff2222, webOpacity = 0.22) {
+  // Remove old curved group if present
   if (globeGroup.userData.countryCountryWeb) {
+    globeGroup.userData.countryCountryWeb.children.forEach(c => {
+      c.geometry.dispose();
+      c.material.dispose();
+    });
     globeGroup.remove(globeGroup.userData.countryCountryWeb);
-    globeGroup.userData.countryCountryWeb.geometry.dispose();
-    globeGroup.userData.countryCountryWeb.material.dispose();
     globeGroup.userData.countryCountryWeb = null;
   }
-  const positions = countryCubesArray.map(cube =>
-    cube.getWorldPosition(new THREE.Vector3())
-  );
-  const lines = [];
+  const webGroup = new THREE.Group();
+  const positions = countryCubesArray.map(cube => cube.getWorldPosition(new THREE.Vector3()));
   for (let i = 0; i < positions.length; i++) {
     for (let j = i + 1; j < positions.length; j++) {
-      lines.push(positions[i].x, positions[i].y, positions[i].z,
-                 positions[j].x, positions[j].y, positions[j].z);
+      const curved = createCurvedWebSegment(positions[i], positions[j], webColor, webOpacity);
+      webGroup.add(curved);
     }
   }
-  if (lines.length < 6) {
-    console.log("Not enough lines to draw web:", lines.length);
-    return;
-  }
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.Float32BufferAttribute(lines, 3));
-
-  // Use a highly visible color and opacity for debug!
-  const mat = new THREE.LineBasicMaterial({
-    color: 0xff0000, // bright red for debug; replace with webColor if you like
-    transparent: true,
-    opacity: 1.0,    // max opacity for debug; set back to webOpacity later
-    depthWrite: false,
-    blending: THREE.AdditiveBlending
-  });
-  const mesh = new THREE.LineSegments(geo, mat);
-  mesh.renderOrder = 1000; // force draw on top for debug
-  globeGroup.userData.countryCountryWeb = mesh;
-  globeGroup.add(mesh);
+  globeGroup.userData.countryCountryWeb = webGroup;
+  globeGroup.add(webGroup);
 }
 
 
