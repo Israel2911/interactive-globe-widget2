@@ -1049,6 +1049,20 @@ function drawCountryAnchorMembrane(anchorSubCubes, color = 0xff2222, opacity = 0
 }
 
 
+function getCenterSubCube(subCubeArray) {
+  if (!subCubeArray.length) return null;
+  const centroid = subCubeArray.reduce(
+    (acc, sub) => acc.add(sub.getWorldPosition(new THREE.Vector3())),
+    new THREE.Vector3()
+  ).divideScalar(subCubeArray.length);
+  let best = subCubeArray[0], minDist = Infinity;
+  for (const sub of subCubeArray) {
+    const pos = sub.getWorldPosition(new THREE.Vector3());
+    const dist = pos.distanceTo(centroid);
+    if (dist < minDist) { minDist = dist; best = sub; }
+  }
+  return best;
+}
 
 
 
