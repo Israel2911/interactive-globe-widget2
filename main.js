@@ -979,6 +979,9 @@ function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
 }
 
 function drawCountryToCountryWeb(countryCubesArray, webColor = 0xff2222, webOpacity = 0.11) {
+  // Debug: log function usage and node count
+  console.log("DRAWING COUNTRY WEB", countryCubesArray.length, "nodes");
+  
   if (globeGroup.userData.countryCountryWeb) {
     globeGroup.remove(globeGroup.userData.countryCountryWeb);
     globeGroup.userData.countryCountryWeb.geometry.dispose();
@@ -995,20 +998,27 @@ function drawCountryToCountryWeb(countryCubesArray, webColor = 0xff2222, webOpac
                  positions[j].x, positions[j].y, positions[j].z);
     }
   }
-  if (lines.length < 6) return;
+  if (lines.length < 6) {
+    console.log("Not enough lines to draw web:", lines.length);
+    return;
+  }
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.Float32BufferAttribute(lines, 3));
+
+  // Use a highly visible color and opacity for debug!
   const mat = new THREE.LineBasicMaterial({
-    color: webColor,
+    color: 0xff0000, // bright red for debug; replace with webColor if you like
     transparent: true,
-    opacity: webOpacity,
+    opacity: 1.0,    // max opacity for debug; set back to webOpacity later
     depthWrite: false,
     blending: THREE.AdditiveBlending
   });
   const mesh = new THREE.LineSegments(geo, mat);
+  mesh.renderOrder = 1000; // force draw on top for debug
   globeGroup.userData.countryCountryWeb = mesh;
   globeGroup.add(mesh);
 }
+
 
 
 
