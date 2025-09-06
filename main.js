@@ -976,40 +976,38 @@ function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
   return cubeObject;
 }
 
-function drawCountryWeb(subCubes, countryCube, webColor = 0xff2222, webOpacity = 0.13) {
-  // Remove old web effect for this country if present
-  if (countryCube.userData.countryWebLine) {
-    globeGroup.remove(countryCube.userData.countryWebLine);
-    countryCube.userData.countryWebLine.geometry.dispose();
-    countryCube.userData.countryWebLine.material.dispose();
-    countryCube.userData.countryWebLine = null;
+function drawCountryToCountryWeb(countryCubesArray, webColor = 0xff2222, webOpacity = 0.11) {
+  if (globeGroup.userData.countryCountryWeb) {
+    globeGroup.remove(globeGroup.userData.countryCountryWeb);
+    globeGroup.userData.countryCountryWeb.geometry.dispose();
+    globeGroup.userData.countryCountryWeb.material.dispose();
+    globeGroup.userData.countryCountryWeb = null;
   }
-  // Gather world positions of visible subcubes
-  const points = [];
-  subCubes.forEach(scube => {
-    points.push(...scube.getWorldPosition(new THREE.Vector3()).toArray());
-  });
-  const indices = [];
-  for (let i = 0; i < subCubes.length; i++) {
-    for (let j = i + 1; j < subCubes.length; j++) {
-      indices.push(i, j);
+  const positions = countryCubesArray.map(cube =>
+    cube.getWorldPosition(new THREE.Vector3())
+  );
+  const lines = [];
+  for (let i = 0; i < positions.length; i++) {
+    for (let j = i + 1; j < positions.length; j++) {
+      lines.push(positions[i].x, positions[i].y, positions[i].z,
+                 positions[j].x, positions[j].y, positions[j].z);
     }
   }
-  if (points.length < 6) return; // Skip empty clusters
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute('position', new THREE.Float32BufferAttribute(points, 3));
-  geometry.setIndex(indices);
-  const material = new THREE.LineBasicMaterial({
+  if (lines.length < 6) return;
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(lines, 3));
+  const mat = new THREE.LineBasicMaterial({
     color: webColor,
     transparent: true,
     opacity: webOpacity,
     depthWrite: false,
     blending: THREE.AdditiveBlending
   });
-  const mesh = new THREE.LineSegments(geometry, material);
-  countryCube.userData.countryWebLine = mesh;
+  const mesh = new THREE.LineSegments(geo, mat);
+  globeGroup.userData.countryCountryWeb = mesh;
   globeGroup.add(mesh);
 }
+
 
 
 // CORRECTED: Creates a Mesh for the membrane effect
@@ -1394,6 +1392,7 @@ function setupEventListeners() {
 // GLOBE AND CUBES CREATION
 // ===
 // =======
+// =======
 // GLOBE AND CUBES CREATION
 // =======
 async function createGlobeAndCubes() {
@@ -1456,17 +1455,19 @@ async function createGlobeAndCubes() {
       countryLabels.push({ label: lMesh, block: blockMesh, offset: 0.06 });
       globeGroup.add(lMesh);
     });
+
+    // Keep these three lines in this order:
     drawAllConnections();
     setTimeout(() => { highlightCountriesByProgram("UG"); }, 500);
-
-    // === INTEGRATED: RED COUNTRY-TO-COUNTRY WEB ===
     drawCountryToCountryWeb(Object.values(countryBlocks), 0xff2222, 0.11);
 
   });
   console.log('✅ Globe and cubes created successfully');
 }
 
-// Utility function: place near your other mesh utilities
+// =======
+// Utility function to define near mesh helpers (already in your code; include here for clarity)
+// =======
 function drawCountryToCountryWeb(countryCubesArray, webColor = 0xff2222, webOpacity = 0.11) {
   if (globeGroup.userData.countryCountryWeb) {
     globeGroup.remove(globeGroup.userData.countryCountryWeb);
