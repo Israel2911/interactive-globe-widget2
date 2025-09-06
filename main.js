@@ -858,7 +858,6 @@ function setCubeToAppliedState(programOrUniName) {
 // =======
 // TOGGLE FUNCTION CREATION
 // =======
-// TOGGLE FUNCTION CREATION
 function createToggleFunction(cubeName) {
   return function() {
     const explosionStateMap = {
@@ -885,12 +884,14 @@ function createToggleFunction(cubeName) {
       'UK': ukExplodedPositions, 'USA': usaExplodedPositions, 'India': indiaExplodedPositions,
       'Singapore': singaporeExplodedPositions, 'Malaysia': malaysiaExplodedPositions
     };
+
     const isExploded = explosionStateMap[cubeName];
     const setExploded = setExplosionStateMap[cubeName];
     const cube = cubeMap[cubeName];
     const subCubes = subCubeMap[cubeName];
     const explodedPos = explodedPosMap[cubeName];
     const shouldBeExploded = !isExploded;
+
     setExploded(shouldBeExploded);
     if (!cube) return;
     const targetPosition = new THREE.Vector3();
@@ -908,9 +909,36 @@ function createToggleFunction(cubeName) {
       new TWEEN.Tween(subCube.position).to(targetPos, 800).easing(TWEEN.Easing.Exponential.InOut).start();
     });
 
-    // === INSERT THE WEB EFFECT BLOCK HERE (INSIDE THE FUNCTION) ===
+    // Clean up previous global membrane (if any)
+    if (globeGroup.userData.countryAnchorMembrane) {
+      globeGroup.remove(globeGroup.userData.countryAnchorMembrane);
+      globeGroup.userData.countryAnchorMembrane.children.forEach(c => {
+        c.geometry.dispose();
+        c.material.dispose();
+      });
+      globeGroup.userData.countryAnchorMembrane = null;
+    }
+
+    // If all countries are exploded, draw the membrane
+    if (
+      isEuropeCubeExploded && isNewThailandCubeExploded && isCanadaCubeExploded && isUkCubeExploded &&
+      isUsaCubeExploded && isIndiaCubeExploded && isSingaporeCubeExploded && isMalaysiaCubeExploded
+    ) {
+      const anchorSubCubes = [
+        getCenterSubCube(europeSubCubes),
+        getCenterSubCube(newThailandSubCubes),
+        getCenterSubCube(canadaSubCubes),
+        getCenterSubCube(ukSubCubes),
+        getCenterSubCube(usaSubCubes),
+        getCenterSubCube(indiaSubCubes),
+        getCenterSubCube(singaporeSubCubes),
+        getCenterSubCube(malaysiaSubCubes)
+      ].filter(Boolean);
+      drawCountryAnchorMembrane(anchorSubCubes, 0xff2222, 0.18);
+    }
+
     if (shouldBeExploded) {
-      drawCountryWeb(subCubes, cube, 0xff2222, 0.13); // reddish blanket
+      drawCountryWeb(subCubes, cube, 0xff2222, 0.13); // reddish blanket for that country
     } else {
       if (cube.userData.countryWebLine) {
         globeGroup.remove(cube.userData.countryWebLine);
@@ -919,9 +947,9 @@ function createToggleFunction(cubeName) {
         cube.userData.countryWebLine = null;
       }
     }
-    // === END OF WEB EFFECT BLOCK ===
-  }
+  };
 }
+
 
 const toggleFunctionMap = {
   'Europe': createToggleFunction('Europe'), 'Thailand': createToggleFunction('Thailand'),
@@ -998,27 +1026,29 @@ function createCurvedWebSegment(start, end, color = 0xff2222, opacity = 0.22) {
 }
 
 
-function drawCountryToCountryWeb(countryCubesArray, webColor = 0xff2222, webOpacity = 0.22) {
-  // Remove old curved group if present
-  if (globeGroup.userData.countryCountryWeb) {
-    globeGroup.userData.countryCountryWeb.children.forEach(c => {
+function drawCountryAnchorMembrane(anchorSubCubes, color = 0xff2222, opacity = 0.18) {
+  if (globeGroup.userData.countryAnchorMembrane) {
+    globeGroup.userData.countryAnchorMembrane.children.forEach(c => {
       c.geometry.dispose();
       c.material.dispose();
     });
-    globeGroup.remove(globeGroup.userData.countryCountryWeb);
-    globeGroup.userData.countryCountryWeb = null;
+    globeGroup.remove(globeGroup.userData.countryAnchorMembrane);
+    globeGroup.userData.countryAnchorMembrane = null;
   }
   const webGroup = new THREE.Group();
-  const positions = countryCubesArray.map(cube => cube.getWorldPosition(new THREE.Vector3()));
-  for (let i = 0; i < positions.length; i++) {
-    for (let j = i + 1; j < positions.length; j++) {
-      const curved = createCurvedWebSegment(positions[i], positions[j], webColor, webOpacity);
-      webGroup.add(curved);
+  for (let i = 0; i < anchorSubCubes.length; i++) {
+    const posA = anchorSubCubes[i].getWorldPosition(new THREE.Vector3());
+    for (let j = i+1; j < anchorSubCubes.length; j++) {
+      const posB = anchorSubCubes[j].getWorldPosition(new THREE.Vector3());
+      const arch = createCurvedWebSegment(posA, posB, color, opacity);
+      webGroup.add(arch);
     }
   }
-  globeGroup.userData.countryCountryWeb = webGroup;
+  globeGroup.userData.countryAnchorMembrane = webGroup;
   globeGroup.add(webGroup);
 }
+
+
 
 
 
