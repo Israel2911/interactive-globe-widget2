@@ -1085,27 +1085,28 @@ function drawCountryNeuralMembraneCountryCubes(color = 0xff0000, opacity = 0.85)
       }
     }
   }
-
-if (vertices.length > 0) {
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-  // ----- MATERIAL BLOCK START -----
-  const material = new THREE.MeshBasicMaterial({
-  color,
-  side: THREE.DoubleSide,
-  transparent: true,
-  opacity: 0.4,                // Or as preferred
-  blending: THREE.NormalBlending,
-  depthWrite: false,
-  depthTest: true,
-  wireframe: true              // <<--- THIS GIVES THE TRIANGULAR EDGE-ONLY LOOK
-});
-
-  // ----- MATERIAL BLOCK END -----
-  const mesh = new THREE.Mesh(geometry, material);
-  globeGroup.userData.countryNeuralMembrane = mesh;
-  globeGroup.add(mesh);
+  
+  if (vertices.length > 0) {
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+    // ----- MATERIAL BLOCK START -----
+    const material = new THREE.MeshBasicMaterial({
+      color,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.4,                // Or as preferred
+      blending: THREE.NormalBlending,
+      depthWrite: false,
+      depthTest: true,
+      wireframe: true              // <<--- TRIANGULAR EDGE LOOK
+    });
+    // ----- MATERIAL BLOCK END -----
+    const mesh = new THREE.Mesh(geometry, material);
+    globeGroup.userData.countryNeuralMembrane = mesh;
+    globeGroup.add(mesh);
+  }
 }
+
 
 
 
