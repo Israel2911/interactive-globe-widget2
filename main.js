@@ -856,6 +856,7 @@ function setCubeToAppliedState(programOrUniName) {
 // =======
 // TOGGLE FUNCTION CREATION
 // =======
+// TOGGLE FUNCTION CREATION
 function createToggleFunction(cubeName) {
   return function() {
     const explosionStateMap = {
@@ -904,8 +905,22 @@ function createToggleFunction(cubeName) {
       const targetPos = shouldBeExploded ? explodedPos[i] : subCube.userData.initialPosition;
       new TWEEN.Tween(subCube.position).to(targetPos, 800).easing(TWEEN.Easing.Exponential.InOut).start();
     });
+
+    // === INSERT THE WEB EFFECT BLOCK HERE (INSIDE THE FUNCTION) ===
+    if (shouldBeExploded) {
+      drawCountryWeb(subCubes, cube, 0xff2222, 0.13); // reddish blanket
+    } else {
+      if (cube.userData.countryWebLine) {
+        globeGroup.remove(cube.userData.countryWebLine);
+        cube.userData.countryWebLine.geometry.dispose();
+        cube.userData.countryWebLine.material.dispose();
+        cube.userData.countryWebLine = null;
+      }
+    }
+    // === END OF WEB EFFECT BLOCK ===
   }
 }
+
 const toggleFunctionMap = {
   'Europe': createToggleFunction('Europe'), 'Thailand': createToggleFunction('Thailand'),
   'Canada': createToggleFunction('Canada'), 'UK': createToggleFunction('UK'),
@@ -960,6 +975,42 @@ function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
       }
   return cubeObject;
 }
+
+function drawCountryWeb(subCubes, countryCube, webColor = 0xff2222, webOpacity = 0.13) {
+  // Remove old web effect for this country if present
+  if (countryCube.userData.countryWebLine) {
+    globeGroup.remove(countryCube.userData.countryWebLine);
+    countryCube.userData.countryWebLine.geometry.dispose();
+    countryCube.userData.countryWebLine.material.dispose();
+    countryCube.userData.countryWebLine = null;
+  }
+  // Gather world positions of visible subcubes
+  const points = [];
+  subCubes.forEach(scube => {
+    points.push(...scube.getWorldPosition(new THREE.Vector3()).toArray());
+  });
+  const indices = [];
+  for (let i = 0; i < subCubes.length; i++) {
+    for (let j = i + 1; j < subCubes.length; j++) {
+      indices.push(i, j);
+    }
+  }
+  if (points.length < 6) return; // Skip empty clusters
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(points, 3));
+  geometry.setIndex(indices);
+  const material = new THREE.LineBasicMaterial({
+    color: webColor,
+    transparent: true,
+    opacity: webOpacity,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending
+  });
+  const mesh = new THREE.LineSegments(geometry, material);
+  countryCube.userData.countryWebLine = mesh;
+  globeGroup.add(mesh);
+}
+
 
 // CORRECTED: Creates a Mesh for the membrane effect
 function createNeuralNetwork() {
