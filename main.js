@@ -195,6 +195,7 @@ function buildLinkWithToken(baseUrl) {
 }
 
 // Show info panel for a selected university/program
+// Show info panel for a selected university/program
 async function showInfoPanel(data) {
   const universityName = data.university;
   if (!universityName || universityName === 'Unassigned') {
@@ -213,7 +214,8 @@ async function showInfoPanel(data) {
   document.getElementById('infoPanelMainCard').innerHTML = `
     <div class="main-card-details">
       <img src="${mainProgram.logo}" alt="${mainProgram.university} Logo">
-      <h3>${mainProgram.university}</h3>
+      <!-- ADD INLINE STYLE FOR DARK, BOLD, VISIBLE HEADING -->
+      <h3 style="color:#111;opacity:1;font-weight:900 !important;">${mainProgram.university}</h3>
     </div>
     <div class="main-card-actions">
       ${mainProgram.erasmusLink && mainProgram.erasmusLink !== '#' ? `<button class="partner-cta erasmus" onclick="window.open('${buildLinkWithToken(mainProgram.erasmusLink)}', '_blank')">Erasmus Info</button>` : ''}
@@ -228,17 +230,18 @@ async function showInfoPanel(data) {
     const applyEnabled = item.applyLink && item.applyLink !== '#';
     const infoLink = buildLinkWithToken(item.programLink);
     const applyLink = buildLinkWithToken(item.applyLink);
+    // ADD INLINE STYLE TO PROGRAM HEADINGS TO GUARANTEE VISIBILITY
     const subcardHTML = `
       <div class="subcard">
         <div class="subcard-info">
-          <h4>${item.programName.replace(/\n/g, ' ')}</h4>
+          <h4 style="color:#111;opacity:1;font-weight:900 !important;">${item.programName.replace(/\n/g, ' ')}</h4>
         </div>
         <div class="subcard-buttons">
-          <button class="partner-cta info" ${infoEnabled ? '' : `disabled title="No info link available"`} 
+          <button class="partner-cta info" ${infoEnabled ? '' : `disabled title="No info link available"`}
                   onclick="if(${infoEnabled}) window.open('${infoLink}', '_blank')">
             University Info
           </button>
-          <button class="partner-cta apply" ${applyEnabled ? '' : `disabled title="No apply link available"`} 
+          <button class="partner-cta apply" ${applyEnabled ? '' : `disabled title="No apply link available"`}
                   onclick="if(${applyEnabled}) window.open('${applyLink}', '_blank')">
             Apply Now
           </button>
@@ -249,10 +252,6 @@ async function showInfoPanel(data) {
   });
   document.getElementById('infoPanelOverlay').style.display = 'flex';
   console.log(`✅ Info panel displayed for ${universityName}`);
-}
-
-function hideInfoPanel() {
-  document.getElementById('infoPanelOverlay').style.display = 'none';
 }
 
 function addInfoPanelStyles() {
@@ -274,13 +273,13 @@ function addInfoPanelStyles() {
       box-shadow: 0 8px 32px #000c;
       position: relative;
     }
-    .info-panel h3 {
-      color: #1a2333 !important;        /* Much darker university name */
-      font-weight: 800 !important;
-      font-size: 1.38em !important;
-      margin-bottom: 19px !important;
-      margin-top: 0 !important;
+    .info-panel h3, .info-panel .subcard-info h4 {
+      color: #111 !important;
+      opacity: 1 !important;
+      font-weight: 900 !important;
       letter-spacing: 0.01em !important;
+      background: none !important;
+      text-shadow: none !important;
     }
     .info-panel .subcard {
       background: #f6f7fa;
@@ -292,14 +291,6 @@ function addInfoPanelStyles() {
       display: flex;
       flex-direction: column;
       align-items: flex-start;
-    }
-    .info-panel .subcard-info h4 {
-      color: #1a2333 !important;      /* Much darker program names */
-      font-size: 1.14em !important;
-      font-weight: 700 !important;
-      margin: 0 0 9px 0 !important;
-      letter-spacing: 0.01em !important;
-      text-align: left !important;
     }
     .info-panel .partner-cta {
       background: #0860f2;
@@ -354,8 +345,6 @@ function addInfoPanelStyles() {
   `;
   document.body.appendChild(overlay);
 }
-
-
 document.addEventListener('DOMContentLoaded', addInfoPanelStyles);
 
 
