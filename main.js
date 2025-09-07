@@ -1105,6 +1105,37 @@ function drawCountryNeuralMembraneCountryCubes(color = 0xff0000, opacity = 0.85)
 }
 
 
+function drawCountryCurvedMembrane(color = 0xff0000, opacity = 0.5) {
+  // (reference the 8 country cubes just as before)
+  const anchors = [
+    europeCube, newThailandCube, canadaCube, ukCube, usaCube, indiaCube, singaporeCube, malaysiaCube
+  ].filter(Boolean);
+
+  // Remove existing mesh/group
+  if (globeGroup.userData.countryCurvedMembrane) {
+    globeGroup.remove(globeGroup.userData.countryCurvedMembrane);
+    globeGroup.userData.countryCurvedMembrane.children?.forEach(c => {
+      c.geometry.dispose();
+      c.material.dispose();
+    });
+    globeGroup.userData.countryCurvedMembrane = null;
+  }
+
+  // Create a new group for all curved segments
+  const group = new THREE.Group();
+
+  for (let i = 0; i < anchors.length; i++) {
+    const posA = anchors[i].getWorldPosition(new THREE.Vector3());
+    for (let j = i+1; j < anchors.length; j++) {
+      const posB = anchors[j].getWorldPosition(new THREE.Vector3());
+      // Use your createCurvedWebSegment helper:
+      const arch = createCurvedWebSegment(posA, posB, color, opacity);
+      group.add(arch);
+    }
+  }
+  globeGroup.userData.countryCurvedMembrane = group;
+  globeGroup.add(group);
+}
 
 
 
