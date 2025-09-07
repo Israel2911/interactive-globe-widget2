@@ -1172,7 +1172,7 @@ function animateMembraneVertices(geometry, time, amplitude = 0.02, frequency = 1
   }
   posAttr.needsUpdate = true;
 }
-
+}
 
 
 
