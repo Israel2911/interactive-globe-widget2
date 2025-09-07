@@ -1253,10 +1253,12 @@ function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
 }
 
 
-// 4. (unchanged)
 function animateArcParticles(arc) {
   const curve = arc.userData.curve;
-  if (!curve) return;
+  if (!curve) {
+    console.log('Arc curve not found!');
+    return;
+  }
   const particleCount = 5;
   const speed = 0.5;
   for (let i = 0; i < particleCount; i++) {
@@ -1264,15 +1266,18 @@ function animateArcParticles(arc) {
       new THREE.SphereGeometry(0.01, 8, 8),
       new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.7 })
     );
+    console.log('Adding particle', i, 'to arc:', arc); // <-- log
     particle.userData = {
       t: Math.random(),
       speed: speed * (0.8 + Math.random() * 0.4),
       curve: curve
     };
+    // Make sure the scene variable is correct!
     scene.add(particle);
     arcParticles.push(particle);
   }
 }
+
 
 // 5. Use arcPairs for all arc generation:
 function drawAllConnections() {
