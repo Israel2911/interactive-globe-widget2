@@ -275,12 +275,12 @@ function addInfoPanelStyles() {
       position: relative;
     }
     .info-panel h3 {
-      color: #fff;
-      font-weight: 800;
-      font-size: 1.38em;
-      margin-bottom: 19px;
-      margin-top: 0;
-      letter-spacing: 0.01em;
+      color: #1a2333 !important;        /* Much darker university name */
+      font-weight: 800 !important;
+      font-size: 1.38em !important;
+      margin-bottom: 19px !important;
+      margin-top: 0 !important;
+      letter-spacing: 0.01em !important;
     }
     .info-panel .subcard {
       background: #f6f7fa;
@@ -294,12 +294,12 @@ function addInfoPanelStyles() {
       align-items: flex-start;
     }
     .info-panel .subcard-info h4 {
-      color: #28314a;
-      font-size: 1.11em;
-      font-weight: 700;
-      margin: 0 0 9px 0;
-      letter-spacing: 0.01em;
-      text-align: left;
+      color: #1a2333 !important;      /* Much darker program names */
+      font-size: 1.14em !important;
+      font-weight: 700 !important;
+      margin: 0 0 9px 0 !important;
+      letter-spacing: 0.01em !important;
+      text-align: left !important;
     }
     .info-panel .partner-cta {
       background: #0860f2;
@@ -354,6 +354,7 @@ function addInfoPanelStyles() {
   `;
   document.body.appendChild(overlay);
 }
+
 
 document.addEventListener('DOMContentLoaded', addInfoPanelStyles);
 
