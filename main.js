@@ -194,18 +194,16 @@ function buildLinkWithToken(baseUrl) {
   return baseUrl;
 }
 
+// Show info panel for a selected university/program
 async function showInfoPanel(data) {
-  // Only need the university name from clicked cube
   const universityName = data.university;
   if (!universityName || universityName === 'Unassigned') {
     console.log('❌ Clicked on an unassigned cube.');
     return;
   }
-  // All programs for this university
   const uniData = allUniversityContent.filter(item => item && item.university === universityName);
   if (uniData.length === 0) {
     console.log(`❌ No content found for ${universityName}`);
-    // Fallback: open whichever link is present
     const linkToOpen = data.programLink || data.applyLink;
     if (linkToOpen && linkToOpen !== '#') window.open(buildLinkWithToken(linkToOpen), '_blank');
     return;
@@ -228,10 +226,8 @@ async function showInfoPanel(data) {
     if (!item) return;
     const infoEnabled = item.programLink && item.programLink !== '#';
     const applyEnabled = item.applyLink && item.applyLink !== '#';
-
     const infoLink = buildLinkWithToken(item.programLink);
     const applyLink = buildLinkWithToken(item.applyLink);
-
     const subcardHTML = `
       <div class="subcard">
         <div class="subcard-info">
@@ -254,7 +250,6 @@ async function showInfoPanel(data) {
   document.getElementById('infoPanelOverlay').style.display = 'flex';
   console.log(`✅ Info panel displayed for ${universityName}`);
 }
-
 
 function hideInfoPanel() {
   document.getElementById('infoPanelOverlay').style.display = 'none';
@@ -360,8 +355,8 @@ function addInfoPanelStyles() {
   document.body.appendChild(overlay);
 }
 
-// This ensures the panel's HTML and CSS are ready when the page loads.
 document.addEventListener('DOMContentLoaded', addInfoPanelStyles);
+
 
 
 // ---------- If later you allow panel post-login, remove the return above and use builder below ----------
