@@ -1610,14 +1610,21 @@ function animate() {
       hoverCard.classList.add('hover-card-hidden');
     }
   }
-  // --- END: HOVER CARD LOGIC ---
+function animate() {
+  requestAnimationFrame(animate);
 
+  // --- HOVER CARD LOGIC (unchanged) ---
+  // (your hover card logic as before...)
+
+  // --- UPDATE TIME & CONTROLS ---
   const elapsedTime = clock.getElapsedTime();
-  if (controls && controls.enabled) { controls.update(); }
-  if (typeof TWEEN !== 'undefined') { TWEEN.update(); }
-  
-  arcPaths.forEach(path => { if (path.material.isShaderMaterial) { path.material.uniforms.time.value = elapsedTime; } });
-  
+  if (controls && controls.enabled) controls.update();
+  if (typeof TWEEN !== 'undefined') TWEEN.update();
+  arcPaths.forEach(path => {
+    if (path.material.isShaderMaterial) path.material.uniforms.time.value = elapsedTime;
+  });
+
+  // --- LABELS ---
   countryLabels.forEach(item => {
     const worldPosition = new THREE.Vector3();
     item.block.getWorldPosition(worldPosition);
@@ -1626,15 +1633,15 @@ function animate() {
     item.label.position.copy(labelPosition);
     item.label.lookAt(camera.position);
   });
-  
+
+  // --- CUBE MOTION ---
   const explosionStateMap = {
     'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded,
     'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded,
     'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded
   };
-  
-  const boundaryRadius = 1.0;
-  const buffer = 0.02;
+  const boundaryRadius = 1.0, buffer = 0.02;
+
   if (!isCubeMovementPaused) {
     cubes.forEach((cube, i) => {
       const isExploded = cube.userData.neuralName && explosionStateMap[cube.userData.neuralName];
@@ -1646,46 +1653,51 @@ function animate() {
         }
       }
     });
-    
+
+    // --- SMALL NEURONAL LINES ---
     if (neuralNetworkLines && neuralNetworkLines.visible) {
-        const vertices = [];
-        const maxDist = 0.6;
-        const connectionsPerCube = 3;
-        for (let i = 0; i < cubes.length; i++) {
-            if (!cubes[i].visible || cubes[i].userData.neuralName) continue;
-            
-            let neighbors = [];
-            for (let j = i + 1; j < cubes.length; j++) {
-                if (!cubes[j].visible || cubes[j].userData.neuralName) continue;
-                const dist = cubes[i].position.distanceTo(cubes[j].position);
-                if (dist < maxDist) {
-                    neighbors.push({ dist: dist, cube: cubes[j] });
-                }
-            }
-            
-            neighbors.sort((a, b) => a.dist - b.dist);
-            const closest = neighbors.slice(0, connectionsPerCube);
-            
-            if (closest.length > 1) {
-                for (let k = 0; k < closest.length - 1; k++) {
-                    const startNode = cubes[i].position;
-                    const neighbor1 = closest[k].cube.position;
-                    const neighbor2 = closest[k + 1].cube.position;
-                    vertices.push(startNode.x, startNode.y, startNode.z);
-                    vertices.push(neighbor1.x, neighbor1.y, neighbor1.z);
-                    vertices.push(neighbor2.x, neighbor2.y, neighbor2.z);
-                }
-            }
+      // (existing logic unchanged)
+      const vertices = [];
+      const maxDist = 0.6, connectionsPerCube = 3;
+      for (let i = 0; i < cubes.length; i++) {
+        if (!cubes[i].visible || cubes[i].userData.neuralName) continue;
+        let neighbors = [];
+        for (let j = i + 1; j < cubes.length; j++) {
+          if (!cubes[j].visible || cubes[j].userData.neuralName) continue;
+          const dist = cubes[i].position.distanceTo(cubes[j].position);
+          if (dist < maxDist) neighbors.push({ dist: dist, cube: cubes[j] });
         }
-        
-        neuralNetworkLines.geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-        neuralNetworkLines.geometry.attributes.position.needsUpdate = true;
-        neuralNetworkLines.geometry.computeVertexNormals();
+        neighbors.sort((a, b) => a.dist - b.dist);
+        const closest = neighbors.slice(0, connectionsPerCube);
+        if (closest.length > 1) {
+          for (let k = 0; k < closest.length - 1; k++) {
+            const startNode = cubes[i].position, neighbor1 = closest[k].cube.position, neighbor2 = closest[k + 1].cube.position;
+            vertices.push(startNode.x, startNode.y, startNode.z, neighbor1.x, neighbor1.y, neighbor1.z, neighbor2.x, neighbor2.y, neighbor2.z);
+          }
+        }
+      }
+      neuralNetworkLines.geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+      neuralNetworkLines.geometry.attributes.position.needsUpdate = true;
+      neuralNetworkLines.geometry.computeVertexNormals();
+    }
+
+    // --- MACRO COUNTRY CONVEX MEMBRANE DRAW (NEW) ---
+    // SAFETY: Only draw if enough cubes exist
+    const anchorCount = [
+      europeCube, newThailandCube, canadaCube, ukCube, usaCube, indiaCube, singaporeCube, malaysiaCube
+    ].filter(Boolean).length;
+    if (anchorCount >= 4) {
+      try {
+        drawCountryConvexMembrane(0xff0000, 0.35); // opacity as desired!
+      } catch (e) {
+        console.error("Convex membrane error!", e);
+      }
     }
   }
-  
+
   renderer.render(scene, camera);
 }
+
 // ===
 function togglePrivacySection() {
   const privacy = document.querySelector('.privacy-assurance');
