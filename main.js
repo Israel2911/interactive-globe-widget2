@@ -1047,62 +1047,6 @@ function getCenterSubCube(subCubeArray) {
 }
 
 
-function drawCountryNeuralMembraneCountryCubes(color = 0xff0000, opacity = 0.85) {
-  const mainCountryCubes = [
-    europeCube, newThailandCube, canadaCube, ukCube, usaCube, indiaCube, singaporeCube, malaysiaCube
-  ].filter(Boolean);
-
-  if (globeGroup.userData.countryNeuralMembrane) {
-    globeGroup.remove(globeGroup.userData.countryNeuralMembrane);
-    if (globeGroup.userData.countryNeuralMembrane.geometry) globeGroup.userData.countryNeuralMembrane.geometry.dispose();
-    if (globeGroup.userData.countryNeuralMembrane.material) globeGroup.userData.countryNeuralMembrane.material.dispose();
-    globeGroup.userData.countryNeuralMembrane = null;
-  }
-
-  const vertices = [];
-  const maxDist = 2.5;
-  const connectionsPerCube = 3;
-  for (let i = 0; i < mainCountryCubes.length; i++) {
-    if (!mainCountryCubes[i].visible) continue;
-    let neighbors = [];
-    const posA = mainCountryCubes[i].getWorldPosition(new THREE.Vector3());
-    for (let j = 0; j < mainCountryCubes.length; j++) {
-      if (i === j || !mainCountryCubes[j].visible) continue;
-      const posB = mainCountryCubes[j].getWorldPosition(new THREE.Vector3());
-      const dist = posA.distanceTo(posB);
-      if (dist < maxDist) {
-        neighbors.push({ dist, pos: posB });
-      }
-    }
-    neighbors.sort((a, b) => a.dist - b.dist);
-    const closest = neighbors.slice(0, connectionsPerCube);
-    if (closest.length > 1) {
-      for (let k = 0; k < closest.length - 1; k++) {
-        vertices.push(posA.x, posA.y, posA.z);
-        vertices.push(closest[k].pos.x, closest[k].pos.y, closest[k].pos.z);
-        vertices.push(closest[k + 1].pos.x, closest[k + 1].pos.y, closest[k + 1].pos.z);
-      }
-    }
-  }
-
-  if (vertices.length > 0) {
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-    const material = new THREE.MeshBasicMaterial({
-      color,
-      side: THREE.DoubleSide,
-      transparent: true,
-      opacity: 0.4,                // Or adjust as preferred
-      blending: THREE.NormalBlending,
-      depthWrite: false,
-      depthTest: true,
-      wireframe: true              // <<--- Triangular edge look
-    });
-    const mesh = new THREE.Mesh(geometry, material);
-    globeGroup.userData.countryNeuralMembrane = mesh;
-    globeGroup.add(mesh);
-  }
-}
 
 
 // Make sure you have ConvexGeometry available from THREE examples! (see instructions below)
@@ -1119,9 +1063,8 @@ function drawCountryConvexMembrane(color = 0xff0000, opacity = 0.35) {
     globeGroup.userData.countryConvexMembrane = null;
   }
 
-  // Get all macro cube world positions
-  const positions = anchors.map(cube => cube.getWorldPosition(new THREE.Vector3()));
-  // Requires ConvexGeometry!
+  // === THIS IS THE LINE: "arrayOfVector3s" is below ===
+  const positions = anchors.map(cube => cube.getWorldPosition(new THREE.Vector3())); // <-- array of 8 country cube centers
   const geometry = new THREE.ConvexGeometry(positions);
 
   const material = new THREE.MeshBasicMaterial({
