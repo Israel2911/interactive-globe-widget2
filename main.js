@@ -1159,20 +1159,7 @@ function drawMacroWebAndMembrane(options = {}) {
   }
 }
 
-function animateMembraneVertices(geometry, time, amplitude = 0.02, frequency = 1.3) {
-  if (!geometry || !geometry.userData || !geometry.userData.base) return;
-  const base = geometry.userData.base;
-  const posAttr = geometry.attributes.position;
-  for (let i = 0; i < posAttr.count; i++) {
-    let x = base[i * 3];
-    let y = base[i * 3 + 1];
-    let z = base[i * 3 + 2];
-    const offset = Math.sin(time + i * frequency) * amplitude;
-    posAttr.setXYZ(i, x + offset, y + offset, z + offset);
-  }
-  posAttr.needsUpdate = true;
-}
-}
+
 
 
 
