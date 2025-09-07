@@ -1614,10 +1614,8 @@ function updateArcParticles(dt) {
     p.material.opacity = 0.35 + 0.65 * Math.sin(ud.t * Math.PI);
   }
 }
-  // --- animation
 function animate() {
   requestAnimationFrame(animate);
-
   // --- HOVER CARD LOGIC ---
   if (hoverCard) {
     raycaster.setFromCamera(mouse, camera);
@@ -1654,7 +1652,6 @@ function animate() {
       hoverCard.classList.add('hover-card-hidden');
     }
   }
-
   // --- UPDATE TIME & CONTROLS ---
   const elapsedTime = clock.getElapsedTime();
   if (controls && controls.enabled) controls.update();
@@ -1662,7 +1659,6 @@ function animate() {
   arcPaths.forEach(path => {
     if (path.material.isShaderMaterial) path.material.uniforms.time.value = elapsedTime;
   });
-
   // --- LABELS ---
   countryLabels.forEach(item => {
     const worldPosition = new THREE.Vector3();
@@ -1672,7 +1668,6 @@ function animate() {
     item.label.position.copy(labelPosition);
     item.label.lookAt(camera.position);
   });
-
   // --- CUBE MOTION ---
   const explosionStateMap = {
     'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded,
@@ -1691,7 +1686,6 @@ function animate() {
         }
       }
     });
-
     // --- SMALL NEURONAL LINES ---
     if (neuralNetworkLines && neuralNetworkLines.visible) {
       const vertices = [];
@@ -1721,18 +1715,14 @@ function animate() {
       neuralNetworkLines.geometry.attributes.position.needsUpdate = true;
       neuralNetworkLines.geometry.computeVertexNormals();
     }
-
     // --- MACRO SPAGHETTI WEB + GLOWING SKIN ---
- // --- MACRO SPAGHETTI WEB + GLOWING MEMBRANE ---
     drawMacroWebAndMembrane({
-  webColor: 0xff2222,
-  webOpacity: 0.33,
-  skinColor: 0xff2222,
-  skinOpacity: 0.45,
-  wireframeSkinOpacity: 0.16
-});
-
-
+      webColor: 0xff2222,
+      webOpacity: 0.33,
+      skinColor: 0xff2222,
+      skinOpacity: 0.45,
+      wireframeSkinOpacity: 0.16
+    });
     // Animate membrane mesh (both fill and wireframe)
     if (globeGroup.userData.macroMembraneSkin) {
       animateMembraneVertices(globeGroup.userData.macroMembraneSkin.geometry, clock.getElapsedTime(), 0.017, 1.24);
@@ -1741,6 +1731,9 @@ function animate() {
       animateMembraneVertices(globeGroup.userData.macroMembraneWire.geometry, clock.getElapsedTime(), 0.017, 1.24);
     }
   }
+  // --- ARC PARTICLE ANIMATION ---
+  const dt = clock.getDelta();
+  updateArcParticles(dt);
 
   // Always render!
   renderer.render(scene, camera);
