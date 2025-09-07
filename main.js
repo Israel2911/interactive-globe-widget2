@@ -1720,12 +1720,13 @@ function animate() {
     // --- MACRO SPAGHETTI WEB + GLOWING SKIN ---
  // --- MACRO SPAGHETTI WEB + GLOWING MEMBRANE ---
     drawMacroWebAndMembrane({
-      webColor: 0xff4444,
-      webOpacity: 0.09,
-      skinColor: 0xff3333,
-      skinOpacity: 0.21,
-      wireframeSkinOpacity: 0.04
-    });
+  webColor: 0xff2222,
+  webOpacity: 0.33,
+  skinColor: 0xff2222,
+  skinOpacity: 0.45,
+  wireframeSkinOpacity: 0.16
+});
+
 
     // Animate membrane mesh (both fill and wireframe)
     if (globeGroup.userData.macroMembraneSkin) {
