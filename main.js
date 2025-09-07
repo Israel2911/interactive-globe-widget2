@@ -987,7 +987,6 @@ function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
       }
   return cubeObject;
 }
-
 // Utility: Get the center-most subcube of a country’s cubes
 function getCenterSubCube(subCubeArray) {
   if (!subCubeArray || !subCubeArray.length) return null;
@@ -1004,12 +1003,12 @@ function getCenterSubCube(subCubeArray) {
   return best;
 }
 
-// Helper: Make a nice curved “spaghetti” arc between two points
+// Helper: Construct a visually thin spaghetti arc segment
 function createCurvedWebSegment(start, end, color = 0xff2222, opacity = 0.11) {
   const mid = start.clone().add(end).multiplyScalar(0.5)
     .normalize().multiplyScalar(start.length() + 0.13);
   const curve = new THREE.QuadraticBezierCurve3(start, mid, end);
-  const geometry = new THREE.TubeGeometry(curve, 32, 0.004, 8, false);  // <<-- much thinner!
+  const geometry = new THREE.TubeGeometry(curve, 32, 0.004, 8, false);  // <<-- super thin!
   const material = new THREE.MeshBasicMaterial({
     color,
     opacity,
@@ -1023,56 +1022,51 @@ function createCurvedWebSegment(start, end, color = 0xff2222, opacity = 0.11) {
   return mesh;
 }
 
-
-// Main macro web/spaghetti renderer
+// Main: Draw macro web + membrane
 function drawMacroWebAndMembrane(options = {}) {
   const {
-    webColor = 0xff0000,
-    webOpacity = 0.21,
-    skinColor = 0xff0000,
-    skinOpacity = 0.08,
-    wireframeSkinOpacity = 0.27
+    webColor = 0xff0000,         // spaghetti color
+    webOpacity = 0.11,           // very thin/faint
+    skinColor = 0xff0000,        // membrane color
+    skinOpacity = 0.18,          // main fill, up to taste
+    wireframeSkinOpacity = 0.06  // almost invisible outer lines
   } = options;
 
-  // 1. Acquire macro node anchors (center subcube of each country)
+  // Gather macro anchors in a visual loop (order matters for true "skinning")
   const anchors = [
     getCenterSubCube(europeSubCubes),
-    getCenterSubCube(newThailandSubCubes),
-    getCenterSubCube(canadaSubCubes),
     getCenterSubCube(ukSubCubes),
+    getCenterSubCube(canadaSubCubes),
     getCenterSubCube(usaSubCubes),
-    getCenterSubCube(indiaSubCubes),
+    getCenterSubCube(malaysiaSubCubes),
     getCenterSubCube(singaporeSubCubes),
-    getCenterSubCube(malaysiaSubCubes)
+    getCenterSubCube(newThailandSubCubes),
+    getCenterSubCube(indiaSubCubes),
+    getCenterSubCube(europeSubCubes) // close loop
   ].filter(Boolean);
 
-  // Remove previous web and membrane layers
-  if (globeGroup.userData.macroWebGroup) {
-    globeGroup.userData.macroWebGroup.children.forEach(c => {
-      c.geometry?.dispose && c.geometry.dispose();
-      c.material?.dispose && c.material.dispose();
-    });
-    globeGroup.remove(globeGroup.userData.macroWebGroup);
-    globeGroup.userData.macroWebGroup = null;
-  }
-  if (globeGroup.userData.macroMembraneSkin) {
-    globeGroup.userData.macroMembraneSkin.geometry?.dispose && globeGroup.userData.macroMembraneSkin.geometry.dispose();
-    globeGroup.userData.macroMembraneSkin.material?.dispose && globeGroup.userData.macroMembraneSkin.material.dispose();
-    globeGroup.remove(globeGroup.userData.macroMembraneSkin);
-    globeGroup.userData.macroMembraneSkin = null;
-  }
-  if (globeGroup.userData.macroMembraneWire) {
-    globeGroup.userData.macroMembraneWire.geometry?.dispose && globeGroup.userData.macroMembraneWire.geometry.dispose();
-    globeGroup.userData.macroMembraneWire.material?.dispose && globeGroup.userData.macroMembraneWire.material.dispose();
-    globeGroup.remove(globeGroup.userData.macroMembraneWire);
-    globeGroup.userData.macroMembraneWire = null;
-  }
+  // Clean up old
+  ["macroWebGroup", "macroMembraneSkin", "macroMembraneWire"].forEach(key => {
+    if (globeGroup.userData[key]) {
+      let obj = globeGroup.userData[key];
+      if (obj.type === "Group")
+        obj.children.forEach(c => {
+          c.geometry?.dispose && c.geometry.dispose();
+          c.material?.dispose && c.material.dispose();
+        });
+      obj.geometry?.dispose && obj.geometry.dispose();
+      obj.material?.dispose && obj.material.dispose();
+      globeGroup.remove(obj);
+      globeGroup.userData[key] = null;
+    }
+  });
 
-  // 2. Draw the bent red web arcs between each anchor pair
+  // Draw macro spaghetti arcs
   const webGroup = new THREE.Group();
-  for (let i = 0; i < anchors.length; i++) {
+  for (let i = 0; i < anchors.length - 1; i++) {
     const posA = anchors[i].getWorldPosition(new THREE.Vector3());
     for (let j = i + 1; j < anchors.length; j++) {
+      // Optionally, for ONLY perimeter, do: if (j === i+1)
       const posB = anchors[j].getWorldPosition(new THREE.Vector3());
       webGroup.add(createCurvedWebSegment(posA, posB, webColor, webOpacity));
     }
@@ -1080,12 +1074,11 @@ function drawMacroWebAndMembrane(options = {}) {
   globeGroup.userData.macroWebGroup = webGroup;
   globeGroup.add(webGroup);
 
-  // 3. Draw the glowing skin/membrane using a triangle fan (simple, always 8)
+  // Draw glowing membrane as polygon skin (triangles around the loop)
   if (anchors.length >= 4) {
     const positions = [];
-    const center = anchors[0].getWorldPosition(new THREE.Vector3());
     for (let i = 1; i < anchors.length - 1; i++) {
-      const a = center;
+      const a = anchors[0].getWorldPosition(new THREE.Vector3());
       const b = anchors[i].getWorldPosition(new THREE.Vector3());
       const c = anchors[i + 1].getWorldPosition(new THREE.Vector3());
       positions.push(...a.toArray(), ...b.toArray(), ...c.toArray());
@@ -1093,7 +1086,7 @@ function drawMacroWebAndMembrane(options = {}) {
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
 
-    // Glowing membrane sheet
+    // Membrane sheet
     const material = new THREE.MeshBasicMaterial({
       color: skinColor,
       transparent: true,
@@ -1105,7 +1098,7 @@ function drawMacroWebAndMembrane(options = {}) {
     globeGroup.add(mesh);
     globeGroup.userData.macroMembraneSkin = mesh;
 
-    // Optional: electric wireframe overlay
+    // Electric wireframe overlay (very faint for elegance)
     const wireMaterial = new THREE.MeshBasicMaterial({
       color: skinColor,
       opacity: wireframeSkinOpacity,
@@ -1118,6 +1111,7 @@ function drawMacroWebAndMembrane(options = {}) {
     globeGroup.userData.macroMembraneWire = wire;
   }
 }
+
 
 
 
@@ -1593,7 +1587,7 @@ function updateArcParticles(dt) {
     p.material.opacity = 0.35 + 0.65 * Math.sin(ud.t * Math.PI);
   }
 }
-
+  // --- animation
 function animate() {
   requestAnimationFrame(animate);
 
@@ -1702,13 +1696,14 @@ function animate() {
     }
 
     // --- MACRO SPAGHETTI WEB + GLOWING SKIN ---
-   drawMacroWebAndMembrane({
-  webColor: 0xff0000,
-  webOpacity: 0.20,
-  skinColor: 0xff0000,
-  skinOpacity: 0.19,        // ← Try 0.18–0.22 for clear first
-  wireframeSkinOpacity: 0.27
+drawMacroWebAndMembrane({
+  webColor: 0xff4444,           // soft but visible red arcs
+  webOpacity: 0.08,             // faint
+  skinColor: 0xff3333,          // lively, elegant fill
+  skinOpacity: 0.22,            // adjust for theme/contrast
+  wireframeSkinOpacity: 0.055   // subtle outer perimeter
 });
+
 
   }
 
