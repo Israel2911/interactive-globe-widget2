@@ -1062,7 +1062,6 @@ function drawMacroWebAndMembrane(options = {}) {
     }
   });
 
-  // Draw macro spaghetti arcs
 function drawMacroWebAndMembrane(options = {}) {
   const {
     webColor = 0xff0000,
@@ -1072,7 +1071,10 @@ function drawMacroWebAndMembrane(options = {}) {
     wireframeSkinOpacity = 0.05
   } = options;
 
-  // Put macro cube anchors in a visually-ordered loop; adjust the order as needed for your globe
+  // Defensive: Ensure globeGroup and userData exist
+  if (!window.globeGroup || !globeGroup.userData) return;
+
+  // Get macro cube anchors with .filter(Boolean) for safety
   const anchors = [
     getCenterSubCube(europeSubCubes),
     getCenterSubCube(ukSubCubes),
@@ -1085,33 +1087,39 @@ function drawMacroWebAndMembrane(options = {}) {
     getCenterSubCube(europeSubCubes)
   ].filter(Boolean);
 
-  // Remove previous mesh groups
+  // Remove previous mesh groups, idempotent
   ["macroWebGroup", "macroMembraneSkin", "macroMembraneWire"].forEach(key => {
-    if (globeGroup.userData[key]) {
-      let obj = globeGroup.userData[key];
-      if (obj.type === "Group")
-        obj.children.forEach(c => {
-          c.geometry?.dispose && c.geometry.dispose();
-          c.material?.dispose && c.material.dispose();
-        });
-      obj.geometry?.dispose && obj.geometry.dispose();
-      obj.material?.dispose && obj.material.dispose();
-      globeGroup.remove(obj);
+    const obj = globeGroup.userData[key];
+    if (obj) {
+      try {
+        if (obj.type === "Group")
+          obj.children.forEach(c => {
+            c.geometry?.dispose && c.geometry.dispose();
+            c.material?.dispose && c.material.dispose();
+          });
+        obj.geometry?.dispose && obj.geometry.dispose();
+        obj.material?.dispose && obj.material.dispose();
+        globeGroup.remove(obj);
+      } catch(e) {
+        console.warn('Cleanup failed on', key, e);
+      }
       globeGroup.userData[key] = null;
     }
   });
 
-  // Macro spaghetti arcs
-  const webGroup = new THREE.Group();
-  for (let i = 0; i < anchors.length - 1; i++) {
-    const posA = anchors[i].getWorldPosition(new THREE.Vector3());
-    for (let j = i + 1; j < anchors.length; j++) {
-      const posB = anchors[j].getWorldPosition(new THREE.Vector3());
-      webGroup.add(createCurvedWebSegment(posA, posB, webColor, webOpacity));
+  // Draw macro spaghetti arcs as thin tubes
+  if (anchors.length >= 2) {
+    const webGroup = new THREE.Group();
+    for (let i = 0; i < anchors.length - 1; i++) {
+      const posA = anchors[i].getWorldPosition(new THREE.Vector3());
+      for (let j = i + 1; j < anchors.length; j++) {
+        const posB = anchors[j].getWorldPosition(new THREE.Vector3());
+        webGroup.add(createCurvedWebSegment(posA, posB, webColor, webOpacity));
+      }
     }
+    globeGroup.userData.macroWebGroup = webGroup;
+    globeGroup.add(webGroup);
   }
-  globeGroup.userData.macroWebGroup = webGroup;
-  globeGroup.add(webGroup);
 
   // Animated membrane fan ("skin" between anchors)
   if (anchors.length >= 4) {
@@ -1127,7 +1135,6 @@ function drawMacroWebAndMembrane(options = {}) {
     // Store original positions for animation
     geometry.userData.base = positions.slice();
 
-    // Glowing animated membrane
     const material = new THREE.MeshBasicMaterial({
       color: skinColor,
       transparent: true,
@@ -1139,7 +1146,6 @@ function drawMacroWebAndMembrane(options = {}) {
     globeGroup.add(mesh);
     globeGroup.userData.macroMembraneSkin = mesh;
 
-    // Electric wire overlay
     const wireMaterial = new THREE.MeshBasicMaterial({
       color: skinColor,
       opacity: wireframeSkinOpacity,
@@ -1152,13 +1158,12 @@ function drawMacroWebAndMembrane(options = {}) {
     globeGroup.userData.macroMembraneWire = wire;
   }
 }
+
 function animateMembraneVertices(geometry, time, amplitude = 0.02, frequency = 1.3) {
-  // Use original positions stored in userData.base for correct animation
+  if (!geometry || !geometry.userData || !geometry.userData.base) return;
   const base = geometry.userData.base;
-  if (!base) return; // If not available, skip (not animated/fresh build)
   const posAttr = geometry.attributes.position;
   for (let i = 0; i < posAttr.count; i++) {
-    // use base slice for original geometry
     let x = base[i * 3];
     let y = base[i * 3 + 1];
     let z = base[i * 3 + 2];
