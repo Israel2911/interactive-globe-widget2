@@ -1049,11 +1049,12 @@ function getCenterSubCube(subCubeArray) {
 
 
 
-// Make sure you have ConvexGeometry available from THREE examples! (see instructions below)
 function drawCountryConvexMembrane(color = 0xff0000, opacity = 0.35) {
   const anchors = [
     europeCube, newThailandCube, canadaCube, ukCube, usaCube, indiaCube, singaporeCube, malaysiaCube
   ].filter(Boolean);
+
+  if (anchors.length < 4) return; // Convex hull needs 4+ points, otherwise skip (prevents crash)
 
   // Remove old membrane if exists
   if (globeGroup.userData.countryConvexMembrane) {
@@ -1062,23 +1063,23 @@ function drawCountryConvexMembrane(color = 0xff0000, opacity = 0.35) {
     if (globeGroup.userData.countryConvexMembrane.material) globeGroup.userData.countryConvexMembrane.material.dispose();
     globeGroup.userData.countryConvexMembrane = null;
   }
-
-  // === THIS IS THE LINE: "arrayOfVector3s" is below ===
-  const positions = anchors.map(cube => cube.getWorldPosition(new THREE.Vector3())); // <-- array of 8 country cube centers
-  const geometry = new THREE.ConvexGeometry(positions);
-
-  const material = new THREE.MeshBasicMaterial({
-    color,
-    transparent: true,
-    opacity,
-    side: THREE.DoubleSide,
-    blending: THREE.NormalBlending,
-    depthWrite: false
-  });
-
-  const mesh = new THREE.Mesh(geometry, material);
-  globeGroup.userData.countryConvexMembrane = mesh;
-  globeGroup.add(mesh);
+  const positions = anchors.map(cube => cube.getWorldPosition(new THREE.Vector3()));
+  try {
+    const geometry = new THREE.ConvexGeometry(positions);
+    const material = new THREE.MeshBasicMaterial({
+      color,
+      transparent: true,
+      opacity,
+      side: THREE.DoubleSide,
+      blending: THREE.NormalBlending,
+      depthWrite: false
+    });
+    const mesh = new THREE.Mesh(geometry, material);
+    globeGroup.userData.countryConvexMembrane = mesh;
+    globeGroup.add(mesh);
+  } catch (e) {
+    console.error('❌ ConvexGeometry creation failed:', e, positions);
+  }
 }
 
 
