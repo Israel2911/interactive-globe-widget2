@@ -1701,13 +1701,14 @@ function animate() {
     }
 
     // --- MACRO SPAGHETTI WEB + GLOWING SKIN ---
-    drawMacroWebAndMembrane({
-      webColor: 0xff0000,
-      webOpacity: 0.20,
-      skinColor: 0xff0000,
-      skinOpacity: 0.08,
-      wireframeSkinOpacity: 0.18
-    });
+   drawMacroWebAndMembrane({
+  webColor: 0xff0000,
+  webOpacity: 0.20,
+  skinColor: 0xff0000,
+  skinOpacity: 0.19,        // ← Try 0.18–0.22 for clear first
+  wireframeSkinOpacity: 0.27
+});
+
   }
 
   renderer.render(scene, camera);
