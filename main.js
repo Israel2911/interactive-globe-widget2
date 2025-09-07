@@ -1060,9 +1060,8 @@ function drawCountryNeuralMembraneCountryCubes(color = 0xff0000, opacity = 0.85)
   }
 
   const vertices = [];
-  const maxDist = 2.5; // bump up if needed for large spread
+  const maxDist = 2.5;
   const connectionsPerCube = 3;
-
   for (let i = 0; i < mainCountryCubes.length; i++) {
     if (!mainCountryCubes[i].visible) continue;
     let neighbors = [];
@@ -1085,27 +1084,26 @@ function drawCountryNeuralMembraneCountryCubes(color = 0xff0000, opacity = 0.85)
       }
     }
   }
-  
+
   if (vertices.length > 0) {
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-    // ----- MATERIAL BLOCK START -----
     const material = new THREE.MeshBasicMaterial({
       color,
       side: THREE.DoubleSide,
       transparent: true,
-      opacity: 0.4,                // Or as preferred
+      opacity: 0.4,                // Or adjust as preferred
       blending: THREE.NormalBlending,
       depthWrite: false,
       depthTest: true,
-      wireframe: true              // <<--- TRIANGULAR EDGE LOOK
+      wireframe: true              // <<--- Triangular edge look
     });
-    // ----- MATERIAL BLOCK END -----
     const mesh = new THREE.Mesh(geometry, material);
     globeGroup.userData.countryNeuralMembrane = mesh;
     globeGroup.add(mesh);
   }
 }
+
 
 
 
