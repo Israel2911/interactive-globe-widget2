@@ -1105,36 +1105,37 @@ function drawCountryNeuralMembraneCountryCubes(color = 0xff0000, opacity = 0.85)
 }
 
 
-function drawCountryCurvedMembrane(color = 0xff0000, opacity = 0.5) {
-  // (reference the 8 country cubes just as before)
+// Make sure you have ConvexGeometry available from THREE examples! (see instructions below)
+function drawCountryConvexMembrane(color = 0xff0000, opacity = 0.35) {
   const anchors = [
     europeCube, newThailandCube, canadaCube, ukCube, usaCube, indiaCube, singaporeCube, malaysiaCube
   ].filter(Boolean);
 
-  // Remove existing mesh/group
-  if (globeGroup.userData.countryCurvedMembrane) {
-    globeGroup.remove(globeGroup.userData.countryCurvedMembrane);
-    globeGroup.userData.countryCurvedMembrane.children?.forEach(c => {
-      c.geometry.dispose();
-      c.material.dispose();
-    });
-    globeGroup.userData.countryCurvedMembrane = null;
+  // Remove old membrane if exists
+  if (globeGroup.userData.countryConvexMembrane) {
+    globeGroup.remove(globeGroup.userData.countryConvexMembrane);
+    if (globeGroup.userData.countryConvexMembrane.geometry) globeGroup.userData.countryConvexMembrane.geometry.dispose();
+    if (globeGroup.userData.countryConvexMembrane.material) globeGroup.userData.countryConvexMembrane.material.dispose();
+    globeGroup.userData.countryConvexMembrane = null;
   }
 
-  // Create a new group for all curved segments
-  const group = new THREE.Group();
+  // Get all macro cube world positions
+  const positions = anchors.map(cube => cube.getWorldPosition(new THREE.Vector3()));
+  // Requires ConvexGeometry!
+  const geometry = new THREE.ConvexGeometry(positions);
 
-  for (let i = 0; i < anchors.length; i++) {
-    const posA = anchors[i].getWorldPosition(new THREE.Vector3());
-    for (let j = i+1; j < anchors.length; j++) {
-      const posB = anchors[j].getWorldPosition(new THREE.Vector3());
-      // Use your createCurvedWebSegment helper:
-      const arch = createCurvedWebSegment(posA, posB, color, opacity);
-      group.add(arch);
-    }
-  }
-  globeGroup.userData.countryCurvedMembrane = group;
-  globeGroup.add(group);
+  const material = new THREE.MeshBasicMaterial({
+    color,
+    transparent: true,
+    opacity,
+    side: THREE.DoubleSide,
+    blending: THREE.NormalBlending,
+    depthWrite: false
+  });
+
+  const mesh = new THREE.Mesh(geometry, material);
+  globeGroup.userData.countryConvexMembrane = mesh;
+  globeGroup.add(mesh);
 }
 
 
@@ -1741,8 +1742,7 @@ function animate() {
     }
 
     // 2. MACRO COUNTRY CURVED MEMBRANE (NEW!)
-    drawCountryCurvedMembrane(0xff0000, 0.22); // color and opacity as desired
-  }
+  drawCountryConvexMembrane(0xff0000, 0.35); // tweak opacity as desired!
 
   // --- MAIN RENDER ---
   renderer.render(scene, camera);
