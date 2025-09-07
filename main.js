@@ -260,21 +260,90 @@ function hideInfoPanel() {
   document.getElementById('infoPanelOverlay').style.display = 'none';
 }
 
-// This function sets up the HTML and CSS for the panel when the page loads.
 function addInfoPanelStyles() {
   const style = document.createElement('style');
-  // Using the same CSS you already had
   style.textContent = `
-    #infoPanelOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center; }
-    .info-panel { background: white; padding: 20px; border-radius: 10px; max-width: 600px; max-height: 80vh; overflow-y: auto; }
-    .partner-cta { padding: 8px 16px; margin: 5px; border: none; border-radius: 5px; background: #007bff; color: white; cursor: pointer; }
-    .partner-cta.disabled { background: #ccc; cursor: not-allowed; }
-    .partner-cta:hover:not(.disabled) { background: #0056b3; }
-    .subcard { border: 1px solid #ddd; padding: 10px; margin: 10px 0; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; }
-    .subcard-info h4 { margin: 0; }
-    .main-card-details { display: flex; align-items: center; margin-bottom: 15px; }
-    .main-card-details img { width: 60px; height: 60px; margin-right: 15px; border-radius: 5px; }
-    .main-card-details h3 { margin: 0; font-size: 24px; }
+    #infoPanelOverlay {
+      display: none;
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(16, 25, 36, 0.82);
+      z-index: 10000;
+      justify-content: center; align-items: center;
+    }
+    .info-panel {
+      background: #22356a;
+      border-radius: 16px;
+      padding: 32px 34px 18px 34px;
+      min-width: 340px; max-width: 470px; max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 8px 32px #000c;
+      position: relative;
+    }
+    .info-panel h3 {
+      color: #fff;
+      font-weight: 800;
+      font-size: 1.38em;
+      margin-bottom: 19px;
+      margin-top: 0;
+      letter-spacing: 0.01em;
+    }
+    .info-panel .subcard {
+      background: #f6f7fa;
+      border-radius: 11px;
+      margin: 16px 0;
+      padding: 17px 16px 12px 16px;
+      box-shadow: 0 1px 6px #0001;
+      border: 1.5px solid #e2e7f1;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .info-panel .subcard-info h4 {
+      color: #28314a;
+      font-size: 1.11em;
+      font-weight: 700;
+      margin: 0 0 9px 0;
+      letter-spacing: 0.01em;
+      text-align: left;
+    }
+    .info-panel .partner-cta {
+      background: #0860f2;
+      color: #fff;
+      font-weight: 600;
+      border-radius: 7px;
+      border: none;
+      padding: 12px 28px;
+      margin-right: 14px;
+      margin-top: 7px;
+      min-width: 112px;
+      font-size: 1.01em;
+      cursor: pointer;
+      box-shadow: 0 2px 6px #0031;
+      transition: background 0.15s, box-shadow 0.12s;
+    }
+    .info-panel .partner-cta:hover:not(:disabled) {
+      background: #093fb9;
+      box-shadow: 0 3px 11px #0035;
+    }
+    .info-panel .partner-cta:disabled {
+      background: #c1cadb; color: #7e8392;
+      cursor: not-allowed;
+    }
+    .main-card-details {
+      display: flex; align-items: center; margin-bottom: 14px;
+    }
+    .main-card-details img { width: 52px; height: 52px; margin-right: 18px; border-radius: 7px; }
+    .main-card-details h3 { margin: 0; font-size: 1.21em; }
+    .info-panel .main-card-actions { margin-bottom: 8px; }
+    .info-panel button[onclick="hideInfoPanel()"] {
+      background: #fff; color: #22356a; font-weight: 700; border: none;
+      border-radius: 8px; box-shadow: 0 1px 4px #0001;
+      margin-top: 19px; padding: 10px 24px; font-size: 1em;
+      cursor: pointer;
+    }
+    .info-panel button[onclick="hideInfoPanel()"]:hover {
+      background: #e9ecf2;
+    }
   `;
   document.head.appendChild(style);
 
