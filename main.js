@@ -1252,30 +1252,49 @@ function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
   return path;
 }
 
-
 function animateArcParticles(arc) {
   const curve = arc.userData.curve;
-  if (!curve) {
-    console.log('Arc curve not found!');
-    return;
-  }
-  const particleCount = 5;
+  if (!curve) return;
+  const particleCount = 6;
   const speed = 0.5;
   for (let i = 0; i < particleCount; i++) {
     const particle = new THREE.Mesh(
-      new THREE.SphereGeometry(0.01, 8, 8),
-      new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.7 })
+      new THREE.BoxGeometry(0.018, 0.018, 0.018),
+      new THREE.MeshBasicMaterial({ color: 0xffff00, transparent: true, opacity: 0.8 })
     );
-    console.log('Adding particle', i, 'to arc:', arc); // <-- log
+
+    // Add a floating label (numbered)
+    const labelSprite = createBillboardLabel((i + 1).toString());
+    particle.add(labelSprite);
+    labelSprite.position.set(0, 0.03, 0);
+
     particle.userData = {
-      t: Math.random(),
+      t: (i / particleCount), // distribute along curve
       speed: speed * (0.8 + Math.random() * 0.4),
       curve: curve
     };
-    // Make sure the scene variable is correct!
     scene.add(particle);
     arcParticles.push(particle);
   }
+}
+
+function createBillboardLabel(text) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 128; canvas.height = 64;
+  const ctx = canvas.getContext('2d');
+  ctx.font = 'bold 34px Arial';
+  ctx.fillStyle = 'rgba(30,30,30,0.86)';
+  ctx.fillRect(0, 0, 128, 64);
+  ctx.fillStyle = '#fff400';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, 64, 35);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.needsUpdate = true;
+  const mat = new THREE.SpriteMaterial({ map: texture, transparent: true });
+  const sprite = new THREE.Sprite(mat);
+  sprite.scale.set(0.09, 0.045, 1);
+  return sprite;
 }
 
 
