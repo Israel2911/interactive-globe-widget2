@@ -1005,11 +1005,11 @@ function getCenterSubCube(subCubeArray) {
 }
 
 // Helper: Make a nice curved “spaghetti” arc between two points
-function createCurvedWebSegment(start, end, color = 0xff2222, opacity = 0.22) {
+function createCurvedWebSegment(start, end, color = 0xff2222, opacity = 0.11) {
   const mid = start.clone().add(end).multiplyScalar(0.5)
     .normalize().multiplyScalar(start.length() + 0.13);
   const curve = new THREE.QuadraticBezierCurve3(start, mid, end);
-  const geometry = new THREE.TubeGeometry(curve, 32, 0.012, 12, false);
+  const geometry = new THREE.TubeGeometry(curve, 32, 0.004, 8, false);  // <<-- much thinner!
   const material = new THREE.MeshBasicMaterial({
     color,
     opacity,
@@ -1022,6 +1022,7 @@ function createCurvedWebSegment(start, end, color = 0xff2222, opacity = 0.22) {
   mesh.renderOrder = 1000;
   return mesh;
 }
+
 
 // Main macro web/spaghetti renderer
 function drawMacroWebAndMembrane(options = {}) {
