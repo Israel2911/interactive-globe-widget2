@@ -1050,21 +1050,33 @@ function getCenterSubCube(subCubeArray) {
 
 
 function drawCountryConvexMembrane(color = 0xff0000, opacity = 0.35) {
+  // Get one subcube (center most) for each country as an anchor
   const anchors = [
-    europeCube, newThailandCube, canadaCube, ukCube, usaCube, indiaCube, singaporeCube, malaysiaCube
+    getCenterSubCube(europeSubCubes),
+    getCenterSubCube(newThailandSubCubes),
+    getCenterSubCube(canadaSubCubes),
+    getCenterSubCube(ukSubCubes),
+    getCenterSubCube(usaSubCubes),
+    getCenterSubCube(indiaSubCubes),
+    getCenterSubCube(singaporeSubCubes),
+    getCenterSubCube(malaysiaSubCubes),
   ].filter(Boolean);
 
-  if (anchors.length < 4) return; // Convex hull needs 4+ points, otherwise skip (prevents crash)
+  if (anchors.length < 4) {
+    // Not enough anchors to form a convex hull
+    console.warn('Convex membrane: not enough center anchors:', anchors.length, anchors);
+    return;
+  }
 
-  // Remove old membrane if exists
   if (globeGroup.userData.countryConvexMembrane) {
     globeGroup.remove(globeGroup.userData.countryConvexMembrane);
     if (globeGroup.userData.countryConvexMembrane.geometry) globeGroup.userData.countryConvexMembrane.geometry.dispose();
     if (globeGroup.userData.countryConvexMembrane.material) globeGroup.userData.countryConvexMembrane.material.dispose();
     globeGroup.userData.countryConvexMembrane = null;
   }
-  const positions = anchors.map(cube => cube.getWorldPosition(new THREE.Vector3()));
+
   try {
+    const positions = anchors.map(cube => cube.getWorldPosition(new THREE.Vector3()));
     const geometry = new THREE.ConvexGeometry(positions);
     const material = new THREE.MeshBasicMaterial({
       color,
@@ -1078,7 +1090,7 @@ function drawCountryConvexMembrane(color = 0xff0000, opacity = 0.35) {
     globeGroup.userData.countryConvexMembrane = mesh;
     globeGroup.add(mesh);
   } catch (e) {
-    console.error('❌ ConvexGeometry creation failed:', e, positions);
+    console.error('❌ Convex membrane error:', e, anchors);
   }
 }
 
