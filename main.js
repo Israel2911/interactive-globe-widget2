@@ -1617,21 +1617,27 @@ function updateArcParticles(dt) {
 function animate() {
   // Main animation frame request
   requestAnimationFrame(animate);
+
   // --- TIME CONTROL ---
-  const dt = clock.getDelta();             // Delta time: use for particle motion, tweens, etc.
+  const dt = clock.getDelta();
   const elapsedTime = clock.getElapsedTime();
+
   // --- INPUT CONTROLS ---
   if (controls && controls.enabled) controls.update();
+
   // --- ANIMATION LIBRARIES (TWEEN) ---
   if (typeof TWEEN !== 'undefined') TWEEN.update();
+
   // --- ARC ANIMATION SHADERS ---
   arcPaths.forEach(path => {
     if (path.material.isShaderMaterial) {
       path.material.uniforms.time.value = elapsedTime;
     }
   });
+
   // --- ARC PARTICLE MOTION (NEW!) ---
   updateArcParticles(dt);
+
   // --- HOVER CARD LOGIC ---
   if (hoverCard) {
     raycaster.setFromCamera(mouse, camera);
@@ -1669,6 +1675,7 @@ function animate() {
       hoverCard.classList.add('hover-card-hidden');
     }
   }
+
   // --- LABEL POSITION UPDATES ---
   countryLabels.forEach(item => {
     const worldPosition = new THREE.Vector3();
@@ -1678,6 +1685,7 @@ function animate() {
     item.label.position.copy(labelPosition);
     item.label.lookAt(camera.position);
   });
+
   // --- CUBE PHYSICS / MOTION ---
   const explosionStateMap = {
     'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded,
@@ -1697,6 +1705,7 @@ function animate() {
         }
       }
     });
+
     // --- 3D MEMBRANE ("neural network lines") ---
     // 1. Small neuronal web - original code:
     if (neuralNetworkLines && neuralNetworkLines.visible) {
@@ -1730,9 +1739,11 @@ function animate() {
       neuralNetworkLines.geometry.attributes.position.needsUpdate = true;
       neuralNetworkLines.geometry.computeVertexNormals();
     }
-    // 2. MACRO COUNTRY MEMBRANE - new code:
-    drawCountryNeuralMembraneCountryCubes(0xff0000, 1.0);
+
+    // 2. MACRO COUNTRY CURVED MEMBRANE (NEW!)
+    drawCountryCurvedMembrane(0xff0000, 0.22); // color and opacity as desired
   }
+
   // --- MAIN RENDER ---
   renderer.render(scene, camera);
 }
