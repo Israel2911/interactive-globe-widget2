@@ -1022,18 +1022,19 @@ function createCurvedWebSegment(start, end, color = 0xff2222, opacity = 0.11) {
   return mesh;
 }
 
-
-// Main: Draw macro web + membrane
 function drawMacroWebAndMembrane(options = {}) {
   const {
-    webColor = 0xff0000,         // spaghetti color
-    webOpacity = 0.11,           // very thin/faint
-    skinColor = 0xff0000,        // membrane color
-    skinOpacity = 0.18,          // main fill, up to taste
-    wireframeSkinOpacity = 0.06  // almost invisible outer lines
+    webColor = 0xff0000,
+    webOpacity = 0.11,
+    skinColor = 0xff0000,
+    skinOpacity = 0.18,
+    wireframeSkinOpacity = 0.06
   } = options;
 
-  // Gather macro anchors in a visual loop (order matters for true "skinning")
+  // Defensive: Ensure globeGroup and userData exist
+  if (!window.globeGroup || !globeGroup.userData) return;
+
+  // Gather macro anchors in a visually-ordered loop
   const anchors = [
     getCenterSubCube(europeSubCubes),
     getCenterSubCube(ukSubCubes),
@@ -1047,47 +1048,6 @@ function drawMacroWebAndMembrane(options = {}) {
   ].filter(Boolean);
 
   // Clean up old
-  ["macroWebGroup", "macroMembraneSkin", "macroMembraneWire"].forEach(key => {
-    if (globeGroup.userData[key]) {
-      let obj = globeGroup.userData[key];
-      if (obj.type === "Group")
-        obj.children.forEach(c => {
-          c.geometry?.dispose && c.geometry.dispose();
-          c.material?.dispose && c.material.dispose();
-        });
-      obj.geometry?.dispose && obj.geometry.dispose();
-      obj.material?.dispose && obj.material.dispose();
-      globeGroup.remove(obj);
-      globeGroup.userData[key] = null;
-    }
-  });
-
-function drawMacroWebAndMembrane(options = {}) {
-  const {
-    webColor = 0xff0000,
-    webOpacity = 0.11,
-    skinColor = 0xff0000,
-    skinOpacity = 0.20,
-    wireframeSkinOpacity = 0.05
-  } = options;
-
-  // Defensive: Ensure globeGroup and userData exist
-  if (!window.globeGroup || !globeGroup.userData) return;
-
-  // Get macro cube anchors with .filter(Boolean) for safety
-  const anchors = [
-    getCenterSubCube(europeSubCubes),
-    getCenterSubCube(ukSubCubes),
-    getCenterSubCube(canadaSubCubes),
-    getCenterSubCube(usaSubCubes),
-    getCenterSubCube(malaysiaSubCubes),
-    getCenterSubCube(singaporeSubCubes),
-    getCenterSubCube(newThailandSubCubes),
-    getCenterSubCube(indiaSubCubes),
-    getCenterSubCube(europeSubCubes)
-  ].filter(Boolean);
-
-  // Remove previous mesh groups, idempotent
   ["macroWebGroup", "macroMembraneSkin", "macroMembraneWire"].forEach(key => {
     const obj = globeGroup.userData[key];
     if (obj) {
@@ -1132,9 +1092,9 @@ function drawMacroWebAndMembrane(options = {}) {
     }
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-    // Store original positions for animation
     geometry.userData.base = positions.slice();
 
+    // Glowing animated membrane
     const material = new THREE.MeshBasicMaterial({
       color: skinColor,
       transparent: true,
@@ -1146,6 +1106,7 @@ function drawMacroWebAndMembrane(options = {}) {
     globeGroup.add(mesh);
     globeGroup.userData.macroMembraneSkin = mesh;
 
+    // Faint wireframe overlay
     const wireMaterial = new THREE.MeshBasicMaterial({
       color: skinColor,
       opacity: wireframeSkinOpacity,
@@ -1158,7 +1119,6 @@ function drawMacroWebAndMembrane(options = {}) {
     globeGroup.userData.macroMembraneWire = wire;
   }
 }
-
 function animateMembraneVertices(geometry, time, amplitude = 0.02, frequency = 1.3) {
   if (!geometry || !geometry.userData || !geometry.userData.base) return;
   const base = geometry.userData.base;
@@ -1172,6 +1132,7 @@ function animateMembraneVertices(geometry, time, amplitude = 0.02, frequency = 1
   }
   posAttr.needsUpdate = true;
 }
+
 
 
 
