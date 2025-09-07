@@ -988,51 +988,9 @@ function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
   return cubeObject;
 }
 
-function createCurvedWebSegment(start, end, color = 0xff2222, opacity = 0.22) {
-  // Calculate a lifted midpoint for a soft curve
-  const mid = start.clone().add(end).multiplyScalar(0.5)
-              .normalize().multiplyScalar(start.length() + 0.13);
-  const curve = new THREE.QuadraticBezierCurve3(start, mid, end);
-  // Thin tube, not visually overpowering—tweak as desired
-  const geometry = new THREE.TubeGeometry(curve, 16, 0.006, 8, false);
-  const material = new THREE.MeshBasicMaterial({
-    color,
-    opacity,
-    transparent: true,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false
-  });
-  const mesh = new THREE.Mesh(geometry, material);
-  mesh.renderOrder = 1000;
-  return mesh;
-}
-
-
-function drawCountryAnchorMembrane(anchorSubCubes, color = 0xff2222, opacity = 0.18) {
-  if (globeGroup.userData.countryAnchorMembrane) {
-    globeGroup.userData.countryAnchorMembrane.children.forEach(c => {
-      c.geometry.dispose();
-      c.material.dispose();
-    });
-    globeGroup.remove(globeGroup.userData.countryAnchorMembrane);
-    globeGroup.userData.countryAnchorMembrane = null;
-  }
-  const webGroup = new THREE.Group();
-  for (let i = 0; i < anchorSubCubes.length; i++) {
-    const posA = anchorSubCubes[i].getWorldPosition(new THREE.Vector3());
-    for (let j = i+1; j < anchorSubCubes.length; j++) {
-      const posB = anchorSubCubes[j].getWorldPosition(new THREE.Vector3());
-      const arch = createCurvedWebSegment(posA, posB, color, opacity);
-      webGroup.add(arch);
-    }
-  }
-  globeGroup.userData.countryAnchorMembrane = webGroup;
-  globeGroup.add(webGroup);
-}
-
-
+// Utility: Get the center-most subcube of a country’s cubes
 function getCenterSubCube(subCubeArray) {
-  if (!subCubeArray.length) return null;
+  if (!subCubeArray || !subCubeArray.length) return null;
   const centroid = subCubeArray.reduce(
     (acc, sub) => acc.add(sub.getWorldPosition(new THREE.Vector3())),
     new THREE.Vector3()
@@ -1046,11 +1004,36 @@ function getCenterSubCube(subCubeArray) {
   return best;
 }
 
+// Helper: Make a nice curved “spaghetti” arc between two points
+function createCurvedWebSegment(start, end, color = 0xff2222, opacity = 0.22) {
+  const mid = start.clone().add(end).multiplyScalar(0.5)
+    .normalize().multiplyScalar(start.length() + 0.13);
+  const curve = new THREE.QuadraticBezierCurve3(start, mid, end);
+  const geometry = new THREE.TubeGeometry(curve, 32, 0.012, 12, false);
+  const material = new THREE.MeshBasicMaterial({
+    color,
+    opacity,
+    transparent: true,
+    blending: THREE.NormalBlending,
+    depthWrite: false,
+    depthTest: false
+  });
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.renderOrder = 1000;
+  return mesh;
+}
 
+// Main macro web/spaghetti renderer
+function drawMacroWebAndMembrane(options = {}) {
+  const {
+    webColor = 0xff0000,
+    webOpacity = 0.21,
+    skinColor = 0xff0000,
+    skinOpacity = 0.08,
+    wireframeSkinOpacity = 0.27
+  } = options;
 
-
-function drawCountryConvexMembrane(color = 0xff0000, opacity = 0.35) {
-  // Get one subcube (center most) for each country as an anchor
+  // 1. Acquire macro node anchors (center subcube of each country)
   const anchors = [
     getCenterSubCube(europeSubCubes),
     getCenterSubCube(newThailandSubCubes),
@@ -1059,42 +1042,81 @@ function drawCountryConvexMembrane(color = 0xff0000, opacity = 0.35) {
     getCenterSubCube(usaSubCubes),
     getCenterSubCube(indiaSubCubes),
     getCenterSubCube(singaporeSubCubes),
-    getCenterSubCube(malaysiaSubCubes),
+    getCenterSubCube(malaysiaSubCubes)
   ].filter(Boolean);
 
-  if (anchors.length < 4) {
-    // Not enough anchors to form a convex hull
-    console.warn('Convex membrane: not enough center anchors:', anchors.length, anchors);
-    return;
+  // Remove previous web and membrane layers
+  if (globeGroup.userData.macroWebGroup) {
+    globeGroup.userData.macroWebGroup.children.forEach(c => {
+      c.geometry?.dispose && c.geometry.dispose();
+      c.material?.dispose && c.material.dispose();
+    });
+    globeGroup.remove(globeGroup.userData.macroWebGroup);
+    globeGroup.userData.macroWebGroup = null;
+  }
+  if (globeGroup.userData.macroMembraneSkin) {
+    globeGroup.userData.macroMembraneSkin.geometry?.dispose && globeGroup.userData.macroMembraneSkin.geometry.dispose();
+    globeGroup.userData.macroMembraneSkin.material?.dispose && globeGroup.userData.macroMembraneSkin.material.dispose();
+    globeGroup.remove(globeGroup.userData.macroMembraneSkin);
+    globeGroup.userData.macroMembraneSkin = null;
+  }
+  if (globeGroup.userData.macroMembraneWire) {
+    globeGroup.userData.macroMembraneWire.geometry?.dispose && globeGroup.userData.macroMembraneWire.geometry.dispose();
+    globeGroup.userData.macroMembraneWire.material?.dispose && globeGroup.userData.macroMembraneWire.material.dispose();
+    globeGroup.remove(globeGroup.userData.macroMembraneWire);
+    globeGroup.userData.macroMembraneWire = null;
   }
 
-  if (globeGroup.userData.countryConvexMembrane) {
-    globeGroup.remove(globeGroup.userData.countryConvexMembrane);
-    if (globeGroup.userData.countryConvexMembrane.geometry) globeGroup.userData.countryConvexMembrane.geometry.dispose();
-    if (globeGroup.userData.countryConvexMembrane.material) globeGroup.userData.countryConvexMembrane.material.dispose();
-    globeGroup.userData.countryConvexMembrane = null;
+  // 2. Draw the bent red web arcs between each anchor pair
+  const webGroup = new THREE.Group();
+  for (let i = 0; i < anchors.length; i++) {
+    const posA = anchors[i].getWorldPosition(new THREE.Vector3());
+    for (let j = i + 1; j < anchors.length; j++) {
+      const posB = anchors[j].getWorldPosition(new THREE.Vector3());
+      webGroup.add(createCurvedWebSegment(posA, posB, webColor, webOpacity));
+    }
   }
+  globeGroup.userData.macroWebGroup = webGroup;
+  globeGroup.add(webGroup);
 
-  try {
-    const positions = anchors.map(cube => cube.getWorldPosition(new THREE.Vector3()));
-    const geometry = new THREE.ConvexGeometry(positions);
+  // 3. Draw the glowing skin/membrane using a triangle fan (simple, always 8)
+  if (anchors.length >= 4) {
+    const positions = [];
+    const center = anchors[0].getWorldPosition(new THREE.Vector3());
+    for (let i = 1; i < anchors.length - 1; i++) {
+      const a = center;
+      const b = anchors[i].getWorldPosition(new THREE.Vector3());
+      const c = anchors[i + 1].getWorldPosition(new THREE.Vector3());
+      positions.push(...a.toArray(), ...b.toArray(), ...c.toArray());
+    }
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+
+    // Glowing membrane sheet
     const material = new THREE.MeshBasicMaterial({
-      color,
+      color: skinColor,
       transparent: true,
-      opacity,
+      opacity: skinOpacity,
       side: THREE.DoubleSide,
-      blending: THREE.NormalBlending,
-      depthWrite: false
+      blending: THREE.AdditiveBlending
     });
     const mesh = new THREE.Mesh(geometry, material);
-    globeGroup.userData.countryConvexMembrane = mesh;
     globeGroup.add(mesh);
-  } catch (e) {
-    console.error('❌ Convex membrane error:', e, anchors);
+    globeGroup.userData.macroMembraneSkin = mesh;
+
+    // Optional: electric wireframe overlay
+    const wireMaterial = new THREE.MeshBasicMaterial({
+      color: skinColor,
+      opacity: wireframeSkinOpacity,
+      transparent: true,
+      wireframe: true,
+      blending: THREE.NormalBlending
+    });
+    const wire = new THREE.Mesh(geometry, wireMaterial);
+    globeGroup.add(wire);
+    globeGroup.userData.macroMembraneWire = wire;
   }
 }
-
-
 
 
 
