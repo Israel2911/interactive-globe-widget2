@@ -1218,6 +1218,8 @@ const arcPairs = [
 ];
 
 // 3. Your arc creation code (no changes except for how arcPairs is fed in):
+// ----- SMALLER, FASTER CUBES WITH NEAT LABELS -----
+
 function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
   const fromName = (fromGroup.userData.countryName || '').toLowerCase();
   const toName = (toGroup.userData.countryName || '').toLowerCase();
@@ -1252,25 +1254,24 @@ function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
   return path;
 }
 
-function animateArcParticles(arc) {
+// -------- Animate arc cubes (both ways) --------
+function animateArcParticles(arc, intakeLabels = ["1", "2", "3", "4", "5", "6"]) {
   const curve = arc.userData.curve;
   if (!curve) return;
   const particleCount = 6;
-  const speed = 0.5;
+  const baseSpeed = 1.2; // Increased speed
   for (let i = 0; i < particleCount; i++) {
     const particle = new THREE.Mesh(
-      new THREE.BoxGeometry(0.018, 0.018, 0.018),
-      new THREE.MeshBasicMaterial({ color: 0xffff00, transparent: true, opacity: 0.8 })
+      new THREE.BoxGeometry(0.009, 0.009, 0.009), // smaller
+      new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.96 })
     );
-
-    // Add a floating label (numbered)
-    const labelSprite = createBillboardLabel((i + 1).toString());
+    // Add small, low-profile white label above the cube
+    const labelSprite = createBillboardLabel(intakeLabels[i]);
     particle.add(labelSprite);
-    labelSprite.position.set(0, 0.03, 0);
-
+    labelSprite.position.set(0, 0.014, 0); // closer to cube
     particle.userData = {
       t: (i / particleCount), // distribute along curve
-      speed: speed * (0.8 + Math.random() * 0.4),
+      speed: baseSpeed * (0.8 + Math.random() * 0.4), // higher speed
       curve: curve
     };
     scene.add(particle);
@@ -1278,24 +1279,27 @@ function animateArcParticles(arc) {
   }
 }
 
+// -------- Billboard label: smaller, white only --------
 function createBillboardLabel(text) {
   const canvas = document.createElement('canvas');
-  canvas.width = 128; canvas.height = 64;
+  canvas.width = 64; canvas.height = 28;
   const ctx = canvas.getContext('2d');
-  ctx.font = 'bold 34px Arial';
-  ctx.fillStyle = 'rgba(30,30,30,0.86)';
-  ctx.fillRect(0, 0, 128, 64);
-  ctx.fillStyle = '#fff400';
+  ctx.font = 'bold 16px Arial';
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = 'rgba(0,0,0,0.45)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#ffffff'; // white font
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(text, 64, 35);
+  ctx.fillText(text, canvas.width / 2, canvas.height / 2 + 2);
   const texture = new THREE.CanvasTexture(canvas);
   texture.needsUpdate = true;
   const mat = new THREE.SpriteMaterial({ map: texture, transparent: true });
   const sprite = new THREE.Sprite(mat);
-  sprite.scale.set(0.09, 0.045, 1);
+  sprite.scale.set(0.025, 0.011, 1); // smaller
   return sprite;
 }
+
 
 
 // 5. Use arcPairs for all arc generation:
@@ -1306,7 +1310,7 @@ function drawAllConnections() {
     if (fromBlock && toBlock) return createConnectionPath(fromBlock, toBlock, index);
     return null;
   }).filter(Boolean);
-  arcPaths.forEach(animateArcParticles);
+  arcPaths.forEach((arc) => animateArcParticles(arc));
 }
 
 
