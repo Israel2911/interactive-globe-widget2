@@ -1561,60 +1561,55 @@ function updateArcParticles(dt) {
 
 function animate() {
   requestAnimationFrame(animate);
-  
-  // --- START: HOVER CARD LOGIC ---
+
+  // --- HOVER CARD LOGIC ---
   if (hoverCard) {
     raycaster.setFromCamera(mouse, camera);
     const intersects = raycaster.intersectObjects(neuronGroup.children, true);
-    
+
     let foundValidSubCube = false;
     if (intersects.length > 0) {
       const firstIntersect = intersects[0].object;
-      
+
       if (firstIntersect.userData.isSubCube && firstIntersect.userData.university !== "Unassigned") {
         foundValidSubCube = true;
-        
+
         if (currentlyHovered !== firstIntersect) {
           currentlyHovered = firstIntersect;
           const data = firstIntersect.userData;
-          
+
           document.getElementById('hover-card-title').textContent = data.university;
-          document.getElementById('hover-card-program').textContent = data.programName.replace(/\\n/g, ' ');
-          
+          document.getElementById('hover-card-program').textContent = data.programName.replace(/\n/g, ' ');
+
           const infoBtn = document.getElementById('hover-card-info-btn');
           const applyBtn = document.getElementById('hover-card-apply-btn');
-          
+
           infoBtn.disabled = !data.programLink || data.programLink === '#';
           applyBtn.disabled = !data.applyLink || data.applyLink === '#';
-          
+
           hoverCard.classList.remove('hover-card-hidden');
         }
-        
-        // --- "STICKY" POSITIONING LOGIC ---
+
+        // "STICKY" POSITIONING LOGIC
         if (currentlyHovered) {
           const vector = new THREE.Vector3();
           currentlyHovered.getWorldPosition(vector);
           vector.project(camera);
-          
+
           const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
           const y = (vector.y * -0.5 + 0.5) * window.innerHeight;
-          
+
           hoverCard.style.left = `${x + 15}px`;
           hoverCard.style.top = `${y}px`;
         }
       }
     }
-    
+
     if (!foundValidSubCube && currentlyHovered) {
       currentlyHovered = null;
       hoverCard.classList.add('hover-card-hidden');
     }
   }
-function animate() {
-  requestAnimationFrame(animate);
-
-  // --- HOVER CARD LOGIC (unchanged) ---
-  // (your hover card logic as before...)
 
   // --- UPDATE TIME & CONTROLS ---
   const elapsedTime = clock.getElapsedTime();
@@ -1641,7 +1636,6 @@ function animate() {
     'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded
   };
   const boundaryRadius = 1.0, buffer = 0.02;
-
   if (!isCubeMovementPaused) {
     cubes.forEach((cube, i) => {
       const isExploded = cube.userData.neuralName && explosionStateMap[cube.userData.neuralName];
@@ -1656,7 +1650,6 @@ function animate() {
 
     // --- SMALL NEURONAL LINES ---
     if (neuralNetworkLines && neuralNetworkLines.visible) {
-      // (existing logic unchanged)
       const vertices = [];
       const maxDist = 0.6, connectionsPerCube = 3;
       for (let i = 0; i < cubes.length; i++) {
@@ -1671,8 +1664,12 @@ function animate() {
         const closest = neighbors.slice(0, connectionsPerCube);
         if (closest.length > 1) {
           for (let k = 0; k < closest.length - 1; k++) {
-            const startNode = cubes[i].position, neighbor1 = closest[k].cube.position, neighbor2 = closest[k + 1].cube.position;
-            vertices.push(startNode.x, startNode.y, startNode.z, neighbor1.x, neighbor1.y, neighbor1.z, neighbor2.x, neighbor2.y, neighbor2.z);
+            const startNode = cubes[i].position;
+            const neighbor1 = closest[k].cube.position;
+            const neighbor2 = closest[k + 1].cube.position;
+            vertices.push(startNode.x, startNode.y, startNode.z,
+                          neighbor1.x, neighbor1.y, neighbor1.z,
+                          neighbor2.x, neighbor2.y, neighbor2.z);
           }
         }
       }
@@ -1682,17 +1679,7 @@ function animate() {
     }
 
     // --- MACRO COUNTRY CONVEX MEMBRANE DRAW (NEW) ---
-    // SAFETY: Only draw if enough cubes exist
-    const anchorCount = [
-      europeCube, newThailandCube, canadaCube, ukCube, usaCube, indiaCube, singaporeCube, malaysiaCube
-    ].filter(Boolean).length;
-    if (anchorCount >= 4) {
-      try {
-        drawCountryConvexMembrane(0xff0000, 0.35); // opacity as desired!
-      } catch (e) {
-        console.error("Convex membrane error!", e);
-      }
-    }
+    drawCountryConvexMembrane(0xff0000, 0.35);
   }
 
   renderer.render(scene, camera);
