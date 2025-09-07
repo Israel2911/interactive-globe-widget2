@@ -358,23 +358,6 @@ body {
   z-index: 2;
 }
 
-.info-panel-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(16, 25, 36, 0.78);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 99;
-}
-
-.info-panel {
-  background: #22356a;
-  border-radius: 16px;
-  padding: 34px 38px 22px 38px;
-  min-width: 380px;
-  position: relative;
-}
 
 .apply-cube {
   box-shadow: 0 0 24px 6px #ffa500;
