@@ -1600,45 +1600,33 @@ function animate() {
   if (hoverCard) {
     raycaster.setFromCamera(mouse, camera);
     const intersects = raycaster.intersectObjects(neuronGroup.children, true);
-
     let foundValidSubCube = false;
     if (intersects.length > 0) {
       const firstIntersect = intersects[0].object;
-
       if (firstIntersect.userData.isSubCube && firstIntersect.userData.university !== "Unassigned") {
         foundValidSubCube = true;
-
         if (currentlyHovered !== firstIntersect) {
           currentlyHovered = firstIntersect;
           const data = firstIntersect.userData;
-
           document.getElementById('hover-card-title').textContent = data.university;
           document.getElementById('hover-card-program').textContent = data.programName.replace(/\n/g, ' ');
-
           const infoBtn = document.getElementById('hover-card-info-btn');
           const applyBtn = document.getElementById('hover-card-apply-btn');
-
           infoBtn.disabled = !data.programLink || data.programLink === '#';
           applyBtn.disabled = !data.applyLink || data.applyLink === '#';
-
           hoverCard.classList.remove('hover-card-hidden');
         }
-
-        // "STICKY" POSITIONING LOGIC
         if (currentlyHovered) {
           const vector = new THREE.Vector3();
           currentlyHovered.getWorldPosition(vector);
           vector.project(camera);
-
           const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
           const y = (vector.y * -0.5 + 0.5) * window.innerHeight;
-
           hoverCard.style.left = `${x + 15}px`;
           hoverCard.style.top = `${y}px`;
         }
       }
     }
-
     if (!foundValidSubCube && currentlyHovered) {
       currentlyHovered = null;
       hoverCard.classList.add('hover-card-hidden');
@@ -1712,12 +1700,19 @@ function animate() {
       neuralNetworkLines.geometry.computeVertexNormals();
     }
 
-    // --- MACRO COUNTRY CONVEX MEMBRANE DRAW (NEW) ---
-    drawCountryConvexMembrane(0xff0000, 0.35);
+    // --- MACRO SPAGHETTI WEB + GLOWING SKIN ---
+    drawMacroWebAndMembrane({
+      webColor: 0xff0000,
+      webOpacity: 0.20,
+      skinColor: 0xff0000,
+      skinOpacity: 0.08,
+      wireframeSkinOpacity: 0.18
+    });
   }
 
   renderer.render(scene, camera);
 }
+
 
 // ===
 function togglePrivacySection() {
