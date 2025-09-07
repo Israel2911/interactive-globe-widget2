@@ -1757,23 +1757,25 @@ function animate() {
     }
 
     // --- MACRO SPAGHETTI WEB + GLOWING SKIN ---
- // Macro web+membrane
-  drawMacroWebAndMembrane({
-    webColor: 0xff4444,
-    webOpacity: 0.09,
-    skinColor: 0xff3333,
-    skinOpacity: 0.21,
-    wireframeSkinOpacity: 0.04
-  });
+ // --- MACRO SPAGHETTI WEB + GLOWING MEMBRANE ---
+    drawMacroWebAndMembrane({
+      webColor: 0xff4444,
+      webOpacity: 0.09,
+      skinColor: 0xff3333,
+      skinOpacity: 0.21,
+      wireframeSkinOpacity: 0.04
+    });
 
-  // Animate the membrane vertices for organic effect
-  if (globeGroup.userData.macroMembraneSkin) {
-    animateMembraneVertices(globeGroup.userData.macroMembraneSkin.geometry, clock.getElapsedTime(), 0.017, 1.24);
-  }
-  if (globeGroup.userData.macroMembraneWire) {
-    animateMembraneVertices(globeGroup.userData.macroMembraneWire.geometry, clock.getElapsedTime(), 0.017, 1.24);
+    // Animate membrane mesh (both fill and wireframe)
+    if (globeGroup.userData.macroMembraneSkin) {
+      animateMembraneVertices(globeGroup.userData.macroMembraneSkin.geometry, clock.getElapsedTime(), 0.017, 1.24);
+    }
+    if (globeGroup.userData.macroMembraneWire) {
+      animateMembraneVertices(globeGroup.userData.macroMembraneWire.geometry, clock.getElapsedTime(), 0.017, 1.24);
+    }
   }
 
+  // Always render!
   renderer.render(scene, camera);
 }
 
