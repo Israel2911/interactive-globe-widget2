@@ -261,7 +261,7 @@ function addInfoPanelStyles() {
   // Using the same CSS you already had
   style.textContent = `
     #infoPanelOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center; }
-    .info-panel { background: white; padding: 20px; border-radius: 10px; max-width: 600px; max-height: 80vh; overflow-y: auto; }
+    .info-panel { background: black; padding: 20px; border-radius: 10px; max-width: 600px; max-height: 80vh; overflow-y: auto; }
     .partner-cta { padding: 8px 16px; margin: 5px; border: none; border-radius: 5px; background: #007bff; color: white; cursor: pointer; }
     .partner-cta.disabled { background: #ccc; cursor: not-allowed; }
     .partner-cta:hover:not(.disabled) { background: #0056b3; }
