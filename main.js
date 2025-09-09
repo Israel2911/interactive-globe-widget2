@@ -194,164 +194,11 @@ function buildLinkWithToken(baseUrl) {
   return baseUrl;
 }
 
-async function showInfoPanel(data) {
-  // Only need the university name from clicked cube
-  const universityName = data.university;
-  if (!universityName || universityName === 'Unassigned') {
-    console.log('❌ Clicked on an unassigned cube.');
-    return;
-  }
-  // All programs for this university
-  const uniData = allUniversityContent.filter(item => item && item.university === universityName);
-  if (uniData.length === 0) {
-    console.log(`❌ No content found for ${universityName}`);
-    // Fallback: open whichever link is present
-    const linkToOpen = data.programLink || data.applyLink;
-    if (linkToOpen && linkToOpen !== '#') window.open(buildLinkWithToken(linkToOpen), '_blank');
-    return;
-  }
-  // --- MAIN CARD ---
-  const mainProgram = uniData[0];
-  document.getElementById('infoPanelMainCard').innerHTML = `
-    <div class="main-card-details">
-      <img src="${mainProgram.logo}" alt="${mainProgram.university} Logo">
-      <h3>${mainProgram.university}</h3>
-    </div>
-    <div class="main-card-actions">
-      ${mainProgram.erasmusLink && mainProgram.erasmusLink !== '#' ? `<button class="partner-cta erasmus" onclick="window.open('${buildLinkWithToken(mainProgram.erasmusLink)}', '_blank')">Erasmus Info</button>` : ''}
-    </div>
-  `;
-  // --- SUBCARDS ---
-  const subcardsContainer = document.getElementById('infoPanelSubcards');
-  subcardsContainer.innerHTML = '';
-  uniData.forEach(item => {
-    if (!item) return;
-    const infoEnabled = item.programLink && item.programLink !== '#';
-    const applyEnabled = item.applyLink && item.applyLink !== '#';
-
-    const infoLink = buildLinkWithToken(item.programLink);
-    const applyLink = buildLinkWithToken(item.applyLink);
-
-    const subcardHTML = `
-      <div class="subcard">
-        <div class="subcard-info">
-          <h4>${item.programName.replace(/\n/g, ' ')}</h4>
-        </div>
-        <div class="subcard-buttons">
-          <button class="partner-cta info" ${infoEnabled ? '' : `disabled title="No info link available"`} 
-                  onclick="if(${infoEnabled}) window.open('${infoLink}', '_blank')">
-            University Info
-          </button>
-          <button class="partner-cta apply" ${applyEnabled ? '' : `disabled title="No apply link available"`} 
-                  onclick="if(${applyEnabled}) window.open('${applyLink}', '_blank')">
-            Apply Now
-          </button>
-        </div>
-      </div>
-    `;
-    subcardsContainer.insertAdjacentHTML('beforeend', subcardHTML);
-  });
-  document.getElementById('infoPanelOverlay').style.display = 'flex';
-  console.log(`✅ Info panel displayed for ${universityName}`);
-}
-
-
 function hideInfoPanel() {
   document.getElementById('infoPanelOverlay').style.display = 'none';
 }
 
-// This function sets up the HTML and CSS for the panel when the page loads.
-function addInfoPanelStyles() {
-  const style = document.createElement('style');
-  // Using the same CSS you already had
-  style.textContent = `
-    #infoPanelOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center; }
-    .info-panel { background: white; padding: 20px; border-radius: 10px; max-width: 600px; max-height: 80vh; overflow-y: auto; }
-    .partner-cta { padding: 8px 16px; margin: 5px; border: none; border-radius: 5px; background: #007bff; color: white; cursor: pointer; }
-    .partner-cta.disabled { background: #ccc; cursor: not-allowed; }
-    .partner-cta:hover:not(.disabled) { background: #0056b3; }
-    .subcard { border: 1px solid #ddd; padding: 10px; margin: 10px 0; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; }
-    .subcard-info h4 { margin: 0; }
-    .main-card-details { display: flex; align-items: center; margin-bottom: 15px; }
-    .main-card-details img { width: 60px; height: 60px; margin-right: 15px; border-radius: 5px; }
-    .main-card-details h3 { margin: 0; font-size: 24px; }
-  `;
-  document.head.appendChild(style);
-
-  const overlay = document.createElement('div');
-  overlay.id = 'infoPanelOverlay';
-  overlay.onclick = hideInfoPanel;
-  overlay.innerHTML = `
-    <div class="info-panel" onclick="event.stopPropagation()">
-      <div id="infoPanelMainCard"></div>
-      <div id="infoPanelSubcards"></div>
-      <button onclick="hideInfoPanel()" style="margin-top: 20px; padding: 10px 20px;">Close</button>
-    </div>
-  `;
-  document.body.appendChild(overlay);
-}
-
-// This ensures the panel's HTML and CSS are ready when the page loads.
-document.addEventListener('DOMContentLoaded', addInfoPanelStyles);
-
-
-// ---------- If later you allow panel post-login, remove the return above and use builder below ----------
-/*
-const uniData = allUniversityContent.filter(item => item && item.university === data.university);
-if (uniData.length === 0) {
-  console.log('❌ No university content found');
-  return;
-}
-const mainErasmusLink = uniData[0].erasmusLink;
-document.getElementById('infoPanelMainCard').innerHTML = `
-  <div class="main-card-details">
-    <img src="${uniData.logo}" alt="${data.university}">
-    <h3>${data.university}</h3>
-  </div>
-  <div class="main-card-actions">
-    ${mainErasmusLink ? `<a href="${mainErasmusLink}" target="_blank" class="partner-cta erasmus">Erasmus Info</a>` : ''}
-  </div>
-`;
-document.getElementById('infoPanelSubcards').innerHTML = '';
-uniData.forEach(item => {
-  if (!item) return;
-  const infoEnabled = item.programLink && item.programLink !== '#';
-  const applyEnabled = item.applyLink && item.applyLink !== '#';
-  const subcardHTML = `
-    <div class="subcard">
-      <div class="subcard-info">
-        <img src="${item.logo}" alt="">
-        <h4>${item.programName.replace(/\\n/g, ' ')}</h4>
-      </div>
-      <div class="subcard-buttons">
-        <button class="partner-cta info" ${infoEnabled ? '' : 'disabled'} data-href="${infoEnabled ? item.programLink : ''}">University Info</button>
-        <button class="partner-cta apply" ${applyEnabled ? '' : 'disabled'} data-return="/members/home">Apply Now</button>
-      </div>
-    </div>
-  `;
-  document.getElementById('infoPanelSubcards').insertAdjacentHTML('beforeend', subcardHTML);
-});
-const container = document.getElementById('infoPanelSubcards');
-container.querySelectorAll('.partner-cta.info').forEach(btn => {
-  btn.addEventListener('click', e => {
-    const href = e.currentTarget.getAttribute('data-href');
-    if (href) window.open(href, '_blank');
-  });
-});
-container.querySelectorAll('.partner-cta.apply').forEach(btn => {
-  btn.addEventListener('click', e => {
-    window.top.location.href = 'https://www.globaleducarealliance.com/home?promptLogin=1';
-  });
-});
-document.getElementById('infoPanelOverlay').style.display = 'flex';
-console.log('✅ Info panel displayed with both university and application links');
-*/
-
-function hideInfoPanel() {
-  document.getElementById('infoPanelOverlay').style.display = 'none';
-}
-
-// Add info panel styles and HTML (kept in case you re-enable the panel)
+// The ONLY info panel styles function – with improved CSS
 function addInfoPanelStyles() {
   const style = document.createElement('style');
   style.textContent = `
@@ -368,61 +215,130 @@ function addInfoPanelStyles() {
       align-items: center;
     }
     .info-panel {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      max-width: 600px;
-      max-height: 80vh;
+      background: #fff;
+      padding: 30px 30px 20px 30px;
+      border-radius: 18px;
+      max-width: 650px;
+      max-height: 83vh;
       overflow-y: auto;
+      box-shadow: 0 8px 36px rgba(30,40,90,0.16);
+      color: #222;
+      font-family: 'Inter', Arial, sans-serif;
     }
-    .partner-cta {
-      padding: 8px 16px;
-      margin: 5px;
-      border: none;
-      border-radius: 5px;
-      background: #007bff;
-      color: white;
-      cursor: pointer;
-    }
-    .partner-cta.disabled {
-      background: #ccc;
-      cursor: not-allowed;
-    }
-    .partner-cta:hover:not(.disabled) {
-      background: #0056b3;
-    }
-    .subcard {
-      border: 1px solid #ddd;
-      padding: 10px;
-      margin: 10px 0;
-      border-radius: 5px;
-    }
-    .subcard-info img {
-      width: 40px;
-      height: 40px;
-      margin-right: 10px;
+    .main-card-details {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+      font-size: 1.1em;
     }
     .main-card-details img {
-      width: 60px;
-      height: 60px;
-      margin-right: 15px;
+      width: 70px;
+      height: 70px;
+      margin-right: 18px;
+      border-radius: 8px;
+      border: 1.5px solid #eee;
+      background: #fafbff;
+    }
+    .main-card-details h3 {
+      margin: 0;
+      font-size: 2.1rem;
+      font-weight: 700;
+      color: #18192a;
+      letter-spacing: 0.7px;
+    }
+    .subcard {
+      border: 1px solid #e3e4e7;
+      padding: 14px;
+      margin: 12px 0 14px 0;
+      border-radius: 8px;
+      background: #f7f9fc;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .subcard-info {
+      display: flex;
+      align-items: center;
+    }
+    .subcard-info img {
+      width: 46px;
+      height: 46px;
+      margin-right: 13px;
+      border-radius: 6px;
+      border: 1px solid #e5e7ef;
+      background: white;
+    }
+    .subcard-info h4 {
+      margin: 0;
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: #173170;
+      letter-spacing: 0.3px;
+    }
+    .subcard-buttons {
+      display: flex;
+      gap: 0.8em;
+      align-items: center;
+    }
+    .partner-cta {
+      padding: 12px 28px;
+      margin: 4px;
+      border: none;
+      border-radius: 7px;
+      background: #1370ee;
+      color: #fff;
+      font-size: 1.08em;
+      font-weight: 600;
+      box-shadow: 0 2px 10px rgba(40,60,150,0.07);
+      cursor: pointer;
+      transition: background 0.18s;
+      letter-spacing: 0.1px;
+      outline: none;
+    }
+    .partner-cta.disabled, .partner-cta[disabled] {
+      background: #d2dae6 !important;
+      color: #fff !important;
+      cursor: not-allowed !important;
+      opacity: 0.7;
+    }
+    .partner-cta:hover:not(.disabled):not([disabled]) {
+      background: #0e57be;
+    }
+    #infoPanelMainCard, #infoPanelSubcards { color: inherit; }
+    .info-panel button {
+      font-weight: 600;
+      font-size: 1.1em;
+      background: #eee;
+      color: #204073;
+      border-radius: 6px;
+      border: none;
+      margin: 12px 3px 0 3px;
+      transition: background 0.19s;
+      padding: 10px 23px;
+    }
+    .info-panel button:hover {
+      background: #e6f0ff;
+      color: #1370ee;
     }
   `;
   document.head.appendChild(style);
-  const overlay = document.createElement('div');
-  overlay.id = 'infoPanelOverlay';
-  overlay.onclick = hideInfoPanel;
-  overlay.innerHTML = `
-    <div class="info-panel" onclick="event.stopPropagation()">
-      <div id="infoPanelMainCard"></div>
-      <div id="infoPanelSubcards"></div>
-      <button onclick="hideInfoPanel()" style="margin-top: 20px; padding: 10px 20px;">Close</button>
-    </div>
-  `;
-  document.body.appendChild(overlay);
+
+  // Only add overlay if it doesn't already exist
+  if (!document.getElementById('infoPanelOverlay')) {
+    const overlay = document.createElement('div');
+    overlay.id = 'infoPanelOverlay';
+    overlay.onclick = hideInfoPanel;
+    overlay.innerHTML = `
+      <div class="info-panel" onclick="event.stopPropagation()">
+        <div id="infoPanelMainCard"></div>
+        <div id="infoPanelSubcards"></div>
+        <button onclick="hideInfoPanel()" style="margin-top: 20px; padding: 10px 20px;">Close</button>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+  }
 }
 
-// Initialize info panel scaffolding on load (safe to keep)
 document.addEventListener('DOMContentLoaded', addInfoPanelStyles);
 
 
