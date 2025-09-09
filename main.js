@@ -396,6 +396,15 @@ function addInfoPanelStyles() {
       height: 60px;
       margin-right: 15px;
     }
+    .main-card-details h3 {
+  color: #111 !important;
+  font-weight: bold;
+}
+.subcard-info h4 {
+  color: #111 !important;
+  font-weight: bold;
+}
+
   `;
   document.head.appendChild(style);
   const overlay = document.createElement('div');
