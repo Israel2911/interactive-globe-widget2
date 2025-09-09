@@ -201,7 +201,31 @@ const indiaContent = [ { university: "Asia College of Journalism", logo: "https:
 
 const singaporeContent = [ { university: "NUS", logo: "https://static.wixstatic.com/media/d77f36_80b489ce45dd4d2494ec43dce3d88a7b~mv2.jpg", programName: "Business\nSchool", programLink: "https://bschool.nus.edu.sg/", applyLink: "https://www.globaleducarealliance.com/6?partner=NUS" }, { university: "NUS", logo: "https://static.wixstatic.com/media/d77f36_80b489ce45dd4d2494ec43dce3d88a7b~mv2.jpg", programName: "Nursing &\nMedicine", programLink: "https://medicine.nus.edu.sg/our-programmes/", applyLink: "https://www.globaleducarealliance.com/6?partner=NUS" }, { university: "NUS", logo: "https://static.wixstatic.com/media/d77f36_80b489ce45dd4d2494ec43dce3d88a7b~mv2.jpg", programName: "Public Policy", programLink: "https://lkyspp.nus.edu.sg/", applyLink: "https://www.globaleducarealliance.com/6?partner=NUS" }, { university: "SIM", logo: "https://static.wixstatic.com/media/d77f36_f2d0805ccb934e8da2019aaf23b16e6f~mv2.avif", programName: "IT &\nCompSci", programLink: "https://www.sim.edu.sg/degrees-diplomas/programmes/disciplines/it-computer-science", applyLink: "https://www.globaleducarealliance.com/6?partner=SIM" }, { university: "SIM", logo: "https://static.wixstatic.com/media/d77f36_f2d0805ccb934e8da2019aaf23b16e6f~mv2.avif", programName: "Nursing", programLink: "https://www.sim.edu.sg/degrees-diplomas/programmes/disciplines/nursing", applyLink: "https://www.globaleducarealliance.com/6?partner=SIM" }, { university: "Nanyang Institute of Management", logo: "https://static.wixstatic.com/media/d77f36_e219748ff80a417ea92e264199b7dfe3~mv2.png", programName: "Business", programLink: "https://nanyang.edu.sg/course/school-of-business/", applyLink: "https://www.globaleducarealliance.com/6?partner=NIM" }, { university: "Nanyang Institute of Management", logo: "https://static.wixstatic.com/media/d77f36_e219748ff80a417ea92e264199b7dfe3~mv2.png", programName: "Hospitality", programLink: "https://nanyang.edu.sg/course/school-of-business/", applyLink: "https://www.globaleducarealliance.com/6?partner=NIM" }, { university: "Nanyang Institute of Management", logo: "https://static.wixstatic.com/media/d77f36_e219748ff80a417ea92e264199b7dfe3~mv2.png", programName: "Digital Media\nDiploma", programLink: "https://nanyang.edu.sg/courses/advanced-diploma-in-digital-media-design-and-communication/", applyLink: "https://www.globaleducarealliance.com/6?partner=NIM" }, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null];
 
-const malaysiaContent = [ { university: "Limkokwing University", logo: "https://static.wixstatic.com/media/d77f36_38c855c3d47448009fc7123812183cc0~mv2.png", programName: "Creative\nTech", programLink: "https://www.limkokwing.net/malaysia/academic/courses", applyLink: "https://www.globaleducarealliance.com/6?partner=Limkokwing" }, { university: "Binary University", logo: "https://static.wixstatic.com/media/d77f36_38969a51e38148f294cade091aa0cbd8~mv2.png", programName: "MyBIG Grant", programLink: "https://binary.edu.my/big_main/", applyLink: "https://www.globaleducarealliance.com/6?partner=Binary" }, { university: "Study in Malaysia Guide", logo: "https://static.wixstatic.com/media/d77f36_e6a24c71b7a14548beca3dafbb8e797b~mv2.jpg", programName: "Student\nGuide", programLink: "#", applyLink: "#" }, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null];
+const malaysiaContent = [
+  { 
+    university: "Limkokwing University", 
+    logo: "https://static.wixstatic.com/media/d77f36_38c855c3d47448009fc7123812183cc0~mv2.png", 
+    programName: "Creative\nTech", 
+    programLink: "https://www.limkokwing.net/malaysia/academic/courses", 
+    applyLink: "https://www.globaleducarealliance.com/6?partner=Limkokwing" 
+  },
+  { 
+    university: "Binary University", 
+    logo: "https://static.wixstatic.com/media/d77f36_38969a51e38148f294cade091aa0cbd8~mv2.png", 
+    programName: "MyBIG Grant", 
+    programLink: "https://binary.edu.my/big_main/", 
+    applyLink: "https://www.globaleducarealliance.com/6?partner=Binary" 
+  },
+  { 
+    university: "Taylor's College",
+    logo: "https://www.taylors.edu.my/content/dam/taylors-college/my/images/logos/taylors-college-logo.png", // (or any valid logo)
+    programName: "Explore All Programmes",
+    programLink: "https://college.taylors.edu.my/en/study/explore-all-programmes.html",
+    applyLink: "https://www.globaleducarealliance.com/blank-8?partner=Malaysia"
+  },
+  null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null
+];
+
 
 const countryPrograms = { "India": ["UG", "PG", "Mobility", "Research"], "Europe": ["UG", "PG", "Mobility", "Language", "Research"], "UK": ["UG", "PG", "Mobility"], "Singapore": ["UG", "PG", "Mobility", "Upskilling", "Diploma"], "Malaysia": ["UG", "PG", "Diploma", "Mobility"], "Canada": ["UG", "PG", "Diploma", "Mobility", "Upskilling"], "Thailand": ["UG", "PG", "Diploma", "Mobility"], "USA": ["UG", "PG", "Mobility"] };
 
