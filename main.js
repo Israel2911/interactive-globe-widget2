@@ -792,6 +792,67 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
   return new THREE.MeshStandardMaterial({ map: texture, emissive: new THREE.Color(bgColor), emissiveIntensity: 0.6 });
 }
 
+// Helper: Add a student scroll or other icon "inside" the cube
+function addSuccessIconToCube(mesh, type = "scroll") {
+  if (!mesh.userData.successIcon) {
+    let iconUrl;
+    if (type === "scroll") {
+      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4dc.png";
+    } else if (type === "letter") {
+      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4e9.png";
+    } else if (type === "cap") {
+      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f393.png";
+    } else {
+      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4dc.png";
+    }
+    const iconTexture = new THREE.TextureLoader().load(iconUrl);
+    const iconMaterial = new THREE.SpriteMaterial({ map: iconTexture, transparent: true });
+    const iconSprite = new THREE.Sprite(iconMaterial);
+    iconSprite.scale.set(0.009, 0.009, 1);      // Small & neat
+    iconSprite.position.set(0, 0, 0.0015);      // Embedded just behind front face
+    mesh.add(iconSprite);
+    mesh.userData.successIcon = iconSprite;
+  }
+}
+
+// Helper: Show a message bubble tied to 2D projected cube position
+function showCubePopup(x, y, msg) {
+  // Remove earlier popups
+  document.querySelectorAll('.applied-cube-popup').forEach(el => el.remove());
+  const div = document.createElement('div');
+  div.className = 'applied-cube-popup';
+  div.style.left = (x - 110) + 'px';  // Horizontally center on cube
+  div.style.top = (y - 85) + 'px';    // Above the cube's center
+  div.innerHTML = msg;
+  document.body.appendChild(div);
+  setTimeout(() => div.remove(), 6000);
+}
+
+// CSS for the popup, add this via JS or your stylesheet once
+if (!document.getElementById('applied-cube-popup-style')) {
+  const style = document.createElement('style');
+  style.id = 'applied-cube-popup-style';
+  style.innerHTML = `
+    .applied-cube-popup {
+      position: absolute;
+      min-width: 220px;
+      background: rgba(35,40,60,0.95);
+      color: #fff900;
+      font-size: 1rem;
+      border-radius: 8px;
+      padding: 14px 23px;
+      box-shadow: 0 6px 22px rgba(10,40,150,0.21);
+      z-index: 9999;
+      border: 1.5px solid #fff700;
+      pointer-events: none;
+      text-align: center;
+      font-family: 'Inter', Arial, sans-serif;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+// MAIN FUNCTION
 function setCubeToAppliedState(programOrUniName) {
   const allSubCubes = [
     ...europeSubCubes, ...newThailandSubCubes, ...canadaSubCubes, ...ukSubCubes,
@@ -815,73 +876,56 @@ function setCubeToAppliedState(programOrUniName) {
       meshes = targetCube.children.filter(child => child.isMesh);
     }
     meshes.forEach(mesh => {
-      // Green blink
+      // Neon blink animation, then yellow+scroll+popup
       mesh.material = new THREE.MeshStandardMaterial({
-        color: 0x39ff14, emissive: 0x39ff14, emissiveIntensity: 5, map: null,
+        color: 0x39ff14, emissive: 0x39ff14, emissiveIntensity: 10, map: null,
         metalness: 0.18, roughness: 0.05
       });
       let blinkStart = performance.now();
       function blink(time) {
         let elapsed = time - blinkStart;
-        let phase = Math.floor(elapsed / 120) % 2;
-        let complete = elapsed > 120 * 12; // ~1.4s
+        let phase = Math.floor(elapsed / 110) % 2;
+        let complete = elapsed > 110 * 12;
         if (complete) {
-          // Soft translucent yellow fill
+          // Translucent yellow + embedded scroll icon
           mesh.material = new THREE.MeshStandardMaterial({
             color: 0xFFF700,
             emissive: 0xFFF700,
-            emissiveIntensity: 0.5,
-            metalness: 0.12,
+            emissiveIntensity: 0.51,
+            metalness: 0.1,
             roughness: 0.20,
             transparent: true,
             opacity: 0.5,
             map: null
           });
-          addSuccessIconToCube(mesh, "scroll"); // "scroll" icon embedded
+          addSuccessIconToCube(mesh, "scroll");
+
+          // Show message bubble tied to this cube's screen position
+          const cubeWorldPos = new THREE.Vector3();
+          mesh.getWorldPosition(cubeWorldPos);
+          cubeWorldPos.project(camera);
+          const x = (cubeWorldPos.x * 0.5 + 0.5) * window.innerWidth;
+          const y = (cubeWorldPos.y * -0.5 + 0.5) * window.innerHeight;
+          showCubePopup(
+            x, y,
+            "<b>✅ Application Received!</b><br>Our team will get back to you within 2 weeks.<br>You can also track updates in your Student Dashboard."
+          );
           return;
         }
         if (phase === 0) {
           mesh.material.color.set(0x39ff14);
           mesh.material.emissive.set(0x39ff14);
-          mesh.material.emissiveIntensity = 8;
+          mesh.material.emissiveIntensity = 18;
         } else {
           mesh.material.color.set(0x000000);
           mesh.material.emissive.set(0x000000);
-          mesh.material.emissiveIntensity = 0.3;
+          mesh.material.emissiveIntensity = 0.15;
         }
         requestAnimationFrame(blink);
       }
       requestAnimationFrame(blink);
     });
   });
-
-  showNotification(
-    "✅ We have received your application.<br>Our team will get back to you within 2 weeks.<br>You can also track updates in your Student Dashboard.",
-    true
-  );
-}
-
-// Helper: Embedded mini scroll icon
-function addSuccessIconToCube(mesh, type = "scroll") {
-  if (!mesh.userData.successIcon) {
-    let iconUrl;
-    if (type === "scroll") {
-      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4dc.png";
-    } else if (type === "letter") {
-      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4e9.png";
-    } else if (type === "cap") {
-      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f393.png";
-    } else {
-      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4dc.png";
-    }
-    const iconTexture = new THREE.TextureLoader().load(iconUrl);
-    const iconMaterial = new THREE.SpriteMaterial({ map: iconTexture, transparent: true });
-    const iconSprite = new THREE.Sprite(iconMaterial);
-    iconSprite.scale.set(0.009, 0.009, 1);      // Small and subtle
-    iconSprite.position.set(0, 0, 0.0015);      // Just inside the front face
-    mesh.add(iconSprite);
-    mesh.userData.successIcon = iconSprite;
-  }
 }
 
 
