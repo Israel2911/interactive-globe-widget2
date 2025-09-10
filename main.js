@@ -814,7 +814,7 @@ function setCubeToAppliedState(programOrUniName) {
       meshes = targetCube.children.filter(child => child.isMesh);
     }
     meshes.forEach(mesh => {
-      // Blink, then turn yellow with icon
+      // Blink green, then turn yellow with icon
       mesh.material = new THREE.MeshStandardMaterial({
         color: 0x39ff14, emissive: 0x39ff14, emissiveIntensity: 5, map: null,
         metalness: 0.18, roughness: 0.05
@@ -825,10 +825,10 @@ function setCubeToAppliedState(programOrUniName) {
         let phase = Math.floor(elapsed / 120) % 2;
         let complete = elapsed > 120 * 12; // ~1.4s
         if (complete) {
-          mesh.material.color.set(0xFFF700);        // yellow
+          mesh.material.color.set(0xFFF700); // yellow
           mesh.material.emissive.set(0xFFF700);
           mesh.material.emissiveIntensity = 2;
-          addSuccessIconToCube(mesh, "scroll");     // Add student scroll icon
+          addSuccessIconToCube(mesh, "scroll"); // small scroll badge
           return;
         }
         if (phase === 0) {
@@ -845,11 +845,14 @@ function setCubeToAppliedState(programOrUniName) {
       requestAnimationFrame(blink);
     });
   });
+
   showNotification(
     "✅ We have received your application.<br>Our team will get back to you within 2 weeks.<br>You can also track updates in your Student Dashboard.",
     true
   );
 }
+
+// Place this helper in your codebase:
 function addSuccessIconToCube(mesh, type = "scroll") {
   if (!mesh.userData.successIcon) {
     let iconUrl;
@@ -865,8 +868,37 @@ function addSuccessIconToCube(mesh, type = "scroll") {
     const iconTexture = new THREE.TextureLoader().load(iconUrl);
     const iconMaterial = new THREE.SpriteMaterial({ map: iconTexture, transparent: true });
     const iconSprite = new THREE.Sprite(iconMaterial);
-    iconSprite.scale.set(0.013, 0.013, 1); // ~one-fifth of a typical subcube face
-    iconSprite.position.set(0, 0, 0.007);  // center, just in front of subcube
+    iconSprite.scale.set(0.013, 0.013, 1);    // small, fits neatly inside cube face
+    iconSprite.position.set(0, 0, 0.007);     // center front, just above face
+    mesh.add(iconSprite);
+    mesh.userData.successIcon = iconSprite;
+  }
+}
+
+function addSuccessIconToCube(mesh, type = "scroll") {
+  if (!mesh.userData.successIcon) {
+    let iconUrl;
+    if (type === "scroll") {
+      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4dc.png";
+    } else if (type === "letter") {
+      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4e9.png";
+    } else if (type === "cap") {
+      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f393.png";
+    } else {
+      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4dc.png";
+    }
+    const iconTexture = new THREE.TextureLoader().load(iconUrl);
+    const iconMaterial = new THREE.SpriteMaterial({ map: iconTexture, transparent: true });
+    const iconSprite = new THREE.Sprite(iconMaterial);
+
+    // Set the icon to fill about 1/4 the face of the cube
+    iconSprite.scale.set(0.008, 0.008, 1);       // (adjust further if needed)
+    iconSprite.position.set(0, 0, 0.008);        // out from center of cube's front face
+
+    // Remove any previous successIcon
+    if (mesh.userData.successIcon) {
+      mesh.remove(mesh.userData.successIcon);
+    }
     mesh.add(iconSprite);
     mesh.userData.successIcon = iconSprite;
   }
