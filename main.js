@@ -815,20 +815,21 @@ function setCubeToAppliedState(programOrUniName) {
       meshes = targetCube.children.filter(child => child.isMesh);
     }
     meshes.forEach(mesh => {
+      // --- Quick blink animation, then show flag
       mesh.material = new THREE.MeshStandardMaterial({
         color: 0x39ff14, emissive: 0x39ff14, emissiveIntensity: 5, map: null,
         metalness: 0.18, roughness: 0.05
       });
-      // --- Animation frame based blink ---
       let blinkStart = performance.now();
       function blink(time) {
         let elapsed = time - blinkStart;
         let phase = Math.floor(elapsed / 120) % 2;
         let complete = elapsed > 120 * 12; // blinks for ~1.4s
         if (complete) {
-          mesh.material.color.set(0x39ff14);
+          mesh.material.color.set(0xffffff); // return to normal, or keep green if you want
           mesh.material.emissive.set(0x39ff14);
-          mesh.material.emissiveIntensity = 6;
+          mesh.material.emissiveIntensity = 3;
+          addFlagToCube(mesh); // Show flag badge when blinking ends
           return;
         }
         if (phase === 0) {
@@ -845,7 +846,27 @@ function setCubeToAppliedState(programOrUniName) {
       requestAnimationFrame(blink);
     });
   });
-  showNotification('Neon green blink (requestAnimationFrame) applied!', true);
+
+  // --- Friendly Next Steps Notification ---
+  showNotification(
+    "✅ We have received your application.<br>Our team will get back to you within 2 weeks.<br>You can also track updates in your Student Dashboard.",
+    true
+  );
+}
+
+// Utility: Add flag sprite as badge
+function addFlagToCube(mesh) {
+  if (!mesh.userData.flagSprite) {
+    const flagTexture = new THREE.TextureLoader().load(
+      'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f6a9.png'
+    );
+    const flagMaterial = new THREE.SpriteMaterial({ map: flagTexture, transparent: true });
+    const flagSprite = new THREE.Sprite(flagMaterial);
+    flagSprite.scale.set(0.09, 0.07, 1);
+    flagSprite.position.set(0.06, 0.06, 0.06);
+    mesh.add(flagSprite);
+    mesh.userData.flagSprite = flagSprite;
+  }
 }
 
 
