@@ -850,49 +850,23 @@ function setCubeToAppliedState(programOrUniName) {
     true
   );
 }
-
-// Helper: Add a student scroll (or letter) icon to the cube center face
 function addSuccessIconToCube(mesh, type = "scroll") {
   if (!mesh.userData.successIcon) {
     let iconUrl;
     if (type === "scroll") {
-      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4dc.png"; // 📜
+      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4dc.png";
     } else if (type === "letter") {
-      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4e9.png"; // 📩
+      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4e9.png";
     } else if (type === "cap") {
-      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f393.png"; // 🎓
+      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f393.png";
     } else {
       iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4dc.png";
     }
     const iconTexture = new THREE.TextureLoader().load(iconUrl);
     const iconMaterial = new THREE.SpriteMaterial({ map: iconTexture, transparent: true });
     const iconSprite = new THREE.Sprite(iconMaterial);
-    iconSprite.scale.set(0.05, 0.05, 1);      // small
-    iconSprite.position.set(0, 0, 0.03);      // center front face
-    mesh.add(iconSprite);
-    mesh.userData.successIcon = iconSprite;
-  }
-}
-
-
-function addSuccessIconToCube(mesh, type = "scroll") {
-  if (!mesh.userData.successIcon) {
-    // Choose the icon to use
-    let iconUrl;
-    if (type === "scroll") {
-      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4dc.png"; // 📜 scroll
-    } else if (type === "letter") {
-      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4e9.png"; // 📩 envelope
-    } else if (type === "cap") {
-      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f393.png"; // 🎓 graduation cap
-    } else {
-      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4dc.png"; // Default: scroll
-    }
-    const iconTexture = new THREE.TextureLoader().load(iconUrl);
-    const iconMaterial = new THREE.SpriteMaterial({ map: iconTexture, transparent: true });
-    const iconSprite = new THREE.Sprite(iconMaterial);
-    iconSprite.scale.set(0.05, 0.05, 1);           // Small, fits "inside" the face
-    iconSprite.position.set(0, 0, 0.018);           // Center, slightly in front
+    iconSprite.scale.set(0.013, 0.013, 1); // ~one-fifth of a typical subcube face
+    iconSprite.position.set(0, 0, 0.007);  // center, just in front of subcube
     mesh.add(iconSprite);
     mesh.userData.successIcon = iconSprite;
   }
