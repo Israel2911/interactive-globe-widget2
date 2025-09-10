@@ -876,40 +876,39 @@ function setCubeToAppliedState(programOrUniName) {
       meshes = targetCube.children.filter(child => child.isMesh);
     }
     meshes.forEach(mesh => {
-      // 1. Add scroll icon before (and after) blinking
+      // 1. Add scroll icon now (and again after blink)
       addSuccessIconToCube(mesh, "scroll");
 
-      // 2. Blink yellow: pulse bright/dim, then go to translucent yellow
+      // 2. NEON BLINK: cycle between three brightness/whiteness levels
       mesh.material = new THREE.MeshStandardMaterial({
-        color: 0xFFF700,                // yellow
-        emissive: 0xFFF700,             // yellow glow
-        emissiveIntensity: 2,
+        color: 0xd6ff14,        // near-neon yellow
+        emissive: 0xd6ff14,
+        emissiveIntensity: 7.5,
         transparent: true,
-        opacity: 0.5,
-        metalness: 0.08, roughness: 0.14,
+        opacity: 1.0,
+        metalness: 0.06, roughness: 0.1,
         map: null
       });
 
       let blinkStart = performance.now();
       function blink(time) {
         let elapsed = time - blinkStart;
-        let phase = Math.floor(elapsed / 120) % 2;
-        let complete = elapsed > 120 * 12; // Blinks for ~1.4s
+        let phase = Math.floor(elapsed / 110) % 3;
+        let complete = elapsed > 110 * 16; // ≈1.7s of blinking for attention
 
         if (complete) {
           mesh.material = new THREE.MeshStandardMaterial({
             color: 0xFFF700,
             emissive: 0xFFF700,
-            emissiveIntensity: 0.5,
-            metalness: 0.08,
-            roughness: 0.16,
+            emissiveIntensity: 0.44,
+            metalness: 0.04,
+            roughness: 0.14,
             transparent: true,
-            opacity: 0.5,
+            opacity: 0.7,
             map: null
           });
-          addSuccessIconToCube(mesh, "scroll"); // Re-add after mat switch
-
-          // Message bubble tied to cube position
+          addSuccessIconToCube(mesh, "scroll");
+          // Popup message
           const cubeWorldPos = new THREE.Vector3();
           mesh.getWorldPosition(cubeWorldPos);
           cubeWorldPos.project(camera);
@@ -921,10 +920,26 @@ function setCubeToAppliedState(programOrUniName) {
           );
           return;
         }
-        // BLINK (YELLOW): pulse emissive
-        mesh.material.color.set(0xFFF700);
-        mesh.material.emissive.set(0xFFF700);
-        mesh.material.emissiveIntensity = (phase === 0 ? 8 : 2);
+
+        // BEACON BLINK: alternate between intense white, neon chartreuse, and soft yellow
+        if (phase === 0) {
+          mesh.material.color.set(0xffffff);         // blast white for beacon draw
+          mesh.material.emissive.set(0xffff00);
+          mesh.material.emissiveIntensity = 20;
+          mesh.material.opacity = 1.0;
+        }
+        else if (phase === 1) {
+          mesh.material.color.set(0xd6ff14);         // super-bright chartreuse
+          mesh.material.emissive.set(0xd6ff14);
+          mesh.material.emissiveIntensity = 11.5;
+          mesh.material.opacity = 1.0;
+        }
+        else {
+          mesh.material.color.set(0xFFF700);         // soft yellow
+          mesh.material.emissive.set(0xFFF700);
+          mesh.material.emissiveIntensity = 3.7;
+          mesh.material.opacity = 0.91;
+        }
         requestAnimationFrame(blink);
       }
       requestAnimationFrame(blink);
@@ -932,12 +947,9 @@ function setCubeToAppliedState(programOrUniName) {
   });
 }
 
-// Helper to center scroll icon on front face of cube, sized for a typical 0.01x0.01x0.01 cube
+// Perfected alignment for emoji scroll icon for subcubes around 0.01 size
 function addSuccessIconToCube(mesh, type = "scroll") {
-  // Remove existing
-  if (mesh.userData.successIcon) {
-    mesh.remove(mesh.userData.successIcon);
-  }
+  if (mesh.userData.successIcon) mesh.remove(mesh.userData.successIcon);
   let iconUrl =
     type === "scroll"
       ? "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4dc.png"
@@ -945,15 +957,14 @@ function addSuccessIconToCube(mesh, type = "scroll") {
   const iconTexture = new THREE.TextureLoader().load(iconUrl);
   const iconMaterial = new THREE.SpriteMaterial({ map: iconTexture, transparent: true });
   const iconSprite = new THREE.Sprite(iconMaterial);
-  // Center front face, tune scale and Z for a cube of ~0.01: 
-  iconSprite.center.set(0.52, 0.55); // Smaller nudge for scroll emoji
-  iconSprite.scale.set(0.0055, 0.0055, 1);      // Small (adjust for best fit)
-  iconSprite.position.set(0, 0, 0.00578);       // Just "in front" of face
+  iconSprite.center.set(0.50, 0.53);               // adjust for emoji baseline as needed
+  iconSprite.scale.set(0.0057, 0.0057, 1);         // tweak for your cube size
+  iconSprite.position.set(0, 0, 0.0062);           // a hair out from cube face for clarity
   mesh.add(iconSprite);
   mesh.userData.successIcon = iconSprite;
 }
 
-// (Optional: Place this once in your CSS or as a JS-inserted style)
+// Popup and CSS as before!
 if (!document.getElementById('applied-cube-popup-style')) {
   const style = document.createElement('style');
   style.id = 'applied-cube-popup-style';
@@ -976,7 +987,6 @@ if (!document.getElementById('applied-cube-popup-style')) {
   `;
   document.head.appendChild(style);
 }
-// Helper for message bubble
 function showCubePopup(x, y, msg) {
   document.querySelectorAll('.applied-cube-popup').forEach(el => el.remove());
   const div = document.createElement('div');
