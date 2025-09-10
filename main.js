@@ -194,17 +194,18 @@ function buildLinkWithToken(baseUrl) {
   return baseUrl;
 }
 
-// Show info panel for a selected university/program
-// Show info panel for a selected university/program
-async function showInfoPanel(data) {
+;async function showInfoPanel(data) {
+  // Only need the university name from clicked cube
   const universityName = data.university;
   if (!universityName || universityName === 'Unassigned') {
     console.log('❌ Clicked on an unassigned cube.');
     return;
   }
+  // All programs for this university
   const uniData = allUniversityContent.filter(item => item && item.university === universityName);
   if (uniData.length === 0) {
     console.log(`❌ No content found for ${universityName}`);
+    // Fallback: open whichever link is present
     const linkToOpen = data.programLink || data.applyLink;
     if (linkToOpen && linkToOpen !== '#') window.open(buildLinkWithToken(linkToOpen), '_blank');
     return;
@@ -214,8 +215,7 @@ async function showInfoPanel(data) {
   document.getElementById('infoPanelMainCard').innerHTML = `
     <div class="main-card-details">
       <img src="${mainProgram.logo}" alt="${mainProgram.university} Logo">
-      <!-- ADD INLINE STYLE FOR DARK, BOLD, VISIBLE HEADING -->
-      <h3 style="color:#111;opacity:1;font-weight:900 !important;">${mainProgram.university}</h3>
+      <h3>${mainProgram.university}</h3>
     </div>
     <div class="main-card-actions">
       ${mainProgram.erasmusLink && mainProgram.erasmusLink !== '#' ? `<button class="partner-cta erasmus" onclick="window.open('${buildLinkWithToken(mainProgram.erasmusLink)}', '_blank')">Erasmus Info</button>` : ''}
@@ -230,18 +230,17 @@ async function showInfoPanel(data) {
     const applyEnabled = item.applyLink && item.applyLink !== '#';
     const infoLink = buildLinkWithToken(item.programLink);
     const applyLink = buildLinkWithToken(item.applyLink);
-    // ADD INLINE STYLE TO PROGRAM HEADINGS TO GUARANTEE VISIBILITY
     const subcardHTML = `
       <div class="subcard">
         <div class="subcard-info">
-          <h4 style="color:#111;opacity:1;font-weight:900 !important;">${item.programName.replace(/\n/g, ' ')}</h4>
+          <h4>${item.programName.replace(/\n/g, ' ')}</h4>
         </div>
         <div class="subcard-buttons">
-          <button class="partner-cta info" ${infoEnabled ? '' : `disabled title="No info link available"`}
+          <button class="partner-cta info" ${infoEnabled ? '' : `disabled title="No info link available"`} 
                   onclick="if(${infoEnabled}) window.open('${infoLink}', '_blank')">
             University Info
           </button>
-          <button class="partner-cta apply" ${applyEnabled ? '' : `disabled title="No apply link available"`}
+          <button class="partner-cta apply" ${applyEnabled ? '' : `disabled title="No apply link available"`} 
                   onclick="if(${applyEnabled}) window.open('${applyLink}', '_blank')">
             Apply Now
           </button>
@@ -253,86 +252,26 @@ async function showInfoPanel(data) {
   document.getElementById('infoPanelOverlay').style.display = 'flex';
   console.log(`✅ Info panel displayed for ${universityName}`);
 }
-
+function hideInfoPanel() {
+  document.getElementById('infoPanelOverlay').style.display = 'none';
+}
+// This function sets up the HTML and CSS for the panel when the page loads.
 function addInfoPanelStyles() {
   const style = document.createElement('style');
+  // Using the same CSS you already had
   style.textContent = `
-    #infoPanelOverlay {
-      display: none;
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(16, 25, 36, 0.82);
-      z-index: 10000;
-      justify-content: center; align-items: center;
-    }
-    .info-panel {
-      background: #22356a;
-      border-radius: 16px;
-      padding: 32px 34px 18px 34px;
-      min-width: 340px; max-width: 470px; max-height: 80vh;
-      overflow-y: auto;
-      box-shadow: 0 8px 32px #000c;
-      position: relative;
-    }
-    .info-panel h3, .info-panel .subcard-info h4 {
-      color: #111 !important;
-      opacity: 1 !important;
-      font-weight: 900 !important;
-      letter-spacing: 0.01em !important;
-      background: none !important;
-      text-shadow: none !important;
-    }
-    .info-panel .subcard {
-      background: #f6f7fa;
-      border-radius: 11px;
-      margin: 16px 0;
-      padding: 17px 16px 12px 16px;
-      box-shadow: 0 1px 6px #0001;
-      border: 1.5px solid #e2e7f1;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-    }
-    .info-panel .partner-cta {
-      background: #0860f2;
-      color: #fff;
-      font-weight: 600;
-      border-radius: 7px;
-      border: none;
-      padding: 12px 28px;
-      margin-right: 14px;
-      margin-top: 7px;
-      min-width: 112px;
-      font-size: 1.01em;
-      cursor: pointer;
-      box-shadow: 0 2px 6px #0031;
-      transition: background 0.15s, box-shadow 0.12s;
-    }
-    .info-panel .partner-cta:hover:not(:disabled) {
-      background: #093fb9;
-      box-shadow: 0 3px 11px #0035;
-    }
-    .info-panel .partner-cta:disabled {
-      background: #c1cadb; color: #7e8392;
-      cursor: not-allowed;
-    }
-    .main-card-details {
-      display: flex; align-items: center; margin-bottom: 14px;
-    }
-    .main-card-details img { width: 52px; height: 52px; margin-right: 18px; border-radius: 7px; }
-    .main-card-details h3 { margin: 0; font-size: 1.21em; }
-    .info-panel .main-card-actions { margin-bottom: 8px; }
-    .info-panel button[onclick="hideInfoPanel()"] {
-      background: #fff; color: #22356a; font-weight: 700; border: none;
-      border-radius: 8px; box-shadow: 0 1px 4px #0001;
-      margin-top: 19px; padding: 10px 24px; font-size: 1em;
-      cursor: pointer;
-    }
-    .info-panel button[onclick="hideInfoPanel()"]:hover {
-      background: #e9ecf2;
-    }
+    #infoPanelOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center; }
+    .info-panel { background: black; padding: 20px; border-radius: 10px; max-width: 600px; max-height: 80vh; overflow-y: auto; }
+    .partner-cta { padding: 8px 16px; margin: 5px; border: none; border-radius: 5px; background: #007bff; color: white; cursor: pointer; }
+    .partner-cta.disabled { background: #ccc; cursor: not-allowed; }
+    .partner-cta:hover:not(.disabled) { background: #0056b3; }
+    .subcard { border: 1px solid #ddd; padding: 10px; margin: 10px 0; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; }
+    .subcard-info h4 { margin: 0; }
+    .main-card-details { display: flex; align-items: center; margin-bottom: 15px; }
+    .main-card-details img { width: 60px; height: 60px; margin-right: 15px; border-radius: 5px; }
+    .main-card-details h3 { margin: 0; font-size: 24px; }
   `;
   document.head.appendChild(style);
-
   const overlay = document.createElement('div');
   overlay.id = 'infoPanelOverlay';
   overlay.onclick = hideInfoPanel;
@@ -345,10 +284,8 @@ function addInfoPanelStyles() {
   `;
   document.body.appendChild(overlay);
 }
+// This ensures the panel's HTML and CSS are ready when the page loads.
 document.addEventListener('DOMContentLoaded', addInfoPanelStyles);
-
-
-
 // ---------- If later you allow panel post-login, remove the return above and use builder below ----------
 /*
 const uniData = allUniversityContent.filter(item => item && item.university === data.university);
@@ -375,7 +312,7 @@ uniData.forEach(item => {
     <div class="subcard">
       <div class="subcard-info">
         <img src="${item.logo}" alt="">
-        <h4>${item.programName.replace(/\\n/g, ' ')}</h4>
+        <h4>${item.programName.replace(/\n/g, ' ')}</h4>
       </div>
       <div class="subcard-buttons">
         <button class="partner-cta info" ${infoEnabled ? '' : 'disabled'} data-href="${infoEnabled ? item.programLink : ''}">University Info</button>
@@ -400,11 +337,9 @@ container.querySelectorAll('.partner-cta.apply').forEach(btn => {
 document.getElementById('infoPanelOverlay').style.display = 'flex';
 console.log('✅ Info panel displayed with both university and application links');
 */
-
 function hideInfoPanel() {
   document.getElementById('infoPanelOverlay').style.display = 'none';
 }
-
 // Add info panel styles and HTML (kept in case you re-enable the panel)
 function addInfoPanelStyles() {
   const style = document.createElement('style');
@@ -461,6 +396,15 @@ function addInfoPanelStyles() {
       height: 60px;
       margin-right: 15px;
     }
+    .main-card-details h3 {
+  color: #111 !important;
+  font-weight: bold;
+}
+.subcard-info h4 {
+  color: #111 !important;
+  font-weight: bold;
+}
+
   `;
   document.head.appendChild(style);
   const overlay = document.createElement('div');
@@ -475,10 +419,8 @@ function addInfoPanelStyles() {
   `;
   document.body.appendChild(overlay);
 }
-
 // Initialize info panel scaffolding on load (safe to keep)
 document.addEventListener('DOMContentLoaded', addInfoPanelStyles);
-
 
 
 // =======
@@ -527,8 +469,6 @@ let isInteracting = false, hoverTimeout;
 let clickedSubCube = null;
 let currentlyHovered = null; 
 let hoverCard;
-let arcParticles = []; // Store moving spheres along animated country/global arcs (for show only)
-
 
 // Add this new line right after
 let ignoreHover = false; // This will temporarily disable hover detection
@@ -910,6 +850,8 @@ function setCubeToAppliedState(programOrUniName) {
 
 
 // =======
+// TOGGLE FUNCTION CREATION
+// =======
 function createToggleFunction(cubeName) {
   return function() {
     const explosionStateMap = {
@@ -942,10 +884,8 @@ function createToggleFunction(cubeName) {
     const subCubes = subCubeMap[cubeName];
     const explodedPos = explodedPosMap[cubeName];
     const shouldBeExploded = !isExploded;
-
     setExploded(shouldBeExploded);
     if (!cube) return;
-
     const targetPosition = new THREE.Vector3();
     if (shouldBeExploded) {
       cube.getWorldPosition(targetPosition);
@@ -960,33 +900,8 @@ function createToggleFunction(cubeName) {
       const targetPos = shouldBeExploded ? explodedPos[i] : subCube.userData.initialPosition;
       new TWEEN.Tween(subCube.position).to(targetPos, 800).easing(TWEEN.Easing.Exponential.InOut).start();
     });
-
-    // ---------- MACRO NEURAL MEMBRANE ----------
-    if (globeGroup.userData.countryNeuralMembrane) {
-      globeGroup.remove(globeGroup.userData.countryNeuralMembrane);
-      if (globeGroup.userData.countryNeuralMembrane.geometry) globeGroup.userData.countryNeuralMembrane.geometry.dispose();
-      if (globeGroup.userData.countryNeuralMembrane.material) globeGroup.userData.countryNeuralMembrane.material.dispose();
-      globeGroup.userData.countryNeuralMembrane = null;
-    }
-    drawCountryNeuralMembraneCountryCubes(0xff0000, 1.0);
-    // -------------------------------------------
-
-    // Per-country web (exploded blanket)
-    if (shouldBeExploded) {
-      drawCountryWeb(subCubes, cube, 0xff2222, 0.13);
-    } else {
-      if (cube.userData.countryWebLine) {
-        globeGroup.remove(cube.userData.countryWebLine);
-        if (cube.userData.countryWebLine.geometry) cube.userData.countryWebLine.geometry.dispose();
-        if (cube.userData.countryWebLine.material) cube.userData.countryWebLine.material.dispose();
-        cube.userData.countryWebLine = null;
-      }
-    }
-  };
+  }
 }
-
-
-
 const toggleFunctionMap = {
   'Europe': createToggleFunction('Europe'), 'Thailand': createToggleFunction('Thailand'),
   'Canada': createToggleFunction('Canada'), 'UK': createToggleFunction('UK'),
@@ -1041,155 +956,6 @@ function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
       }
   return cubeObject;
 }
-// Utility: Get the center-most subcube of a country’s cubes
-function getCenterSubCube(subCubeArray) {
-  if (!subCubeArray || !subCubeArray.length) return null;
-  const centroid = subCubeArray.reduce(
-    (acc, sub) => acc.add(sub.getWorldPosition(new THREE.Vector3())),
-    new THREE.Vector3()
-  ).divideScalar(subCubeArray.length);
-  let best = subCubeArray[0], minDist = Infinity;
-  for (const sub of subCubeArray) {
-    const pos = sub.getWorldPosition(new THREE.Vector3());
-    const dist = pos.distanceTo(centroid);
-    if (dist < minDist) { minDist = dist; best = sub; }
-  }
-  return best;
-}
-
-// Helper: Construct a visually thin spaghetti arc segment
-function createCurvedWebSegment(start, end, color = 0xff2222, opacity = 0.11) {
-  const mid = start.clone().add(end).multiplyScalar(0.5)
-    .normalize().multiplyScalar(start.length() + 0.13);
-  const curve = new THREE.QuadraticBezierCurve3(start, mid, end);
-  const geometry = new THREE.TubeGeometry(curve, 32, 0.004, 8, false);
-  const material = new THREE.MeshBasicMaterial({
-    color,
-    opacity,
-    transparent: true,
-    blending: THREE.NormalBlending,
-    depthWrite: false,
-    depthTest: false,
-  });
-  const mesh = new THREE.Mesh(geometry, material);
-  mesh.renderOrder = 1000;
-  return mesh;
-}
-
-function drawMacroWebAndMembrane(options = {}) {
-  const {
-    webColor = 0xff0000,
-    webOpacity = 0.11,
-    skinColor = 0xff0000,
-    skinOpacity = 0.18,
-    wireframeSkinOpacity = 0.06
-  } = options;
-
-  // Defensive: Ensure globeGroup and userData exist
-  if (!window.globeGroup || !globeGroup.userData) return;
-
-  // Gather macro anchors in a visually-ordered loop
-  const anchors = [
-    getCenterSubCube(europeSubCubes),
-    getCenterSubCube(ukSubCubes),
-    getCenterSubCube(canadaSubCubes),
-    getCenterSubCube(usaSubCubes),
-    getCenterSubCube(malaysiaSubCubes),
-    getCenterSubCube(singaporeSubCubes),
-    getCenterSubCube(newThailandSubCubes),
-    getCenterSubCube(indiaSubCubes),
-    getCenterSubCube(europeSubCubes) // close loop
-  ].filter(Boolean);
-
-  // Clean up old
-  ["macroWebGroup", "macroMembraneSkin", "macroMembraneWire"].forEach(key => {
-    const obj = globeGroup.userData[key];
-    if (obj) {
-      try {
-        if (obj.type === "Group")
-          obj.children.forEach(c => {
-            c.geometry?.dispose && c.geometry.dispose();
-            c.material?.dispose && c.material.dispose();
-          });
-        obj.geometry?.dispose && obj.geometry.dispose();
-        obj.material?.dispose && obj.material.dispose();
-        globeGroup.remove(obj);
-      } catch(e) {
-        console.warn('Cleanup failed on', key, e);
-      }
-      globeGroup.userData[key] = null;
-    }
-  });
-
-  // Draw macro spaghetti arcs as thin tubes
-  if (anchors.length >= 2) {
-    const webGroup = new THREE.Group();
-    for (let i = 0; i < anchors.length - 1; i++) {
-      const posA = anchors[i].getWorldPosition(new THREE.Vector3());
-      for (let j = i + 1; j < anchors.length; j++) {
-        const posB = anchors[j].getWorldPosition(new THREE.Vector3());
-        webGroup.add(createCurvedWebSegment(posA, posB, webColor, webOpacity));
-      }
-    }
-    globeGroup.userData.macroWebGroup = webGroup;
-    globeGroup.add(webGroup);
-  }
-
-  // Animated membrane fan ("skin" between anchors)
-  if (anchors.length >= 4) {
-    const positions = [];
-    for (let i = 1; i < anchors.length - 1; i++) {
-      const a = anchors[0].getWorldPosition(new THREE.Vector3());
-      const b = anchors[i].getWorldPosition(new THREE.Vector3());
-      const c = anchors[i + 1].getWorldPosition(new THREE.Vector3());
-      positions.push(...a.toArray(), ...b.toArray(), ...c.toArray());
-    }
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-    geometry.userData.base = positions.slice();
-
-    // Glowing animated membrane
-    const material = new THREE.MeshBasicMaterial({
-      color: skinColor,
-      transparent: true,
-      opacity: skinOpacity,
-      side: THREE.DoubleSide,
-      blending: THREE.AdditiveBlending
-    });
-    const mesh = new THREE.Mesh(geometry, material);
-    globeGroup.add(mesh);
-    globeGroup.userData.macroMembraneSkin = mesh;
-
-    // Faint wireframe overlay
-    const wireMaterial = new THREE.MeshBasicMaterial({
-      color: skinColor,
-      opacity: wireframeSkinOpacity,
-      transparent: true,
-      wireframe: true,
-      blending: THREE.NormalBlending
-    });
-    const wire = new THREE.Mesh(geometry.clone(), wireMaterial);
-    globeGroup.add(wire);
-    globeGroup.userData.macroMembraneWire = wire;
-  }
-}
-function animateMembraneVertices(geometry, time, amplitude = 0.02, frequency = 1.3) {
-  if (!geometry || !geometry.userData || !geometry.userData.base) return;
-  const base = geometry.userData.base;
-  const posAttr = geometry.attributes.position;
-  for (let i = 0; i < posAttr.count; i++) {
-    let x = base[i * 3];
-    let y = base[i * 3 + 1];
-    let z = base[i * 3 + 2];
-    const offset = Math.sin(time + i * frequency) * amplitude;
-    posAttr.setXYZ(i, x + offset, y + offset, z + offset);
-  }
-  posAttr.needsUpdate = true;
-}
-
-
-
-
 
 // CORRECTED: Creates a Mesh for the membrane effect
 function createNeuralNetwork() {
@@ -1272,8 +1038,6 @@ const arcPairs = [
 ];
 
 // 3. Your arc creation code (no changes except for how arcPairs is fed in):
-// ----- SMALLER, FASTER CUBES WITH NEAT LABELS -----
-
 function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
   const fromName = (fromGroup.userData.countryName || '').toLowerCase();
   const toName = (toGroup.userData.countryName || '').toLowerCase();
@@ -1308,53 +1072,26 @@ function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
   return path;
 }
 
-// -------- Animate arc cubes (both ways) --------
-function animateArcParticles(arc, intakeLabels = ["1", "2", "3", "4", "5", "6"]) {
+// 4. (unchanged)
+function animateArcParticles(arc) {
   const curve = arc.userData.curve;
   if (!curve) return;
-  const particleCount = 6;
-  const baseSpeed = 1.2; // Increased speed
+  const particleCount = 5;
+  const speed = 0.5;
   for (let i = 0; i < particleCount; i++) {
     const particle = new THREE.Mesh(
-      new THREE.BoxGeometry(0.009, 0.009, 0.009), // smaller
-      new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.96 })
+      new THREE.SphereGeometry(0.01, 8, 8),
+      new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.7 })
     );
-    // Add small, low-profile white label above the cube
-    const labelSprite = createBillboardLabel(intakeLabels[i]);
-    particle.add(labelSprite);
-    labelSprite.position.set(0, 0.014, 0); // closer to cube
     particle.userData = {
-      t: (i / particleCount), // distribute along curve
-      speed: baseSpeed * (0.8 + Math.random() * 0.4), // higher speed
+      t: Math.random(),
+      speed: speed * (0.8 + Math.random() * 0.4),
       curve: curve
     };
     scene.add(particle);
     arcParticles.push(particle);
   }
 }
-
-// -------- Billboard label: smaller, white only --------
-function createBillboardLabel(text) {
-  const canvas = document.createElement('canvas');
-  canvas.width = 64; canvas.height = 28;
-  const ctx = canvas.getContext('2d');
-  ctx.font = 'bold 16px Arial';
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = 'rgba(0,0,0,0.45)';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = '#ffffff'; // white font
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(text, canvas.width / 2, canvas.height / 2 + 2);
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.needsUpdate = true;
-  const mat = new THREE.SpriteMaterial({ map: texture, transparent: true });
-  const sprite = new THREE.Sprite(mat);
-  sprite.scale.set(0.025, 0.011, 1); // smaller
-  return sprite;
-}
-
-
 
 // 5. Use arcPairs for all arc generation:
 function drawAllConnections() {
@@ -1364,7 +1101,7 @@ function drawAllConnections() {
     if (fromBlock && toBlock) return createConnectionPath(fromBlock, toBlock, index);
     return null;
   }).filter(Boolean);
-  arcPaths.forEach((arc) => animateArcParticles(arc));
+  arcPaths.forEach(animateArcParticles);
 }
 
 
@@ -1601,10 +1338,6 @@ function setupEventListeners() {
 // ===
 // GLOBE AND CUBES CREATION
 // ===
-// =======
-// =======
-// GLOBE AND CUBES CREATION
-// =======
 async function createGlobeAndCubes() {
   console.log('🔄 Creating globe and cubes...');
   createNeuralNetwork();
@@ -1665,78 +1398,73 @@ async function createGlobeAndCubes() {
       countryLabels.push({ label: lMesh, block: blockMesh, offset: 0.06 });
       globeGroup.add(lMesh);
     });
-
-    // Keep these three lines in this order:
     drawAllConnections();
     setTimeout(() => { highlightCountriesByProgram("UG"); }, 500);
-    drawCountryToCountryWeb(Object.values(countryBlocks), 0xff2222, 0.11);
-
   });
   console.log('✅ Globe and cubes created successfully');
 }
-
-// =======
-
-
-// 1. Top-level helper
-function updateArcParticles(dt) {
-  if (!arcParticles.length) return;
-  for (const p of arcParticles) {
-    const ud = p.userData;
-    if (!ud || !ud.curve) continue;
-    ud.t += ud.speed * dt * 0.25;
-    if (ud.t > 1) ud.t -= 1;
-    const pos = ud.curve.getPoint(ud.t);
-    p.position.copy(pos);
-    p.material.opacity = 0.35 + 0.65 * Math.sin(ud.t * Math.PI);
-  }
-}
+// ===
+// ANIMATION (with "Sticky" Hover Card Logic)
+// ===
 function animate() {
   requestAnimationFrame(animate);
-  // --- HOVER CARD LOGIC ---
+  
+  // --- START: HOVER CARD LOGIC ---
   if (hoverCard) {
     raycaster.setFromCamera(mouse, camera);
     const intersects = raycaster.intersectObjects(neuronGroup.children, true);
+    
     let foundValidSubCube = false;
     if (intersects.length > 0) {
       const firstIntersect = intersects[0].object;
+      
       if (firstIntersect.userData.isSubCube && firstIntersect.userData.university !== "Unassigned") {
         foundValidSubCube = true;
+        
         if (currentlyHovered !== firstIntersect) {
           currentlyHovered = firstIntersect;
           const data = firstIntersect.userData;
+          
           document.getElementById('hover-card-title').textContent = data.university;
-          document.getElementById('hover-card-program').textContent = data.programName.replace(/\n/g, ' ');
+          document.getElementById('hover-card-program').textContent = data.programName.replace(/\\n/g, ' ');
+          
           const infoBtn = document.getElementById('hover-card-info-btn');
           const applyBtn = document.getElementById('hover-card-apply-btn');
+          
           infoBtn.disabled = !data.programLink || data.programLink === '#';
           applyBtn.disabled = !data.applyLink || data.applyLink === '#';
+          
           hoverCard.classList.remove('hover-card-hidden');
         }
+        
+        // --- "STICKY" POSITIONING LOGIC ---
         if (currentlyHovered) {
           const vector = new THREE.Vector3();
           currentlyHovered.getWorldPosition(vector);
           vector.project(camera);
+          
           const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
           const y = (vector.y * -0.5 + 0.5) * window.innerHeight;
+          
           hoverCard.style.left = `${x + 15}px`;
           hoverCard.style.top = `${y}px`;
         }
       }
     }
+    
     if (!foundValidSubCube && currentlyHovered) {
       currentlyHovered = null;
       hoverCard.classList.add('hover-card-hidden');
     }
   }
-  // --- UPDATE TIME & CONTROLS ---
+  // --- END: HOVER CARD LOGIC ---
+
   const elapsedTime = clock.getElapsedTime();
-  if (controls && controls.enabled) controls.update();
-  if (typeof TWEEN !== 'undefined') TWEEN.update();
-  arcPaths.forEach(path => {
-    if (path.material.isShaderMaterial) path.material.uniforms.time.value = elapsedTime;
-  });
-  // --- LABELS ---
+  if (controls && controls.enabled) { controls.update(); }
+  if (typeof TWEEN !== 'undefined') { TWEEN.update(); }
+  
+  arcPaths.forEach(path => { if (path.material.isShaderMaterial) { path.material.uniforms.time.value = elapsedTime; } });
+  
   countryLabels.forEach(item => {
     const worldPosition = new THREE.Vector3();
     item.block.getWorldPosition(worldPosition);
@@ -1745,13 +1473,15 @@ function animate() {
     item.label.position.copy(labelPosition);
     item.label.lookAt(camera.position);
   });
-  // --- CUBE MOTION ---
+  
   const explosionStateMap = {
     'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded,
     'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded,
     'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded
   };
-  const boundaryRadius = 1.0, buffer = 0.02;
+  
+  const boundaryRadius = 1.0;
+  const buffer = 0.02;
   if (!isCubeMovementPaused) {
     cubes.forEach((cube, i) => {
       const isExploded = cube.userData.neuralName && explosionStateMap[cube.userData.neuralName];
@@ -1763,59 +1493,46 @@ function animate() {
         }
       }
     });
-    // --- SMALL NEURONAL LINES ---
+    
     if (neuralNetworkLines && neuralNetworkLines.visible) {
-      const vertices = [];
-      const maxDist = 0.6, connectionsPerCube = 3;
-      for (let i = 0; i < cubes.length; i++) {
-        if (!cubes[i].visible || cubes[i].userData.neuralName) continue;
-        let neighbors = [];
-        for (let j = i + 1; j < cubes.length; j++) {
-          if (!cubes[j].visible || cubes[j].userData.neuralName) continue;
-          const dist = cubes[i].position.distanceTo(cubes[j].position);
-          if (dist < maxDist) neighbors.push({ dist: dist, cube: cubes[j] });
+        const vertices = [];
+        const maxDist = 0.6;
+        const connectionsPerCube = 3;
+        for (let i = 0; i < cubes.length; i++) {
+            if (!cubes[i].visible || cubes[i].userData.neuralName) continue;
+            
+            let neighbors = [];
+            for (let j = i + 1; j < cubes.length; j++) {
+                if (!cubes[j].visible || cubes[j].userData.neuralName) continue;
+                const dist = cubes[i].position.distanceTo(cubes[j].position);
+                if (dist < maxDist) {
+                    neighbors.push({ dist: dist, cube: cubes[j] });
+                }
+            }
+            
+            neighbors.sort((a, b) => a.dist - b.dist);
+            const closest = neighbors.slice(0, connectionsPerCube);
+            
+            if (closest.length > 1) {
+                for (let k = 0; k < closest.length - 1; k++) {
+                    const startNode = cubes[i].position;
+                    const neighbor1 = closest[k].cube.position;
+                    const neighbor2 = closest[k + 1].cube.position;
+                    vertices.push(startNode.x, startNode.y, startNode.z);
+                    vertices.push(neighbor1.x, neighbor1.y, neighbor1.z);
+                    vertices.push(neighbor2.x, neighbor2.y, neighbor2.z);
+                }
+            }
         }
-        neighbors.sort((a, b) => a.dist - b.dist);
-        const closest = neighbors.slice(0, connectionsPerCube);
-        if (closest.length > 1) {
-          for (let k = 0; k < closest.length - 1; k++) {
-            const startNode = cubes[i].position;
-            const neighbor1 = closest[k].cube.position;
-            const neighbor2 = closest[k + 1].cube.position;
-            vertices.push(startNode.x, startNode.y, startNode.z,
-                          neighbor1.x, neighbor1.y, neighbor1.z,
-                          neighbor2.x, neighbor2.y, neighbor2.z);
-          }
-        }
-      }
-      neuralNetworkLines.geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-      neuralNetworkLines.geometry.attributes.position.needsUpdate = true;
-      neuralNetworkLines.geometry.computeVertexNormals();
-    }
-    // --- MACRO SPAGHETTI WEB + GLOWING SKIN ---
-    drawMacroWebAndMembrane({
-      webColor: 0xff2222,
-      webOpacity: 0.33,
-      skinColor: 0xff2222,
-      skinOpacity: 0.45,
-      wireframeSkinOpacity: 0.16
-    });
-    // Animate membrane mesh (both fill and wireframe)
-    if (globeGroup.userData.macroMembraneSkin) {
-      animateMembraneVertices(globeGroup.userData.macroMembraneSkin.geometry, clock.getElapsedTime(), 0.017, 1.24);
-    }
-    if (globeGroup.userData.macroMembraneWire) {
-      animateMembraneVertices(globeGroup.userData.macroMembraneWire.geometry, clock.getElapsedTime(), 0.017, 1.24);
+        
+        neuralNetworkLines.geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+        neuralNetworkLines.geometry.attributes.position.needsUpdate = true;
+        neuralNetworkLines.geometry.computeVertexNormals();
     }
   }
-  // --- ARC PARTICLE ANIMATION ---
-  const dt = clock.getDelta();
-  updateArcParticles(dt);
-
-  // Always render!
+  
   renderer.render(scene, camera);
 }
-
 // ===
 function togglePrivacySection() {
   const privacy = document.querySelector('.privacy-assurance');
@@ -1968,7 +1685,3 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   
 });
-
-
-
-
