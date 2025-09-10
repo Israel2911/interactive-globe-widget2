@@ -791,7 +791,6 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
   } else { drawText(); }
   return new THREE.MeshStandardMaterial({ map: texture, emissive: new THREE.Color(bgColor), emissiveIntensity: 0.6 });
 }
-
 function setCubeToAppliedState(programOrUniName) {
   const allSubCubes = [
     ...europeSubCubes, ...newThailandSubCubes, ...canadaSubCubes, ...ukSubCubes,
@@ -815,7 +814,7 @@ function setCubeToAppliedState(programOrUniName) {
       meshes = targetCube.children.filter(child => child.isMesh);
     }
     meshes.forEach(mesh => {
-      // --- Quick blink animation, then show flag
+      // Blink, then turn yellow with icon
       mesh.material = new THREE.MeshStandardMaterial({
         color: 0x39ff14, emissive: 0x39ff14, emissiveIntensity: 5, map: null,
         metalness: 0.18, roughness: 0.05
@@ -824,12 +823,12 @@ function setCubeToAppliedState(programOrUniName) {
       function blink(time) {
         let elapsed = time - blinkStart;
         let phase = Math.floor(elapsed / 120) % 2;
-        let complete = elapsed > 120 * 12; // blinks for ~1.4s
+        let complete = elapsed > 120 * 12; // ~1.4s
         if (complete) {
-          mesh.material.color.set(0xffffff); // return to normal, or keep green if you want
-          mesh.material.emissive.set(0x39ff14);
-          mesh.material.emissiveIntensity = 3;
-          addFlagToCube(mesh); // Show flag badge when blinking ends
+          mesh.material.color.set(0xFFF700);        // yellow
+          mesh.material.emissive.set(0xFFF700);
+          mesh.material.emissiveIntensity = 2;
+          addSuccessIconToCube(mesh, "scroll");     // Add student scroll icon
           return;
         }
         if (phase === 0) {
@@ -846,13 +845,35 @@ function setCubeToAppliedState(programOrUniName) {
       requestAnimationFrame(blink);
     });
   });
-
-  // --- Friendly Next Steps Notification ---
   showNotification(
     "✅ We have received your application.<br>Our team will get back to you within 2 weeks.<br>You can also track updates in your Student Dashboard.",
     true
   );
 }
+
+// Helper: Add a student scroll (or letter) icon to the cube center face
+function addSuccessIconToCube(mesh, type = "scroll") {
+  if (!mesh.userData.successIcon) {
+    let iconUrl;
+    if (type === "scroll") {
+      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4dc.png"; // 📜
+    } else if (type === "letter") {
+      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4e9.png"; // 📩
+    } else if (type === "cap") {
+      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f393.png"; // 🎓
+    } else {
+      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4dc.png";
+    }
+    const iconTexture = new THREE.TextureLoader().load(iconUrl);
+    const iconMaterial = new THREE.SpriteMaterial({ map: iconTexture, transparent: true });
+    const iconSprite = new THREE.Sprite(iconMaterial);
+    iconSprite.scale.set(0.05, 0.05, 1);      // small
+    iconSprite.position.set(0, 0, 0.03);      // center front face
+    mesh.add(iconSprite);
+    mesh.userData.successIcon = iconSprite;
+  }
+}
+
 
 function addSuccessIconToCube(mesh, type = "scroll") {
   if (!mesh.userData.successIcon) {
