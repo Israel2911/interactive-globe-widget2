@@ -853,6 +853,7 @@ if (!document.getElementById('applied-cube-popup-style')) {
 }
 
 // MAIN FUNCTION
+// MAIN FUNCTION - NEON BLINK/BEACON AND ICON ALIGNMENT
 function setCubeToAppliedState(programOrUniName) {
   const allSubCubes = [
     ...europeSubCubes, ...newThailandSubCubes, ...canadaSubCubes, ...ukSubCubes,
@@ -876,39 +877,39 @@ function setCubeToAppliedState(programOrUniName) {
       meshes = targetCube.children.filter(child => child.isMesh);
     }
     meshes.forEach(mesh => {
-      // 1. Add scroll icon now (and again after blink)
+      // Always add the scroll icon, before and after blinking
       addSuccessIconToCube(mesh, "scroll");
 
-      // 2. NEON BLINK: cycle between three brightness/whiteness levels
+      // Start NEON "beacon" BLINK: full, bright, and visible
       mesh.material = new THREE.MeshStandardMaterial({
-        color: 0xd6ff14,        // near-neon yellow
-        emissive: 0xd6ff14,
-        emissiveIntensity: 7.5,
+        color: 0xffff00,
+        emissive: 0xffff00,
+        emissiveIntensity: 10,
         transparent: true,
         opacity: 1.0,
-        metalness: 0.06, roughness: 0.1,
+        metalness: 0.07, roughness: 0.09,
         map: null
       });
 
       let blinkStart = performance.now();
       function blink(time) {
         let elapsed = time - blinkStart;
-        let phase = Math.floor(elapsed / 110) % 3;
-        let complete = elapsed > 110 * 16; // ≈1.7s of blinking for attention
+        let phase = Math.floor(elapsed / 100) % 3;
+        let complete = elapsed > 100 * 18; // ≈1.8s of blinking for attention
 
         if (complete) {
           mesh.material = new THREE.MeshStandardMaterial({
-            color: 0xFFF700,
-            emissive: 0xFFF700,
-            emissiveIntensity: 0.44,
+            color: 0xffff00,
+            emissive: 0xffff00,
+            emissiveIntensity: 0.45,
             metalness: 0.04,
             roughness: 0.14,
             transparent: true,
-            opacity: 0.7,
+            opacity: 0.77,
             map: null
           });
           addSuccessIconToCube(mesh, "scroll");
-          // Popup message
+          // Show bubble
           const cubeWorldPos = new THREE.Vector3();
           mesh.getWorldPosition(cubeWorldPos);
           cubeWorldPos.project(camera);
@@ -920,25 +921,22 @@ function setCubeToAppliedState(programOrUniName) {
           );
           return;
         }
-
-        // BEACON BLINK: alternate between intense white, neon chartreuse, and soft yellow
+        // BEACON BLINK: vivid swings in intensity and brightness; never < 1.0 opacity
         if (phase === 0) {
-          mesh.material.color.set(0xffffff);         // blast white for beacon draw
+          mesh.material.color.set(0xffffff);    // pure beacon white
           mesh.material.emissive.set(0xffff00);
-          mesh.material.emissiveIntensity = 20;
+          mesh.material.emissiveIntensity = 24;
           mesh.material.opacity = 1.0;
-        }
-        else if (phase === 1) {
-          mesh.material.color.set(0xd6ff14);         // super-bright chartreuse
-          mesh.material.emissive.set(0xd6ff14);
-          mesh.material.emissiveIntensity = 11.5;
+        } else if (phase === 1) {
+          mesh.material.color.set(0xffff00);    // electric yellow
+          mesh.material.emissive.set(0xffff00);
+          mesh.material.emissiveIntensity = 14;
           mesh.material.opacity = 1.0;
-        }
-        else {
-          mesh.material.color.set(0xFFF700);         // soft yellow
-          mesh.material.emissive.set(0xFFF700);
-          mesh.material.emissiveIntensity = 3.7;
-          mesh.material.opacity = 0.91;
+        } else {
+          mesh.material.color.set(0xffff00);    // dimmer yellow
+          mesh.material.emissive.set(0xffff00);
+          mesh.material.emissiveIntensity = 4.5;
+          mesh.material.opacity = 0.94;
         }
         requestAnimationFrame(blink);
       }
@@ -947,7 +945,7 @@ function setCubeToAppliedState(programOrUniName) {
   });
 }
 
-// Perfected alignment for emoji scroll icon for subcubes around 0.01 size
+// Helper: pixel-perfect centered, non-clipped scroll icon for typical 0.01 subcube
 function addSuccessIconToCube(mesh, type = "scroll") {
   if (mesh.userData.successIcon) mesh.remove(mesh.userData.successIcon);
   let iconUrl =
@@ -957,14 +955,14 @@ function addSuccessIconToCube(mesh, type = "scroll") {
   const iconTexture = new THREE.TextureLoader().load(iconUrl);
   const iconMaterial = new THREE.SpriteMaterial({ map: iconTexture, transparent: true });
   const iconSprite = new THREE.Sprite(iconMaterial);
-  iconSprite.center.set(0.50, 0.53);               // adjust for emoji baseline as needed
-  iconSprite.scale.set(0.0057, 0.0057, 1);         // tweak for your cube size
-  iconSprite.position.set(0, 0, 0.0062);           // a hair out from cube face for clarity
+  iconSprite.center.set(0.5, 0.49);                 // visually center for scroll PNG baseline
+  iconSprite.scale.set(0.0053, 0.0053, 1);          // fits most cube faces; tweak if needed
+  iconSprite.position.set(0, 0, 0.0053);            // flush with face, not floating
   mesh.add(iconSprite);
   mesh.userData.successIcon = iconSprite;
 }
 
-// Popup and CSS as before!
+// CSS (same as before) for popup
 if (!document.getElementById('applied-cube-popup-style')) {
   const style = document.createElement('style');
   style.id = 'applied-cube-popup-style';
@@ -997,6 +995,7 @@ function showCubePopup(x, y, msg) {
   document.body.appendChild(div);
   setTimeout(() => div.remove(), 6000);
 }
+
 
 // =======
 // TOGGLE FUNCTION CREATION
