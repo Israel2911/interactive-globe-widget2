@@ -854,18 +854,26 @@ function setCubeToAppliedState(programOrUniName) {
   );
 }
 
-// Utility: Add flag sprite as badge
-function addFlagToCube(mesh) {
-  if (!mesh.userData.flagSprite) {
-    const flagTexture = new THREE.TextureLoader().load(
-      'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f6a9.png'
-    );
-    const flagMaterial = new THREE.SpriteMaterial({ map: flagTexture, transparent: true });
-    const flagSprite = new THREE.Sprite(flagMaterial);
-    flagSprite.scale.set(0.09, 0.07, 1);
-    flagSprite.position.set(0.06, 0.06, 0.06);
-    mesh.add(flagSprite);
-    mesh.userData.flagSprite = flagSprite;
+function addSuccessIconToCube(mesh, type = "scroll") {
+  if (!mesh.userData.successIcon) {
+    // Choose the icon to use
+    let iconUrl;
+    if (type === "scroll") {
+      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4dc.png"; // 📜 scroll
+    } else if (type === "letter") {
+      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4e9.png"; // 📩 envelope
+    } else if (type === "cap") {
+      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f393.png"; // 🎓 graduation cap
+    } else {
+      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4dc.png"; // Default: scroll
+    }
+    const iconTexture = new THREE.TextureLoader().load(iconUrl);
+    const iconMaterial = new THREE.SpriteMaterial({ map: iconTexture, transparent: true });
+    const iconSprite = new THREE.Sprite(iconMaterial);
+    iconSprite.scale.set(0.05, 0.05, 1);           // Small, fits "inside" the face
+    iconSprite.position.set(0, 0, 0.018);           // Center, slightly in front
+    mesh.add(iconSprite);
+    mesh.userData.successIcon = iconSprite;
   }
 }
 
