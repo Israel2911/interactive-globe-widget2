@@ -876,7 +876,9 @@ function setCubeToAppliedState(programOrUniName) {
       meshes = targetCube.children.filter(child => child.isMesh);
     }
     meshes.forEach(mesh => {
-      // Neon blink animation, then yellow+scroll+popup
+      // 1. Add scroll icon IMMEDIATELY so it's visible during AND after blinking
+      addSuccessIconToCube(mesh, "scroll");
+      // 2. Blink animation, then soft yellow at end
       mesh.material = new THREE.MeshStandardMaterial({
         color: 0x39ff14, emissive: 0x39ff14, emissiveIntensity: 10, map: null,
         metalness: 0.18, roughness: 0.05
@@ -887,7 +889,6 @@ function setCubeToAppliedState(programOrUniName) {
         let phase = Math.floor(elapsed / 110) % 2;
         let complete = elapsed > 110 * 12;
         if (complete) {
-          // Translucent yellow + embedded scroll icon
           mesh.material = new THREE.MeshStandardMaterial({
             color: 0xFFF700,
             emissive: 0xFFF700,
@@ -898,9 +899,9 @@ function setCubeToAppliedState(programOrUniName) {
             opacity: 0.5,
             map: null
           });
+          // Add again in case post-blink material replacement removed it
           addSuccessIconToCube(mesh, "scroll");
-
-          // Show message bubble tied to this cube's screen position
+          // Show message bubble (see earlier code for showCubePopup)
           const cubeWorldPos = new THREE.Vector3();
           mesh.getWorldPosition(cubeWorldPos);
           cubeWorldPos.project(camera);
@@ -927,6 +928,24 @@ function setCubeToAppliedState(programOrUniName) {
     });
   });
 }
+
+// Helper as before, but ensure Z is "just in front" of the cube face
+function addSuccessIconToCube(mesh, type = "scroll") {
+  if (!mesh.userData.successIcon) {
+    let iconUrl =
+      type === "scroll"
+        ? "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4dc.png"
+        : "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4e9.png"; // default: scroll
+    const iconTexture = new THREE.TextureLoader().load(iconUrl);
+    const iconMaterial = new THREE.SpriteMaterial({ map: iconTexture, transparent: true });
+    const iconSprite = new THREE.Sprite(iconMaterial);
+    iconSprite.scale.set(0.009, 0.009, 1);
+    iconSprite.position.set(0, 0, 0.007); // Z should be about +cube depth/2+margin
+    mesh.add(iconSprite);
+    mesh.userData.successIcon = iconSprite;
+  }
+}
+
 
 
 // =======
