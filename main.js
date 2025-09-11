@@ -837,6 +837,7 @@ function setCubeToAppliedState(programOrUniName) {
 }
 
 
+
 // =======
 // SVG/Canvas NEON SCROLL ICON: Only runs for APPLIED/YELLOW cubes!
 // =======
