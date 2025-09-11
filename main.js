@@ -867,30 +867,81 @@ function setCubeToAppliedState(programOrUniName) {
     showNotification(`No cube found for "${programOrUniName}"`, false);
     return;
   }
-  cubesToHighlight.forEach(mesh => {
-    mesh.material = new THREE.MeshStandardMaterial({
-      color: 0xffff00,
-      emissive: 0xffff00,
-      emissiveIntensity: 0.44,
-      metalness: 0.04,
-      roughness: 0.14,
-      transparent: true,
-      opacity: 0.74,
-      map: null
+  cubesToHighlight.forEach(targetCube => {
+    let meshes = [];
+    if (targetCube.isMesh) {
+      meshes = [targetCube];
+    } else if (targetCube.type === "Group" && targetCube.children) {
+      meshes = targetCube.children.filter(child => child.isMesh);
+    }
+    meshes.forEach(mesh => {
+      // Green blink
+      mesh.material = new THREE.MeshStandardMaterial({
+        color: 0x39ff14, emissive: 0x39ff14, emissiveIntensity: 5, map: null,
+        metalness: 0.18, roughness: 0.05
+      });
+      let blinkStart = performance.now();
+      function blink(time) {
+        let elapsed = time - blinkStart;
+        let phase = Math.floor(elapsed / 120) % 2;
+        let complete = elapsed > 120 * 12; // ~1.4s
+        if (complete) {
+          // Soft translucent yellow fill
+          mesh.material = new THREE.MeshStandardMaterial({
+            color: 0xFFF700,
+            emissive: 0xFFF700,
+            emissiveIntensity: 0.5,
+            metalness: 0.12,
+            roughness: 0.20,
+            transparent: true,
+            opacity: 0.5,
+            map: null
+          });
+          addSuccessIconToCube(mesh, "scroll"); // "scroll" icon embedded
+          return;
+        }
+        if (phase === 0) {
+          mesh.material.color.set(0x39ff14);
+          mesh.material.emissive.set(0x39ff14);
+          mesh.material.emissiveIntensity = 8;
+        } else {
+          mesh.material.color.set(0x000000);
+          mesh.material.emissive.set(0x000000);
+          mesh.material.emissiveIntensity = 0.3;
+        }
+        requestAnimationFrame(blink);
+      }
+      requestAnimationFrame(blink);
     });
-    addSuccessIconToCube(mesh, "scroll");
-
-    // "Sticky flag" popup message above cube (disappears after 5s)
-    const cubeWorldPos = new THREE.Vector3();
-    mesh.getWorldPosition(cubeWorldPos);
-    cubeWorldPos.project(camera);
-    const x = (cubeWorldPos.x * 0.5 + 0.5) * window.innerWidth;
-    const y = (cubeWorldPos.y * -0.5 + 0.5) * window.innerHeight;
-    showCubePopup(
-      x, y,
-      "<b>✅ Application Received!</b><br>Our team will get back to you in 2 weeks.<br>You can also track updates in your Student Dashboard."
-    );
   });
+
+  showNotification(
+    "✅ We have received your application.<br>Our team will get back to you within 2 weeks.<br>You can also track updates in your Student Dashboard.",
+    true
+  );
+}
+
+// Helper: Embedded mini scroll icon
+function addSuccessIconToCube(mesh, type = "scroll") {
+  if (!mesh.userData.successIcon) {
+    let iconUrl;
+    if (type === "scroll") {
+      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4dc.png";
+    } else if (type === "letter") {
+      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4e9.png";
+    } else if (type === "cap") {
+      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f393.png";
+    } else {
+      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4dc.png";
+    }
+    const iconTexture = new THREE.TextureLoader().load(iconUrl);
+    const iconMaterial = new THREE.SpriteMaterial({ map: iconTexture, transparent: true });
+    const iconSprite = new THREE.Sprite(iconMaterial);
+    iconSprite.scale.set(0.009, 0.009, 1);      // Small and subtle
+    iconSprite.position.set(0, 0, 0.0015);      // Just inside the front face
+    mesh.add(iconSprite);
+    mesh.userData.successIcon = iconSprite;
+  }
 }
 
 // =======
