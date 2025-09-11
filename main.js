@@ -797,26 +797,23 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
 // APPLIED STATE WITH DEBUGGING AND SCALING 3D MESSAGE CARD
 // =======
 // =======
-// APPLIED STATE: FULL OPAQUE + GLOWING CENTERED SCROLL ICON + TIGHT FLAG
+// APPLIED STATE: FULL OPAQUE + GLOWING SCROLL ICON + TIGHT FLAG
 // =======
 function setCubeToAppliedState(programOrUniName) {
   const allSubCubes = [
     ...europeSubCubes, ...newThailandSubCubes, ...canadaSubCubes, ...ukSubCubes,
     ...usaSubCubes, ...indiaSubCubes, ...singaporeSubCubes, ...malaysiaSubCubes
   ];
-
   const cubesToHighlight = allSubCubes.filter(
     cube =>
       cube &&
       cube.userData.university &&
       cube.userData.university.trim().toLowerCase() === programOrUniName.trim().toLowerCase()
   );
-
   if (cubesToHighlight.length === 0) {
     showNotification(`No cube found for "${programOrUniName}"`, false);
     return;
   }
-
   cubesToHighlight.forEach(mesh => {
     // 1. BOLD yellow highlight, fully opaque
     mesh.material = new THREE.MeshStandardMaterial({
@@ -832,8 +829,7 @@ function setCubeToAppliedState(programOrUniName) {
     // 2. Perfect glowing scroll icon
     addScrollIconWithGlow(mesh);
   });
-
-  // 3. Flag directly above (main) cube
+  // 3. Flag directly above (main) cube, now compact and tight!
   add3DMessageCardToCube(cubesToHighlight[0]);
   showNotification(
     "✅ We have received your application.<br>Our team will get back to you within 2 weeks.<br>You can also track updates in your Student Dashboard.",
@@ -846,7 +842,6 @@ function setCubeToAppliedState(programOrUniName) {
 // =======
 function addScrollIconWithGlow(mesh) {
   if (mesh.userData.successIcon) mesh.remove(mesh.userData.successIcon);
-
   const size = 128;
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = size;
@@ -868,24 +863,22 @@ function addScrollIconWithGlow(mesh) {
     texture.needsUpdate = true;
   };
   img.src = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4dc.png";
-
   const texture = new THREE.CanvasTexture(canvas);
   const mat = new THREE.SpriteMaterial({ map: texture, transparent: true });
   const sprite = new THREE.Sprite(mat);
   const geo = mesh.geometry.parameters || {width: 0.08, height: 0.08, depth: 0.08};
   sprite.center.set(0.5, 0.5);
-  sprite.scale.set(0.38 * geo.width, 0.38 * geo.height, 1);
+  sprite.scale.set(0.34 * geo.width, 0.34 * geo.height, 1);
   sprite.position.set(0, 0, geo.depth/2 + 0.0016);
   mesh.add(sprite);
   mesh.userData.successIcon = sprite;
 }
 
 // =======
-// Very close, branded message card above cube
+// COMPACT, TIGHT message card directly above cube
 // =======
 function add3DMessageCardToCube(mesh, text1 = "Application Received", text2 = "Your forms have been received.") {
   if (mesh.userData.messageCard) mesh.remove(mesh.userData.messageCard);
-
   const cardWidth = 800, cardHeight = 210;
   const canvas = document.createElement('canvas');
   canvas.width = cardWidth; canvas.height = cardHeight;
@@ -899,16 +892,16 @@ function add3DMessageCardToCube(mesh, text1 = "Application Received", text2 = "Y
   ctx.lineTo(30, cardHeight); ctx.quadraticCurveTo(0, cardHeight, 0, cardHeight - 30);
   ctx.lineTo(0, 30); ctx.quadraticCurveTo(0, 0, 30, 0); ctx.closePath();
   ctx.fill(); ctx.stroke();
-  ctx.font = 'bold 66px Arial'; ctx.fillStyle = "#fff700"; ctx.fillText(text1, 120, 65);
-  ctx.font = '44px Arial'; ctx.fillStyle = "#fff"; ctx.fillText(text2, 120, 150);
+  ctx.font = 'bold 45px Arial'; ctx.fillStyle = "#fff700"; ctx.fillText(text1, 120, 55);
+  ctx.font = '28px Arial'; ctx.fillStyle = "#fff"; ctx.fillText(text2, 120, 127);
   const cardTexture = new THREE.CanvasTexture(canvas);
   const cardMaterial = new THREE.SpriteMaterial({ map: cardTexture, transparent: true });
   const cardSprite = new THREE.Sprite(cardMaterial);
 
-  // Place card just above cube (tune if desired)
+  // —————— THE FIX: TIGHT positioning and size ——————
   let geo = mesh.geometry && mesh.geometry.parameters ? mesh.geometry.parameters : { height: 0.08, depth: 0.08 };
-  cardSprite.position.set(0, geo.height/2 + 0.019, geo.depth/2 + 0.016);
-  cardSprite.scale.set(0.164, 0.057, 1);
+  cardSprite.position.set(0, geo.height/2 + 0.012, geo.depth/2 + 0.009);
+  cardSprite.scale.set(0.058, 0.019, 1); // ~55% cube width (fits ~1–2 cubes)
 
   mesh.add(cardSprite);
   mesh.userData.messageCard = cardSprite;
@@ -917,12 +910,11 @@ function add3DMessageCardToCube(mesh, text1 = "Application Received", text2 = "Y
   const scrollImg = new window.Image();
   scrollImg.crossOrigin = "Anonymous";
   scrollImg.onload = function() {
-    ctx.drawImage(scrollImg, 36, 46, 90, 90);
+    ctx.drawImage(scrollImg, 28, 40, 60, 60);
     cardTexture.needsUpdate = true;
   };
   scrollImg.src = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4dc.png";
 }
-
 
 
 // Remember: In your main render loop...
