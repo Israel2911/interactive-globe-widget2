@@ -796,43 +796,40 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
 // =======
 // APPLIED STATE: NEON CUBES + GLOWING NEON SCROLL ICON + NEON SPEECH FLAG
 function setCubeToAppliedState(programOrUniName) {
-  const cubeGroups = [
-    europeSubCubes, newThailandSubCubes, canadaSubCubes, ukSubCubes,
-    usaSubCubes, indiaSubCubes, singaporeSubCubes, malaysiaSubCubes
+  const allSubCubes = [
+    ...europeSubCubes, ...newThailandSubCubes, ...canadaSubCubes, ...ukSubCubes,
+    ...usaSubCubes, ...indiaSubCubes, ...singaporeSubCubes, ...malaysiaSubCubes
   ];
-
-  let cubesToHighlight = [];
-  cubeGroups.forEach(cubeGroup => {
-    cubeGroup.forEach(mesh => {
-      const thisName =
-        mesh &&
-        mesh.userData.university &&
-        mesh.userData.university.trim().toLowerCase();
-      if (thisName === programOrUniName.trim().toLowerCase()) {
-        mesh.material = new THREE.MeshStandardMaterial({
-          color: 0x151515,
-          emissive: 0xFFD700,
-          emissiveIntensity: 2.3,
-          metalness: 0.14,
-          roughness: 0.09,
-          transparent: false,
-          opacity: 1.0,
-          map: null
-        });
-        addNeonScrollSVGIcon(mesh);
-        cubesToHighlight.push(mesh);
-      }
-      // DO NOT reset, recolor, or modify other cubes at all!
-    });
-  });
-
+  let cubesToHighlight = allSubCubes.filter(
+    cube =>
+      cube &&
+      cube.userData.university &&
+      cube.userData.university.trim().toLowerCase() === programOrUniName.trim().toLowerCase()
+  );
   if (cubesToHighlight.length === 0) {
     showNotification(`No cube found for "${programOrUniName}"`, false);
     return;
   }
-
+  cubesToHighlight.forEach(mesh => {
+    // Always remove any old icons before adding
+    if (mesh.userData.successIcon) {
+      mesh.remove(mesh.userData.successIcon);
+      mesh.userData.successIcon = undefined;
+    }
+    // NEON material
+    mesh.material = new THREE.MeshStandardMaterial({
+      color: 0x151515,
+      emissive: 0xFFD700,
+      emissiveIntensity: 2.3,
+      metalness: 0.14,
+      roughness: 0.09,
+      transparent: false,
+      opacity: 1.0
+    });
+    addNeonScrollSVGIcon(mesh);
+    // Optionally, add flag only over the first cube
+  });
   addNeonSpeechBubble(cubesToHighlight[0], "APPLICATION\nRECEIVED");
-
   showNotification(
     "✅ We have received your application.<br>Our team will get back to you within 2 weeks.<br>You can also track updates in your Student Dashboard.",
     true
