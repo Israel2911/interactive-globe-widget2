@@ -881,49 +881,71 @@ function addSuccessIconToCube(mesh, type = "scroll") {
 }
 
 // NEW: Helper to add persistent, scaling 3D message card (flag)
-function add3DMessageCardToCube(mesh, text = "Application Received.<br>Your forms have been received.") {
+function add3DMessageCardToCube(mesh, text1 = "Application Received", text2 = "Your forms have been received.") {
+  // Remove previous card if present
   if (mesh.userData.messageCard) mesh.remove(mesh.userData.messageCard);
-  // Card with canvas+emoji+text
+
+  // High-res canvas (for crisp visuals)
+  const cardWidth = 800, cardHeight = 210;
   const canvas = document.createElement('canvas');
-  canvas.width = 400;
-  canvas.height = 105;
+  canvas.width = cardWidth;
+  canvas.height = cardHeight;
   const ctx = canvas.getContext('2d');
-  ctx.fillStyle = 'rgba(35,40,60,0.96)';
+
+  // Background w/ border (rounded)
+  ctx.fillStyle = 'rgba(35,40,60,0.97)';
   ctx.strokeStyle = '#fff700';
-  ctx.lineWidth = 6;
-  ctx.roundRect?.(0, 0, 400, 105, 18);
+  ctx.lineWidth = 12;
+  ctx.beginPath();
+  ctx.moveTo(30, 0); ctx.lineTo(cardWidth-30,0); ctx.quadraticCurveTo(cardWidth,0,cardWidth,30);
+  ctx.lineTo(cardWidth,cardHeight-30); ctx.quadraticCurveTo(cardWidth,cardHeight,cardWidth-30,cardHeight);
+  ctx.lineTo(30,cardHeight); ctx.quadraticCurveTo(0,cardHeight,0,cardHeight-30);
+  ctx.lineTo(0,30); ctx.quadraticCurveTo(0,0,30,0);
+  ctx.closePath();
   ctx.fill();
   ctx.stroke();
+
+  // Scroll icon (left)
   const scrollImg = new window.Image();
   scrollImg.crossOrigin = "Anonymous";
-  const iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4dc.png";
   scrollImg.onload = function() {
-    ctx.drawImage(scrollImg, 16, 20, 62, 62);
-    ctx.font = 'bold 28px Arial';
+    ctx.drawImage(scrollImg, 34, 48, 64, 64);
+
+    // Main text ("Application Received") in bold yellow
+    ctx.font = 'bold 54px Arial';
     ctx.fillStyle = "#fff700";
-    ctx.fillText("Application Received", 95, 28);
-    ctx.font = '20px Arial';
+    ctx.textBaseline = "top";
+    ctx.textAlign = "left";
+    ctx.fillText(text1, 120, 45);
+
+    // Subtext
+    ctx.font = '36px Arial';
     ctx.fillStyle = "#fff";
-    ctx.fillText("Your forms have been received.", 95, 60);
+    ctx.fillText(text2, 120, 115);
+
     cardTexture.needsUpdate = true;
   };
-  scrollImg.src = iconUrl;
-  // Draw fallback text
-  ctx.font = 'bold 28px Arial';
+  scrollImg.src = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4dc.png";
+
+  // Draw fallback default (no icon) first - so the card appears quickly
+  ctx.font = 'bold 54px Arial';
   ctx.fillStyle = "#fff700";
-  ctx.fillText("Application Received", 95, 28);
-  ctx.font = '20px Arial';
+  ctx.fillText(text1, 120, 45);
+  ctx.font = '36px Arial';
   ctx.fillStyle = "#fff";
-  ctx.fillText("Your forms have been received.", 95, 60);
+  ctx.fillText(text2, 120, 115);
 
   const cardTexture = new THREE.CanvasTexture(canvas);
   const cardMaterial = new THREE.SpriteMaterial({ map: cardTexture, transparent: true });
   const cardSprite = new THREE.Sprite(cardMaterial);
-  cardSprite.scale.set(0.23, 0.06, 1);            // Good for cube ~0.08, scale up/down as needed
-  cardSprite.position.set(0.13, 0.02, 0.045);     // Beside and just in front of cube
+
+  // Large, always-visible, aspect-correct scale (tune for your cube size)
+  cardSprite.scale.set(0.38, 0.1, 1); // wide and clear; adjust as needed
+  cardSprite.position.set(0.21, 0.01, 0.1); // right of center, close to cube face; tweak as needed
   mesh.add(cardSprite);
   mesh.userData.messageCard = cardSprite;
 }
+
 
 // Helper: Dynamically scale 3D message card so it remains visible at any zoom
 function updateMessageCardScale(mesh, camera) {
