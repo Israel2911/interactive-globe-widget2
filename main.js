@@ -796,37 +796,64 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
 // =======
 // APPLIED STATE: NEON CUBES + GLOWING NEON SCROLL ICON + NEON SPEECH FLAG
 // =======
+// APPLIED STATE: NEON! Only for truly "applied" cubes
+// =======
 function setCubeToAppliedState(programOrUniName) {
   const allSubCubes = [
     ...europeSubCubes, ...newThailandSubCubes, ...canadaSubCubes, ...ukSubCubes,
     ...usaSubCubes, ...indiaSubCubes, ...singaporeSubCubes, ...malaysiaSubCubes
   ];
+  // FILTER: ONLY target cubes matching the applied program/university
   const cubesToHighlight = allSubCubes.filter(
     cube =>
       cube &&
       cube.userData.university &&
       cube.userData.university.trim().toLowerCase() === programOrUniName.trim().toLowerCase()
   );
+
   if (cubesToHighlight.length === 0) {
     showNotification(`No cube found for "${programOrUniName}"`, false);
     return;
   }
-  cubesToHighlight.forEach(mesh => {
-    // NEON: dark fill + strong yellow outline glow
-    mesh.material = new THREE.MeshStandardMaterial({
-      color: 0x151515,           // nearly black to make neon edges pop
-      emissive: 0xFFD700,        // bright neon yellow
-      emissiveIntensity: 2.3,    // strong inner neon effect
-      metalness: 0.14,
-      roughness: 0.09,
-      transparent: false,
-      opacity: 1.0,
-      map: null
-    });
-    addNeonScrollSVGIcon(mesh); // SVG neon scroll on the front
+
+  allSubCubes.forEach(mesh => {
+    // Determine if this mesh should be neon ("applied") or dormant ("default")
+    const applied = cubesToHighlight.includes(mesh);
+    // If APPLIED: NEON style!
+    if (applied) {
+      mesh.material = new THREE.MeshStandardMaterial({
+        color: 0x151515,
+        emissive: 0xFFD700,
+        emissiveIntensity: 2.3,
+        metalness: 0.14,
+        roughness: 0.09,
+        transparent: false,
+        opacity: 1.0,
+        map: null
+      });
+      addNeonScrollSVGIcon(mesh); // Only run for neon/applied
+    } else {
+      // DORMANT: remove any neon icon, set dark material
+      mesh.material = new THREE.MeshStandardMaterial({
+        color: 0x292929,
+        emissive: 0x111122,
+        emissiveIntensity: 0.18,
+        metalness: 0.09,
+        roughness: 0.23,
+        transparent: false,
+        opacity: 1.0,
+        map: null
+      });
+      if (mesh.userData.successIcon) {
+        mesh.remove(mesh.userData.successIcon);
+        mesh.userData.successIcon = undefined;
+      }
+    }
   });
-  // Neon flag over first 'applied' cube
+
+  // Neon flag over first applied cube only
   addNeonSpeechBubble(cubesToHighlight[0], "APPLICATION\nRECEIVED");
+
   showNotification(
     "✅ We have received your application.<br>Our team will get back to you within 2 weeks.<br>You can also track updates in your Student Dashboard.",
     true
@@ -834,7 +861,7 @@ function setCubeToAppliedState(programOrUniName) {
 }
 
 // =======
-// SVG/Canvas NEON SCROLL ICON (not emoji!)
+// SVG/Canvas NEON SCROLL ICON: Only runs for APPLIED/YELLOW cubes!
 // =======
 function addNeonScrollSVGIcon(mesh) {
   if (mesh.userData.successIcon) mesh.remove(mesh.userData.successIcon);
@@ -842,7 +869,6 @@ function addNeonScrollSVGIcon(mesh) {
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = size;
   const ctx = canvas.getContext('2d');
-
   // Neon glow
   ctx.save();
   ctx.shadowColor = "#04f6ff";
@@ -857,7 +883,6 @@ function addNeonScrollSVGIcon(mesh) {
   ctx.quadraticCurveTo(85,28,72,28); ctx.lineTo(27,28);
   ctx.stroke();
   ctx.restore();
-
   // Glowing lines for "text"
   ctx.save();
   ctx.shadowColor = "#18efff";
@@ -871,21 +896,19 @@ function addNeonScrollSVGIcon(mesh) {
     ctx.stroke();
   }
   ctx.restore();
-
   const texture = new THREE.CanvasTexture(canvas);
   const mat = new THREE.SpriteMaterial({ map: texture, transparent: true });
   const sprite = new THREE.Sprite(mat);
   const geo = mesh.geometry.parameters || {width: 0.08, height: 0.08, depth: 0.08};
   sprite.center.set(0.5, 0.5);
-  sprite.scale.set(0.46 * geo.width, 0.46 * geo.height, 1); // large neon!
-  sprite.position.set(0, 0, geo.depth/2 + 0.001); // DEAD CENTER of front face
+  sprite.scale.set(0.46 * geo.width, 0.46 * geo.height, 1);
+  sprite.position.set(0, 0, geo.depth/2 + 0.001);
   mesh.add(sprite);
   mesh.userData.successIcon = sprite;
 }
 
-
 // =======
-// NEON SPEECH BUBBLE FLAG (above the cube)
+// NEON FLAG: Only appears above the first APPLIED cube!
 // =======
 function addNeonSpeechBubble(mesh, text="APPLICATION\nRECEIVED") {
   if (mesh.userData.messageCard) mesh.remove(mesh.userData.messageCard);
@@ -893,7 +916,6 @@ function addNeonSpeechBubble(mesh, text="APPLICATION\nRECEIVED") {
   const canvas = document.createElement('canvas');
   canvas.width = cardWidth; canvas.height = cardHeight;
   const ctx = canvas.getContext('2d');
-  // Neon blue speech bubble
   ctx.save();
   ctx.shadowColor = "#0cf3ff";
   ctx.shadowBlur = 14;
@@ -906,31 +928,25 @@ function addNeonSpeechBubble(mesh, text="APPLICATION\nRECEIVED") {
   ctx.lineTo(cardWidth-6,cardHeight-38);
   ctx.quadraticCurveTo(cardWidth-6,cardHeight-6,cardWidth-38,cardHeight-6);
   ctx.lineTo(95,cardHeight-6);
-  ctx.lineTo(75,cardHeight+19); // speech bubble pointer
+  ctx.lineTo(75,cardHeight+19); // pointer
   ctx.lineTo(75,cardHeight-6);
   ctx.lineTo(22,cardHeight-6); ctx.quadraticCurveTo(6,cardHeight-6,6,cardHeight-26);
   ctx.lineTo(6,38); ctx.quadraticCurveTo(6,22,22,22); ctx.closePath();
   ctx.fill(); ctx.stroke(); ctx.restore();
-
-  // Neon label text
   ctx.font = 'bold 34px Arial'; ctx.fillStyle = "#08f9ff"; ctx.textBaseline="middle";
   ctx.textAlign="center";
   let txt = text.split("\n");
   ctx.fillText(txt[0] || '', cardWidth/2, 54);
   ctx.font = '22px Arial'; ctx.fillText(txt[1] || '', cardWidth/2, 92);
-
   const cardTexture = new THREE.CanvasTexture(canvas);
   const cardMaterial = new THREE.SpriteMaterial({ map: cardTexture, transparent: true });
   const cardSprite = new THREE.Sprite(cardMaterial);
-
-  // Place above top face, tight/neat
   let geo = mesh.geometry && mesh.geometry.parameters ? mesh.geometry.parameters : { height: 0.08, depth: 0.08 };
   cardSprite.position.set(0, geo.height/2 + 0.046, 0);
   cardSprite.scale.set(0.14, 0.055, 1);
   mesh.add(cardSprite);
   mesh.userData.messageCard = cardSprite;
 }
-
 
 // Remember: In your main render loop...
 // allParentMeshes.forEach(mesh => updateMessageCardScale(mesh, camera));
