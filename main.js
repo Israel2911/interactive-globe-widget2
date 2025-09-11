@@ -793,109 +793,18 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
 }
 
 
-// APPLIED STATE with SCALING 3D MESSAGE CARD
-
-function setCubeToAppliedState(programOrUniName) {
-  const allSubCubes = [
-    ...europeSubCubes, ...newThailandSubCubes, ...canadaSubCubes, ...ukSubCubes,
-    ...usaSubCubes, ...indiaSubCubes, ...singaporeSubCubes, ...malaysiaSubCubes
-  ];
-  let cubesToHighlight = allSubCubes.filter(
-    cube =>
-      cube &&
-      cube.userData.university &&
-      cube.userData.university.trim().toLowerCase() === programOrUniName.trim().toLowerCase()
-  );
-  if (cubesToHighlight.length === 0) {
-    showNotification(`No cube found for "${programOrUniName}"`, false);
-    return;
-  }
-  cubesToHighlight.forEach(targetCube => {
-    let meshes = [];
-    if (targetCube.isMesh) {
-      meshes = [targetCube];
-    } else if (targetCube.type === "Group" && targetCube.children) {
-      meshes = targetCube.children.filter(child => child.isMesh);
-    }
-    meshes.forEach(mesh => {
-      // Green blink animation
-      mesh.material = new THREE.MeshStandardMaterial({
-        color: 0x39ff14, emissive: 0x39ff14, emissiveIntensity: 5, map: null,
-        metalness: 0.18, roughness: 0.05
-      });
-      let blinkStart = performance.now();
-      function blink(time) {
-        let elapsed = time - blinkStart;
-        let phase = Math.floor(elapsed / 120) % 2;
-        let complete = elapsed > 120 * 12; // ~1.4s
-        if (complete) {
-          // Switch to final yellow highlight
-          mesh.material = new THREE.MeshStandardMaterial({
-            color: 0xFFF700,
-            emissive: 0xFFF700,
-            emissiveIntensity: 0.5,
-            metalness: 0.12,
-            roughness: 0.20,
-            transparent: true,
-            opacity: 0.5,
-            map: null
-          });
-          addSuccessIconToCube(mesh, "scroll"); // add scroll icon inside
-          add3DMessageCardToCube(mesh);         // add sticky 3D message card beside cube
-          return;
-        }
-        if (phase === 0) {
-          mesh.material.color.set(0x39ff14);
-          mesh.material.emissive.set(0x39ff14);
-          mesh.material.emissiveIntensity = 8;
-        } else {
-          mesh.material.color.set(0x000000);
-          mesh.material.emissive.set(0x000000);
-          mesh.material.emissiveIntensity = 0.3;
-        }
-        requestAnimationFrame(blink);
-      }
-      requestAnimationFrame(blink);
-    });
-  });
-  showNotification(
-    "✅ We have received your application.<br>Our team will get back to you within 2 weeks.<br>You can also track updates in your Student Dashboard.",
-    true
-  );
-}
-
-// Helper: Embedded mini scroll icon
-function addSuccessIconToCube(mesh, type = "scroll") {
-  if (mesh.userData.successIcon) mesh.remove(mesh.userData.successIcon);
-  let iconUrl =
-    type === "scroll"
-      ? "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4dc.png"
-      : "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4e9.png";
-  const iconTexture = new THREE.TextureLoader().load(iconUrl);
-  const iconMaterial = new THREE.SpriteMaterial({ map: iconTexture, transparent: true });
-  const iconSprite = new THREE.Sprite(iconMaterial);
-  iconSprite.scale.set(0.009, 0.009, 1);
-  iconSprite.position.set(0, 0, 0.0015);
-  mesh.add(iconSprite);
-  mesh.userData.successIcon = iconSprite;
-}
-
-// NEW: Helper to add persistent, scaling 3D message card (flag)
 function add3DMessageCardToCube(mesh, text1 = "Application Received", text2 = "Your forms have been received.") {
-  // Remove previous card if present
   if (mesh.userData.messageCard) mesh.remove(mesh.userData.messageCard);
 
-  // High-res canvas (for crisp visuals)
+  // Crisp, very visible card
   const cardWidth = 800, cardHeight = 210;
   const canvas = document.createElement('canvas');
   canvas.width = cardWidth;
   canvas.height = cardHeight;
   const ctx = canvas.getContext('2d');
-
-  // Background w/ border (rounded)
-  ctx.fillStyle = 'rgba(35,40,60,0.97)';
+  ctx.fillStyle = 'rgba(35,40,60,0.98)';
   ctx.strokeStyle = '#fff700';
-  ctx.lineWidth = 12;
+  ctx.lineWidth = 18;
   ctx.beginPath();
   ctx.moveTo(30, 0); ctx.lineTo(cardWidth-30,0); ctx.quadraticCurveTo(cardWidth,0,cardWidth,30);
   ctx.lineTo(cardWidth,cardHeight-30); ctx.quadraticCurveTo(cardWidth,cardHeight,cardWidth-30,cardHeight);
@@ -905,29 +814,7 @@ function add3DMessageCardToCube(mesh, text1 = "Application Received", text2 = "Y
   ctx.fill();
   ctx.stroke();
 
-  // Scroll icon (left)
-  const scrollImg = new window.Image();
-  scrollImg.crossOrigin = "Anonymous";
-  scrollImg.onload = function() {
-    ctx.drawImage(scrollImg, 34, 48, 64, 64);
-
-    // Main text ("Application Received") in bold yellow
-    ctx.font = 'bold 54px Arial';
-    ctx.fillStyle = "#fff700";
-    ctx.textBaseline = "top";
-    ctx.textAlign = "left";
-    ctx.fillText(text1, 120, 45);
-
-    // Subtext
-    ctx.font = '36px Arial';
-    ctx.fillStyle = "#fff";
-    ctx.fillText(text2, 120, 115);
-
-    cardTexture.needsUpdate = true;
-  };
-  scrollImg.src = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4dc.png";
-
-  // Draw fallback default (no icon) first - so the card appears quickly
+  // Draw scroll icon and main text later, but fallback text immediately
   ctx.font = 'bold 54px Arial';
   ctx.fillStyle = "#fff700";
   ctx.fillText(text1, 120, 45);
@@ -939,30 +826,46 @@ function add3DMessageCardToCube(mesh, text1 = "Application Received", text2 = "Y
   const cardMaterial = new THREE.SpriteMaterial({ map: cardTexture, transparent: true });
   const cardSprite = new THREE.Sprite(cardMaterial);
 
-  // Large, always-visible, aspect-correct scale (tune for your cube size)
-  cardSprite.scale.set(0.38, 0.1, 1); // wide and clear; adjust as needed
-  cardSprite.position.set(0.21, 0.01, 0.1); // right of center, close to cube face; tweak as needed
+  // Make card very obvious for debugging
+  cardSprite.scale.set(1, 0.26, 1);           // Much larger for debug
+  cardSprite.position.set(1.2, 0, 0.5);       // Well OUTSIDE the cube
+
   mesh.add(cardSprite);
   mesh.userData.messageCard = cardSprite;
+
+  // Try logging to console for debug
+  console.log("Added message card sprite", cardSprite, "to", mesh);
+
+  // Load icon and redraw ONCE
+  const scrollImg = new window.Image();
+  scrollImg.crossOrigin = "Anonymous";
+  scrollImg.onload = function() {
+    ctx.clearRect(0, 0, cardWidth, cardHeight);
+    ctx.fillStyle = 'rgba(35,40,60,0.98)';
+    ctx.strokeStyle = '#fff700';
+    ctx.lineWidth = 18;
+    ctx.beginPath();
+    ctx.moveTo(30, 0); ctx.lineTo(cardWidth-30,0); ctx.quadraticCurveTo(cardWidth,0,cardWidth,30);
+    ctx.lineTo(cardWidth,cardHeight-30); ctx.quadraticCurveTo(cardWidth,cardHeight,cardWidth-30,cardHeight);
+    ctx.lineTo(30,cardHeight); ctx.quadraticCurveTo(0,cardHeight,0,cardHeight-30);
+    ctx.lineTo(0,30); ctx.quadraticCurveTo(0,0,30,0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.drawImage(scrollImg, 34, 48, 64, 64);
+    ctx.font = 'bold 54px Arial';
+    ctx.fillStyle = "#fff700";
+    ctx.fillText(text1, 120, 45);
+    ctx.font = '36px Arial';
+    ctx.fillStyle = "#fff";
+    ctx.fillText(text2, 120, 115);
+    cardTexture.needsUpdate = true;
+    console.log("Card icon loaded and redrawn");
+  };
+  scrollImg.onerror = () => console.log("Scroll icon failed to load!");
+  scrollImg.src = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4dc.png";
 }
-
-
-// Helper: Dynamically scale 3D message card so it remains visible at any zoom
-function updateMessageCardScale(mesh, camera) {
-  if (!mesh.userData.messageCard) return;
-  const meshPosition = new THREE.Vector3();
-  mesh.getWorldPosition(meshPosition);
-  const cameraDistance = camera.position.distanceTo(meshPosition);
-  const baseScale = 0.23;
-  mesh.userData.messageCard.scale.set(
-    baseScale * cameraDistance,
-    baseScale * cameraDistance * 0.255,
-    1
-  );
-}
-
-// In your main render loop, call for every cube with a card:
-// allParentMeshes.forEach(mesh => updateMessageCardScale(mesh, camera));
+s.forEach(mesh => updateMessageCardScale(mesh, camera));
 
 
 // =======
