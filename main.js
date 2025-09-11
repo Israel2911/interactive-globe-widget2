@@ -793,7 +793,8 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
 }
 
 
-// APPLIED STATE 
+// APPLIED STATE with SCALING 3D MESSAGE CARD
+
 function setCubeToAppliedState(programOrUniName) {
   const allSubCubes = [
     ...europeSubCubes, ...newThailandSubCubes, ...canadaSubCubes, ...ukSubCubes,
@@ -817,7 +818,7 @@ function setCubeToAppliedState(programOrUniName) {
       meshes = targetCube.children.filter(child => child.isMesh);
     }
     meshes.forEach(mesh => {
-      // Green blink
+      // Green blink animation
       mesh.material = new THREE.MeshStandardMaterial({
         color: 0x39ff14, emissive: 0x39ff14, emissiveIntensity: 5, map: null,
         metalness: 0.18, roughness: 0.05
@@ -828,7 +829,7 @@ function setCubeToAppliedState(programOrUniName) {
         let phase = Math.floor(elapsed / 120) % 2;
         let complete = elapsed > 120 * 12; // ~1.4s
         if (complete) {
-          // Soft translucent yellow fill
+          // Switch to final yellow highlight
           mesh.material = new THREE.MeshStandardMaterial({
             color: 0xFFF700,
             emissive: 0xFFF700,
@@ -839,7 +840,8 @@ function setCubeToAppliedState(programOrUniName) {
             opacity: 0.5,
             map: null
           });
-          addSuccessIconToCube(mesh, "scroll"); // "scroll" icon embedded
+          addSuccessIconToCube(mesh, "scroll"); // add scroll icon inside
+          add3DMessageCardToCube(mesh);         // add sticky 3D message card beside cube
           return;
         }
         if (phase === 0) {
@@ -856,7 +858,6 @@ function setCubeToAppliedState(programOrUniName) {
       requestAnimationFrame(blink);
     });
   });
-
   showNotification(
     "✅ We have received your application.<br>Our team will get back to you within 2 weeks.<br>You can also track updates in your Student Dashboard.",
     true
@@ -865,27 +866,81 @@ function setCubeToAppliedState(programOrUniName) {
 
 // Helper: Embedded mini scroll icon
 function addSuccessIconToCube(mesh, type = "scroll") {
-  if (!mesh.userData.successIcon) {
-    let iconUrl;
-    if (type === "scroll") {
-      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4dc.png";
-    } else if (type === "letter") {
-      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4e9.png";
-    } else if (type === "cap") {
-      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f393.png";
-    } else {
-      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4dc.png";
-    }
-    const iconTexture = new THREE.TextureLoader().load(iconUrl);
-    const iconMaterial = new THREE.SpriteMaterial({ map: iconTexture, transparent: true });
-    const iconSprite = new THREE.Sprite(iconMaterial);
-    iconSprite.scale.set(0.009, 0.009, 1);      // Small and subtle
-    iconSprite.position.set(0, 0, 0.0015);      // Just inside the front face
-    mesh.add(iconSprite);
-    mesh.userData.successIcon = iconSprite;
-  }
+  if (mesh.userData.successIcon) mesh.remove(mesh.userData.successIcon);
+  let iconUrl =
+    type === "scroll"
+      ? "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4dc.png"
+      : "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4e9.png";
+  const iconTexture = new THREE.TextureLoader().load(iconUrl);
+  const iconMaterial = new THREE.SpriteMaterial({ map: iconTexture, transparent: true });
+  const iconSprite = new THREE.Sprite(iconMaterial);
+  iconSprite.scale.set(0.009, 0.009, 1);
+  iconSprite.position.set(0, 0, 0.0015);
+  mesh.add(iconSprite);
+  mesh.userData.successIcon = iconSprite;
 }
 
+// NEW: Helper to add persistent, scaling 3D message card (flag)
+function add3DMessageCardToCube(mesh, text = "Application Received.<br>Your forms have been received.") {
+  if (mesh.userData.messageCard) mesh.remove(mesh.userData.messageCard);
+  // Card with canvas+emoji+text
+  const canvas = document.createElement('canvas');
+  canvas.width = 400;
+  canvas.height = 105;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = 'rgba(35,40,60,0.96)';
+  ctx.strokeStyle = '#fff700';
+  ctx.lineWidth = 6;
+  ctx.roundRect?.(0, 0, 400, 105, 18);
+  ctx.fill();
+  ctx.stroke();
+  const scrollImg = new window.Image();
+  scrollImg.crossOrigin = "Anonymous";
+  const iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4dc.png";
+  scrollImg.onload = function() {
+    ctx.drawImage(scrollImg, 16, 20, 62, 62);
+    ctx.font = 'bold 28px Arial';
+    ctx.fillStyle = "#fff700";
+    ctx.fillText("Application Received", 95, 28);
+    ctx.font = '20px Arial';
+    ctx.fillStyle = "#fff";
+    ctx.fillText("Your forms have been received.", 95, 60);
+    cardTexture.needsUpdate = true;
+  };
+  scrollImg.src = iconUrl;
+  // Draw fallback text
+  ctx.font = 'bold 28px Arial';
+  ctx.fillStyle = "#fff700";
+  ctx.fillText("Application Received", 95, 28);
+  ctx.font = '20px Arial';
+  ctx.fillStyle = "#fff";
+  ctx.fillText("Your forms have been received.", 95, 60);
+
+  const cardTexture = new THREE.CanvasTexture(canvas);
+  const cardMaterial = new THREE.SpriteMaterial({ map: cardTexture, transparent: true });
+  const cardSprite = new THREE.Sprite(cardMaterial);
+  cardSprite.scale.set(0.23, 0.06, 1);            // Good for cube ~0.08, scale up/down as needed
+  cardSprite.position.set(0.13, 0.02, 0.045);     // Beside and just in front of cube
+  mesh.add(cardSprite);
+  mesh.userData.messageCard = cardSprite;
+}
+
+// Helper: Dynamically scale 3D message card so it remains visible at any zoom
+function updateMessageCardScale(mesh, camera) {
+  if (!mesh.userData.messageCard) return;
+  const meshPosition = new THREE.Vector3();
+  mesh.getWorldPosition(meshPosition);
+  const cameraDistance = camera.position.distanceTo(meshPosition);
+  const baseScale = 0.23;
+  mesh.userData.messageCard.scale.set(
+    baseScale * cameraDistance,
+    baseScale * cameraDistance * 0.255,
+    1
+  );
+}
+
+// In your main render loop, call for every cube with a card:
+// allParentMeshes.forEach(mesh => updateMessageCardScale(mesh, camera));
 
 
 // =======
