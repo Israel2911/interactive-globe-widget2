@@ -815,38 +815,56 @@ function setCubeToAppliedState(programOrUniName) {
       meshes = targetCube.children.filter(child => child.isMesh);
     }
     meshes.forEach(mesh => {
+      mesh.userData.isApplied = true; // lock applied state
       mesh.material = new THREE.MeshStandardMaterial({
-        color: 0x39ff14, emissive: 0x39ff14, emissiveIntensity: 5, map: null,
-        metalness: 0.18, roughness: 0.05
+        color: 0xFFD700, // yellow
+        emissive: 0xFFD700,
+        emissiveIntensity: 2.3,
+        metalness: 0.14,
+        roughness: 0.09,
+        transparent: false,
+        opacity: 1.0
       });
-      // --- Animation frame based blink ---
-      let blinkStart = performance.now();
-      function blink(time) {
-        let elapsed = time - blinkStart;
-        let phase = Math.floor(elapsed / 120) % 2;
-        let complete = elapsed > 120 * 12; // blinks for ~1.4s
-        if (complete) {
-          mesh.material.color.set(0x39ff14);
-          mesh.material.emissive.set(0x39ff14);
-          mesh.material.emissiveIntensity = 6;
-          return;
-        }
-        if (phase === 0) {
-          mesh.material.color.set(0x39ff14);
-          mesh.material.emissive.set(0x39ff14);
-          mesh.material.emissiveIntensity = 8;
-        } else {
-          mesh.material.color.set(0x000000);
-          mesh.material.emissive.set(0x000000);
-          mesh.material.emissiveIntensity = 0.3;
-        }
-        requestAnimationFrame(blink);
-      }
-      requestAnimationFrame(blink);
+      addNeonScrollSVGIcon && addNeonScrollSVGIcon(mesh);
+      addSimpleApplicationPlaque(mesh, "APPLICATION RECEIVED");
     });
   });
-  showNotification('Neon green blink (requestAnimationFrame) applied!', true);
+  showNotification(
+    "✅ We have received your application.<br>Our team will get back to you within 2 weeks.<br>You can also track updates in your Student Dashboard.",
+    true
+  );
 }
+function addSimpleApplicationPlaque(mesh, text="APPLICATION RECEIVED") {
+  if (mesh.userData.messageCard) mesh.remove(mesh.userData.messageCard);
+  const cardWidth = 160, cardHeight = 48;
+  const canvas = document.createElement('canvas');
+  canvas.width = cardWidth;
+  canvas.height = cardHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.save();
+  ctx.shadowColor = "#FFD700";
+  ctx.shadowBlur = 12;
+  ctx.fillStyle = "#222";
+  ctx.strokeStyle = "#FFD700";
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.roundRect(8, 8, cardWidth-16, cardHeight-16, 12);
+  ctx.fill(); ctx.stroke();
+  ctx.restore();
+  ctx.font = 'bold 20px Arial';
+  ctx.fillStyle = "#FFD700";
+  ctx.textAlign = "center";
+  ctx.fillText(text, cardWidth/2, cardHeight/2 + 7);
+  const cardTexture = new THREE.CanvasTexture(canvas);
+  const cardMaterial = new THREE.SpriteMaterial({ map: cardTexture, transparent: true });
+  const cardSprite = new THREE.Sprite(cardMaterial);
+  let geo = mesh.geometry?.parameters || { height: 0.08 };
+  cardSprite.position.set(0, geo.height/2 + 0.045, 0);
+  cardSprite.scale.set(0.12, 0.04, 1);
+  mesh.add(cardSprite);
+  mesh.userData.messageCard = cardSprite;
+}
+
 
 
 // =======
