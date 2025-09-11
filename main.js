@@ -764,6 +764,7 @@ function getColorByData(data) {
   color.multiplyScalar(data.confidence);
   return color;
 }
+
 function createTexture(text, logoUrl, bgColor = '#003366') {
   const canvas = document.createElement('canvas');
   canvas.width = 256;
@@ -792,13 +793,9 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
   return new THREE.MeshStandardMaterial({ map: texture, emissive: new THREE.Color(bgColor), emissiveIntensity: 0.6 });
 }
 
-
-function add3DMessageCardToCube(mesh, text1 = "Application Received", text2 = "Your forms have been received.") {
-  if (mesh.userData.messageCard) mesh.remove(mesh.userData.messageCard);
-
-  // Crisp, very visible card
-  const cardWidth = 800, cardHeight = 210;
+// =======
 // APPLIED STATE WITH DEBUGGING AND SCALING 3D MESSAGE CARD
+// =======
 function setCubeToAppliedState(programOrUniName) {
   const allSubCubes = [
     ...europeSubCubes, ...newThailandSubCubes, ...canadaSubCubes, ...ukSubCubes,
@@ -814,7 +811,6 @@ function setCubeToAppliedState(programOrUniName) {
     showNotification(`No cube found for "${programOrUniName}"`, false);
     return;
   }
-
   cubesToHighlight.forEach(targetCube => {
     let meshes = [];
     if (targetCube.isMesh) {
@@ -823,7 +819,6 @@ function setCubeToAppliedState(programOrUniName) {
       meshes = targetCube.children.filter(child => child.isMesh);
     }
     meshes.forEach(mesh => {
-      // Green blink animation
       mesh.material = new THREE.MeshStandardMaterial({
         color: 0x39ff14, emissive: 0x39ff14, emissiveIntensity: 5, map: null,
         metalness: 0.18, roughness: 0.05
@@ -834,7 +829,6 @@ function setCubeToAppliedState(programOrUniName) {
         let phase = Math.floor(elapsed / 120) % 2;
         let complete = elapsed > 120 * 12; // ~1.4s
         if (complete) {
-          // Switch to final yellow highlight
           mesh.material = new THREE.MeshStandardMaterial({
             color: 0xFFF700,
             emissive: 0xFFF700,
@@ -842,11 +836,11 @@ function setCubeToAppliedState(programOrUniName) {
             metalness: 0.12,
             roughness: 0.20,
             transparent: true,
-            opacity: 0.5, // For more debug, try 0.8 here!
+            opacity: 0.8, // Use 0.8 for debug, later set to 0.5
             map: null
           });
           addSuccessIconToCube(mesh, "scroll");
-          add3DMessageCardToCube(mesh); // DEBUG card
+          add3DMessageCardToCube(mesh); // DEBUG: visible, large
           return;
         }
         if (phase === 0) {
@@ -863,14 +857,12 @@ function setCubeToAppliedState(programOrUniName) {
       requestAnimationFrame(blink);
     });
   });
-
   showNotification(
     "✅ We have received your application.<br>Our team will get back to you within 2 weeks.<br>You can also track updates in your Student Dashboard.",
     true
   );
 }
 
-// Embedded mini scroll icon helper
 function addSuccessIconToCube(mesh, type = "scroll") {
   if (mesh.userData.successIcon) mesh.remove(mesh.userData.successIcon);
   let iconUrl = (type === "scroll")
@@ -885,9 +877,7 @@ function addSuccessIconToCube(mesh, type = "scroll") {
   mesh.userData.successIcon = iconSprite;
 }
 
-// HIGH-VIS 3D MESSAGE CARD (DEBUG VERSION!)
 function add3DMessageCardToCube(mesh, text1 = "Application Received", text2 = "Your forms have been received.") {
-  // Remove previous card
   if (mesh.userData.messageCard) mesh.remove(mesh.userData.messageCard);
 
   const cardWidth = 800, cardHeight = 210;
@@ -895,7 +885,6 @@ function add3DMessageCardToCube(mesh, text1 = "Application Received", text2 = "Y
   canvas.width = cardWidth;
   canvas.height = cardHeight;
   const ctx = canvas.getContext('2d');
-  // Card background and border, very visible
   ctx.fillStyle = 'rgba(35,40,60,0.98)';
   ctx.strokeStyle = '#fff700';
   ctx.lineWidth = 18;
@@ -907,7 +896,6 @@ function add3DMessageCardToCube(mesh, text1 = "Application Received", text2 = "Y
   ctx.closePath();
   ctx.fill();
   ctx.stroke();
-
   ctx.font = 'bold 54px Arial';
   ctx.fillStyle = "#fff700";
   ctx.fillText(text1, 120, 45);
@@ -918,17 +906,13 @@ function add3DMessageCardToCube(mesh, text1 = "Application Received", text2 = "Y
   const cardTexture = new THREE.CanvasTexture(canvas);
   const cardMaterial = new THREE.SpriteMaterial({ map: cardTexture, transparent: true });
   const cardSprite = new THREE.Sprite(cardMaterial);
-
-  // DEBUG: Make it VERY obvious
-  cardSprite.scale.set(1, 0.3, 1);
-  cardSprite.position.set(1, 0.3, 0.5);
-
+  cardSprite.scale.set(1, 0.3, 1); // DEBUG: BIG! (refine later)
+  cardSprite.position.set(1, 0.3, 0.5); // DEBUG: clear of mesh (refine later)
   mesh.add(cardSprite);
   mesh.userData.messageCard = cardSprite;
 
   console.log("Added message card sprite to", mesh);
 
-  // Load scroll icon and redraw with icon and log
   const scrollImg = new window.Image();
   scrollImg.crossOrigin = "Anonymous";
   scrollImg.onload = function() {
@@ -958,7 +942,7 @@ function add3DMessageCardToCube(mesh, text1 = "Application Received", text2 = "Y
   scrollImg.src = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4dc.png";
 }
 
-// Card scaling function (call in render loop!)
+// Call every frame for each mesh that has a card!
 function updateMessageCardScale(mesh, camera) {
   if (!mesh.userData.messageCard) return;
   const meshPosition = new THREE.Vector3();
@@ -971,6 +955,7 @@ function updateMessageCardScale(mesh, camera) {
     1
   );
 }
+
 
 // Remember: In your main render loop...
 // allParentMeshes.forEach(mesh => updateMessageCardScale(mesh, camera));
