@@ -795,57 +795,52 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
 
 // =======
 // APPLIED STATE WITH DEBUGGING AND SCALING 3D MESSAGE CARD
-// APPLIED STATE WITH ANCHORED, SCALING 3D MESSAGE CARD (debug-tuned)
-// You MUST call updateMessageCardScale(mesh, camera) for all cubes with cards in your render loop!
+// =======
+// APPLIED STATE: Translucent Highlight + Perfect Centered Scroll Icon
+// =======
 
 function setCubeToAppliedState(programOrUniName) {
   const allSubCubes = [
     ...europeSubCubes, ...newThailandSubCubes, ...canadaSubCubes, ...ukSubCubes,
     ...usaSubCubes, ...indiaSubCubes, ...singaporeSubCubes, ...malaysiaSubCubes
   ];
-
-  let cubesToHighlight = allSubCubes.filter(
+  const cubesToHighlight = allSubCubes.filter(
     cube =>
       cube &&
       cube.userData.university &&
       cube.userData.university.trim().toLowerCase() === programOrUniName.trim().toLowerCase()
   );
-
   if (cubesToHighlight.length === 0) {
     showNotification(`No cube found for "${programOrUniName}"`, false);
     return;
   }
 
-  // Find the main (center or parent) cube to anchor the message card
-  // (Chose the first matching mesh for simplicity; tune for your hierarchy)
-  let parentCubeMesh = cubesToHighlight[0];
-
-  // Highlight and icon for all affected subcubes
   cubesToHighlight.forEach(mesh => {
-    // "Unmistakable" yellow for debug -- set to 1.0 for clarity, later tune down
+    // -- TUNE THIS OPACITY to your preferred balance:
     mesh.material = new THREE.MeshStandardMaterial({
       color: 0xFFF700,
       emissive: 0xFFF700,
-      emissiveIntensity: 0.65,
-      metalness: 0.12,
-      roughness: 0.20,
-      transparent: false, // NOT transparent for DEBUG!
-      opacity: 1.0,
+      emissiveIntensity: 0.35,  // Soft but visible glow
+      metalness: 0.1,
+      roughness: 0.16,
+      transparent: true,
+      opacity: 0.77,    // <--- Play with 0.65 to 0.85 for your desired translucency!
       map: null
     });
     addSuccessIconToCube(mesh, "scroll");
   });
 
-  // Attach the message card to the parent cube (visually clear)
-  add3DMessageCardToCube(parentCubeMesh);
-
+  // Attach message card (optional, can anchor to any main cube)
+  add3DMessageCardToCube(cubesToHighlight[0], "Application Received", "Your forms have been received.");
   showNotification(
     "✅ We have received your application.<br>Our team will get back to you within 2 weeks.<br>You can also track updates in your Student Dashboard.",
     true
   );
 }
 
-// Embedded mini scroll icon helper
+// =======
+// Embedded scroll icon, always geometric center, always front face
+// =======
 function addSuccessIconToCube(mesh, type = "scroll") {
   if (mesh.userData.successIcon) mesh.remove(mesh.userData.successIcon);
   let iconUrl = (type === "scroll")
@@ -854,21 +849,29 @@ function addSuccessIconToCube(mesh, type = "scroll") {
   const iconTexture = new THREE.TextureLoader().load(iconUrl);
   const iconMaterial = new THREE.SpriteMaterial({ map: iconTexture, transparent: true });
   const iconSprite = new THREE.Sprite(iconMaterial);
-  iconSprite.scale.set(0.009, 0.009, 1);
-  iconSprite.position.set(0, 0, 0.011); // move a bit further out for full clarity
+
+  // True geometric center, size/placement based on cube size
+  const geo = mesh.geometry.parameters;
+  const w = geo ? geo.width : 0.08; // fallback if geometry not parametric
+  const h = geo ? geo.height : 0.08;
+  const d = geo ? geo.depth : 0.08;
+  iconSprite.center.set(0.5, 0.5); // always dead-center
+  iconSprite.scale.set(0.39 * w, 0.39 * h, 1); // adjust 0.39 as visual sweet spot
+  iconSprite.position.set(0, 0, (d / 2) + 0.001); // just above front face -- adjust epsilon (0.001)
+
   mesh.add(iconSprite);
   mesh.userData.successIcon = iconSprite;
 }
 
-// 3D message card helper: always anchored above+in front of the parent cube
+// =======
+// OPTIONAL: Sticky scaling 3D card/flag for main parent cube
+// =======
 function add3DMessageCardToCube(mesh, text1 = "Application Received", text2 = "Your forms have been received.") {
   if (mesh.userData.messageCard) mesh.remove(mesh.userData.messageCard);
 
-  // High-res for crisp visuals
   const cardWidth = 800, cardHeight = 210;
   const canvas = document.createElement('canvas');
-  canvas.width = cardWidth;
-  canvas.height = cardHeight;
+  canvas.width = cardWidth; canvas.height = cardHeight;
   const ctx = canvas.getContext('2d');
   ctx.fillStyle = 'rgba(35,40,60,0.98)';
   ctx.strokeStyle = '#fff700';
@@ -877,73 +880,48 @@ function add3DMessageCardToCube(mesh, text1 = "Application Received", text2 = "Y
   ctx.moveTo(30, 0); ctx.lineTo(cardWidth - 30, 0); ctx.quadraticCurveTo(cardWidth, 0, cardWidth, 30);
   ctx.lineTo(cardWidth, cardHeight - 30); ctx.quadraticCurveTo(cardWidth, cardHeight, cardWidth - 30, cardHeight);
   ctx.lineTo(30, cardHeight); ctx.quadraticCurveTo(0, cardHeight, 0, cardHeight - 30);
-  ctx.lineTo(0, 30); ctx.quadraticCurveTo(0, 0, 30, 0);
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
+  ctx.lineTo(0, 30); ctx.quadraticCurveTo(0, 0, 30, 0); ctx.closePath();
+  ctx.fill(); ctx.stroke();
 
-  // Draw fallback text immediately (before icon)
-  ctx.font = 'bold 54px Arial';
-  ctx.fillStyle = "#fff700";
-  ctx.fillText(text1, 120, 45);
-  ctx.font = '36px Arial';
-  ctx.fillStyle = "#fff";
-  ctx.fillText(text2, 120, 115);
+  ctx.font = 'bold 54px Arial'; ctx.fillStyle = "#fff700"; ctx.fillText(text1, 120, 45);
+  ctx.font = '36px Arial'; ctx.fillStyle = "#fff"; ctx.fillText(text2, 120, 115);
 
   const cardTexture = new THREE.CanvasTexture(canvas);
   const cardMaterial = new THREE.SpriteMaterial({ map: cardTexture, transparent: true });
   const cardSprite = new THREE.Sprite(cardMaterial);
 
-  // Position: direct above+in front
-  // Try: 0 Y for base center, 0.075 above, 0.13 forward
+  // Above+front (tune for your cube size)
   cardSprite.position.set(0, 0.075, 0.13);
-  cardSprite.scale.set(0.37, 0.1, 1); // width, height, 1 -- adjust for cube size
+  cardSprite.scale.set(0.37, 0.1, 1);
 
   mesh.add(cardSprite);
   mesh.userData.messageCard = cardSprite;
 
-  // Debug
-  const dbg = new THREE.Vector3();
-  mesh.getWorldPosition(dbg);
-  console.log("Parent cube WORLD POS:", dbg, "Card local pos:", cardSprite.position);
-  setTimeout(() => {
-    if (mesh.userData.messageCard) {
-      mesh.userData.messageCard.getWorldPosition(dbg);
-      console.log("Card WORLD POS after 2s:", dbg);
-    }
-  }, 2000);
-
-  // Load icon (onload redraws canvas properly)
+  // Add icon if needed
   const scrollImg = new window.Image();
   scrollImg.crossOrigin = "Anonymous";
   scrollImg.onload = function() {
     ctx.clearRect(0, 0, cardWidth, cardHeight);
     ctx.fillStyle = 'rgba(35,40,60,0.98)';
-    ctx.strokeStyle = '#fff700';
-    ctx.lineWidth = 18;
+    ctx.strokeStyle = '#fff700'; ctx.lineWidth = 18;
     ctx.beginPath();
     ctx.moveTo(30, 0); ctx.lineTo(cardWidth - 30, 0); ctx.quadraticCurveTo(cardWidth, 0, cardWidth, 30);
     ctx.lineTo(cardWidth, cardHeight - 30); ctx.quadraticCurveTo(cardWidth, cardHeight, cardWidth - 30, cardHeight);
     ctx.lineTo(30, cardHeight); ctx.quadraticCurveTo(0, cardHeight, 0, cardHeight - 30);
-    ctx.lineTo(0, 30); ctx.quadraticCurveTo(0, 0, 30, 0);
-    ctx.closePath();
+    ctx.lineTo(0, 30); ctx.quadraticCurveTo(0, 0, 30, 0); ctx.closePath();
     ctx.fill();
     ctx.stroke();
     ctx.drawImage(scrollImg, 34, 48, 64, 64);
-    ctx.font = 'bold 54px Arial';
-    ctx.fillStyle = "#fff700";
-    ctx.fillText(text1, 120, 45);
-    ctx.font = '36px Arial';
-    ctx.fillStyle = "#fff";
-    ctx.fillText(text2, 120, 115);
+    ctx.font = 'bold 54px Arial'; ctx.fillStyle = "#fff700"; ctx.fillText(text1, 120, 45);
+    ctx.font = '36px Arial'; ctx.fillStyle = "#fff"; ctx.fillText(text2, 120, 115);
     cardTexture.needsUpdate = true;
-    console.log("Card icon loaded and redrawn for mesh", mesh);
   };
-  scrollImg.onerror = () => console.log("Scroll icon failed to load!");
   scrollImg.src = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4dc.png";
 }
 
-// Call every animation frame for each cube with a card (typically just the parent cube)
+// =======
+// OPTIONAL: For true scaling at all distances, call in your render/animate loop:
+// allParentMeshes.forEach(mesh => updateMessageCardScale(mesh, camera));
 function updateMessageCardScale(mesh, camera) {
   if (!mesh.userData.messageCard) return;
   const meshPosition = new THREE.Vector3();
@@ -956,6 +934,7 @@ function updateMessageCardScale(mesh, camera) {
     1
   );
 }
+
 
 
 
