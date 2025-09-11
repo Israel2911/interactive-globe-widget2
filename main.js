@@ -796,62 +796,49 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
 // =======
 // APPLIED STATE: NEON CUBES + GLOWING NEON SCROLL ICON + NEON SPEECH FLAG
 // =======
-// APPLIED STATE: NEON! Only for truly "applied" cubes
+// APPLIED STATE: NEON! Only for truly "applied" cubes per program/uni
 // =======
 function setCubeToAppliedState(programOrUniName) {
-  const allSubCubes = [
-    ...europeSubCubes, ...newThailandSubCubes, ...canadaSubCubes, ...ukSubCubes,
-    ...usaSubCubes, ...indiaSubCubes, ...singaporeSubCubes, ...malaysiaSubCubes
+  // Combine all subcube groups for full global search
+  const cubeGroups = [
+    europeSubCubes, newThailandSubCubes, canadaSubCubes, ukSubCubes,
+    usaSubCubes, indiaSubCubes, singaporeSubCubes, malaysiaSubCubes
   ];
-  // FILTER: ONLY target cubes matching the applied program/university
-  const cubesToHighlight = allSubCubes.filter(
-    cube =>
-      cube &&
-      cube.userData.university &&
-      cube.userData.university.trim().toLowerCase() === programOrUniName.trim().toLowerCase()
-  );
+
+  // Only highlight matching cubes, leave others untouched
+  let cubesToHighlight = [];
+  cubeGroups.forEach(cubeGroup => {
+    cubeGroup.forEach(mesh => {
+      const isApplied =
+        mesh &&
+        mesh.userData.university &&
+        mesh.userData.university.trim().toLowerCase() === programOrUniName.trim().toLowerCase();
+
+      if (isApplied) {
+        // NEON: vivid, bright
+        mesh.material = new THREE.MeshStandardMaterial({
+          color: 0x151515,
+          emissive: 0xFFD700,
+          emissiveIntensity: 2.3,
+          metalness: 0.14,
+          roughness: 0.09,
+          transparent: false,
+          opacity: 1.0,
+          map: null
+        });
+        addNeonScrollSVGIcon(mesh);
+        cubesToHighlight.push(mesh);
+      }
+      // DO NOT touch non-applied cubes!
+    });
+  });
 
   if (cubesToHighlight.length === 0) {
     showNotification(`No cube found for "${programOrUniName}"`, false);
     return;
   }
 
-  allSubCubes.forEach(mesh => {
-    // Determine if this mesh should be neon ("applied") or dormant ("default")
-    const applied = cubesToHighlight.includes(mesh);
-    // If APPLIED: NEON style!
-    if (applied) {
-      mesh.material = new THREE.MeshStandardMaterial({
-        color: 0x151515,
-        emissive: 0xFFD700,
-        emissiveIntensity: 2.3,
-        metalness: 0.14,
-        roughness: 0.09,
-        transparent: false,
-        opacity: 1.0,
-        map: null
-      });
-      addNeonScrollSVGIcon(mesh); // Only run for neon/applied
-    } else {
-      // DORMANT: remove any neon icon, set dark material
-      mesh.material = new THREE.MeshStandardMaterial({
-        color: 0x292929,
-        emissive: 0x111122,
-        emissiveIntensity: 0.18,
-        metalness: 0.09,
-        roughness: 0.23,
-        transparent: false,
-        opacity: 1.0,
-        map: null
-      });
-      if (mesh.userData.successIcon) {
-        mesh.remove(mesh.userData.successIcon);
-        mesh.userData.successIcon = undefined;
-      }
-    }
-  });
-
-  // Neon flag over first applied cube only
+  // Neon speech bubble flag above the first matching (applied) cube only
   addNeonSpeechBubble(cubesToHighlight[0], "APPLICATION\nRECEIVED");
 
   showNotification(
