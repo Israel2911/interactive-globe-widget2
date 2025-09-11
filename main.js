@@ -791,7 +791,7 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
   } else { drawText(); }
   return new THREE.MeshStandardMaterial({ map: texture, emissive: new THREE.Color(bgColor), emissiveIntensity: 0.6 });
 }
-// === APPLIED STATE 
+
 function setCubeToAppliedState(programOrUniName) {
   const allSubCubes = [
     ...europeSubCubes, ...newThailandSubCubes, ...canadaSubCubes, ...ukSubCubes,
@@ -815,32 +815,38 @@ function setCubeToAppliedState(programOrUniName) {
       meshes = targetCube.children.filter(child => child.isMesh);
     }
     meshes.forEach(mesh => {
-      // === NEON PATCH ===
-      if (mesh.userData.successIcon) {
-        mesh.remove(mesh.userData.successIcon);
-        mesh.userData.successIcon = undefined;
-      }
-      mesh.userData.isApplied = true; // <-- THIS LINE MAKES APPLIED STATE STICK FOREVER
       mesh.material = new THREE.MeshStandardMaterial({
-        color: 0xFFD700,
-        emissive: 0xFFD700,
-        emissiveIntensity: 2.3,
-        metalness: 0.14,
-        roughness: 0.09,
-        transparent: false,
-        opacity: 1.0
+        color: 0x39ff14, emissive: 0x39ff14, emissiveIntensity: 5, map: null,
+        metalness: 0.18, roughness: 0.05
       });
-      addNeonScrollSVGIcon(mesh);
-      // === END PATCH ===
+      // --- Animation frame based blink ---
+      let blinkStart = performance.now();
+      function blink(time) {
+        let elapsed = time - blinkStart;
+        let phase = Math.floor(elapsed / 120) % 2;
+        let complete = elapsed > 120 * 12; // blinks for ~1.4s
+        if (complete) {
+          mesh.material.color.set(0x39ff14);
+          mesh.material.emissive.set(0x39ff14);
+          mesh.material.emissiveIntensity = 6;
+          return;
+        }
+        if (phase === 0) {
+          mesh.material.color.set(0x39ff14);
+          mesh.material.emissive.set(0x39ff14);
+          mesh.material.emissiveIntensity = 8;
+        } else {
+          mesh.material.color.set(0x000000);
+          mesh.material.emissive.set(0x000000);
+          mesh.material.emissiveIntensity = 0.3;
+        }
+        requestAnimationFrame(blink);
+      }
+      requestAnimationFrame(blink);
     });
   });
-  addNeonSpeechBubble(cubesToHighlight[0], "APPLICATION\nRECEIVED");
-  showNotification(
-    "✅ We have received your application.<br>Our team will get back to you within 2 weeks.<br>You can also track updates in your Student Dashboard.",
-    true
-  );
+  showNotification('Neon green blink (requestAnimationFrame) applied!', true);
 }
-
 
 
 // =======
