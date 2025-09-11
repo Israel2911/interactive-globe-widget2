@@ -194,7 +194,7 @@ function buildLinkWithToken(baseUrl) {
   return baseUrl;
 }
 
-;async function showInfoPanel(data) {
+async function showInfoPanel(data) {
   // Only need the university name from clicked cube
   const universityName = data.university;
   if (!universityName || universityName === 'Unassigned') {
@@ -228,8 +228,10 @@ function buildLinkWithToken(baseUrl) {
     if (!item) return;
     const infoEnabled = item.programLink && item.programLink !== '#';
     const applyEnabled = item.applyLink && item.applyLink !== '#';
+
     const infoLink = buildLinkWithToken(item.programLink);
     const applyLink = buildLinkWithToken(item.applyLink);
+
     const subcardHTML = `
       <div class="subcard">
         <div class="subcard-info">
@@ -252,16 +254,19 @@ function buildLinkWithToken(baseUrl) {
   document.getElementById('infoPanelOverlay').style.display = 'flex';
   console.log(`✅ Info panel displayed for ${universityName}`);
 }
+
+
 function hideInfoPanel() {
   document.getElementById('infoPanelOverlay').style.display = 'none';
 }
+
 // This function sets up the HTML and CSS for the panel when the page loads.
 function addInfoPanelStyles() {
   const style = document.createElement('style');
   // Using the same CSS you already had
   style.textContent = `
     #infoPanelOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center; }
-    .info-panel { background: black; padding: 20px; border-radius: 10px; max-width: 600px; max-height: 80vh; overflow-y: auto; }
+    .info-panel { background: white; padding: 20px; border-radius: 10px; max-width: 600px; max-height: 80vh; overflow-y: auto; }
     .partner-cta { padding: 8px 16px; margin: 5px; border: none; border-radius: 5px; background: #007bff; color: white; cursor: pointer; }
     .partner-cta.disabled { background: #ccc; cursor: not-allowed; }
     .partner-cta:hover:not(.disabled) { background: #0056b3; }
@@ -272,6 +277,7 @@ function addInfoPanelStyles() {
     .main-card-details h3 { margin: 0; font-size: 24px; }
   `;
   document.head.appendChild(style);
+
   const overlay = document.createElement('div');
   overlay.id = 'infoPanelOverlay';
   overlay.onclick = hideInfoPanel;
@@ -284,8 +290,11 @@ function addInfoPanelStyles() {
   `;
   document.body.appendChild(overlay);
 }
+
 // This ensures the panel's HTML and CSS are ready when the page loads.
 document.addEventListener('DOMContentLoaded', addInfoPanelStyles);
+
+
 // ---------- If later you allow panel post-login, remove the return above and use builder below ----------
 /*
 const uniData = allUniversityContent.filter(item => item && item.university === data.university);
@@ -312,7 +321,7 @@ uniData.forEach(item => {
     <div class="subcard">
       <div class="subcard-info">
         <img src="${item.logo}" alt="">
-        <h4>${item.programName.replace(/\n/g, ' ')}</h4>
+        <h4>${item.programName.replace(/\\n/g, ' ')}</h4>
       </div>
       <div class="subcard-buttons">
         <button class="partner-cta info" ${infoEnabled ? '' : 'disabled'} data-href="${infoEnabled ? item.programLink : ''}">University Info</button>
@@ -337,9 +346,11 @@ container.querySelectorAll('.partner-cta.apply').forEach(btn => {
 document.getElementById('infoPanelOverlay').style.display = 'flex';
 console.log('✅ Info panel displayed with both university and application links');
 */
+
 function hideInfoPanel() {
   document.getElementById('infoPanelOverlay').style.display = 'none';
 }
+
 // Add info panel styles and HTML (kept in case you re-enable the panel)
 function addInfoPanelStyles() {
   const style = document.createElement('style');
@@ -396,15 +407,6 @@ function addInfoPanelStyles() {
       height: 60px;
       margin-right: 15px;
     }
-    .main-card-details h3 {
-  color: #111 !important;
-  font-weight: bold;
-}
-.subcard-info h4 {
-  color: #111 !important;
-  font-weight: bold;
-}
-
   `;
   document.head.appendChild(style);
   const overlay = document.createElement('div');
@@ -419,8 +421,10 @@ function addInfoPanelStyles() {
   `;
   document.body.appendChild(overlay);
 }
+
 // Initialize info panel scaffolding on load (safe to keep)
 document.addEventListener('DOMContentLoaded', addInfoPanelStyles);
+
 
 
 // =======
@@ -764,7 +768,6 @@ function getColorByData(data) {
   color.multiplyScalar(data.confidence);
   return color;
 }
-
 function createTexture(text, logoUrl, bgColor = '#003366') {
   const canvas = document.createElement('canvas');
   canvas.width = 256;
@@ -793,8 +796,6 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
   return new THREE.MeshStandardMaterial({ map: texture, emissive: new THREE.Color(bgColor), emissiveIntensity: 0.6 });
 }
 
-// =======
-// APPLIED STATE: NEON CUBES + GLOWING NEON SCROLL ICON + NEON SPEECH FLAG
 function setCubeToAppliedState(programOrUniName) {
   const allSubCubes = [
     ...europeSubCubes, ...newThailandSubCubes, ...canadaSubCubes, ...ukSubCubes,
@@ -810,128 +811,46 @@ function setCubeToAppliedState(programOrUniName) {
     showNotification(`No cube found for "${programOrUniName}"`, false);
     return;
   }
-  cubesToHighlight.forEach(mesh => {
-    // Always remove any old icons before adding
-    if (mesh.userData.successIcon) {
-      mesh.remove(mesh.userData.successIcon);
-      mesh.userData.successIcon = undefined;
+  cubesToHighlight.forEach(targetCube => {
+    let meshes = [];
+    if (targetCube.isMesh) {
+      meshes = [targetCube];
+    } else if (targetCube.type === "Group" && targetCube.children) {
+      meshes = targetCube.children.filter(child => child.isMesh);
     }
-    // NEON material
-    mesh.material = new THREE.MeshStandardMaterial({
-      color: 0x151515,
-      emissive: 0xFFD700,
-      emissiveIntensity: 2.3,
-      metalness: 0.14,
-      roughness: 0.09,
-      transparent: false,
-      opacity: 1.0
+    meshes.forEach(mesh => {
+      mesh.material = new THREE.MeshStandardMaterial({
+        color: 0x39ff14, emissive: 0x39ff14, emissiveIntensity: 5, map: null,
+        metalness: 0.18, roughness: 0.05
+      });
+      // --- Animation frame based blink ---
+      let blinkStart = performance.now();
+      function blink(time) {
+        let elapsed = time - blinkStart;
+        let phase = Math.floor(elapsed / 120) % 2;
+        let complete = elapsed > 120 * 12; // blinks for ~1.4s
+        if (complete) {
+          mesh.material.color.set(0x39ff14);
+          mesh.material.emissive.set(0x39ff14);
+          mesh.material.emissiveIntensity = 6;
+          return;
+        }
+        if (phase === 0) {
+          mesh.material.color.set(0x39ff14);
+          mesh.material.emissive.set(0x39ff14);
+          mesh.material.emissiveIntensity = 8;
+        } else {
+          mesh.material.color.set(0x000000);
+          mesh.material.emissive.set(0x000000);
+          mesh.material.emissiveIntensity = 0.3;
+        }
+        requestAnimationFrame(blink);
+      }
+      requestAnimationFrame(blink);
     });
-    addNeonScrollSVGIcon(mesh);
-    // Optionally, add flag only over the first cube
   });
-  addNeonSpeechBubble(cubesToHighlight[0], "APPLICATION\nRECEIVED");
-  showNotification(
-    "✅ We have received your application.<br>Our team will get back to you within 2 weeks.<br>You can also track updates in your Student Dashboard.",
-    true
-  );
+  showNotification('Neon green blink (requestAnimationFrame) applied!', true);
 }
-
-
-
-// =======
-// SVG/Canvas NEON SCROLL ICON: Only runs for APPLIED/YELLOW cubes!
-// =======
-function addNeonScrollSVGIcon(mesh) {
-  // Always remove any old icon first!
-  if (mesh.userData.successIcon) {
-    mesh.remove(mesh.userData.successIcon);
-    mesh.userData.successIcon = undefined;
-  }
-  const size = 120;
-  const canvas = document.createElement('canvas');
-  canvas.width = canvas.height = size;
-  const ctx = canvas.getContext('2d');
-  // Neon glow scroll shape
-  ctx.save();
-  ctx.shadowColor = "#04f6ff";
-  ctx.shadowBlur = 20;
-  ctx.lineJoin = "round";
-  ctx.strokeStyle = "#04f6ff";
-  ctx.lineWidth = 7;
-  ctx.beginPath();
-  ctx.moveTo(27, 28); ctx.lineTo(27, 68); ctx.quadraticCurveTo(27,82,47,68);
-  ctx.lineTo(73,68); ctx.quadraticCurveTo(87,61,73,47);
-  ctx.lineTo(35,46); ctx.lineTo(35,36); ctx.lineTo(73,36);
-  ctx.quadraticCurveTo(85,28,72,28); ctx.lineTo(27,28);
-  ctx.stroke();
-  ctx.restore();
-  // Glowing blue lines for "text"
-  ctx.save();
-  ctx.shadowColor = "#18efff";
-  ctx.shadowBlur = 7;
-  ctx.strokeStyle = "#18efff";
-  ctx.lineWidth = 4;
-  for (let k=0; k<3; k++) {
-    ctx.beginPath();
-    ctx.moveTo(37, 38+11*k);
-    ctx.lineTo(68, 38+11*k);
-    ctx.stroke();
-  }
-  ctx.restore();
-  const texture = new THREE.CanvasTexture(canvas);
-  const mat = new THREE.SpriteMaterial({ map: texture, transparent: true });
-  const sprite = new THREE.Sprite(mat);
-  const geo = mesh.geometry.parameters || {width: 0.08, height: 0.08, depth: 0.08};
-  sprite.center.set(0.5, 0.5);
-  sprite.scale.set(0.48 * geo.width, 0.48 * geo.height, 1); // large and fully centered
-  sprite.position.set(0, 0, geo.depth/2 + 0.001);
-  mesh.add(sprite);
-  mesh.userData.successIcon = sprite;
-}
-
-// =======
-// NEON FLAG: Only appears above the first APPLIED cube!
-// =======
-function addNeonSpeechBubble(mesh, text="APPLICATION\nRECEIVED") {
-  if (mesh.userData.messageCard) mesh.remove(mesh.userData.messageCard);
-  const cardWidth = 360, cardHeight = 120;
-  const canvas = document.createElement('canvas');
-  canvas.width = cardWidth; canvas.height = cardHeight;
-  const ctx = canvas.getContext('2d');
-  ctx.save();
-  ctx.shadowColor = "#0cf3ff";
-  ctx.shadowBlur = 14;
-  ctx.fillStyle = "#122450";
-  ctx.strokeStyle = "#0cf3ff";
-  ctx.lineWidth = 9;
-  ctx.beginPath();
-  ctx.moveTo(22,22); ctx.lineTo(cardWidth-22,22);
-  ctx.quadraticCurveTo(cardWidth-6,22,cardWidth-6,38);
-  ctx.lineTo(cardWidth-6,cardHeight-38);
-  ctx.quadraticCurveTo(cardWidth-6,cardHeight-6,cardWidth-38,cardHeight-6);
-  ctx.lineTo(95,cardHeight-6);
-  ctx.lineTo(75,cardHeight+19); // pointer
-  ctx.lineTo(75,cardHeight-6);
-  ctx.lineTo(22,cardHeight-6); ctx.quadraticCurveTo(6,cardHeight-6,6,cardHeight-26);
-  ctx.lineTo(6,38); ctx.quadraticCurveTo(6,22,22,22); ctx.closePath();
-  ctx.fill(); ctx.stroke(); ctx.restore();
-  ctx.font = 'bold 34px Arial'; ctx.fillStyle = "#08f9ff"; ctx.textBaseline="middle";
-  ctx.textAlign="center";
-  let txt = text.split("\n");
-  ctx.fillText(txt[0] || '', cardWidth/2, 54);
-  ctx.font = '22px Arial'; ctx.fillText(txt[1] || '', cardWidth/2, 92);
-  const cardTexture = new THREE.CanvasTexture(canvas);
-  const cardMaterial = new THREE.SpriteMaterial({ map: cardTexture, transparent: true });
-  const cardSprite = new THREE.Sprite(cardMaterial);
-  let geo = mesh.geometry && mesh.geometry.parameters ? mesh.geometry.parameters : { height: 0.08, depth: 0.08 };
-  cardSprite.position.set(0, geo.height/2 + 0.046, 0);
-  cardSprite.scale.set(0.14, 0.055, 1);
-  mesh.add(cardSprite);
-  mesh.userData.messageCard = cardSprite;
-}
-
-// Remember: In your main render loop...
-// allParentMeshes.forEach(mesh => updateMessageCardScale(mesh, camera));
 
 
 // =======
@@ -1770,3 +1689,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   
 });
+
+
+
+
