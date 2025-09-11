@@ -792,6 +792,8 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
   return new THREE.MeshStandardMaterial({ map: texture, emissive: new THREE.Color(bgColor), emissiveIntensity: 0.6 });
 }
 
+
+// APPLIED STATE 
 function setCubeToAppliedState(programOrUniName) {
   const allSubCubes = [
     ...europeSubCubes, ...newThailandSubCubes, ...canadaSubCubes, ...ukSubCubes,
@@ -884,6 +886,63 @@ function addSuccessIconToCube(mesh, type = "scroll") {
   }
 }
 
+function add3DMessageCardToCube(mesh, text = "Application Received.<br>Your forms have been received.") {
+  // Remove any existing card
+  if (mesh.userData.messageCard) mesh.remove(mesh.userData.messageCard);
+
+  // Canvas for card
+  const canvas = document.createElement('canvas');
+  canvas.width = 400;
+  canvas.height = 105;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = 'rgba(35,40,60,0.96)';
+  ctx.strokeStyle = '#fff700';
+  ctx.lineWidth = 6;
+  if (ctx.roundRect) ctx.roundRect(0, 0, 400, 105, 18);
+  else ctx.fillRect(0, 0, 400, 105);
+  ctx.fill();
+  ctx.stroke();
+
+  // Draw scroll icon
+  const scrollImg = new window.Image();
+  scrollImg.crossOrigin = "Anonymous";
+  const iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4dc.png";
+  scrollImg.onload = function() {
+    ctx.drawImage(scrollImg, 16, 20, 62, 62);
+    // Main text (yellow)
+    ctx.font = 'bold 28px Arial';
+    ctx.fillStyle = "#fff700";
+    ctx.textBaseline = "top";
+    ctx.textAlign = "left";
+    ctx.fillText("Application Received", 95, 28);
+    // Sub-text (white)
+    ctx.font = '20px Arial';
+    ctx.fillStyle = "#fff";
+    ctx.fillText("Your forms have been received.", 95, 60);
+    cardTexture.needsUpdate = true;
+  };
+  scrollImg.src = iconUrl;
+
+  // Draw fallback text (if icon fails to load)
+  ctx.font = 'bold 28px Arial';
+  ctx.fillStyle = "#fff700";
+  ctx.textBaseline = "top";
+  ctx.textAlign = "left";
+  ctx.fillText("Application Received", 95, 28);
+  ctx.font = '20px Arial';
+  ctx.fillStyle = "#fff";
+  ctx.fillText("Your forms have been received.", 95, 60);
+
+  const cardTexture = new THREE.CanvasTexture(canvas);
+  const cardMaterial = new THREE.SpriteMaterial({ map: cardTexture, transparent: true });
+  const cardSprite = new THREE.Sprite(cardMaterial);
+
+  // Scale/position beside cube: adjust for your actual cube size if needed
+  cardSprite.scale.set(0.25, 0.065, 1);  // w, h
+  cardSprite.position.set(0.15, 0, 0.045); // beside and slightly in front (tune for your layout)
+  mesh.add(cardSprite);
+  mesh.userData.messageCard = cardSprite;
+}
 
 
 // =======
