@@ -838,18 +838,18 @@ function setCubeToAppliedState(programOrUniName) {
 // =======
 function addNeonScrollSVGIcon(mesh) {
   if (mesh.userData.successIcon) mesh.remove(mesh.userData.successIcon);
-  const size = 100;
+  const size = 120;
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = size;
   const ctx = canvas.getContext('2d');
-  // Neon blue shadow
+
+  // Neon glow
   ctx.save();
   ctx.shadowColor = "#04f6ff";
-  ctx.shadowBlur = 17;
+  ctx.shadowBlur = 20;
   ctx.lineJoin = "round";
   ctx.strokeStyle = "#04f6ff";
-  ctx.lineWidth = 5;
-  // SVG-style path: a simple scroll, adjust to taste
+  ctx.lineWidth = 7;
   ctx.beginPath();
   ctx.moveTo(27, 28); ctx.lineTo(27, 68); ctx.quadraticCurveTo(27,82,47,68);
   ctx.lineTo(73,68); ctx.quadraticCurveTo(87,61,73,47);
@@ -858,16 +858,16 @@ function addNeonScrollSVGIcon(mesh) {
   ctx.stroke();
   ctx.restore();
 
-  // Optional: Add glowing horizontal lines for "writing"
+  // Glowing lines for "text"
   ctx.save();
   ctx.shadowColor = "#18efff";
-  ctx.shadowBlur = 6;
+  ctx.shadowBlur = 7;
   ctx.strokeStyle = "#18efff";
-  ctx.lineWidth = 3;
+  ctx.lineWidth = 4;
   for (let k=0; k<3; k++) {
     ctx.beginPath();
-    ctx.moveTo(37, 38+10*k);
-    ctx.lineTo(68, 38+10*k);
+    ctx.moveTo(37, 38+11*k);
+    ctx.lineTo(68, 38+11*k);
     ctx.stroke();
   }
   ctx.restore();
@@ -877,11 +877,12 @@ function addNeonScrollSVGIcon(mesh) {
   const sprite = new THREE.Sprite(mat);
   const geo = mesh.geometry.parameters || {width: 0.08, height: 0.08, depth: 0.08};
   sprite.center.set(0.5, 0.5);
-  sprite.scale.set(0.38 * geo.width, 0.38 * geo.height, 1);
-  sprite.position.set(0, 0, geo.depth/2 + 0.0016);
+  sprite.scale.set(0.46 * geo.width, 0.46 * geo.height, 1); // large neon!
+  sprite.position.set(0, 0, geo.depth/2 + 0.001); // DEAD CENTER of front face
   mesh.add(sprite);
   mesh.userData.successIcon = sprite;
 }
+
 
 // =======
 // NEON SPEECH BUBBLE FLAG (above the cube)
