@@ -194,7 +194,7 @@ function buildLinkWithToken(baseUrl) {
   return baseUrl;
 }
 
-async function showInfoPanel(data) {
+;async function showInfoPanel(data) {
   // Only need the university name from clicked cube
   const universityName = data.university;
   if (!universityName || universityName === 'Unassigned') {
@@ -228,10 +228,8 @@ async function showInfoPanel(data) {
     if (!item) return;
     const infoEnabled = item.programLink && item.programLink !== '#';
     const applyEnabled = item.applyLink && item.applyLink !== '#';
-
     const infoLink = buildLinkWithToken(item.programLink);
     const applyLink = buildLinkWithToken(item.applyLink);
-
     const subcardHTML = `
       <div class="subcard">
         <div class="subcard-info">
@@ -254,19 +252,16 @@ async function showInfoPanel(data) {
   document.getElementById('infoPanelOverlay').style.display = 'flex';
   console.log(`✅ Info panel displayed for ${universityName}`);
 }
-
-
 function hideInfoPanel() {
   document.getElementById('infoPanelOverlay').style.display = 'none';
 }
-
 // This function sets up the HTML and CSS for the panel when the page loads.
 function addInfoPanelStyles() {
   const style = document.createElement('style');
   // Using the same CSS you already had
   style.textContent = `
     #infoPanelOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center; }
-    .info-panel { background: white; padding: 20px; border-radius: 10px; max-width: 600px; max-height: 80vh; overflow-y: auto; }
+    .info-panel { background: black; padding: 20px; border-radius: 10px; max-width: 600px; max-height: 80vh; overflow-y: auto; }
     .partner-cta { padding: 8px 16px; margin: 5px; border: none; border-radius: 5px; background: #007bff; color: white; cursor: pointer; }
     .partner-cta.disabled { background: #ccc; cursor: not-allowed; }
     .partner-cta:hover:not(.disabled) { background: #0056b3; }
@@ -277,7 +272,6 @@ function addInfoPanelStyles() {
     .main-card-details h3 { margin: 0; font-size: 24px; }
   `;
   document.head.appendChild(style);
-
   const overlay = document.createElement('div');
   overlay.id = 'infoPanelOverlay';
   overlay.onclick = hideInfoPanel;
@@ -290,11 +284,8 @@ function addInfoPanelStyles() {
   `;
   document.body.appendChild(overlay);
 }
-
 // This ensures the panel's HTML and CSS are ready when the page loads.
 document.addEventListener('DOMContentLoaded', addInfoPanelStyles);
-
-
 // ---------- If later you allow panel post-login, remove the return above and use builder below ----------
 /*
 const uniData = allUniversityContent.filter(item => item && item.university === data.university);
@@ -321,7 +312,7 @@ uniData.forEach(item => {
     <div class="subcard">
       <div class="subcard-info">
         <img src="${item.logo}" alt="">
-        <h4>${item.programName.replace(/\\n/g, ' ')}</h4>
+        <h4>${item.programName.replace(/\n/g, ' ')}</h4>
       </div>
       <div class="subcard-buttons">
         <button class="partner-cta info" ${infoEnabled ? '' : 'disabled'} data-href="${infoEnabled ? item.programLink : ''}">University Info</button>
@@ -346,11 +337,9 @@ container.querySelectorAll('.partner-cta.apply').forEach(btn => {
 document.getElementById('infoPanelOverlay').style.display = 'flex';
 console.log('✅ Info panel displayed with both university and application links');
 */
-
 function hideInfoPanel() {
   document.getElementById('infoPanelOverlay').style.display = 'none';
 }
-
 // Add info panel styles and HTML (kept in case you re-enable the panel)
 function addInfoPanelStyles() {
   const style = document.createElement('style');
@@ -407,6 +396,15 @@ function addInfoPanelStyles() {
       height: 60px;
       margin-right: 15px;
     }
+    .main-card-details h3 {
+  color: #111 !important;
+  font-weight: bold;
+}
+.subcard-info h4 {
+  color: #111 !important;
+  font-weight: bold;
+}
+
   `;
   document.head.appendChild(style);
   const overlay = document.createElement('div');
@@ -421,10 +419,8 @@ function addInfoPanelStyles() {
   `;
   document.body.appendChild(overlay);
 }
-
 // Initialize info panel scaffolding on load (safe to keep)
 document.addEventListener('DOMContentLoaded', addInfoPanelStyles);
-
 
 
 // =======
@@ -1689,7 +1685,3 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   
 });
-
-
-
-
