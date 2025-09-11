@@ -796,6 +796,7 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
 // =======
 // APPLIED STATE: NEON CUBES + GLOWING NEON SCROLL ICON + NEON SPEECH FLAG
 // =======
+// =======
 // APPLIED STATE: NEON! Only for truly "applied" cubes per program/uni
 // =======
 function setCubeToAppliedState(programOrUniName) {
@@ -809,11 +810,16 @@ function setCubeToAppliedState(programOrUniName) {
   let cubesToHighlight = [];
   cubeGroups.forEach(cubeGroup => {
     cubeGroup.forEach(mesh => {
+      // REMOVE OLD ICONS always first
+      if (mesh.userData.successIcon) {
+        mesh.remove(mesh.userData.successIcon);
+        mesh.userData.successIcon = undefined;
+      }
+      // Determine applied status (case and trim safe)
       const isApplied =
         mesh &&
         mesh.userData.university &&
         mesh.userData.university.trim().toLowerCase() === programOrUniName.trim().toLowerCase();
-
       if (isApplied) {
         // NEON: vivid, bright
         mesh.material = new THREE.MeshStandardMaterial({
@@ -829,7 +835,7 @@ function setCubeToAppliedState(programOrUniName) {
         addNeonScrollSVGIcon(mesh);
         cubesToHighlight.push(mesh);
       }
-      // DO NOT touch non-applied cubes!
+      // DO NOT touch non-applied cubes further
     });
   });
 
@@ -851,12 +857,16 @@ function setCubeToAppliedState(programOrUniName) {
 // SVG/Canvas NEON SCROLL ICON: Only runs for APPLIED/YELLOW cubes!
 // =======
 function addNeonScrollSVGIcon(mesh) {
-  if (mesh.userData.successIcon) mesh.remove(mesh.userData.successIcon);
+  // Always remove any old icon first!
+  if (mesh.userData.successIcon) {
+    mesh.remove(mesh.userData.successIcon);
+    mesh.userData.successIcon = undefined;
+  }
   const size = 120;
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = size;
   const ctx = canvas.getContext('2d');
-  // Neon glow
+  // Neon glow scroll shape
   ctx.save();
   ctx.shadowColor = "#04f6ff";
   ctx.shadowBlur = 20;
@@ -870,7 +880,7 @@ function addNeonScrollSVGIcon(mesh) {
   ctx.quadraticCurveTo(85,28,72,28); ctx.lineTo(27,28);
   ctx.stroke();
   ctx.restore();
-  // Glowing lines for "text"
+  // Glowing blue lines for "text"
   ctx.save();
   ctx.shadowColor = "#18efff";
   ctx.shadowBlur = 7;
@@ -888,7 +898,7 @@ function addNeonScrollSVGIcon(mesh) {
   const sprite = new THREE.Sprite(mat);
   const geo = mesh.geometry.parameters || {width: 0.08, height: 0.08, depth: 0.08};
   sprite.center.set(0.5, 0.5);
-  sprite.scale.set(0.46 * geo.width, 0.46 * geo.height, 1);
+  sprite.scale.set(0.48 * geo.width, 0.48 * geo.height, 1); // large and fully centered
   sprite.position.set(0, 0, geo.depth/2 + 0.001);
   mesh.add(sprite);
   mesh.userData.successIcon = sprite;
