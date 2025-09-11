@@ -924,26 +924,21 @@ function setCubeToAppliedState(programOrUniName) {
 
 // Helper: Embedded mini scroll icon
 function addSuccessIconToCube(mesh, type = "scroll") {
-  if (!mesh.userData.successIcon) {
-    let iconUrl;
-    if (type === "scroll") {
-      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4dc.png";
-    } else if (type === "letter") {
-      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4e9.png";
-    } else if (type === "cap") {
-      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f393.png";
-    } else {
-      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4dc.png";
-    }
-    const iconTexture = new THREE.TextureLoader().load(iconUrl);
-    const iconMaterial = new THREE.SpriteMaterial({ map: iconTexture, transparent: true });
-    const iconSprite = new THREE.Sprite(iconMaterial);
-    iconSprite.scale.set(0.009, 0.009, 1);      // Small and subtle
-    iconSprite.position.set(0, 0, 0.0015);      // Just inside the front face
-    mesh.add(iconSprite);
-    mesh.userData.successIcon = iconSprite;
-  }
+  if (mesh.userData.successIcon) mesh.remove(mesh.userData.successIcon);
+  let iconUrl =
+    type === "scroll"
+      ? "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4dc.png"
+      : "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4e9.png";
+  const iconTexture = new THREE.TextureLoader().load(iconUrl);
+  const iconMaterial = new THREE.SpriteMaterial({ map: iconTexture, transparent: true });
+  const iconSprite = new THREE.Sprite(iconMaterial);
+  iconSprite.center.set(0.5, 0.49);                      // baseline remains
+  iconSprite.scale.set(0.0053, 0.0053, 1);               // keep size
+  iconSprite.position.set(-0.0013, 0, 0.0053);           // shift left by 0.0013 (tweak as needed)
+  mesh.add(iconSprite);
+  mesh.userData.successIcon = iconSprite;
 }
+
 
 // =======
 // TOGGLE FUNCTION CREATION
