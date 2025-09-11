@@ -865,10 +865,8 @@ function addSuccessIconToCube(mesh, type = "scroll") {
 
 // =======
 // OPTIONAL: Sticky scaling 3D card/flag for main parent cube
-// =======
 function add3DMessageCardToCube(mesh, text1 = "Application Received", text2 = "Your forms have been received.") {
   if (mesh.userData.messageCard) mesh.remove(mesh.userData.messageCard);
-
   const cardWidth = 800, cardHeight = 210;
   const canvas = document.createElement('canvas');
   canvas.width = cardWidth; canvas.height = cardHeight;
@@ -882,22 +880,28 @@ function add3DMessageCardToCube(mesh, text1 = "Application Received", text2 = "Y
   ctx.lineTo(30, cardHeight); ctx.quadraticCurveTo(0, cardHeight, 0, cardHeight - 30);
   ctx.lineTo(0, 30); ctx.quadraticCurveTo(0, 0, 30, 0); ctx.closePath();
   ctx.fill(); ctx.stroke();
-
   ctx.font = 'bold 54px Arial'; ctx.fillStyle = "#fff700"; ctx.fillText(text1, 120, 45);
   ctx.font = '36px Arial'; ctx.fillStyle = "#fff"; ctx.fillText(text2, 120, 115);
-
   const cardTexture = new THREE.CanvasTexture(canvas);
   const cardMaterial = new THREE.SpriteMaterial({ map: cardTexture, transparent: true });
   const cardSprite = new THREE.Sprite(cardMaterial);
 
-  // Above+front (tune for your cube size)
-  cardSprite.position.set(0, 0.075, 0.13);
-  cardSprite.scale.set(0.37, 0.1, 1);
+  // Anchor card: above and in front of cube (use cube geometry if available)
+  let geo = mesh.geometry && mesh.geometry.parameters
+              ? mesh.geometry.parameters
+              : { height: 0.08, depth: 0.08 };
+  let offsetY = geo.height / 2 + 0.03;   // just above the cube
+  let offsetZ = geo.depth / 2 + 0.02;    // just in front of face
+
+  cardSprite.position.set(0, offsetY, offsetZ);   // centered X
+
+  // Good visual size for most cube sizes (tune 0.15/0.045 for yours!)
+  cardSprite.scale.set(0.15, 0.045, 1);
 
   mesh.add(cardSprite);
   mesh.userData.messageCard = cardSprite;
 
-  // Add icon if needed
+  // Add scroll icon to the card
   const scrollImg = new window.Image();
   scrollImg.crossOrigin = "Anonymous";
   scrollImg.onload = function() {
@@ -920,8 +924,7 @@ function add3DMessageCardToCube(mesh, text1 = "Application Received", text2 = "Y
 }
 
 // =======
-// OPTIONAL: For true scaling at all distances, call in your render/animate loop:
-// allParentMeshes.forEach(mesh => updateMessageCardScale(mesh, camera));
+// Card scaling (call every render frame!)
 function updateMessageCardScale(mesh, camera) {
   if (!mesh.userData.messageCard) return;
   const meshPosition = new THREE.Vector3();
