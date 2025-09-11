@@ -807,12 +807,13 @@ function addSuccessIconToCube(mesh, type = "scroll") {
   const iconTexture = new THREE.TextureLoader().load(iconUrl);
   const iconMaterial = new THREE.SpriteMaterial({ map: iconTexture, transparent: true });
   const iconSprite = new THREE.Sprite(iconMaterial);
-  iconSprite.center.set(0.5, 0.49);
-  iconSprite.scale.set(0.0053, 0.0053, 1);
-  iconSprite.position.set(0, 0, 0.0053);
+  iconSprite.center.set(0.5, 0.49);                      // baseline remains
+  iconSprite.scale.set(0.0053, 0.0053, 1);               // keep size
+  iconSprite.position.set(-0.0013, 0, 0.0053);           // shift left by 0.0013 (tweak as needed)
   mesh.add(iconSprite);
   mesh.userData.successIcon = iconSprite;
 }
+
 
 function showCubePopup(x, y, msg) {
   document.querySelectorAll('.applied-cube-popup').forEach(el => el.remove());
