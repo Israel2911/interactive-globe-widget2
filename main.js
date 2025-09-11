@@ -815,15 +815,14 @@ function setCubeToAppliedState(programOrUniName) {
       meshes = targetCube.children.filter(child => child.isMesh);
     }
     meshes.forEach(mesh => {
-      // === NEON PATCH STARTS HERE ===
-      // Remove any old icon
+      // === NEON PATCH ===
       if (mesh.userData.successIcon) {
         mesh.remove(mesh.userData.successIcon);
         mesh.userData.successIcon = undefined;
       }
-      // Neon look
+      mesh.userData.isApplied = true; // <-- THIS LINE MAKES APPLIED STATE STICK FOREVER
       mesh.material = new THREE.MeshStandardMaterial({
-        color: 0x151515,
+        color: 0xFFD700,
         emissive: 0xFFD700,
         emissiveIntensity: 2.3,
         metalness: 0.14,
@@ -831,9 +830,8 @@ function setCubeToAppliedState(programOrUniName) {
         transparent: false,
         opacity: 1.0
       });
-      // Add neon scroll icon
       addNeonScrollSVGIcon(mesh);
-      // === NEON PATCH ENDS HERE ===
+      // === END PATCH ===
     });
   });
   addNeonSpeechBubble(cubesToHighlight[0], "APPLICATION\nRECEIVED");
@@ -842,6 +840,7 @@ function setCubeToAppliedState(programOrUniName) {
     true
   );
 }
+
 
 
 // =======
