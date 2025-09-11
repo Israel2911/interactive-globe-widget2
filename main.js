@@ -702,10 +702,9 @@ function setInteractionMode(mode) {
 }
 
 // =======
-// Three.js initialization
+// Three.js Initialization
 // =======
 function initializeThreeJS() {
-  console.log('🔄 Initializing Three.js...');
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.001, 1000);
   camera.position.z = 3.5;
@@ -737,8 +736,11 @@ function initializeThreeJS() {
   scene.add(pointLight);
   renderer.domElement.addEventListener('mousedown', () => { isInteracting = true; clearTimeout(hoverTimeout); if (isPanMode) renderer.domElement.style.cursor = 'grabbing'; });
   renderer.domElement.addEventListener('mouseup', () => { hoverTimeout = setTimeout(() => { isInteracting = false; }, 200); if (isPanMode) renderer.domElement.style.cursor = 'grab'; });
-  console.log('✅ Three.js initialized successfully');
 }
+
+// =======
+// Canvas Resize
+// =======
 function updateCanvasSize() {
   const headerHeight = document.querySelector('.header-ui-bar')?.offsetHeight || 0;
   const footerHeight = document.querySelector('.footer-ui-bar')?.offsetHeight || 0;
@@ -752,7 +754,7 @@ function updateCanvasSize() {
 }
 
 // =======
-// UTILITIES
+// Color/Texture Utility
 // =======
 function getColorByData(data) {
   const baseHue = data.domain * 30 % 360;
@@ -764,6 +766,7 @@ function getColorByData(data) {
   color.multiplyScalar(data.confidence);
   return color;
 }
+
 function createTexture(text, logoUrl, bgColor = '#003366') {
   const canvas = document.createElement('canvas');
   canvas.width = 256;
@@ -792,43 +795,37 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
   return new THREE.MeshStandardMaterial({ map: texture, emissive: new THREE.Color(bgColor), emissiveIntensity: 0.6 });
 }
 
-// Helper: Add a student scroll or other icon "inside" the cube
+// =======
+// Success State Utilities
+// =======
 function addSuccessIconToCube(mesh, type = "scroll") {
-  if (!mesh.userData.successIcon) {
-    let iconUrl;
-    if (type === "scroll") {
-      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4dc.png";
-    } else if (type === "letter") {
-      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4e9.png";
-    } else if (type === "cap") {
-      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f393.png";
-    } else {
-      iconUrl = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4dc.png";
-    }
-    const iconTexture = new THREE.TextureLoader().load(iconUrl);
-    const iconMaterial = new THREE.SpriteMaterial({ map: iconTexture, transparent: true });
-    const iconSprite = new THREE.Sprite(iconMaterial);
-    iconSprite.scale.set(0.009, 0.009, 1);      // Small & neat
-    iconSprite.position.set(0, 0, 0.0015);      // Embedded just behind front face
-    mesh.add(iconSprite);
-    mesh.userData.successIcon = iconSprite;
-  }
+  if (mesh.userData.successIcon) mesh.remove(mesh.userData.successIcon);
+  let iconUrl =
+    type === "scroll"
+      ? "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4dc.png"
+      : "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4e9.png";
+  const iconTexture = new THREE.TextureLoader().load(iconUrl);
+  const iconMaterial = new THREE.SpriteMaterial({ map: iconTexture, transparent: true });
+  const iconSprite = new THREE.Sprite(iconMaterial);
+  iconSprite.center.set(0.5, 0.49);
+  iconSprite.scale.set(0.0053, 0.0053, 1);
+  iconSprite.position.set(0, 0, 0.0053);
+  mesh.add(iconSprite);
+  mesh.userData.successIcon = iconSprite;
 }
 
-// Helper: Show a message bubble tied to 2D projected cube position
 function showCubePopup(x, y, msg) {
-  // Remove earlier popups
   document.querySelectorAll('.applied-cube-popup').forEach(el => el.remove());
   const div = document.createElement('div');
   div.className = 'applied-cube-popup';
-  div.style.left = (x - 110) + 'px';  // Horizontally center on cube
-  div.style.top = (y - 85) + 'px';    // Above the cube's center
+  div.style.left = (x - 110) + 'px';
+  div.style.top = (y - 85) + 'px';
   div.innerHTML = msg;
   document.body.appendChild(div);
-  setTimeout(() => div.remove(), 6000);
+  setTimeout(() => div.remove(), 5000);
 }
 
-// CSS for the popup, add this via JS or your stylesheet once
+// Add CSS for popup (runs only once)
 if (!document.getElementById('applied-cube-popup-style')) {
   const style = document.createElement('style');
   style.id = 'applied-cube-popup-style';
@@ -852,8 +849,9 @@ if (!document.getElementById('applied-cube-popup-style')) {
   document.head.appendChild(style);
 }
 
-// MAIN FUNCTION
-// MAIN FUNCTION - NEON BLINK/BEACON AND ICON ALIGNMENT
+// =======
+// MAIN FUNCTION: No blinking, just static translucent yellow, scroll, popup-flag
+// =======
 function setCubeToAppliedState(programOrUniName) {
   const allSubCubes = [
     ...europeSubCubes, ...newThailandSubCubes, ...canadaSubCubes, ...ukSubCubes,
@@ -869,133 +867,31 @@ function setCubeToAppliedState(programOrUniName) {
     showNotification(`No cube found for "${programOrUniName}"`, false);
     return;
   }
-  cubesToHighlight.forEach(targetCube => {
-    let meshes = [];
-    if (targetCube.isMesh) {
-      meshes = [targetCube];
-    } else if (targetCube.type === "Group" && targetCube.children) {
-      meshes = targetCube.children.filter(child => child.isMesh);
-    }
-    meshes.forEach(mesh => {
-      // Always add the scroll icon, before and after blinking
-      addSuccessIconToCube(mesh, "scroll");
-
-      // Start NEON "beacon" BLINK: full, bright, and visible
-      mesh.material = new THREE.MeshStandardMaterial({
-        color: 0xffff00,
-        emissive: 0xffff00,
-        emissiveIntensity: 10,
-        transparent: true,
-        opacity: 1.0,
-        metalness: 0.07, roughness: 0.09,
-        map: null
-      });
-
-      let blinkStart = performance.now();
-      function blink(time) {
-        let elapsed = time - blinkStart;
-        let phase = Math.floor(elapsed / 100) % 3;
-        let complete = elapsed > 100 * 18; // ≈1.8s of blinking for attention
-
-        if (complete) {
-          mesh.material = new THREE.MeshStandardMaterial({
-            color: 0xffff00,
-            emissive: 0xffff00,
-            emissiveIntensity: 0.45,
-            metalness: 0.04,
-            roughness: 0.14,
-            transparent: true,
-            opacity: 0.77,
-            map: null
-          });
-          addSuccessIconToCube(mesh, "scroll");
-          // Show bubble
-          const cubeWorldPos = new THREE.Vector3();
-          mesh.getWorldPosition(cubeWorldPos);
-          cubeWorldPos.project(camera);
-          const x = (cubeWorldPos.x * 0.5 + 0.5) * window.innerWidth;
-          const y = (cubeWorldPos.y * -0.5 + 0.5) * window.innerHeight;
-          showCubePopup(
-            x, y,
-            "<b>✅ Application Received!</b><br>Our team will get back to you within 2 weeks.<br>You can also track updates in your Student Dashboard."
-          );
-          return;
-        }
-        // BEACON BLINK: vivid swings in intensity and brightness; never < 1.0 opacity
-        if (phase === 0) {
-          mesh.material.color.set(0xffffff);    // pure beacon white
-          mesh.material.emissive.set(0xffff00);
-          mesh.material.emissiveIntensity = 24;
-          mesh.material.opacity = 1.0;
-        } else if (phase === 1) {
-          mesh.material.color.set(0xffff00);    // electric yellow
-          mesh.material.emissive.set(0xffff00);
-          mesh.material.emissiveIntensity = 14;
-          mesh.material.opacity = 1.0;
-        } else {
-          mesh.material.color.set(0xffff00);    // dimmer yellow
-          mesh.material.emissive.set(0xffff00);
-          mesh.material.emissiveIntensity = 4.5;
-          mesh.material.opacity = 0.94;
-        }
-        requestAnimationFrame(blink);
-      }
-      requestAnimationFrame(blink);
+  cubesToHighlight.forEach(mesh => {
+    mesh.material = new THREE.MeshStandardMaterial({
+      color: 0xffff00,
+      emissive: 0xffff00,
+      emissiveIntensity: 0.44,
+      metalness: 0.04,
+      roughness: 0.14,
+      transparent: true,
+      opacity: 0.74,
+      map: null
     });
+    addSuccessIconToCube(mesh, "scroll");
+
+    // "Sticky flag" popup message above cube (disappears after 5s)
+    const cubeWorldPos = new THREE.Vector3();
+    mesh.getWorldPosition(cubeWorldPos);
+    cubeWorldPos.project(camera);
+    const x = (cubeWorldPos.x * 0.5 + 0.5) * window.innerWidth;
+    const y = (cubeWorldPos.y * -0.5 + 0.5) * window.innerHeight;
+    showCubePopup(
+      x, y,
+      "<b>✅ Application Received!</b><br>Our team will get back to you in 2 weeks.<br>You can also track updates in your Student Dashboard."
+    );
   });
 }
-
-// Helper: pixel-perfect centered, non-clipped scroll icon for typical 0.01 subcube
-function addSuccessIconToCube(mesh, type = "scroll") {
-  if (mesh.userData.successIcon) mesh.remove(mesh.userData.successIcon);
-  let iconUrl =
-    type === "scroll"
-      ? "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4dc.png"
-      : "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4e9.png";
-  const iconTexture = new THREE.TextureLoader().load(iconUrl);
-  const iconMaterial = new THREE.SpriteMaterial({ map: iconTexture, transparent: true });
-  const iconSprite = new THREE.Sprite(iconMaterial);
-  iconSprite.center.set(0.5, 0.49);                 // visually center for scroll PNG baseline
-  iconSprite.scale.set(0.0053, 0.0053, 1);          // fits most cube faces; tweak if needed
-  iconSprite.position.set(0, 0, 0.0053);            // flush with face, not floating
-  mesh.add(iconSprite);
-  mesh.userData.successIcon = iconSprite;
-}
-
-// CSS (same as before) for popup
-if (!document.getElementById('applied-cube-popup-style')) {
-  const style = document.createElement('style');
-  style.id = 'applied-cube-popup-style';
-  style.innerHTML = `
-    .applied-cube-popup {
-      position: absolute;
-      min-width: 220px;
-      background: rgba(35,40,60,0.95);
-      color: #fff900;
-      font-size: 1rem;
-      border-radius: 8px;
-      padding: 14px 23px;
-      box-shadow: 0 6px 22px rgba(10,40,150,0.21);
-      z-index: 9999;
-      border: 1.5px solid #fff700;
-      pointer-events: none;
-      text-align: center;
-      font-family: 'Inter', Arial, sans-serif;
-    }
-  `;
-  document.head.appendChild(style);
-}
-function showCubePopup(x, y, msg) {
-  document.querySelectorAll('.applied-cube-popup').forEach(el => el.remove());
-  const div = document.createElement('div');
-  div.className = 'applied-cube-popup';
-  div.style.left = (x - 110) + 'px';
-  div.style.top = (y - 85) + 'px';
-  div.innerHTML = msg;
-  document.body.appendChild(div);
-  setTimeout(() => div.remove(), 6000);
-}
-
 
 // =======
 // TOGGLE FUNCTION CREATION
