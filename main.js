@@ -795,33 +795,20 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
 
 // =======
 // APPLIED STATE: NEON CUBES + GLOWING NEON SCROLL ICON + NEON SPEECH FLAG
-// =======
-// =======
-// APPLIED STATE: NEON! Only for truly "applied" cubes per program/uni
-// =======
 function setCubeToAppliedState(programOrUniName) {
-  // Combine all subcube groups for full global search
   const cubeGroups = [
     europeSubCubes, newThailandSubCubes, canadaSubCubes, ukSubCubes,
     usaSubCubes, indiaSubCubes, singaporeSubCubes, malaysiaSubCubes
   ];
 
-  // Only highlight matching cubes, leave others untouched
   let cubesToHighlight = [];
   cubeGroups.forEach(cubeGroup => {
     cubeGroup.forEach(mesh => {
-      // REMOVE OLD ICONS always first
-      if (mesh.userData.successIcon) {
-        mesh.remove(mesh.userData.successIcon);
-        mesh.userData.successIcon = undefined;
-      }
-      // Determine applied status (case and trim safe)
-      const isApplied =
+      const thisName =
         mesh &&
         mesh.userData.university &&
-        mesh.userData.university.trim().toLowerCase() === programOrUniName.trim().toLowerCase();
-      if (isApplied) {
-        // NEON: vivid, bright
+        mesh.userData.university.trim().toLowerCase();
+      if (thisName === programOrUniName.trim().toLowerCase()) {
         mesh.material = new THREE.MeshStandardMaterial({
           color: 0x151515,
           emissive: 0xFFD700,
@@ -835,7 +822,7 @@ function setCubeToAppliedState(programOrUniName) {
         addNeonScrollSVGIcon(mesh);
         cubesToHighlight.push(mesh);
       }
-      // DO NOT touch non-applied cubes further
+      // DO NOT reset, recolor, or modify other cubes at all!
     });
   });
 
@@ -844,7 +831,6 @@ function setCubeToAppliedState(programOrUniName) {
     return;
   }
 
-  // Neon speech bubble flag above the first matching (applied) cube only
   addNeonSpeechBubble(cubesToHighlight[0], "APPLICATION\nRECEIVED");
 
   showNotification(
@@ -852,6 +838,7 @@ function setCubeToAppliedState(programOrUniName) {
     true
   );
 }
+
 
 // =======
 // SVG/Canvas NEON SCROLL ICON: Only runs for APPLIED/YELLOW cubes!
