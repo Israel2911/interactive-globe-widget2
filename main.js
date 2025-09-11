@@ -702,11 +702,10 @@ function setInteractionMode(mode) {
 }
 
 // =======
-// Three.js Initialization
-// =======
-// Three.js Initialization
+// Three.js initialization
 // =======
 function initializeThreeJS() {
+  console.log('🔄 Initializing Three.js...');
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.001, 1000);
   camera.position.z = 3.5;
@@ -738,11 +737,8 @@ function initializeThreeJS() {
   scene.add(pointLight);
   renderer.domElement.addEventListener('mousedown', () => { isInteracting = true; clearTimeout(hoverTimeout); if (isPanMode) renderer.domElement.style.cursor = 'grabbing'; });
   renderer.domElement.addEventListener('mouseup', () => { hoverTimeout = setTimeout(() => { isInteracting = false; }, 200); if (isPanMode) renderer.domElement.style.cursor = 'grab'; });
+  console.log('✅ Three.js initialized successfully');
 }
-
-// =======
-// Canvas Resize
-// =======
 function updateCanvasSize() {
   const headerHeight = document.querySelector('.header-ui-bar')?.offsetHeight || 0;
   const footerHeight = document.querySelector('.footer-ui-bar')?.offsetHeight || 0;
@@ -756,7 +752,7 @@ function updateCanvasSize() {
 }
 
 // =======
-// Color/Texture Utility
+// UTILITIES
 // =======
 function getColorByData(data) {
   const baseHue = data.domain * 30 % 360;
@@ -768,7 +764,6 @@ function getColorByData(data) {
   color.multiplyScalar(data.confidence);
   return color;
 }
-
 function createTexture(text, logoUrl, bgColor = '#003366') {
   const canvas = document.createElement('canvas');
   canvas.width = 256;
@@ -797,63 +792,6 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
   return new THREE.MeshStandardMaterial({ map: texture, emissive: new THREE.Color(bgColor), emissiveIntensity: 0.6 });
 }
 
-// =======
-// Success State Utilities
-// =======
-function addSuccessIconToCube(mesh, type = "scroll") {
-  if (mesh.userData.successIcon) mesh.remove(mesh.userData.successIcon);
-  let iconUrl =
-    type === "scroll"
-      ? "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4dc.png"
-      : "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4e9.png";
-  const iconTexture = new THREE.TextureLoader().load(iconUrl);
-  const iconMaterial = new THREE.SpriteMaterial({ map: iconTexture, transparent: true });
-  const iconSprite = new THREE.Sprite(iconMaterial);
-  iconSprite.center.set(0.5, 0.49);                // visually nudged for left-alignment
-  iconSprite.scale.set(0.0053, 0.0053, 1);
-  iconSprite.position.set(-0.0012, 0, 0.0053);     // shifted left by 0.0012 (tweak for your cube)
-  mesh.add(iconSprite);
-  mesh.userData.successIcon = iconSprite;
-}
-
-function showCubePopup(x, y, msg) {
-  document.querySelectorAll('.applied-cube-popup').forEach(el => el.remove());
-  const div = document.createElement('div');
-  div.className = 'applied-cube-popup';
-  div.style.left = (x - 110) + 'px';
-  div.style.top = (y - 85) + 'px';
-  div.innerHTML = msg;
-  document.body.appendChild(div);
-  setTimeout(() => div.remove(), 5000);
-}
-
-// Add CSS for popup (runs only once)
-if (!document.getElementById('applied-cube-popup-style')) {
-  const style = document.createElement('style');
-  style.id = 'applied-cube-popup-style';
-  style.innerHTML = `
-    .applied-cube-popup {
-      position: absolute;
-      min-width: 220px;
-      background: rgba(35,40,60,0.95);
-      color: #fff900;
-      font-size: 1rem;
-      border-radius: 8px;
-      padding: 14px 23px;
-      box-shadow: 0 6px 22px rgba(10,40,150,0.21);
-      z-index: 9999;
-      border: 1.5px solid #fff700;
-      pointer-events: none;
-      text-align: center;
-      font-family: 'Inter', Arial, sans-serif;
-    }
-  `;
-  document.head.appendChild(style);
-}
-
-// =======
-// MAIN FUNCTION: No blinking, just static highlight and popup-flag
-// =======
 function setCubeToAppliedState(programOrUniName) {
   const allSubCubes = [
     ...europeSubCubes, ...newThailandSubCubes, ...canadaSubCubes, ...ukSubCubes,
@@ -869,30 +807,45 @@ function setCubeToAppliedState(programOrUniName) {
     showNotification(`No cube found for "${programOrUniName}"`, false);
     return;
   }
-  cubesToHighlight.forEach(mesh => {
-    mesh.material = new THREE.MeshStandardMaterial({
-      color: 0xffff00,
-      emissive: 0xffff00,
-      emissiveIntensity: 0.44,
-      metalness: 0.04,
-      roughness: 0.14,
-      transparent: true,
-      opacity: 0.74,
-      map: null
+  cubesToHighlight.forEach(targetCube => {
+    let meshes = [];
+    if (targetCube.isMesh) {
+      meshes = [targetCube];
+    } else if (targetCube.type === "Group" && targetCube.children) {
+      meshes = targetCube.children.filter(child => child.isMesh);
+    }
+    meshes.forEach(mesh => {
+      mesh.material = new THREE.MeshStandardMaterial({
+        color: 0x39ff14, emissive: 0x39ff14, emissiveIntensity: 5, map: null,
+        metalness: 0.18, roughness: 0.05
+      });
+      // --- Animation frame based blink ---
+      let blinkStart = performance.now();
+      function blink(time) {
+        let elapsed = time - blinkStart;
+        let phase = Math.floor(elapsed / 120) % 2;
+        let complete = elapsed > 120 * 12; // blinks for ~1.4s
+        if (complete) {
+          mesh.material.color.set(0x39ff14);
+          mesh.material.emissive.set(0x39ff14);
+          mesh.material.emissiveIntensity = 6;
+          return;
+        }
+        if (phase === 0) {
+          mesh.material.color.set(0x39ff14);
+          mesh.material.emissive.set(0x39ff14);
+          mesh.material.emissiveIntensity = 8;
+        } else {
+          mesh.material.color.set(0x000000);
+          mesh.material.emissive.set(0x000000);
+          mesh.material.emissiveIntensity = 0.3;
+        }
+        requestAnimationFrame(blink);
+      }
+      requestAnimationFrame(blink);
     });
-    addSuccessIconToCube(mesh, "scroll");
-
-    // "Sticky flag" popup message above cube (disappears after 5s)
-    const cubeWorldPos = new THREE.Vector3();
-    mesh.getWorldPosition(cubeWorldPos);
-    cubeWorldPos.project(camera);
-    const x = (cubeWorldPos.x * 0.5 + 0.5) * window.innerWidth;
-    const y = (cubeWorldPos.y * -0.5 + 0.5) * window.innerHeight;
-    showCubePopup(
-      x, y,
-      "<b>✅ Application Received!</b><br>Our team will get back to you in 2 weeks.<br>You can also track updates in your Student Dashboard."
-    );
   });
+  showNotification('Neon green blink (requestAnimationFrame) applied!', true);
 }
 
 
