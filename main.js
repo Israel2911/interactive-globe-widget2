@@ -790,7 +790,7 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
   } else { drawText(); }
   return new THREE.MeshStandardMaterial({ map: texture, emissive: new THREE.Color(bgColor), emissiveIntensity: 0.6 });
 }
-function setCubeToAppliedState(programOrUniName) {
+function setCubeToAppliedStateWithPlaque(programOrUniName) {
   const allSubCubes = [
     ...europeSubCubes, ...newThailandSubCubes, ...canadaSubCubes, ...ukSubCubes,
     ...usaSubCubes, ...indiaSubCubes, ...singaporeSubCubes, ...malaysiaSubCubes
@@ -814,15 +814,15 @@ function setCubeToAppliedState(programOrUniName) {
     }
     meshes.forEach(mesh => {
       mesh.material = new THREE.MeshStandardMaterial({
-        color: 0x39ff14, emissive: 0x39ff14, emissiveIntensity: 5, map: null,
+        color: 0x39ff14, emissive: 0x39ff14, emissiveIntensity: 6, map: null,
         metalness: 0.18, roughness: 0.05
       });
-      // --- Animation frame based blink ---
+      // Neon blink as before...
       let blinkStart = performance.now();
       function blink(time) {
         let elapsed = time - blinkStart;
         let phase = Math.floor(elapsed / 120) % 2;
-        let complete = elapsed > 120 * 12; // blinks for ~1.4s
+        let complete = elapsed > 120 * 12;
         if (complete) {
           mesh.material.color.set(0x39ff14);
           mesh.material.emissive.set(0x39ff14);
@@ -841,37 +841,70 @@ function setCubeToAppliedState(programOrUniName) {
         requestAnimationFrame(blink);
       }
       requestAnimationFrame(blink);
+
+      // Add neon scroll+message plaque
+      addNeonApplicationPlaque(mesh, "Apply/Review Form Submitted!");
     });
   });
-  showNotification('Neon green blink (requestAnimationFrame) applied!', true);
+  showNotification('Neon green blink + neon scroll plaque applied!', true);
 }
-function addSimpleApplicationPlaque(mesh, text="APPLICATION RECEIVED") {
+
+function addNeonApplicationPlaque(mesh, text = "APPLICATION SUBMITTED") {
   if (mesh.userData.messageCard) mesh.remove(mesh.userData.messageCard);
-  const cardWidth = 160, cardHeight = 48;
+  const cardWidth = 180, cardHeight = 56;
   const canvas = document.createElement('canvas');
   canvas.width = cardWidth;
   canvas.height = cardHeight;
   const ctx = canvas.getContext('2d');
+
+  // --- Outer Card with Neon Glow ---
   ctx.save();
-  ctx.shadowColor = "#FFD700";
-  ctx.shadowBlur = 12;
-  ctx.fillStyle = "#222";
-  ctx.strokeStyle = "#FFD700";
+  ctx.shadowColor = "#FFE047";
+  ctx.shadowBlur = 17;
+  ctx.fillStyle = "#232322";
+  ctx.strokeStyle = "#FFE047";
   ctx.lineWidth = 4;
   ctx.beginPath();
-  ctx.roundRect(8, 8, cardWidth-16, cardHeight-16, 12);
+  ctx.roundRect(8, 8, cardWidth-16, cardHeight-16, 14);
   ctx.fill(); ctx.stroke();
   ctx.restore();
-  ctx.font = 'bold 20px Arial';
-  ctx.fillStyle = "#FFD700";
-  ctx.textAlign = "center";
-  ctx.fillText(text, cardWidth/2, cardHeight/2 + 7);
+
+  // --- Neon Scroll Icon (Simple Version) ---
+  // You could use a more detailed icon, or even load an image if desired!
+  ctx.save();
+  ctx.translate(32, 22);
+  ctx.shadowColor = "#fff700";
+  ctx.shadowBlur = 13;
+  ctx.fillStyle = "#fff700";
+  ctx.rotate(-0.08);
+  // Draw scroll base
+  ctx.fillRect(-15, -10, 30, 20);
+  // Roll lines
+  ctx.beginPath();
+  ctx.arc(11, 0, 7, Math.PI / 2, Math.PI * 2.3, false);
+  ctx.arc(-11, 0, 7, Math.PI * 0.85, Math.PI * 1.5, true);
+  ctx.strokeStyle = "#fffb7b";
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+  ctx.restore();
+
+  // --- Neon Message Text ---
+  ctx.save();
+  ctx.font = 'bold 17px Arial';
+  ctx.fillStyle = "#FFE047";
+  ctx.shadowColor = "#ffe047";
+  ctx.shadowBlur = 6;
+  ctx.textAlign = "left";
+  ctx.fillText(text, 56, cardHeight/2 + 6);
+  ctx.restore();
+
+  // --- Sprite creation as before ---
   const cardTexture = new THREE.CanvasTexture(canvas);
   const cardMaterial = new THREE.SpriteMaterial({ map: cardTexture, transparent: true });
   const cardSprite = new THREE.Sprite(cardMaterial);
   let geo = mesh.geometry?.parameters || { height: 0.08 };
-  cardSprite.position.set(0, geo.height/2 + 0.045, 0);
-  cardSprite.scale.set(0.12, 0.04, 1);
+  cardSprite.position.set(0, geo.height/2 + 0.08, 0);
+  cardSprite.scale.set(0.19, 0.055, 1);
   mesh.add(cardSprite);
   mesh.userData.messageCard = cardSprite;
 }
