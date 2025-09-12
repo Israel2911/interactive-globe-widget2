@@ -752,6 +752,7 @@ function updateCanvasSize() {
 }
 
 // UTILITIES
+// UTILITIES
 // =======
 function getColorByData(data) {
   const baseHue = data.domain * 30 % 360;
@@ -790,98 +791,21 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
   } else { drawText(); }
   return new THREE.MeshStandardMaterial({ map: texture, emissive: new THREE.Color(bgColor), emissiveIntensity: 0.6 });
 }
-// === On Globe Application Page ===
-
-// Utility: get the value of a query parameter
-function getQueryParam(name) {
-  const params = new URLSearchParams(window.location.search);
-  return params.get(name);
-}
-
-// --- Neon Application Plaque Drawing ---
-function addNeonApplicationPlaque(mesh, text = "Apply/Review Form Submitted!") {
-  if (mesh.userData.messageCard) mesh.remove(mesh.userData.messageCard);
-
-  const cardWidth = 180, cardHeight = 56;
-  const canvas = document.createElement('canvas');
-  canvas.width = cardWidth;
-  canvas.height = cardHeight;
-  const ctx = canvas.getContext('2d');
-
-  // Neon card background
-  ctx.save();
-  ctx.shadowColor = "#FFE047";
-  ctx.shadowBlur = 17;
-  ctx.fillStyle = "#232322";
-  ctx.strokeStyle = "#FFE047";
-  ctx.lineWidth = 4;
-  ctx.beginPath();
-  ctx.roundRect(8, 8, cardWidth-16, cardHeight-16, 14);
-  ctx.fill(); ctx.stroke();
-  ctx.restore();
-
-  // Neon scroll icon (simple)
-  ctx.save();
-  ctx.translate(32, 22);
-  ctx.shadowColor = "#fff700";
-  ctx.shadowBlur = 13;
-  ctx.fillStyle = "#fff700";
-  ctx.rotate(-0.08);
-  ctx.fillRect(-15, -10, 30, 20);
-  ctx.beginPath();
-  ctx.arc(11, 0, 7, Math.PI / 2, Math.PI * 2.3, false);
-  ctx.arc(-11, 0, 7, Math.PI * 0.85, Math.PI * 1.5, true);
-  ctx.strokeStyle = "#fffb7b";
-  ctx.lineWidth = 2.5;
-  ctx.stroke();
-  ctx.restore();
-
-  // Neon message text
-  ctx.save();
-  ctx.font = 'bold 17px Arial';
-  ctx.fillStyle = "#FFE047";
-  ctx.shadowColor = "#ffe047";
-  ctx.shadowBlur = 6;
-  ctx.textAlign = "left";
-  ctx.fillText(text, 56, cardHeight/2 + 6);
-  ctx.restore();
-
-  // Sprite creation
-  const cardTexture = new THREE.CanvasTexture(canvas);
-  const cardMaterial = new THREE.SpriteMaterial({ map: cardTexture, transparent: true });
-  const cardSprite = new THREE.Sprite(cardMaterial);
-  let geo = mesh.geometry?.parameters || { height: 0.08 };
-  cardSprite.position.set(0, geo.height/2 + 0.08, 0);
-  cardSprite.scale.set(0.19, 0.055, 1);
-  mesh.add(cardSprite);
-  mesh.userData.messageCard = cardSprite;
-}
-
-// --- Main Apply State Handler ---
-function setCubeToAppliedStateWithPlaque(programOrUniName) {
-  // Replace these with your real cube arrays
+function setCubeToAppliedState(programOrUniName) {
   const allSubCubes = [
     ...europeSubCubes, ...newThailandSubCubes, ...canadaSubCubes, ...ukSubCubes,
     ...usaSubCubes, ...indiaSubCubes, ...singaporeSubCubes, ...malaysiaSubCubes
   ];
-
-  const matchName = programOrUniName?.trim().toLowerCase();
-  console.log("Seeking match for university:", matchName);
-
   let cubesToHighlight = allSubCubes.filter(
     cube =>
       cube &&
-      typeof cube.userData.university === 'string' &&
-      cube.userData.university.trim().toLowerCase() === matchName
+      cube.userData.university &&
+      cube.userData.university.trim().toLowerCase() === programOrUniName.trim().toLowerCase()
   );
-
-  console.log("Matching cubes found:", cubesToHighlight.length, cubesToHighlight);
-
   if (cubesToHighlight.length === 0) {
-    if (typeof showNotification === 'function') showNotification(`No cube found for "${programOrUniName}"`, false);
+    showNotification(`No cube found for "${programOrUniName}"`, false);
     return;
   }
-
   cubesToHighlight.forEach(targetCube => {
     let meshes = [];
     if (targetCube.isMesh) {
@@ -889,19 +813,17 @@ function setCubeToAppliedStateWithPlaque(programOrUniName) {
     } else if (targetCube.type === "Group" && targetCube.children) {
       meshes = targetCube.children.filter(child => child.isMesh);
     }
-    console.log("Meshes to update:", meshes);
     meshes.forEach(mesh => {
       mesh.material = new THREE.MeshStandardMaterial({
-        color: 0x39ff14, emissive: 0x39ff14, emissiveIntensity: 6, map: null,
+        color: 0x39ff14, emissive: 0x39ff14, emissiveIntensity: 5, map: null,
         metalness: 0.18, roughness: 0.05
       });
-
-      // Neon blink animation
+      // --- Animation frame based blink ---
       let blinkStart = performance.now();
       function blink(time) {
         let elapsed = time - blinkStart;
         let phase = Math.floor(elapsed / 120) % 2;
-        let complete = elapsed > 120 * 12;
+        let complete = elapsed > 120 * 12; // blinks for ~1.4s
         if (complete) {
           mesh.material.color.set(0x39ff14);
           mesh.material.emissive.set(0x39ff14);
@@ -920,25 +842,40 @@ function setCubeToAppliedStateWithPlaque(programOrUniName) {
         requestAnimationFrame(blink);
       }
       requestAnimationFrame(blink);
-
-      // Add neon scroll + message plaque
-      addNeonApplicationPlaque(mesh, "Apply/Review Form Submitted!");
     });
   });
-  if (typeof showNotification === 'function') showNotification('Neon green blink + neon scroll plaque applied!', true);
+  showNotification('Neon green blink (requestAnimationFrame) applied!', true);
 }
-
-// === At Globe Load ===
-
-document.addEventListener("DOMContentLoaded", () => {
-  // Run after globe/cube arrays are initialized!
-  const appliedUniversity = getQueryParam("appliedUniversity");
-  console.log("Loaded appliedUniversity param:", appliedUniversity);
-
-  if (appliedUniversity) {
-    setCubeToAppliedStateWithPlaque(appliedUniversity);
-  }
-});
+function addSimpleApplicationPlaque(mesh, text="APPLICATION RECEIVED") {
+  if (mesh.userData.messageCard) mesh.remove(mesh.userData.messageCard);
+  const cardWidth = 160, cardHeight = 48;
+  const canvas = document.createElement('canvas');
+  canvas.width = cardWidth;
+  canvas.height = cardHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.save();
+  ctx.shadowColor = "#FFD700";
+  ctx.shadowBlur = 12;
+  ctx.fillStyle = "#222";
+  ctx.strokeStyle = "#FFD700";
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.roundRect(8, 8, cardWidth-16, cardHeight-16, 12);
+  ctx.fill(); ctx.stroke();
+  ctx.restore();
+  ctx.font = 'bold 20px Arial';
+  ctx.fillStyle = "#FFD700";
+  ctx.textAlign = "center";
+  ctx.fillText(text, cardWidth/2, cardHeight/2 + 7);
+  const cardTexture = new THREE.CanvasTexture(canvas);
+  const cardMaterial = new THREE.SpriteMaterial({ map: cardTexture, transparent: true });
+  const cardSprite = new THREE.Sprite(cardMaterial);
+  let geo = mesh.geometry?.parameters || { height: 0.08 };
+  cardSprite.position.set(0, geo.height/2 + 0.045, 0);
+  cardSprite.scale.set(0.12, 0.04, 1);
+  mesh.add(cardSprite);
+  mesh.userData.messageCard = cardSprite;
+}
 
 
 
