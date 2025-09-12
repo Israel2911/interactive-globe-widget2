@@ -751,7 +751,7 @@ function updateCanvasSize() {
   camera.updateProjectionMatrix();
 }
 
-// UTILITIES
+// =======
 // UTILITIES
 // =======
 function getColorByData(data) {
@@ -791,6 +791,7 @@ function createTexture(text, logoUrl, bgColor = '#003366') {
   } else { drawText(); }
   return new THREE.MeshStandardMaterial({ map: texture, emissive: new THREE.Color(bgColor), emissiveIntensity: 0.6 });
 }
+
 function setCubeToAppliedState(programOrUniName) {
   const allSubCubes = [
     ...europeSubCubes, ...newThailandSubCubes, ...canadaSubCubes, ...ukSubCubes,
@@ -842,59 +843,10 @@ function setCubeToAppliedState(programOrUniName) {
         requestAnimationFrame(blink);
       }
       requestAnimationFrame(blink);
-
-      // ---- Neon application plaque anchored above each mesh ----
-      addSimpleApplicationPlaque(mesh, "APPLICATION RECEIVED");
     });
   });
-  showNotification('Neon green blink (requestAnimationFrame) and plaque applied!', true);
+  showNotification('Neon green blink (requestAnimationFrame) applied!', true);
 }
-
-function addSimpleApplicationPlaque(mesh, text="APPLICATION RECEIVED") {
-  // Remove existing sprite(s)
-  mesh.children
-    .filter(child => child.isSprite)
-    .forEach(sprite => mesh.remove(sprite));
-
-  const cardWidth = 240, cardHeight = 54;
-  const canvas = document.createElement('canvas');
-  canvas.width = cardWidth;
-  canvas.height = cardHeight;
-  const ctx = canvas.getContext('2d');
-
-  // Glow frame
-  ctx.save();
-  ctx.shadowColor = "#FFD700";
-  ctx.shadowBlur = 14;
-  ctx.fillStyle = "#222";
-  ctx.strokeStyle = "#FFD700";
-  ctx.lineWidth = 4;
-  ctx.beginPath();
-  ctx.roundRect(8, 8, cardWidth-16, cardHeight-16, 12);
-  ctx.fill(); ctx.stroke();
-  ctx.restore();
-
-  // Smaller font size for better fit
-  ctx.font = 'bold 15px Arial';
-  ctx.fillStyle = "#FFD700";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.shadowColor = "#FFD700";
-  ctx.shadowBlur = 6;
-  ctx.fillText(text, cardWidth / 2, cardHeight / 2);
-
-  const cardTexture = new THREE.CanvasTexture(canvas);
-  const cardMaterial = new THREE.SpriteMaterial({ map: cardTexture, transparent: true });
-  const cardSprite = new THREE.Sprite(cardMaterial);
-
-  let geo = mesh.geometry?.parameters || { height: 0.08 };
-  cardSprite.position.set(0, geo.height / 2 + 0.055, 0);
-  cardSprite.scale.set(0.19, 0.046, 1);
-  mesh.add(cardSprite);
-  mesh.userData.messageCard = cardSprite;
-}
-
-
 
 
 // =======
