@@ -851,7 +851,7 @@ function setCubeToAppliedState(programOrUniName) {
 }
 
 function addSimpleApplicationPlaque(mesh, text="APPLICATION RECEIVED") {
-  // Remove *any* existing Sprites on this mesh
+  // Remove existing sprite(s)
   mesh.children
     .filter(child => child.isSprite)
     .forEach(sprite => mesh.remove(sprite));
@@ -861,7 +861,8 @@ function addSimpleApplicationPlaque(mesh, text="APPLICATION RECEIVED") {
   canvas.width = cardWidth;
   canvas.height = cardHeight;
   const ctx = canvas.getContext('2d');
-  // Drawing code as above...
+
+  // Glow frame
   ctx.save();
   ctx.shadowColor = "#FFD700";
   ctx.shadowBlur = 14;
@@ -873,7 +874,8 @@ function addSimpleApplicationPlaque(mesh, text="APPLICATION RECEIVED") {
   ctx.fill(); ctx.stroke();
   ctx.restore();
 
-  ctx.font = 'bold 19px Arial';
+  // Smaller font size for better fit
+  ctx.font = 'bold 15px Arial';
   ctx.fillStyle = "#FFD700";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
