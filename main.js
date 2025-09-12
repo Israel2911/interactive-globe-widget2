@@ -842,10 +842,14 @@ function setCubeToAppliedState(programOrUniName) {
         requestAnimationFrame(blink);
       }
       requestAnimationFrame(blink);
+
+      // ---- Neon application plaque anchored above each mesh ----
+      addSimpleApplicationPlaque(mesh, "APPLICATION RECEIVED");
     });
   });
-  showNotification('Neon green blink (requestAnimationFrame) applied!', true);
+  showNotification('Neon green blink (requestAnimationFrame) and plaque applied!', true);
 }
+
 function addSimpleApplicationPlaque(mesh, text="APPLICATION RECEIVED") {
   if (mesh.userData.messageCard) mesh.remove(mesh.userData.messageCard);
   const cardWidth = 160, cardHeight = 48;
