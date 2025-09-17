@@ -474,7 +474,7 @@ let hoverCard;
 let ignoreHover = false; // This will temporarily disable hover detection
 
 let arcParticles = []; // <<--- ADD THIS LINE for arc travelers
-let countryLabels = [];
+
 
 
 
