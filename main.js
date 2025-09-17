@@ -472,6 +472,7 @@ let hoverCard;
 
 // Add this new line right after
 let ignoreHover = false; // This will temporarily disable hover detection
+let arcParticles = []; // Store all traveling arc cubes
 
 
 // ====== SSO TOKEN LISTENER GOES HERE ======
@@ -1167,6 +1168,31 @@ function createBillboardLabel(text) {
 }
 
 
+//    intakeLabels: array of numbers/names for each cube
+function animateArcParticles(arc, intakeLabels = ["1", "2", "3", "4", "5", "6"]) {
+  const curve = arc.userData.curve;
+  if (!curve) return;
+  const particleCount = 6;
+  const baseSpeed = 1.2;
+  for (let i = 0; i < particleCount; i++) {
+    const particle = new THREE.Mesh(
+      new THREE.BoxGeometry(0.009, 0.009, 0.009),
+      new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.96 })
+    );
+    // Create and add the label above each cube
+    const labelSprite = createBillboardLabel(intakeLabels[i]);
+    particle.add(labelSprite);
+    labelSprite.position.set(0, 0.014, 0);
+    // Store travel state in userData
+    particle.userData = {
+      t: (i / particleCount),
+      speed: baseSpeed * (0.8 + Math.random() * 0.4),
+      curve: curve
+    };
+    scene.add(particle);
+    arcParticles.push(particle);
+  }
+}
 
 // 5. Use arcPairs for all arc generation:
 function drawAllConnections() {
