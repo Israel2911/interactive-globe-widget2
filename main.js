@@ -1086,16 +1086,27 @@ const arcPairs = [
 
 // Insert just above or alongside your arcPairs definition
 const arcTrafficMeta = {
-  "europe-thailand":   { label: "UG", color: 0x3B82F6 },
-  "thailand-europe":   { label: "EX", color: 0xF59E42 },
-  "india-canada":      { label: "UG", color: 0x349DFF },
-  "canada-india":      { label: "PG", color: 0x8B5CF6 },
-  "canada-europe":     { label: "SAB", color: 0x22D3EE },
-  "uk-thailand":       { label: "SE", color: 0xF59E42 },
+  "thailand-india":    { label: "UG", color: 0x3B82F6 },
+  "thailand-europe":   { label: "PG", color: 0x8B5CF6 },
   "thailand-uk":       { label: "SE", color: 0xF59E42 },
-  "india-europe":      { label: "SAB", color: 0x10B981 },
-  "europe-india":      { label: "SAB", color: 0x10B981 },
-  // ...add more as needed, one per arc direction...
+  "thailand-canada":   { label: "SA", color: 0x22D3EE },
+  "thailand-usa":      { label: "EX", color: 0xFBBF24 },
+  "thailand-singapore":{ label: "UG", color: 0xFF6384 },
+  "thailand-malaysia": { label: "PG", color: 0x36A2EB },
+  "india-europe":      { label: "UG", color: 0xF39C12 },
+  "india-canada":      { label: "UG", color: 0x349DFF },
+  "india-thailand":    { label: "SA", color: 0x27AE60 },
+  "europe-india":      { label: "UG", color: 0x3B82F6 },
+  "europe-canada":     { label: "SA", color: 0x22D3EE },
+  "europe-thailand":   { label: "PG", color: 0x8B5CF6 },
+  "canada-usa":        { label: "SE", color: 0xF39C12 },
+  "canada-thailand":   { label: "PG", color: 0xE67E22 },
+  "usa-thailand":      { label: "PG", color: 0x2ECC71 },
+  "malaysia-singapore":{ label: "SE", color: 0x36A2EB },
+  "singapore-malaysia":{ label: "UG", color: 0xFF6384 },
+  "singapore-thailand":{ label: "EX", color: 0xFBBF24 },
+  "uk-thailand":       { label: "SE", color: 0xF59E42 },
+  // ... add all remaining arcs you visualize ...
 };
 
 
@@ -1161,8 +1172,7 @@ function createBillboardLabel(text) {
 //    intakeLabels: array of numbers/names for each cube
 function animateArcParticles(arc, fromName, toName) {
   const arcKey = `${fromName.toLowerCase()}-${toName.toLowerCase()}`;
-  // Use your custom label & color, fallback is: empty label, white color (invisible label)
-  const meta = arcTrafficMeta[arcKey] || { label: "", color: 0xffffff };
+  const meta = arcTrafficMeta[arcKey] || { label: "Arc", color: 0xffffff };
   const particleCount = 6;
   const baseSpeed = 0.8;
   for (let i = 0; i < particleCount; i++) {
@@ -1170,7 +1180,8 @@ function animateArcParticles(arc, fromName, toName) {
       new THREE.BoxGeometry(0.009, 0.009, 0.009),
       new THREE.MeshBasicMaterial({ color: meta.color, transparent: true, opacity: 0.95 })
     );
-    const labelSprite = createBillboardLabel(meta.label);
+    // Numbered label (e.g., "UG 1", "UG 2", ...)
+    const labelSprite = createBillboardLabel(`${meta.label} ${i+1}`);
     particle.add(labelSprite);
     labelSprite.position.set(0, 0.014, 0);
     particle.userData = {
