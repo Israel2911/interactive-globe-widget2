@@ -1486,9 +1486,11 @@ async function createGlobeAndCubes() {
   console.log('✅ Globe and cubes created successfully');
 }
 // ===
+// ANIMATION (with "Sticky" Hover Card Logic)
+// ===
 function animate() {
   requestAnimationFrame(animate);
-
+  
   // --- START: HOVER CARD LOGIC ---
   if (hoverCard) {
     raycaster.setFromCamera(mouse, camera);
@@ -1500,12 +1502,13 @@ function animate() {
       
       if (firstIntersect.userData.isSubCube && firstIntersect.userData.university !== "Unassigned") {
         foundValidSubCube = true;
+        
         if (currentlyHovered !== firstIntersect) {
           currentlyHovered = firstIntersect;
           const data = firstIntersect.userData;
           
           document.getElementById('hover-card-title').textContent = data.university;
-          document.getElementById('hover-card-program').textContent = data.programName.replace(/\n/g, ' ');
+          document.getElementById('hover-card-program').textContent = data.programName.replace(/\\n/g, ' ');
           
           const infoBtn = document.getElementById('hover-card-info-btn');
           const applyBtn = document.getElementById('hover-card-apply-btn');
@@ -1515,6 +1518,7 @@ function animate() {
           
           hoverCard.classList.remove('hover-card-hidden');
         }
+        
         // --- "STICKY" POSITIONING LOGIC ---
         if (currentlyHovered) {
           const vector = new THREE.Vector3();
@@ -1529,6 +1533,7 @@ function animate() {
         }
       }
     }
+    
     if (!foundValidSubCube && currentlyHovered) {
       currentlyHovered = null;
       hoverCard.classList.add('hover-card-hidden');
@@ -1539,11 +1544,9 @@ function animate() {
   const elapsedTime = clock.getElapsedTime();
   if (controls && controls.enabled) { controls.update(); }
   if (typeof TWEEN !== 'undefined') { TWEEN.update(); }
-  arcPaths.forEach(path => { 
-    if (path.material.isShaderMaterial) { 
-      path.material.uniforms.time.value = elapsedTime; 
-    } 
-  });
+  
+  arcPaths.forEach(path => { if (path.material.isShaderMaterial) { path.material.uniforms.time.value = elapsedTime; } });
+  
   countryLabels.forEach(item => {
     const worldPosition = new THREE.Vector3();
     item.block.getWorldPosition(worldPosition);
@@ -1552,12 +1555,13 @@ function animate() {
     item.label.position.copy(labelPosition);
     item.label.lookAt(camera.position);
   });
-
+  
   const explosionStateMap = {
     'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded,
     'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded,
     'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded
   };
+  
   const boundaryRadius = 1.0;
   const buffer = 0.02;
   if (!isCubeMovementPaused) {
@@ -1571,51 +1575,44 @@ function animate() {
         }
       }
     });
-
+    
     if (neuralNetworkLines && neuralNetworkLines.visible) {
-      const vertices = [];
-      const maxDist = 0.6;
-      const connectionsPerCube = 3;
-      for (let i = 0; i < cubes.length; i++) {
-        if (!cubes[i].visible || cubes[i].userData.neuralName) continue;
-        let neighbors = [];
-        for (let j = i + 1; j < cubes.length; j++) {
-          if (!cubes[j].visible || cubes[j].userData.neuralName) continue;
-          const dist = cubes[i].position.distanceTo(cubes[j].position);
-          if (dist < maxDist) {
-            neighbors.push({ dist: dist, cube: cubes[j] });
-          }
+        const vertices = [];
+        const maxDist = 0.6;
+        const connectionsPerCube = 3;
+        for (let i = 0; i < cubes.length; i++) {
+            if (!cubes[i].visible || cubes[i].userData.neuralName) continue;
+            
+            let neighbors = [];
+            for (let j = i + 1; j < cubes.length; j++) {
+                if (!cubes[j].visible || cubes[j].userData.neuralName) continue;
+                const dist = cubes[i].position.distanceTo(cubes[j].position);
+                if (dist < maxDist) {
+                    neighbors.push({ dist: dist, cube: cubes[j] });
+                }
+            }
+            
+            neighbors.sort((a, b) => a.dist - b.dist);
+            const closest = neighbors.slice(0, connectionsPerCube);
+            
+            if (closest.length > 1) {
+                for (let k = 0; k < closest.length - 1; k++) {
+                    const startNode = cubes[i].position;
+                    const neighbor1 = closest[k].cube.position;
+                    const neighbor2 = closest[k + 1].cube.position;
+                    vertices.push(startNode.x, startNode.y, startNode.z);
+                    vertices.push(neighbor1.x, neighbor1.y, neighbor1.z);
+                    vertices.push(neighbor2.x, neighbor2.y, neighbor2.z);
+                }
+            }
         }
-        neighbors.sort((a, b) => a.dist - b.dist);
-        const closest = neighbors.slice(0, connectionsPerCube);
-        if (closest.length > 1) {
-          for (let k = 0; k < closest.length - 1; k++) {
-            const startNode = cubes[i].position;
-            const neighbor1 = closest[k].cube.position;
-            const neighbor2 = closest[k + 1].cube.position;
-            vertices.push(startNode.x, startNode.y, startNode.z);
-            vertices.push(neighbor1.x, neighbor1.y, neighbor1.z);
-            vertices.push(neighbor2.x, neighbor2.y, neighbor2.z);
-          }
-        }
-      }
-      neuralNetworkLines.geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-      neuralNetworkLines.geometry.attributes.position.needsUpdate = true;
-      neuralNetworkLines.geometry.computeVertexNormals();
+        
+        neuralNetworkLines.geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+        neuralNetworkLines.geometry.attributes.position.needsUpdate = true;
+        neuralNetworkLines.geometry.computeVertexNormals();
     }
   }
-
-  // --- ARC PARTICLES ANIMATION BLOCK (add here!) ---
-  arcParticles.forEach(particle => {
-    if (!isCubeMovementPaused) {
-      particle.userData.t += (particle.userData.speed || 0.2) * 0.0025;
-      if (particle.userData.t > 1) particle.userData.t -= 1;
-      const pos = particle.userData.curve.getPoint(particle.userData.t);
-      particle.position.copy(pos);
-      particle.lookAt(0, 0, 0);
-    }
-  });
-
+  
   renderer.render(scene, camera);
 }
 
