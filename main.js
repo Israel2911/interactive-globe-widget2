@@ -1607,7 +1607,8 @@ function animate() {
   // --- ARC PARTICLES ANIMATION BLOCK (add here!) ---
   arcParticles.forEach(particle => {
     if (!isCubeMovementPaused) {
-     particle.userData.t += (particle.userData.speed || 0.2) * 0.001; // slower
+    particle.userData.t += (particle.userData.speed || 0.2) * 0.00005;
+
 
       if (particle.userData.t > 1) particle.userData.t -= 1;
       const pos = particle.userData.curve.getPoint(particle.userData.t);
