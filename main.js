@@ -1085,7 +1085,6 @@ const arcPairs = [
 ];
 
 // Insert just above or alongside your arcPairs definition
-//      (this should also match what you put in part 1)
 const arcTrafficMeta = {
   "europe-thailand":   { label: "UG", color: 0x3B82F6 },
   "thailand-europe":   { label: "EX", color: 0xF59E42 },
@@ -1096,7 +1095,7 @@ const arcTrafficMeta = {
   "thailand-uk":       { label: "SE", color: 0xF59E42 },
   "india-europe":      { label: "SAB", color: 0x10B981 },
   "europe-india":      { label: "SAB", color: 0x10B981 },
-  // ... etc as previously described ...
+  // ...add more as needed, one per arc direction...
 };
 
 
@@ -1162,19 +1161,18 @@ function createBillboardLabel(text) {
 //    intakeLabels: array of numbers/names for each cube
 function animateArcParticles(arc, fromName, toName) {
   const arcKey = `${fromName.toLowerCase()}-${toName.toLowerCase()}`;
-  const meta = arcTrafficMeta[arcKey] || { label: "XX", color: 0xffffff };
+  // Use your custom label & color, fallback is: empty label, white color (invisible label)
+  const meta = arcTrafficMeta[arcKey] || { label: "", color: 0xffffff };
   const particleCount = 6;
-  const baseSpeed = 0.8; // Use your desired speed
+  const baseSpeed = 0.8;
   for (let i = 0; i < particleCount; i++) {
     const particle = new THREE.Mesh(
       new THREE.BoxGeometry(0.009, 0.009, 0.009),
       new THREE.MeshBasicMaterial({ color: meta.color, transparent: true, opacity: 0.95 })
     );
-    // All arc particles for this connection get the right label
     const labelSprite = createBillboardLabel(meta.label);
     particle.add(labelSprite);
     labelSprite.position.set(0, 0.014, 0);
-    // Store travel state in userData
     particle.userData = {
       t: i / particleCount,
       speed: baseSpeed * (0.8 + Math.random() * 0.4),
