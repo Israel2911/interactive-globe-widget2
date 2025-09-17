@@ -964,12 +964,7 @@ const toggleFunctionMap = {
 // =============
 // == FULL CORRECTED PART 2 (with "Sticky" Hover Card)
 // =============
-// ===
-// CUBE CREATION (Reverted to Original Colors)
-// ===
-// ===
-// CUBE CREATION (Reverted to Original Colors)
-// ===
+
 function createNeuralCube(content, subCubeArray, explodedPositionArray, color) {
   let contentIdx = 0;
   const cubeObject = new THREE.Group();
@@ -1089,6 +1084,22 @@ const arcPairs = [
   // Add more as needed!
 ];
 
+// Insert just above or alongside your arcPairs definition
+//      (this should also match what you put in part 1)
+const arcTrafficMeta = {
+  "europe-thailand":   { label: "UG", color: 0x3B82F6 },
+  "thailand-europe":   { label: "EX", color: 0xF59E42 },
+  "india-canada":      { label: "UG", color: 0x349DFF },
+  "canada-india":      { label: "PG", color: 0x8B5CF6 },
+  "canada-europe":     { label: "SAB", color: 0x22D3EE },
+  "uk-thailand":       { label: "SE", color: 0xF59E42 },
+  "thailand-uk":       { label: "SE", color: 0xF59E42 },
+  "india-europe":      { label: "SAB", color: 0x10B981 },
+  "europe-india":      { label: "SAB", color: 0x10B981 },
+  // ... etc as previously described ...
+};
+
+
 // 3. Your arc creation code (no changes except for how arcPairs is fed in):
 function createConnectionPath(fromGroup, toGroup, arcIndex = 0) {
   const fromName = (fromGroup.userData.countryName || '').toLowerCase();
@@ -1149,30 +1160,31 @@ function createBillboardLabel(text) {
 
 
 //    intakeLabels: array of numbers/names for each cube
-function animateArcParticles(arc, intakeLabels = ["1", "2", "3", "4", "5", "6"]) {
-  const curve = arc.userData.curve;
-  if (!curve) return;
+function animateArcParticles(arc, fromName, toName) {
+  const arcKey = `${fromName.toLowerCase()}-${toName.toLowerCase()}`;
+  const meta = arcTrafficMeta[arcKey] || { label: "XX", color: 0xffffff };
   const particleCount = 6;
-  const baseSpeed = 1.2;
+  const baseSpeed = 0.8; // Use your desired speed
   for (let i = 0; i < particleCount; i++) {
     const particle = new THREE.Mesh(
       new THREE.BoxGeometry(0.009, 0.009, 0.009),
-      new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.96 })
+      new THREE.MeshBasicMaterial({ color: meta.color, transparent: true, opacity: 0.95 })
     );
-    // Create and add the label above each cube
-    const labelSprite = createBillboardLabel(intakeLabels[i]);
+    // All arc particles for this connection get the right label
+    const labelSprite = createBillboardLabel(meta.label);
     particle.add(labelSprite);
     labelSprite.position.set(0, 0.014, 0);
     // Store travel state in userData
     particle.userData = {
-      t: (i / particleCount),
+      t: i / particleCount,
       speed: baseSpeed * (0.8 + Math.random() * 0.4),
-      curve: curve
+      curve: arc.userData.curve
     };
     scene.add(particle);
     arcParticles.push(particle);
   }
 }
+
 
 // 5. Use arcPairs for all arc generation:
 function drawAllConnections() {
@@ -1182,9 +1194,12 @@ function drawAllConnections() {
     if (fromBlock && toBlock) return createConnectionPath(fromBlock, toBlock, index);
     return null;
   }).filter(Boolean);
-  arcPaths.forEach((arc) => animateArcParticles(arc));
+  // Key: now pass from/to for meta
+  arcPairs.forEach(([from, to], idx) => {
+    const path = arcPaths[idx];
+    if (path) animateArcParticles(path, from, to);
+  });
 }
-
 
 
 // ===
