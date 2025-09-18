@@ -1407,23 +1407,18 @@ function setupEventListeners() {
       toggleNodesButton.textContent = newVisibility ? "Hide Neural Nodes" : "Show Neural Nodes";
     });
   }
-  const scrollLockButton = document.getElementById('scrollLockBtn');
-  if (scrollLockButton) {
-    function setGlobeInteraction(isInteractive) {
-      if (controls) { controls.enabled = isInteractive; }
-      const scrollInstruction = document.getElementById('scrollLockInstruction');
-      if (isInteractive) {
-        scrollLockButton.textContent = 'Unlock Scroll';
-        scrollLockButton.classList.remove('unlocked');
-        if (scrollInstruction) scrollInstruction.textContent = 'Globe is active.';
-      } else {
-        scrollLockButton.textContent = 'Lock Globe';
-        scrollLockButton.classList.add('unlocked');
-        if (scrollInstruction) scrollInstruction.textContent = 'Page scroll is active.';
-      }
-    }
-    scrollLockButton.addEventListener('click', () => { setGlobeInteraction(!controls.enabled); });
+const scrollLockButton = document.getElementById('scrollLockBtn');
+if (scrollLockButton) {
+  function setGlobeInteraction(isInteractive) {
+    if (controls) { controls.enabled = isInteractive; }
+    // No more scroll instruction messages!
+    scrollLockButton.textContent = isInteractive ? 'Unlock Scroll' : 'Lock Globe';
+    scrollLockButton.classList.toggle('unlocked', !isInteractive);
+    // (optional: keep your body.style.overflow toggle here for true scroll lock)
   }
+  scrollLockButton.addEventListener('click', () => { setGlobeInteraction(!controls.enabled); });
+}
+
   document.addEventListener('keydown', (event) => {
     if (!controls) return;
     switch(event.code) {
