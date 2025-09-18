@@ -609,11 +609,11 @@ body {
   color: white;
   font-weight: bold;
 }
-button.scroll-lock-btn.floating-scroll-btn {
+.floating-scroll-btn {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  top: 170px; /* Adjust as needed */
+  top: 150px; /* Adjust this value to match your header + carousel height */
   z-index: 20050;
   background: rgba(20,22,39,0.82);
   color: #fff;
@@ -629,27 +629,28 @@ button.scroll-lock-btn.floating-scroll-btn {
   transition: background 0.15s;
   pointer-events: auto;
 }
-button.scroll-lock-btn.floating-scroll-btn:active,
-button.scroll-lock-btn.floating-scroll-btn.active {
+.floating-scroll-btn:active,
+.floating-scroll-btn.active {
   background: #2cd880d0;
   color: #fff;
 }
 @media (max-width: 700px) {
-  button.scroll-lock-btn.floating-scroll-btn { 
-    top: 122px;
+  .floating-scroll-btn { 
+    top: 105px; /* Tune for smaller header+carousel */
     width: 48px;
     height: 48px;
     font-size: 1.4em;
   }
 }
 @media (max-width: 480px) {
-  button.scroll-lock-btn.floating-scroll-btn { 
-    top: 98px;
+  .floating-scroll-btn { 
+    top: 88px;
     width: 42px;
     height: 42px;
     font-size: 1.1em;
   }
 }
+
 
 
 
