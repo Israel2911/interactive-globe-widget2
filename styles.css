@@ -637,25 +637,27 @@ body {
   pointer-events: auto;
 }
 
-.floating-scroll-btn:active,
-.floating-scroll-btn.active {
+
+.scroll-lock-btn:active,
+.scroll-lock-btn.active {
   background: #2cd880d0;
   color: #fff;
 }
 @media (max-width: 700px) {
-  .floating-scroll-btn { 
-    top: 122px; /* lower for mobile cards/header - adjust as needed */
+  .scroll-lock-btn { 
+    top: 122px;
     width: 48px;
     height: 48px;
     font-size: 1.4em;
   }
 }
 @media (max-width: 480px) {
-  .floating-scroll-btn { 
+  .scroll-lock-btn { 
     top: 98px;
     width: 42px;
     height: 42px;
     font-size: 1.1em;
   }
 }
+
 
