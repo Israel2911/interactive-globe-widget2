@@ -1800,8 +1800,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   
 });
 document.addEventListener("DOMContentLoaded", function(){
- const scrollBtn = document.getElementById('scrollLockBtn');
-
+  const scrollBtn = document.getElementById('floatingScrollBtn');
   let scrollMode = false;
   scrollBtn.addEventListener('click', () => {
     scrollMode = !scrollMode;
