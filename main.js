@@ -1411,13 +1411,15 @@ const scrollLockButton = document.getElementById('scrollLockBtn');
 if (scrollLockButton) {
   function setGlobeInteraction(isInteractive) {
     if (controls) { controls.enabled = isInteractive; }
-    // No more scroll instruction messages!
-    scrollLockButton.textContent = isInteractive ? 'Unlock Scroll' : 'Lock Globe';
+    // REMOVE or modify this line:
+    // scrollLockButton.textContent = isInteractive ? 'Unlock Scroll' : 'Lock Globe';
+    scrollLockButton.innerHTML = `<span id="scrollLockIcon">${isInteractive ? "🔓" : "↕️"}</span>`;
     scrollLockButton.classList.toggle('unlocked', !isInteractive);
-    // (optional: keep your body.style.overflow toggle here for true scroll lock)
+    // ... (do not touch your scroll locking code or controls logic)
   }
   scrollLockButton.addEventListener('click', () => { setGlobeInteraction(!controls.enabled); });
 }
+
 
   document.addEventListener('keydown', (event) => {
     if (!controls) return;
