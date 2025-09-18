@@ -474,6 +474,7 @@ let hoverCard;
 let ignoreHover = false; // This will temporarily disable hover detection
 
 let arcParticles = []; // <<--- ADD THIS LINE for arc travelers
+let __scroll_lock_active = false;
 
 
 
@@ -1397,18 +1398,25 @@ function setupEventListeners() {
     });
   }
   // Place this at the top of your main JS or above event listeners
+
+
 function setTrueScrollLock(lock) {
-  if (lock) {
+  if (lock && !__scroll_lock_active) {
     document.body.style.overflow = "hidden";
+    document.body.style.touchAction = "none";
     document.addEventListener('touchmove', preventScroll, { passive: false });
     document.addEventListener('wheel', preventScroll, { passive: false });
-  } else {
+    __scroll_lock_active = true;
+  } else if (!lock && __scroll_lock_active) {
     document.body.style.overflow = "";
+    document.body.style.touchAction = "";
     document.removeEventListener('touchmove', preventScroll, { passive: false });
     document.removeEventListener('wheel', preventScroll, { passive: false });
+    __scroll_lock_active = false;
   }
 }
 function preventScroll(e) { e.preventDefault(); }
+
 
 // Main button handler—put this inside your DOMContentLoaded or app init
 const scrollLockButton = document.getElementById('scrollLockBtn');
