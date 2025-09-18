@@ -613,8 +613,8 @@ body {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  top: calc(65px + 90px); /* Adjust these to match your .header-ui-bar and carousel height */
-  z-index: 22000;
+  top: calc(65px + 110px); /* adjust for your header height + carousel! */
+  z-index: 23000;
   background: rgba(20,22,39,0.82);
   color: #fff;
   border-radius: 50%;
@@ -622,19 +622,14 @@ body {
   height: 54px;
   box-shadow: 0 4px 16px rgba(0,16,80,0.10);
   border: none;
-  outline: none;
   display: flex; align-items: center; justify-content: center;
   font-size: 2em;
   cursor: pointer;
-  pointer-events: auto;
-  transition: background 0.15s;
 }
 @media (max-width: 800px) {
   .floating-scroll-btn {
-    top: calc(45px + 85px); /* lower values for mobile header/carousel */
-    width: 48px;
-    height: 48px;
-    font-size: 1.6em;
+    top: calc(35px + 92px); /* adjust these numbers for your mobile header+carousel heights */
+    width: 48px; height: 48px; font-size: 1.2em;
   }
 }
 
