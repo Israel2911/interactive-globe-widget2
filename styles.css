@@ -628,3 +628,34 @@ body {
   color: white;
   font-weight: bold;
 }
+.floating-scroll-btn {
+  position: fixed;
+  right: 16px;
+  bottom: 88px;
+  z-index: 20050;
+  background: rgba(20,22,39,0.62);
+  color: #fff;
+  border-radius: 50%;
+  width: 54px;
+  height: 54px;
+  box-shadow: 0 4px 16px rgba(0,16,80,0.10);
+  border: none;
+  outline: none;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2em;
+  cursor: pointer;
+  transition: background 0.15s;
+  pointer-events: auto;
+}
+.floating-scroll-btn:active,
+.floating-scroll-btn.active {
+  background: #2cd880d0;
+  color: #fff;
+}
+@media (max-width: 700px) {
+  .floating-scroll-btn { bottom: 56px; }
+}
+@media (max-width: 480px) {
+  .floating-scroll-btn { bottom: 34px; right: 8px; }
+}
+
