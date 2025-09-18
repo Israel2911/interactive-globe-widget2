@@ -1807,8 +1807,9 @@ document.addEventListener("DOMContentLoaded", function(){
   let scrollMode = false;
   scrollBtn.addEventListener('click', () => {
     scrollMode = !scrollMode;
+    scrollBtn.classList.toggle('unlocked', scrollMode);
+    scrollBtn.classList.toggle('scroll-lock-btn', true);  // Always use the class
     if (window.controls) window.controls.enabled = !scrollMode;
-    scrollBtn.classList.toggle('active', scrollMode);
     scrollBtn.title = scrollMode ? 'Lock Globe (stop scroll)' : 'Unlock scroll';
     document.getElementById('floatingScrollIcon').textContent = scrollMode ? '🔓' : '↕️';
     if (typeof showNotification === "function") {
@@ -1818,13 +1819,12 @@ document.addEventListener("DOMContentLoaded", function(){
   window.addEventListener('scroll', () => {
     if (scrollMode && window.scrollY > 30) {
       scrollMode = false;
+      scrollBtn.classList.remove('unlocked');
       if (window.controls) window.controls.enabled = true;
-      scrollBtn.classList.remove('active');
       document.getElementById('floatingScrollIcon').textContent = '↕️';
       scrollBtn.title = 'Unlock scroll';
     }
   });
 });
-
 
 
