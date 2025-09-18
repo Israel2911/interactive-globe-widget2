@@ -327,12 +327,6 @@ body {
   color: #222;
 }
 
-/* Hide the entire old scroll lock UI (including both instruction and button) */
-.scroll-lock-ui,
-#scrollLockBtn,
-#scrollLockInstruction {
-  display: none !important;
-}
 
 
 /* Globe, Info Panel, and other styles */
