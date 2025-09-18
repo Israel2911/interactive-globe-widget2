@@ -1799,12 +1799,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   
 });
+// Now paste THIS NEXT!
 document.addEventListener("DOMContentLoaded", function(){
   const scrollBtn = document.getElementById('floatingScrollBtn');
   let scrollMode = false;
   scrollBtn.addEventListener('click', () => {
     scrollMode = !scrollMode;
-    setGlobeInteraction(!scrollMode); // this is the working, robust toggle!
+    if (window.controls) window.controls.enabled = !scrollMode;
     scrollBtn.classList.toggle('active', scrollMode);
     scrollBtn.title = scrollMode ? 'Lock Globe (stop scroll)' : 'Unlock scroll';
     document.getElementById('floatingScrollIcon').textContent = scrollMode ? '🔓' : '↕️';
@@ -1815,12 +1816,11 @@ document.addEventListener("DOMContentLoaded", function(){
   window.addEventListener('scroll', () => {
     if (scrollMode && window.scrollY > 30) {
       scrollMode = false;
-      setGlobeInteraction(true);
+      if (window.controls) window.controls.enabled = true;
       scrollBtn.classList.remove('active');
       document.getElementById('floatingScrollIcon').textContent = '↕️';
       scrollBtn.title = 'Unlock scroll';
     }
   });
 });
-
 
