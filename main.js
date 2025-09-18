@@ -1396,29 +1396,38 @@ function setupEventListeners() {
       arcPaths.forEach((p, i) => { if (i === 0) { visible = !p.visible; } p.visible = visible; });
     });
   }
-  const toggleNodesButton = document.getElementById('toggleNodesButton');
-  if (toggleNodesButton) {
-    toggleNodesButton.addEventListener('click', () => {
-      const neuralNodes = cubes.filter(cube => cube.userData.isSmallNode);
-      const areVisible = neuralNodes.length > 0 && neuralNodes[0].visible;
-      const newVisibility = !areVisible;
-      neuralNodes.forEach(node => { node.visible = newVisibility; });
-      if (neuralNetworkLines) { neuralNetworkLines.visible = newVisibility; }
-      toggleNodesButton.textContent = newVisibility ? "Hide Neural Nodes" : "Show Neural Nodes";
-    });
+  // Place this at the top of your main JS or above event listeners
+function setTrueScrollLock(lock) {
+  if (lock) {
+    document.body.style.overflow = "hidden";
+    document.addEventListener('touchmove', preventScroll, { passive: false });
+    document.addEventListener('wheel', preventScroll, { passive: false });
+  } else {
+    document.body.style.overflow = "";
+    document.removeEventListener('touchmove', preventScroll, { passive: false });
+    document.removeEventListener('wheel', preventScroll, { passive: false });
   }
+}
+function preventScroll(e) { e.preventDefault(); }
+
+// Main button handler—put this inside your DOMContentLoaded or app init
 const scrollLockButton = document.getElementById('scrollLockBtn');
 if (scrollLockButton) {
   function setGlobeInteraction(isInteractive) {
     if (controls) { controls.enabled = isInteractive; }
-    // REMOVE or modify this line:
-    // scrollLockButton.textContent = isInteractive ? 'Unlock Scroll' : 'Lock Globe';
     scrollLockButton.innerHTML = `<span id="scrollLockIcon">${isInteractive ? "🔓" : "↕️"}</span>`;
     scrollLockButton.classList.toggle('unlocked', !isInteractive);
-    // ... (do not touch your scroll locking code or controls logic)
+
+    // Lock/unlock page/viewport scroll—works on all devices
+    setTrueScrollLock(!isInteractive);
   }
+  // Init: globe starts interactive (unlocked)
+  setGlobeInteraction(true);
   scrollLockButton.addEventListener('click', () => { setGlobeInteraction(!controls.enabled); });
 }
+
+
+
 
 
   document.addEventListener('keydown', (event) => {
