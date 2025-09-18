@@ -609,7 +609,7 @@ body {
   color: white;
   font-weight: bold;
 }
-.floating-scroll-btn {
+.scroll-lock-btn {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
@@ -630,14 +630,13 @@ body {
   transition: background 0.15s;
   pointer-events: auto;
 }
-
-.floating-scroll-btn:active,
-.floating-scroll-btn.active {
+.scroll-lock-btn:active,
+.scroll-lock-btn.active {
   background: #2cd880d0;
   color: #fff;
 }
 @media (max-width: 700px) {
-  .floating-scroll-btn { 
+  .scroll-lock-btn { 
     top: 122px; /* lower for mobile cards/header - adjust as needed */
     width: 48px;
     height: 48px;
@@ -645,7 +644,7 @@ body {
   }
 }
 @media (max-width: 480px) {
-  .floating-scroll-btn { 
+  .scroll-lock-btn { 
     top: 98px;
     width: 42px;
     height: 42px;
