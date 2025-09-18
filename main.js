@@ -1804,14 +1804,12 @@ document.addEventListener("DOMContentLoaded", function(){
   let scrollMode = false;
   scrollBtn.addEventListener('click', () => {
     scrollMode = !scrollMode;
-    setGlobeInteraction(!scrollMode);
+    setGlobeInteraction(!scrollMode); // this is the working, robust toggle!
     scrollBtn.classList.toggle('active', scrollMode);
     scrollBtn.title = scrollMode ? 'Lock Globe (stop scroll)' : 'Unlock scroll';
     document.getElementById('floatingScrollIcon').textContent = scrollMode ? '🔓' : '↕️';
     if (typeof showNotification === "function") {
-      showNotification(
-        scrollMode ? 'Scroll unlocked (globe paused)' : 'Globe interaction restored', true
-      );
+      showNotification(scrollMode ? 'Scroll unlocked (globe paused)' : 'Globe interaction restored', true);
     }
   });
   window.addEventListener('scroll', () => {
