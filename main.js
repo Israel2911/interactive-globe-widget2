@@ -1400,40 +1400,50 @@ function setupEventListeners() {
   // Place this at the top of your main JS or above event listeners
 
 
+
+function isMobileDevice() {
+  return /Mobi|Android|iPhone|iPad|iPod|Tablet/i.test(navigator.userAgent);
+}
+
 function setTrueScrollLock(lock) {
-  if (lock && !__scroll_lock_active) {
-    document.body.style.overflow = "hidden";
-    document.body.style.touchAction = "none";
-    document.addEventListener('touchmove', preventScroll, { passive: false });
-    document.addEventListener('wheel', preventScroll, { passive: false });
-    __scroll_lock_active = true;
-  } else if (!lock && __scroll_lock_active) {
-    document.body.style.overflow = "";
-    document.body.style.touchAction = "";
-    document.removeEventListener('touchmove', preventScroll, { passive: false });
-    document.removeEventListener('wheel', preventScroll, { passive: false });
-    __scroll_lock_active = false;
+  if (isMobileDevice()) {
+    // Robust scroll lock for mobile/iPad
+    if (lock && !__scroll_lock_active) {
+      document.body.style.overflow = "hidden";
+      document.body.style.touchAction = "none";
+      document.addEventListener('touchmove', preventScroll, { passive: false });
+      document.addEventListener('wheel', preventScroll, { passive: false });
+      __scroll_lock_active = true;
+    } else if (!lock && __scroll_lock_active) {
+      document.body.style.overflow = "";
+      document.body.style.touchAction = "";
+      document.removeEventListener('touchmove', preventScroll, { passive: false });
+      document.removeEventListener('wheel', preventScroll, { passive: false });
+      __scroll_lock_active = false;
+    }
+  } else {
+    // Desktop: only use overflow
+    document.body.style.overflow = lock ? "hidden" : "";
   }
 }
+
 function preventScroll(e) { e.preventDefault(); }
 
-
-// Main button handler—put this inside your DOMContentLoaded or app init
+// --- Button and state logic ---
 const scrollLockButton = document.getElementById('scrollLockBtn');
 if (scrollLockButton) {
   function setGlobeInteraction(isInteractive) {
     if (controls) { controls.enabled = isInteractive; }
     scrollLockButton.innerHTML = `<span id="scrollLockIcon">${isInteractive ? "🔓" : "↕️"}</span>`;
     scrollLockButton.classList.toggle('unlocked', !isInteractive);
-
-    // Lock/unlock page/viewport scroll—works on all devices
-    setTrueScrollLock(!isInteractive);
+    setTrueScrollLock(!isInteractive); // <-- Now device-adaptive!
   }
-  // Init: globe starts interactive (unlocked)
+  // Optionally set initial state:
   setGlobeInteraction(true);
   scrollLockButton.addEventListener('click', () => { setGlobeInteraction(!controls.enabled); });
 }
 
+// (Leave your other event handlers—keydown, resize, etc.—below as usual)
 
 
 
