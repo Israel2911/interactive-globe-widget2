@@ -1799,38 +1799,5 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   
 });
-// Now paste THIS NEXT!
-document.addEventListener("DOMContentLoaded", function() {
-  const scrollBtn = document.getElementById('floatingScrollBtn');
-  let scrollMode = false;
-
-  scrollBtn.addEventListener('click', () => {
-    scrollMode = !scrollMode;
-    // ACTUAL SCROLL LOCK LOGIC HERE
-    document.body.style.overflow = scrollMode ? "hidden" : "";
-    // Optional: Toggle a helper class as well
-    // document.body.classList.toggle('scroll-locked', scrollMode);
-
-    // Toggle globe interaction
-    if (window.controls) window.controls.enabled = !scrollMode;
-    scrollBtn.classList.toggle('active', scrollMode);
-    scrollBtn.title = scrollMode ? 'Lock Globe (stop scroll)' : 'Unlock scroll';
-    document.getElementById('floatingScrollIcon').textContent = scrollMode ? '🔓' : '↕️';
-    if (typeof showNotification === "function") {
-      showNotification(scrollMode ? 'Scroll unlocked (globe paused)' : 'Globe interaction restored', true);
-    }
-  });
-
-  window.addEventListener('scroll', () => {
-    if (scrollMode && window.scrollY > 30) {
-      scrollMode = false;
-      document.body.style.overflow = "";
-      if (window.controls) window.controls.enabled = true;
-      scrollBtn.classList.remove('active');
-      document.getElementById('floatingScrollIcon').textContent = '↕️';
-      scrollBtn.title = 'Unlock scroll';
-    }
-  });
-});
 
 
