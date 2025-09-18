@@ -474,7 +474,6 @@ let hoverCard;
 let ignoreHover = false; // This will temporarily disable hover detection
 
 let arcParticles = []; // <<--- ADD THIS LINE for arc travelers
-let __scroll_lock_active = false;
 
 
 
@@ -1401,33 +1400,6 @@ function setupEventListeners() {
 
 
 
-function isMobileDevice() {
-  return /Mobi|Android|iPhone|iPad|iPod|Tablet/i.test(navigator.userAgent);
-}
-
-function setTrueScrollLock(lock) {
-  if (isMobileDevice()) {
-    // Robust scroll lock for mobile/iPad
-    if (lock && !__scroll_lock_active) {
-      document.body.style.overflow = "hidden";
-      document.body.style.touchAction = "none";
-      document.addEventListener('touchmove', preventScroll, { passive: false });
-      document.addEventListener('wheel', preventScroll, { passive: false });
-      __scroll_lock_active = true;
-    } else if (!lock && __scroll_lock_active) {
-      document.body.style.overflow = "";
-      document.body.style.touchAction = "";
-      document.removeEventListener('touchmove', preventScroll, { passive: false });
-      document.removeEventListener('wheel', preventScroll, { passive: false });
-      __scroll_lock_active = false;
-    }
-  } else {
-    // Desktop: only use overflow
-    document.body.style.overflow = lock ? "hidden" : "";
-  }
-}
-
-function preventScroll(e) { e.preventDefault(); }
 
 // --- Button and state logic ---
 const scrollLockButton = document.getElementById('scrollLockBtn');
@@ -1825,27 +1797,5 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 
-document.addEventListener("DOMContentLoaded", function(){
-  const scrollBtn = document.getElementById('scrollLockBtn');
-  let scrollMode = false;
-  scrollBtn.addEventListener('click', () => {
-    scrollMode = !scrollMode;
-    if (window.controls) window.controls.enabled = !scrollMode;
-    scrollBtn.classList.toggle('active', scrollMode);
-    scrollBtn.title = scrollMode ? 'Lock Globe (stop scroll)' : 'Unlock scroll';
-    document.getElementById('scrollLockIcon').textContent = scrollMode ? '🔓' : '↕️';
-    if (typeof showNotification === "function") {
-      showNotification(scrollMode ? 'Scroll unlocked (globe paused)' : 'Globe interaction restored', true);
-    }
-  });
-  window.addEventListener('scroll', () => {
-    if (scrollMode && window.scrollY > 30) {
-      scrollMode = false;
-      if (window.controls) window.controls.enabled = true;
-      scrollBtn.classList.remove('active');
-      document.getElementById('scrollLockIcon').textContent = '↕️';
-      scrollBtn.title = 'Unlock scroll';
-    }
-  });
-});
+
 
