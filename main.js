@@ -1800,11 +1800,30 @@ document.addEventListener('DOMContentLoaded', async () => {
   
 });
 // Now paste THIS NEXT!
+// Add this utility function at the top of your script
+function togglePageScroll(lock) {
+  if (lock) {
+    document.body.style.overflow = "hidden";
+    document.body.classList.add("scroll-locked");
+    document.body.addEventListener("touchmove", preventDefault, { passive: false });
+    document.body.addEventListener("wheel", preventDefault, { passive: false });
+  } else {
+    document.body.style.overflow = "";
+    document.body.classList.remove("scroll-locked");
+    document.body.removeEventListener("touchmove", preventDefault, { passive: false });
+    document.body.removeEventListener("wheel", preventDefault, { passive: false });
+  }
+}
+function preventDefault(e) { e.preventDefault(); }
+
+// ... Rest of your setup
 document.addEventListener("DOMContentLoaded", function(){
   const scrollBtn = document.getElementById('floatingScrollBtn');
   let scrollMode = false;
   scrollBtn.addEventListener('click', () => {
     scrollMode = !scrollMode;
+    togglePageScroll(scrollMode); // Always lock/unlock real page scroll!
+
     if (window.controls) window.controls.enabled = !scrollMode;
     scrollBtn.classList.toggle('active', scrollMode);
     scrollBtn.title = scrollMode ? 'Lock Globe (stop scroll)' : 'Unlock scroll';
@@ -1816,6 +1835,7 @@ document.addEventListener("DOMContentLoaded", function(){
   window.addEventListener('scroll', () => {
     if (scrollMode && window.scrollY > 30) {
       scrollMode = false;
+      togglePageScroll(false); // Reset scroll lock if user scrolls
       if (window.controls) window.controls.enabled = true;
       scrollBtn.classList.remove('active');
       document.getElementById('floatingScrollIcon').textContent = '↕️';
@@ -1823,4 +1843,5 @@ document.addEventListener("DOMContentLoaded", function(){
     }
   });
 });
+
 
