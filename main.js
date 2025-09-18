@@ -1509,6 +1509,8 @@ async function createGlobeAndCubes() {
   });
   console.log('✅ Globe and cubes created successfully');
 }
+
+
 function animate() {
   requestAnimationFrame(animate);
 
@@ -1797,3 +1799,27 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   
 });
+document.addEventListener("DOMContentLoaded", function(){
+  const scrollBtn = document.getElementById('floatingScrollBtn');
+  let scrollMode = false;
+  scrollBtn.addEventListener('click', () => {
+    scrollMode = !scrollMode;
+    if (window.controls) window.controls.enabled = !scrollMode;
+    scrollBtn.classList.toggle('active', scrollMode);
+    scrollBtn.title = scrollMode ? 'Lock Globe (stop scroll)' : 'Unlock scroll';
+    document.getElementById('floatingScrollIcon').textContent = scrollMode ? '🔓' : '↕️';
+    if (typeof showNotification === "function") {
+      showNotification(scrollMode ? 'Scroll unlocked (globe paused)' : 'Globe interaction restored', true);
+    }
+  });
+  window.addEventListener('scroll', () => {
+    if (scrollMode && window.scrollY > 30) {
+      scrollMode = false;
+      if (window.controls) window.controls.enabled = true;
+      scrollBtn.classList.remove('active');
+      document.getElementById('floatingScrollIcon').textContent = '↕️';
+      scrollBtn.title = 'Unlock scroll';
+    }
+  });
+});
+
