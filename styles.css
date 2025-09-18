@@ -327,26 +327,13 @@ body {
   color: #222;
 }
 
-/* Hide "Globe is active" text and style button */
+/* Hide the entire old scroll lock UI (including both instruction and button) */
+.scroll-lock-ui,
+#scrollLockBtn,
 #scrollLockInstruction {
   display: none !important;
 }
 
-.scroll-lock-ui {
-  display: flex;
-  align-items: center;
-}
-
-#scrollLockBtn {
-  background: #ffa500;
-  color: #222;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  padding: 5px 18px;
-  margin: 0;
-}
 
 /* Globe, Info Panel, and other styles */
 #globe-canvas {
