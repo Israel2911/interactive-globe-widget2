@@ -609,12 +609,11 @@ body {
   color: white;
   font-weight: bold;
 }
-.floating-scroll-btn {
+button.scroll-lock-btn.floating-scroll-btn {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  /* To control vertical placement: */
-  top: 170px; /* Adjust this value to be just below your carousel/cards */
+  top: 170px; /* Adjust as needed */
   z-index: 20050;
   background: rgba(20,22,39,0.82);
   color: #fff;
@@ -630,15 +629,13 @@ body {
   transition: background 0.15s;
   pointer-events: auto;
 }
-
-
-.scroll-lock-btn:active,
-.scroll-lock-btn.active {
+button.scroll-lock-btn.floating-scroll-btn:active,
+button.scroll-lock-btn.floating-scroll-btn.active {
   background: #2cd880d0;
   color: #fff;
 }
 @media (max-width: 700px) {
-  .scroll-lock-btn { 
+  button.scroll-lock-btn.floating-scroll-btn { 
     top: 122px;
     width: 48px;
     height: 48px;
@@ -646,12 +643,13 @@ body {
   }
 }
 @media (max-width: 480px) {
-  .scroll-lock-btn { 
+  button.scroll-lock-btn.floating-scroll-btn { 
     top: 98px;
     width: 42px;
     height: 42px;
     font-size: 1.1em;
   }
 }
+
 
 
