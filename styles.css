@@ -610,12 +610,11 @@ body {
   font-weight: bold;
 }
 .floating-scroll-btn {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  top: 150px; /* Adjust this value to match your header + carousel height */
+  position: fixed;
+  right: 16px;
+  bottom: 88px;
   z-index: 20050;
-  background: rgba(20,22,39,0.82);
+  background: rgba(20,22,39,0.62);
   color: #fff;
   border-radius: 50%;
   width: 54px;
@@ -635,22 +634,11 @@ body {
   color: #fff;
 }
 @media (max-width: 700px) {
-  .floating-scroll-btn { 
-    top: 105px; /* Tune for smaller header+carousel */
-    width: 48px;
-    height: 48px;
-    font-size: 1.4em;
-  }
+  .floating-scroll-btn { bottom: 56px; }
 }
 @media (max-width: 480px) {
-  .floating-scroll-btn { 
-    top: 88px;
-    width: 42px;
-    height: 42px;
-    font-size: 1.1em;
-  }
+  .floating-scroll-btn { bottom: 34px; right: 8px; }
 }
-
 
 
 
