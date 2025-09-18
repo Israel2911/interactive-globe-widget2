@@ -1801,29 +1801,46 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 // Now paste THIS NEXT!
 // ... Rest of your setup
+function setFloatingScrollLock(enabled) {
+  // Toggle globe controls
+  if (window.controls) window.controls.enabled = !enabled;
+
+  // Toggle true body/page scroll lock
+  document.body.style.overflow = enabled ? 'hidden' : '';
+  document.body.classList.toggle('scroll-locked', enabled);
+
+  // Update visuals
+  const scrollBtn = document.getElementById('floatingScrollBtn');
+  if (scrollBtn) {
+    scrollBtn.classList.toggle('active', enabled);
+    scrollBtn.title = enabled ? 'Lock Globe (stop scroll)' : 'Unlock scroll';
+    document.getElementById('floatingScrollIcon').textContent = enabled ? '🔓' : '↕️';
+  }
+  const scrollInstruction = document.getElementById('scrollLockInstruction');
+  if (scrollInstruction) {
+    scrollInstruction.textContent = enabled ? 'Page scroll is active.' : 'Globe is active.';
+  }
+
+  // Show notification
+  if (typeof showNotification === "function") {
+    showNotification(
+      enabled ? 'Scroll unlocked (globe paused)' : 'Globe interaction restored', true
+    );
+  }
+}
+
+// Then, bind to your new floating button:
 document.addEventListener("DOMContentLoaded", function(){
   const scrollBtn = document.getElementById('floatingScrollBtn');
   let scrollMode = false;
   scrollBtn.addEventListener('click', () => {
     scrollMode = !scrollMode;
-    togglePageScroll(scrollMode); // Always lock/unlock real page scroll!
-
-    if (window.controls) window.controls.enabled = !scrollMode;
-    scrollBtn.classList.toggle('active', scrollMode);
-    scrollBtn.title = scrollMode ? 'Lock Globe (stop scroll)' : 'Unlock scroll';
-    document.getElementById('floatingScrollIcon').textContent = scrollMode ? '🔓' : '↕️';
-    if (typeof showNotification === "function") {
-      showNotification(scrollMode ? 'Scroll unlocked (globe paused)' : 'Globe interaction restored', true);
-    }
+    setFloatingScrollLock(scrollMode);
   });
   window.addEventListener('scroll', () => {
     if (scrollMode && window.scrollY > 30) {
       scrollMode = false;
-      togglePageScroll(false); // Reset scroll lock if user scrolls
-      if (window.controls) window.controls.enabled = true;
-      scrollBtn.classList.remove('active');
-      document.getElementById('floatingScrollIcon').textContent = '↕️';
-      scrollBtn.title = 'Unlock scroll';
+      setFloatingScrollLock(false);
     }
   });
 });
