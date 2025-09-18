@@ -1805,10 +1805,6 @@ document.addEventListener("DOMContentLoaded", function(){
   let scrollMode = false;
   scrollBtn.addEventListener('click', () => {
     scrollMode = !scrollMode;
-    
-    // Restore: block page scroll when locked
-    document.body.style.overflow = scrollMode ? "auto" : "hidden";
-    
     if (window.controls) window.controls.enabled = !scrollMode;
     scrollBtn.classList.toggle('active', scrollMode);
     scrollBtn.title = scrollMode ? 'Lock Globe (stop scroll)' : 'Unlock scroll';
@@ -1820,8 +1816,6 @@ document.addEventListener("DOMContentLoaded", function(){
   window.addEventListener('scroll', () => {
     if (scrollMode && window.scrollY > 30) {
       scrollMode = false;
-      // Undo page scroll lock
-      document.body.style.overflow = "hidden";
       if (window.controls) window.controls.enabled = true;
       scrollBtn.classList.remove('active');
       document.getElementById('floatingScrollIcon').textContent = '↕️';
