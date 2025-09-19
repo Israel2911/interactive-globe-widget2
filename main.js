@@ -99,25 +99,48 @@ async function fetchAuthStatus() {
   }
 }
 
+// === UNIFIED postMessage HANDLER (replaces older listeners) ===
+// Place this near other top-level flags, BEFORE the message handler:
+let externalScrollMode = false;
 
-/ --- PLACE THE NEW POSTMESSAGE LISTENER HERE --- //
-// For debugging, accept all origins (remove this for production or list all trusted origins)
-window.addEventListener("message", event => {
-  console.log("[GLOBE] Received postMessage:", event.data); // <--- ADD THIS LINE
+// Unified postMessage handler (kept in Part 1)
+window.addEventListener('message', (event) => {
+  const msg = event.data || {};
+  // if (event.origin !== 'https://www.globaleducarealliance.com') return; // enable in prod
 
-  // if (
-  //   event.origin === "https://www.globaleducarealliance.com" && // restrict in production!
-  if (
-    event.data &&
-    event.data.type === "SET_CUBE_COLOR" &&
-    event.data.universityName
-  ) {
-    setCubeToAppliedState(event.data.universityName);
-    showNotification(
-      `Application submitted for ${event.data.universityName}! Cube updated.`, true
-    );
+  if (msg.type === 'SSO_TOKEN' && msg.token) {
+    window.ssoToken = msg.token;
+    fetchAuthStatus();
+    return;
+  }
+
+  if (msg.type === 'SET_CUBE_COLOR' && msg.universityName) {
+    setCubeToAppliedState(msg.universityName);
+    showNotification(`Application submitted for ${msg.universityName}! Cube updated.`, true);
+    return;
+  }
+
+  if (msg.type === 'SCROLL_MODE') {
+    externalScrollMode = !!msg.active;
+    try {
+      if (typeof closeAllExploded === 'function') closeAllExploded();
+      transformControls?.detach?.();
+      if (transformControls) transformControls.visible = false;
+      if (renderer?.domElement) renderer.domElement.style.cursor = 'default';
+    } catch {}
+    return;
   }
 });
+
+// REMOVE THIS ENTIRE BLOCK (duplicate listener lower in the file):
+// window.addEventListener('message', (event) => {
+//   if (event.data && event.data.type === 'SSO_TOKEN' && event.data.token) {
+//     window.ssoToken = event.data.token;
+//     console.log("[GLOBE] SSO_TOKEN received and stored:", window.ssoToken);
+//     fetchAuthStatus();
+//   }
+// });
+
 
 
 
@@ -474,19 +497,15 @@ let hoverCard;
 let ignoreHover = false; // This will temporarily disable hover detection
 
 let arcParticles = []; // <<--- ADD THIS LINE for arc travelers
+// At module scope
+
+let lastHoverCheck = 0;                   // simple throttle
+const HOVER_CHECK_MS = 50;                // ~20 fps hover tests
+const raycastTargets = [];   
 
 
 
 
-// ====== SSO TOKEN LISTENER GOES HERE ======
-window.ssoToken = null;
-window.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SSO_TOKEN' && event.data.token) {
-    window.ssoToken = event.data.token;
-    console.log("[GLOBE] SSO_TOKEN received and stored:", window.ssoToken);
-    fetchAuthStatus(); // ← Updates authStatus, triggers unlock if authenticated
-  }
-});
 
 
 
@@ -1516,61 +1535,67 @@ async function createGlobeAndCubes() {
 function animate() {
   requestAnimationFrame(animate);
 
-  // --- START: HOVER CARD LOGIC ---
+  // Frame timing
+  const delta = clock.getDelta();         // seconds since last frame
+  const elapsedTime = clock.getElapsedTime();
+
+  // Hover card logic (guard + throttle + optimized targets)
   if (hoverCard) {
-    raycaster.setFromCamera(mouse, camera);
-    const intersects = raycaster.intersectObjects(neuronGroup.children, true);
-    
-    let foundValidSubCube = false;
-    if (intersects.length > 0) {
-      const firstIntersect = intersects[0].object;
-      
-      if (firstIntersect.userData.isSubCube && firstIntersect.userData.university !== "Unassigned") {
-        foundValidSubCube = true;
-        if (currentlyHovered !== firstIntersect) {
-          currentlyHovered = firstIntersect;
-          const data = firstIntersect.userData;
-          
-          document.getElementById('hover-card-title').textContent = data.university;
-          document.getElementById('hover-card-program').textContent = data.programName.replace(/\n/g, ' ');
-          
-          const infoBtn = document.getElementById('hover-card-info-btn');
-          const applyBtn = document.getElementById('hover-card-apply-btn');
-          
-          infoBtn.disabled = !data.programLink || data.programLink === '#';
-          applyBtn.disabled = !data.applyLink || data.applyLink === '#';
-          
-          hoverCard.classList.remove('hover-card-hidden');
-        }
-        // --- "STICKY" POSITIONING LOGIC ---
-        if (currentlyHovered) {
-          const vector = new THREE.Vector3();
-          currentlyHovered.getWorldPosition(vector);
-          vector.project(camera);
-          
-          const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
-          const y = (vector.y * -0.5 + 0.5) * window.innerHeight;
-          
-          hoverCard.style.left = `${x + 15}px`;
-          hoverCard.style.top = `${y}px`;
+    const now = performance.now();
+    const canHover = !externalScrollMode && !isInteracting && !ignoreHover;
+    if (canHover && (now - lastHoverCheck) >= HOVER_CHECK_MS) {
+      lastHoverCheck = now;
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(raycastTargets, true);
+
+      let foundValidSubCube = false;
+      if (intersects.length > 0) {
+        const firstIntersect = intersects[0].object;
+        if (firstIntersect.userData?.isSubCube && firstIntersect.userData.university !== "Unassigned") {
+          foundValidSubCube = true;
+          if (currentlyHovered !== firstIntersect) {
+            currentlyHovered = firstIntersect;
+            const data = firstIntersect.userData;
+            document.getElementById('hover-card-title').textContent = data.university;
+            document.getElementById('hover-card-program').textContent = data.programName.replace(/\n/g, ' ');
+            const infoBtn = document.getElementById('hover-card-info-btn');
+            const applyBtn = document.getElementById('hover-card-apply-btn');
+            infoBtn.disabled = !data.programLink || data.programLink === '#';
+            applyBtn.disabled = !data.applyLink || data.applyLink === '#';
+            hoverCard.classList.remove('hover-card-hidden');
+          }
         }
       }
-    }
-    if (!foundValidSubCube && currentlyHovered) {
-      currentlyHovered = null;
+      if (!foundValidSubCube && currentlyHovered) {
+        currentlyHovered = null;
+        hoverCard.classList.add('hover-card-hidden');
+      }
+    } else if (externalScrollMode && !hoverCard.classList.contains('hover-card-hidden')) {
+      // Ensure hidden while scrolling page
       hoverCard.classList.add('hover-card-hidden');
+      currentlyHovered = null;
+    }
+
+    // Sticky positioning if visible
+    if (currentlyHovered && !externalScrollMode) {
+      const vector = new THREE.Vector3();
+      currentlyHovered.getWorldPosition(vector);
+      vector.project(camera);
+      const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
+      const y = (vector.y * -0.5 + 0.5) * window.innerHeight;
+      hoverCard.style.left = `${x + 15}px`;
+      hoverCard.style.top = `${y}px`;
     }
   }
-  // --- END: HOVER CARD LOGIC ---
 
-  const elapsedTime = clock.getElapsedTime();
+  // Controls + tweens
   if (controls && controls.enabled) { controls.update(); }
   if (typeof TWEEN !== 'undefined') { TWEEN.update(); }
-  arcPaths.forEach(path => { 
-    if (path.material.isShaderMaterial) { 
-      path.material.uniforms.time.value = elapsedTime; 
-    } 
-  });
+
+  // Shader time
+  arcPaths.forEach(path => { if (path.material.isShaderMaterial) { path.material.uniforms.time.value = elapsedTime; } });
+
+  // Country labels
   countryLabels.forEach(item => {
     const worldPosition = new THREE.Vector3();
     item.block.getWorldPosition(worldPosition);
@@ -1580,13 +1605,13 @@ function animate() {
     item.label.lookAt(camera.position);
   });
 
+  // Free nodes movement + membrane
   const explosionStateMap = {
     'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded,
     'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded,
     'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded
   };
-  const boundaryRadius = 1.0;
-  const buffer = 0.02;
+  const boundaryRadius = 1.0, buffer = 0.02;
   if (!isCubeMovementPaused) {
     cubes.forEach((cube, i) => {
       const isExploded = cube.userData.neuralName && explosionStateMap[cube.userData.neuralName];
@@ -1598,20 +1623,16 @@ function animate() {
         }
       }
     });
-
     if (neuralNetworkLines && neuralNetworkLines.visible) {
       const vertices = [];
-      const maxDist = 0.6;
-      const connectionsPerCube = 3;
+      const maxDist = 0.6, connectionsPerCube = 3;
       for (let i = 0; i < cubes.length; i++) {
         if (!cubes[i].visible || cubes[i].userData.neuralName) continue;
-        let neighbors = [];
+        const neighbors = [];
         for (let j = i + 1; j < cubes.length; j++) {
           if (!cubes[j].visible || cubes[j].userData.neuralName) continue;
           const dist = cubes[i].position.distanceTo(cubes[j].position);
-          if (dist < maxDist) {
-            neighbors.push({ dist: dist, cube: cubes[j] });
-          }
+          if (dist < maxDist) neighbors.push({ dist, cube: cubes[j] });
         }
         neighbors.sort((a, b) => a.dist - b.dist);
         const closest = neighbors.slice(0, connectionsPerCube);
@@ -1632,12 +1653,11 @@ function animate() {
     }
   }
 
-  // --- ARC PARTICLES ANIMATION BLOCK (add here!) ---
+  // Arc particles: delta-time based motion
   arcParticles.forEach(particle => {
     if (!isCubeMovementPaused) {
-    particle.userData.t += (particle.userData.speed || 0.2) * 0.00005;
-
-
+      const speed = particle.userData.speed || 0.2;
+      particle.userData.t += speed * delta * 0.3; // tune factor as needed
       if (particle.userData.t > 1) particle.userData.t -= 1;
       const pos = particle.userData.curve.getPoint(particle.userData.t);
       particle.position.copy(pos);
