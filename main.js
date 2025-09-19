@@ -1536,41 +1536,32 @@ async function createGlobeAndCubes() {
 function animate() {
   requestAnimationFrame(animate);
 
-  // --- START: HOVER CARD LOGIC ---
   if (hoverCard) {
     raycaster.setFromCamera(mouse, camera);
+    // Use: full recursive search
     const intersects = raycaster.intersectObjects(neuronGroup.children, true);
-    
     let foundValidSubCube = false;
     if (intersects.length > 0) {
       const firstIntersect = intersects[0].object;
-      
-      if (firstIntersect.userData.isSubCube && firstIntersect.userData.university !== "Unassigned") {
+      if (firstIntersect.userData && firstIntersect.userData.isSubCube && firstIntersect.userData.university !== "Unassigned") {
         foundValidSubCube = true;
         if (currentlyHovered !== firstIntersect) {
           currentlyHovered = firstIntersect;
           const data = firstIntersect.userData;
-          
           document.getElementById('hover-card-title').textContent = data.university;
           document.getElementById('hover-card-program').textContent = data.programName.replace(/\n/g, ' ');
-          
           const infoBtn = document.getElementById('hover-card-info-btn');
           const applyBtn = document.getElementById('hover-card-apply-btn');
-          
           infoBtn.disabled = !data.programLink || data.programLink === '#';
           applyBtn.disabled = !data.applyLink || data.applyLink === '#';
-          
           hoverCard.classList.remove('hover-card-hidden');
         }
-        // --- "STICKY" POSITIONING LOGIC ---
         if (currentlyHovered) {
           const vector = new THREE.Vector3();
           currentlyHovered.getWorldPosition(vector);
           vector.project(camera);
-          
           const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
           const y = (vector.y * -0.5 + 0.5) * window.innerHeight;
-          
           hoverCard.style.left = `${x + 15}px`;
           hoverCard.style.top = `${y}px`;
         }
