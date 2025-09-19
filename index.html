@@ -16,11 +16,6 @@
       <div class="carousel-arrow right" onclick="scrollCarousel(1)">❯</div>
     </div>
   </div>
-<!-- Floating Scroll Lock Button -->
-<button id="scrollLockBtn" class="scroll-lock-btn" title="Unlock scroll">
-  <span id="scrollLockIcon">↕️</span>
-</button>
-
 
   <!-- Authentication Status Indicator -->
   <div id="auth-indicator" style="position: fixed; top: 10px; right: 10px; z-index: 1000; font-size: 14px; max-width: 300px;"></div>
@@ -33,7 +28,10 @@
       <div class="nav-row"><div class="nav-btn" id="btn-zoom-in">+</div><div class="nav-btn" id="btn-zoom-out">−</div></div>
       <div class="nav-row"><div class="nav-btn" id="btn-rotate">⟲</div><div class="nav-btn" id="btn-pan" title="Toggle Pan/Move Mode">✋</div></div>
     </div>
-   
+    <div class="scroll-lock-ui">
+        <div id="scrollLockInstruction">Globe is active.</div>
+        <button id="scrollLockBtn">Unlock Scroll</button>
+    </div>
   </div>
 
   <div class="control-buttons">
