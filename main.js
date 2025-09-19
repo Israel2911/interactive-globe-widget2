@@ -1515,8 +1515,7 @@ const floatingBtn = document.getElementById('floatingScrollBtn');
 const scrollMask = document.getElementById('scrollMaskOverlay');
 if (floatingBtn) {
   floatingBtn.addEventListener('click', function() {
-    if (!scrollUnlocked) { scrollUnlocked = true; }
-    else { scrollUnlocked = false; }
+    scrollUnlocked = !scrollUnlocked;
   });
 }
 if (scrollMask) {
@@ -1533,37 +1532,32 @@ function animate() {
   if (scrollUnlocked) {
     if (scrollMask) scrollMask.style.display = 'block';
     if (floatingBtn) floatingBtn.textContent = 'Lock Globe';
-    if (typeof controls !== 'undefined' && controls) controls.enabled = false;
+    if (renderer && renderer.domElement) renderer.domElement.style.pointerEvents = 'none';
   } else {
     if (scrollMask) scrollMask.style.display = 'none';
     if (floatingBtn) floatingBtn.textContent = 'Unlock Scroll';
-    if (typeof controls !== 'undefined' && controls) controls.enabled = true;
+    if (renderer && renderer.domElement) renderer.domElement.style.pointerEvents = 'auto';
   }
 
+  // --- REST OF YOUR ANIMATE CODE UNCHANGED ---
   // --- START: HOVER CARD LOGIC ---
   if (hoverCard) {
     raycaster.setFromCamera(mouse, camera);
     const intersects = raycaster.intersectObjects(neuronGroup.children, true);
-    
     let foundValidSubCube = false;
     if (intersects.length > 0) {
       const firstIntersect = intersects[0].object;
-      
       if (firstIntersect.userData.isSubCube && firstIntersect.userData.university !== "Unassigned") {
         foundValidSubCube = true;
         if (currentlyHovered !== firstIntersect) {
           currentlyHovered = firstIntersect;
           const data = firstIntersect.userData;
-          
           document.getElementById('hover-card-title').textContent = data.university;
           document.getElementById('hover-card-program').textContent = data.programName.replace(/\n/g, ' ');
-          
           const infoBtn = document.getElementById('hover-card-info-btn');
           const applyBtn = document.getElementById('hover-card-apply-btn');
-          
           infoBtn.disabled = !data.programLink || data.programLink === '#';
           applyBtn.disabled = !data.applyLink || data.applyLink === '#';
-          
           hoverCard.classList.remove('hover-card-hidden');
         }
         // --- "STICKY" POSITIONING LOGIC ---
@@ -1571,10 +1565,8 @@ function animate() {
           const vector = new THREE.Vector3();
           currentlyHovered.getWorldPosition(vector);
           vector.project(camera);
-          
           const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
           const y = (vector.y * -0.5 + 0.5) * window.innerHeight;
-          
           hoverCard.style.left = `${x + 15}px`;
           hoverCard.style.top = `${y}px`;
         }
