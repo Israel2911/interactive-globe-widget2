@@ -1509,8 +1509,36 @@ async function createGlobeAndCubes() {
   });
   console.log('✅ Globe and cubes created successfully');
 }
+// ===== FLOATING SCROLL BUTTON AND MASK VARIABLES =====
+let scrollUnlocked = false;
+const floatingBtn = document.getElementById('floatingScrollBtn');
+const scrollMask = document.getElementById('scrollMaskOverlay');
+if (floatingBtn) {
+  floatingBtn.addEventListener('click', function() {
+    if (!scrollUnlocked) { scrollUnlocked = true; }
+    else { scrollUnlocked = false; }
+  });
+}
+if (scrollMask) {
+  scrollMask.addEventListener('click', function() {
+    scrollUnlocked = false;
+  });
+}
+
+// ======== ANIMATION LOOP ========
 function animate() {
   requestAnimationFrame(animate);
+
+  // --- FLOATING SCROLL MASK LOGIC (INSIDE ANIMATE!) ---
+  if (scrollUnlocked) {
+    if (scrollMask) scrollMask.style.display = 'block';
+    if (floatingBtn) floatingBtn.textContent = 'Lock Globe';
+    if (typeof controls !== 'undefined' && controls) controls.enabled = false;
+  } else {
+    if (scrollMask) scrollMask.style.display = 'none';
+    if (floatingBtn) floatingBtn.textContent = 'Unlock Scroll';
+    if (typeof controls !== 'undefined' && controls) controls.enabled = true;
+  }
 
   // --- START: HOVER CARD LOGIC ---
   if (hoverCard) {
@@ -1558,7 +1586,6 @@ function animate() {
     }
   }
   // --- END: HOVER CARD LOGIC ---
-
   const elapsedTime = clock.getElapsedTime();
   if (controls && controls.enabled) { controls.update(); }
   if (typeof TWEEN !== 'undefined') { TWEEN.update(); }
@@ -1575,7 +1602,6 @@ function animate() {
     item.label.position.copy(labelPosition);
     item.label.lookAt(camera.position);
   });
-
   const explosionStateMap = {
     'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded,
     'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded,
@@ -1594,7 +1620,6 @@ function animate() {
         }
       }
     });
-
     if (neuralNetworkLines && neuralNetworkLines.visible) {
       const vertices = [];
       const maxDist = 0.6;
@@ -1627,22 +1652,19 @@ function animate() {
       neuralNetworkLines.geometry.computeVertexNormals();
     }
   }
-
   // --- ARC PARTICLES ANIMATION BLOCK (add here!) ---
   arcParticles.forEach(particle => {
     if (!isCubeMovementPaused) {
     particle.userData.t += (particle.userData.speed || 0.2) * 0.00005;
-
-
       if (particle.userData.t > 1) particle.userData.t -= 1;
       const pos = particle.userData.curve.getPoint(particle.userData.t);
       particle.position.copy(pos);
       particle.lookAt(0, 0, 0);
     }
   });
-
   renderer.render(scene, camera);
 }
+
 
 
 // ===
