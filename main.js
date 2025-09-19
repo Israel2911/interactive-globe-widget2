@@ -1511,18 +1511,27 @@ async function createGlobeAndCubes() {
 }
 // ===== FLOATING SCROLL BUTTON AND MASK VARIABLES =====
 let scrollUnlocked = false;
-const floatingBtn = document.getElementById('floatingScrollBtn');
-const scrollMask = document.getElementById('scrollMaskOverlay');
-if (floatingBtn) {
-  floatingBtn.addEventListener('click', function() {
-    scrollUnlocked = !scrollUnlocked;
-  });
-}
-if (scrollMask) {
-  scrollMask.addEventListener('click', function() {
-    scrollUnlocked = false;
-  });
-}
+let floatingBtn, scrollMask;
+
+document.addEventListener('DOMContentLoaded', function() {
+  floatingBtn = document.getElementById('floatingScrollBtn');
+  scrollMask = document.getElementById('scrollMaskOverlay');
+
+  if (!floatingBtn) { console.error("Floating scroll button not found!"); }
+  if (!scrollMask) { console.error("Scroll mask overlay not found!"); }
+
+  if (floatingBtn) {
+    floatingBtn.addEventListener('click', function() {
+      scrollUnlocked = !scrollUnlocked;
+    });
+  }
+  if (scrollMask) {
+    scrollMask.addEventListener('click', function() {
+      scrollUnlocked = false;
+    });
+  }
+});
+
 
 // ======== ANIMATION LOOP ========
 function animate() {
