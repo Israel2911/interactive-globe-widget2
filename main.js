@@ -1532,70 +1532,65 @@ async function createGlobeAndCubes() {
 }
 
 
+
 function animate() {
   requestAnimationFrame(animate);
 
-  // Frame timing
-  const delta = clock.getDelta();         // seconds since last frame
-  const elapsedTime = clock.getElapsedTime();
-
-  // Hover card logic (guard + throttle + optimized targets)
+  // --- START: HOVER CARD LOGIC ---
   if (hoverCard) {
-    const now = performance.now();
-    const canHover = !externalScrollMode && !isInteracting && !ignoreHover;
-    if (canHover && (now - lastHoverCheck) >= HOVER_CHECK_MS) {
-      lastHoverCheck = now;
-      raycaster.setFromCamera(mouse, camera);
-      const intersects = raycaster.intersectObjects(raycastTargets, true);
-
-      let foundValidSubCube = false;
-      if (intersects.length > 0) {
-        const firstIntersect = intersects[0].object;
-        if (firstIntersect.userData?.isSubCube && firstIntersect.userData.university !== "Unassigned") {
-          foundValidSubCube = true;
-          if (currentlyHovered !== firstIntersect) {
-            currentlyHovered = firstIntersect;
-            const data = firstIntersect.userData;
-            document.getElementById('hover-card-title').textContent = data.university;
-            document.getElementById('hover-card-program').textContent = data.programName.replace(/\n/g, ' ');
-            const infoBtn = document.getElementById('hover-card-info-btn');
-            const applyBtn = document.getElementById('hover-card-apply-btn');
-            infoBtn.disabled = !data.programLink || data.programLink === '#';
-            applyBtn.disabled = !data.applyLink || data.applyLink === '#';
-            hoverCard.classList.remove('hover-card-hidden');
-          }
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(neuronGroup.children, true);
+    
+    let foundValidSubCube = false;
+    if (intersects.length > 0) {
+      const firstIntersect = intersects[0].object;
+      
+      if (firstIntersect.userData.isSubCube && firstIntersect.userData.university !== "Unassigned") {
+        foundValidSubCube = true;
+        if (currentlyHovered !== firstIntersect) {
+          currentlyHovered = firstIntersect;
+          const data = firstIntersect.userData;
+          
+          document.getElementById('hover-card-title').textContent = data.university;
+          document.getElementById('hover-card-program').textContent = data.programName.replace(/\n/g, ' ');
+          
+          const infoBtn = document.getElementById('hover-card-info-btn');
+          const applyBtn = document.getElementById('hover-card-apply-btn');
+          
+          infoBtn.disabled = !data.programLink || data.programLink === '#';
+          applyBtn.disabled = !data.applyLink || data.applyLink === '#';
+          
+          hoverCard.classList.remove('hover-card-hidden');
+        }
+        // --- "STICKY" POSITIONING LOGIC ---
+        if (currentlyHovered) {
+          const vector = new THREE.Vector3();
+          currentlyHovered.getWorldPosition(vector);
+          vector.project(camera);
+          
+          const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
+          const y = (vector.y * -0.5 + 0.5) * window.innerHeight;
+          
+          hoverCard.style.left = `${x + 15}px`;
+          hoverCard.style.top = `${y}px`;
         }
       }
-      if (!foundValidSubCube && currentlyHovered) {
-        currentlyHovered = null;
-        hoverCard.classList.add('hover-card-hidden');
-      }
-    } else if (externalScrollMode && !hoverCard.classList.contains('hover-card-hidden')) {
-      // Ensure hidden while scrolling page
-      hoverCard.classList.add('hover-card-hidden');
-      currentlyHovered = null;
     }
-
-    // Sticky positioning if visible
-    if (currentlyHovered && !externalScrollMode) {
-      const vector = new THREE.Vector3();
-      currentlyHovered.getWorldPosition(vector);
-      vector.project(camera);
-      const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
-      const y = (vector.y * -0.5 + 0.5) * window.innerHeight;
-      hoverCard.style.left = `${x + 15}px`;
-      hoverCard.style.top = `${y}px`;
+    if (!foundValidSubCube && currentlyHovered) {
+      currentlyHovered = null;
+      hoverCard.classList.add('hover-card-hidden');
     }
   }
+  // --- END: HOVER CARD LOGIC ---
 
-  // Controls + tweens
+  const elapsedTime = clock.getElapsedTime();
   if (controls && controls.enabled) { controls.update(); }
   if (typeof TWEEN !== 'undefined') { TWEEN.update(); }
-
-  // Shader time
-  arcPaths.forEach(path => { if (path.material.isShaderMaterial) { path.material.uniforms.time.value = elapsedTime; } });
-
-  // Country labels
+  arcPaths.forEach(path => { 
+    if (path.material.isShaderMaterial) { 
+      path.material.uniforms.time.value = elapsedTime; 
+    } 
+  });
   countryLabels.forEach(item => {
     const worldPosition = new THREE.Vector3();
     item.block.getWorldPosition(worldPosition);
@@ -1605,13 +1600,13 @@ function animate() {
     item.label.lookAt(camera.position);
   });
 
-  // Free nodes movement + membrane
   const explosionStateMap = {
     'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded,
     'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded,
     'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded
   };
-  const boundaryRadius = 1.0, buffer = 0.02;
+  const boundaryRadius = 1.0;
+  const buffer = 0.02;
   if (!isCubeMovementPaused) {
     cubes.forEach((cube, i) => {
       const isExploded = cube.userData.neuralName && explosionStateMap[cube.userData.neuralName];
@@ -1623,16 +1618,20 @@ function animate() {
         }
       }
     });
+
     if (neuralNetworkLines && neuralNetworkLines.visible) {
       const vertices = [];
-      const maxDist = 0.6, connectionsPerCube = 3;
+      const maxDist = 0.6;
+      const connectionsPerCube = 3;
       for (let i = 0; i < cubes.length; i++) {
         if (!cubes[i].visible || cubes[i].userData.neuralName) continue;
-        const neighbors = [];
+        let neighbors = [];
         for (let j = i + 1; j < cubes.length; j++) {
           if (!cubes[j].visible || cubes[j].userData.neuralName) continue;
           const dist = cubes[i].position.distanceTo(cubes[j].position);
-          if (dist < maxDist) neighbors.push({ dist, cube: cubes[j] });
+          if (dist < maxDist) {
+            neighbors.push({ dist: dist, cube: cubes[j] });
+          }
         }
         neighbors.sort((a, b) => a.dist - b.dist);
         const closest = neighbors.slice(0, connectionsPerCube);
@@ -1653,11 +1652,12 @@ function animate() {
     }
   }
 
-  // Arc particles: delta-time based motion
+  // --- ARC PARTICLES ANIMATION BLOCK (add here!) ---
   arcParticles.forEach(particle => {
     if (!isCubeMovementPaused) {
-      const speed = particle.userData.speed || 0.2;
-      particle.userData.t += speed * delta * 0.3; // tune factor as needed
+    particle.userData.t += (particle.userData.speed || 0.2) * 0.00005;
+
+
       if (particle.userData.t > 1) particle.userData.t -= 1;
       const pos = particle.userData.curve.getPoint(particle.userData.t);
       particle.position.copy(pos);
