@@ -610,25 +610,31 @@ body {
   font-weight: bold;
 }
 /* Hide "Globe is active" text and style button */
-#scrollLockInstruction {
-  display: none !important;
-}
-
-.scroll-lock-ui {
-  display: flex;
-  align-items: center;
-}
-
-#scrollLockBtn {
+#floatingScrollBtn {
+  position: absolute;
+  left: 50%;
+  top: 210px;           /* Adjust this value as needed (higher = lower button) */
+  transform: translateX(-50%);
+  z-index: 11000;
   background: #ffa500;
   color: #222;
   border: none;
-  border-radius: 8px;
-  font-weight: 600;
+  border-radius: 25px;
+  padding: 14px 32px;
+  font-size: 1.17em;
+  font-weight: bold;
+  box-shadow: 0 4px 16px rgba(0,16,80,0.14);
   cursor: pointer;
-  padding: 5px 18px;
-  margin: 0;
+  transition: background 0.14s;
 }
+
+/* Responsive: move button lower for mobile if your carousel is taller on phones */
+@media (max-width: 600px) {
+  #floatingScrollBtn {
+    top: 260px;
+  }
+}
+
 
 
 
