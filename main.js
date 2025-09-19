@@ -101,24 +101,33 @@ async function fetchAuthStatus() {
 
 // === UNIFIED postMessage HANDLER (replaces older listeners) ===
 // Place this near other top-level flags, BEFORE the message handler:
+// 1. Declare at the top (if not already)
+// Place near the top, with other flags:
 let externalScrollMode = false;
 
-// Unified postMessage handler (kept in Part 1)
 window.addEventListener('message', (event) => {
   const msg = event.data || {};
-  // if (event.origin !== 'https://www.globaleducarealliance.com') return; // enable in prod
 
-  if (msg.type === 'SSO_TOKEN' && msg.token) {
-    window.ssoToken = msg.token;
-    fetchAuthStatus();
+  // === SCROLL MODE TOGGLER ===
+  if (msg.type === 'SCROLL_MODE') {
+    externalScrollMode = !!msg.active;
+    try {
+      // Hide overlays, hover card etc when page scroll is activated
+      if (externalScrollMode) {
+        if (hoverCard) hoverCard.classList.add('hover-card-hidden');
+        currentlyHovered = null;
+        if (typeof closeAllExploded === 'function') closeAllExploded();
+        transformControls?.detach?.();
+        if (transformControls) transformControls.visible = false;
+        if (renderer?.domElement) renderer.domElement.style.cursor = 'default';
+      }
+    } catch {}
     return;
   }
+  
+  
 
-  if (msg.type === 'SET_CUBE_COLOR' && msg.universityName) {
-    setCubeToAppliedState(msg.universityName);
-    showNotification(`Application submitted for ${msg.universityName}! Cube updated.`, true);
-    return;
-  }
+
 
   if (msg.type === 'SCROLL_MODE') {
     externalScrollMode = !!msg.active;
@@ -1233,9 +1242,15 @@ function drawAllConnections() {
 // ===
 // MOUSE EVENT HANDLERS
 // ===
+// =======
+// MOUSE EVENT HANDLERS (scroll mode guard added)
+// =======
+
 function onCanvasMouseDown(event) {
+  if (externalScrollMode) return;
   mouseDownPos.set(event.clientX, event.clientY);
 }
+
 function closeAllExploded() {
   if (isEuropeCubeExploded) toggleFunctionMap['Europe']();
   if (isNewThailandCubeExploded) toggleFunctionMap['Thailand']();
@@ -1246,23 +1261,21 @@ function closeAllExploded() {
   if (isSingaporeCubeExploded) toggleFunctionMap['Singapore']();
   if (isMalaysiaCubeExploded) toggleFunctionMap['Malaysia']();
 }
+
 function onCanvasMouseUp(event) {
+  if (externalScrollMode) return;
   if (transformControls.dragging) return;
   const deltaX = Math.abs(event.clientX - mouseDownPos.x);
   const deltaY = Math.abs(event.clientY - mouseDownPos.y);
   if (deltaX > 5 || deltaY > 5) return;
   if (event.target.closest('.info-panel')) return;
-  
   const canvasRect = renderer.domElement.getBoundingClientRect();
   mouse.x = ((event.clientX - canvasRect.left) / canvasRect.width) * 2 - 1;
   mouse.y = -((event.clientY - canvasRect.top) / canvasRect.height) * 2 + 1;
-  
   raycaster.setFromCamera(mouse, camera);
   const allClickableObjects = [...Object.values(countryBlocks), ...neuronGroup.children];
   const intersects = raycaster.intersectObjects(allClickableObjects, true);
-  
   if (intersects.length === 0) { closeAllExploded(); return; }
-  
   const clickedObject = intersects[0].object;
   if (clickedObject.userData.countryName) {
     const countryName = clickedObject.userData.countryName;
@@ -1283,7 +1296,6 @@ function onCanvasMouseUp(event) {
     }
     return;
   }
-  
   let parent = clickedObject;
   let neuralName = null;
   let clickedSubCubeLocal = clickedObject.userData.isSubCube ? clickedObject : null;
@@ -1291,13 +1303,11 @@ function onCanvasMouseUp(event) {
     if (parent.userData.neuralName) { neuralName = parent.userData.neuralName; break; }
     parent = parent.parent;
   }
-  
   const explosionStateMap = {
     'Europe': isEuropeCubeExploded, 'Thailand': isNewThailandCubeExploded, 'Canada': isCanadaCubeExploded,
     'UK': isUkCubeExploded, 'USA': isUsaCubeExploded, 'India': isIndiaCubeExploded,
     'Singapore': isSingaporeCubeExploded, 'Malaysia': isMalaysiaCubeExploded
   };
-  
   if (neuralName) {
     const isExploded = explosionStateMap[neuralName];
     const toggleFunc = toggleFunctionMap[neuralName];
@@ -1316,7 +1326,9 @@ function onCanvasMouseUp(event) {
     closeAllExploded(); 
   }
 }
+
 function onCanvasMouseDownPan(event) {
+  if (externalScrollMode) return;
   mouseDownPos.set(event.clientX, event.clientY);
   if (isPanMode) {
     isDragging = true;
@@ -1325,7 +1337,9 @@ function onCanvasMouseDownPan(event) {
     event.preventDefault(); event.stopPropagation();
   }
 }
+
 function onCanvasMouseMovePan(event) {
+  if (externalScrollMode) return;
   if (isPanMode && isDragging) {
     const deltaMove = { x: event.clientX - previousMousePosition.x, y: event.clientY - previousMousePosition.y };
     const panSpeed = 0.001;
@@ -1341,7 +1355,9 @@ function onCanvasMouseMovePan(event) {
     event.preventDefault(); event.stopPropagation();
   }
 }
+
 function onCanvasMouseUpPan(event) {
+  if (externalScrollMode) return;
   if (isPanMode) {
     isDragging = false;
     renderer.domElement.style.cursor = isPanMode ? 'grab' : 'default';
@@ -1349,6 +1365,7 @@ function onCanvasMouseUpPan(event) {
   }
   onCanvasMouseUp(event);
 }
+
 // ===
 // EVENT LISTENERS SETUP
 // ===
@@ -1536,6 +1553,18 @@ async function createGlobeAndCubes() {
 function animate() {
   requestAnimationFrame(animate);
 
+  // ========== MOBILE SCROLL MODE GUARD ==========
+  if (typeof externalScrollMode !== 'undefined' && externalScrollMode) {
+    if (hoverCard && !hoverCard.classList.contains('hover-card-hidden')) {
+      hoverCard.classList.add('hover-card-hidden');
+      currentlyHovered = null;
+    }
+    renderer.render(scene, camera);
+    return; // Nothing else runs while in scroll mode
+  }
+  // ========== END GUARD ==========
+
+  // (UNCHANGED REST OF YOUR HOVER LOGIC)
   if (hoverCard) {
     raycaster.setFromCamera(mouse, camera);
     // Use: full recursive search
