@@ -4,7 +4,7 @@ async function requireLoginAndGo() { return; }
 async function isLoggedIn() { return false; }
 async function updateAuthStatus() { /* no-op to keep UI simple */ }
 async function handleCallback() { /* no-op */ }
-async function logout() { window.top.location.href = 'https://globaleducarealliance.com/#globelogin'; }
+async function logout() { window.top.location.href = 'https://www.globaleducarealliance.com'; }
 
 // ===
 // DASHBOARD / UPLOAD actions — always require login, then go Home
