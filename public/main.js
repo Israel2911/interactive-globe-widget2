@@ -1,3 +1,6 @@
+// Backend base URL: Firebase HTTPS function "globeApi"
+const API_BASE = 'https://us-central1-interactive-globe-widget.cloudfunctions.net/globeApi';
+
 function redirectToWix() { /* no-op on external globe */ }
 async function requireLoginAndGo() { return; }
 // No-op placeholders replacing custom SSO usage in front-end
@@ -287,56 +290,7 @@ function addInfoPanelStyles() {
 // This ensures the panel's HTML and CSS are ready when the page loads.
 document.addEventListener('DOMContentLoaded', addInfoPanelStyles);
 // ---------- If later you allow panel post-login, remove the return above and use builder below ----------
-/*
-const uniData = allUniversityContent.filter(item => item && item.university === data.university);
-if (uniData.length === 0) {
-  console.log('❌ No university content found');
-  return;
-}
-const mainErasmusLink = uniData[0].erasmusLink;
-document.getElementById('infoPanelMainCard').innerHTML = `
-  <div class="main-card-details">
-    <img src="${uniData.logo}" alt="${data.university}">
-    <h3>${data.university}</h3>
-  </div>
-  <div class="main-card-actions">
-    ${mainErasmusLink ? `<a href="${mainErasmusLink}" target="_blank" class="partner-cta erasmus">Erasmus Info</a>` : ''}
-  </div>
-`;
-document.getElementById('infoPanelSubcards').innerHTML = '';
-uniData.forEach(item => {
-  if (!item) return;
-  const infoEnabled = item.programLink && item.programLink !== '#';
-  const applyEnabled = item.applyLink && item.applyLink !== '#';
-  const subcardHTML = `
-    <div class="subcard">
-      <div class="subcard-info">
-        <img src="${item.logo}" alt="">
-        <h4>${item.programName.replace(/\n/g, ' ')}</h4>
-      </div>
-      <div class="subcard-buttons">
-        <button class="partner-cta info" ${infoEnabled ? '' : 'disabled'} data-href="${infoEnabled ? item.programLink : ''}">University Info</button>
-        <button class="partner-cta apply" ${applyEnabled ? '' : 'disabled'} data-return="/members/home">Apply Now</button>
-      </div>
-    </div>
-  `;
-  document.getElementById('infoPanelSubcards').insertAdjacentHTML('beforeend', subcardHTML);
-});
-const container = document.getElementById('infoPanelSubcards');
-container.querySelectorAll('.partner-cta.info').forEach(btn => {
-  btn.addEventListener('click', e => {
-    const href = e.currentTarget.getAttribute('data-href');
-    if (href) window.open(href, '_blank');
-  });
-});
-container.querySelectorAll('.partner-cta.apply').forEach(btn => {
-  btn.addEventListener('click', e => {
-    window.top.location.href = 'https://www.globaleducarealliance.com/home?promptLogin=1';
-  });
-});
-document.getElementById('infoPanelOverlay').style.display = 'flex';
-console.log('✅ Info panel displayed with both university and application links');
-*/
+
 function hideInfoPanel() {
   document.getElementById('infoPanelOverlay').style.display = 'none';
 }
