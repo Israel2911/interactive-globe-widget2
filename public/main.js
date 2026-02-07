@@ -1,9 +1,6 @@
-
-
-
 function redirectToWix() { /* no-op on external globe */ }
 async function requireLoginAndGo() { return; }
-
+// No-op placeholders replacing custom SSO usage in front-end
 async function isLoggedIn() { return false; }
 async function updateAuthStatus() { /* no-op to keep UI simple */ }
 async function handleCallback() { /* no-op */ }
@@ -38,7 +35,6 @@ function activateAllCubes() {
   showNotification('Success! You now have access to all university programs.');
 }
 
-const API_BASE = 'https://us-central1-interactive-globe-widget.cloudfunctions.net/globeApi';
 // ===
 // SAFE FETCH WRAPPER - NEW ADDITION
 async function safeFetch(url, options = {}) {
@@ -79,14 +75,14 @@ let alreadyActivated = false; // <--- ADD THIS LINE HERE
 async function fetchAuthStatus() {
   try {
     console.log('🔍 Fetching auth status...');
-   const res = await fetch(`${API_BASE}/api/auth/status`, { 
-  credentials: 'include', 
-  cache: 'no-store',
-  headers: {
-    'Content-Type': 'application/json',
-    ...(window.ssoToken ? { 'Authorization': 'Bearer ' + window.ssoToken } : {})
-  }
-});
+    const res = await fetch('/api/auth/status', { 
+      credentials: 'include', 
+      cache: 'no-store',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(window.ssoToken ? { 'Authorization': 'Bearer ' + window.ssoToken } : {})
+      }
+    });
 
     if (!res.ok) {
       console.error(`❌ Auth status fetch failed: ${res.status} ${res.statusText}`);
@@ -104,6 +100,7 @@ async function fetchAuthStatus() {
 }
 
 
+/ --- PLACE THE NEW POSTMESSAGE LISTENER HERE --- //
 // For debugging, accept all origins (remove this for production or list all trusted origins)
 window.addEventListener("message", event => {
   console.log("[GLOBE] Received postMessage:", event.data); // <--- ADD THIS LINE
@@ -124,7 +121,10 @@ window.addEventListener("message", event => {
 
 
 
-
+// ===
+// ===
+// AUTH STATUS POLLING - IMPROVED WITH SAFER FETCH
+// ===
 function startAuthStatusPolling() {
   setInterval(async () => {
     const oldStatus = authStatus.isAuthenticated;
@@ -147,6 +147,13 @@ function startAuthStatusPolling() {
 }
 
 
+// vvvvv  PLACE THE NEW FUNCTION RIGHT HERE  vvvvv
+
+
+/**
+ * Periodically polls the server to check for notifications about
+ * successful application submissions for the authenticated user.
+ */
 function startPollingForApplicationUpdates() {
     // Set an interval to check for updates (e.g., every 15 seconds)
     const pollInterval = 15000; 
@@ -159,7 +166,7 @@ function startPollingForApplicationUpdates() {
 
         try {
             // Use your existing safeFetch wrapper for authenticated requests
-            const data = await safeFetch(`${API_BASE}/api/applications/notifications`);
+            const data = await safeFetch('/api/applications/notifications');
             
             // If the server sends back new notifications, process them
             if (data && data.notifications && data.notifications.length > 0) {
@@ -280,7 +287,56 @@ function addInfoPanelStyles() {
 // This ensures the panel's HTML and CSS are ready when the page loads.
 document.addEventListener('DOMContentLoaded', addInfoPanelStyles);
 // ---------- If later you allow panel post-login, remove the return above and use builder below ----------
-
+/*
+const uniData = allUniversityContent.filter(item => item && item.university === data.university);
+if (uniData.length === 0) {
+  console.log('❌ No university content found');
+  return;
+}
+const mainErasmusLink = uniData[0].erasmusLink;
+document.getElementById('infoPanelMainCard').innerHTML = `
+  <div class="main-card-details">
+    <img src="${uniData.logo}" alt="${data.university}">
+    <h3>${data.university}</h3>
+  </div>
+  <div class="main-card-actions">
+    ${mainErasmusLink ? `<a href="${mainErasmusLink}" target="_blank" class="partner-cta erasmus">Erasmus Info</a>` : ''}
+  </div>
+`;
+document.getElementById('infoPanelSubcards').innerHTML = '';
+uniData.forEach(item => {
+  if (!item) return;
+  const infoEnabled = item.programLink && item.programLink !== '#';
+  const applyEnabled = item.applyLink && item.applyLink !== '#';
+  const subcardHTML = `
+    <div class="subcard">
+      <div class="subcard-info">
+        <img src="${item.logo}" alt="">
+        <h4>${item.programName.replace(/\n/g, ' ')}</h4>
+      </div>
+      <div class="subcard-buttons">
+        <button class="partner-cta info" ${infoEnabled ? '' : 'disabled'} data-href="${infoEnabled ? item.programLink : ''}">University Info</button>
+        <button class="partner-cta apply" ${applyEnabled ? '' : 'disabled'} data-return="/members/home">Apply Now</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('infoPanelSubcards').insertAdjacentHTML('beforeend', subcardHTML);
+});
+const container = document.getElementById('infoPanelSubcards');
+container.querySelectorAll('.partner-cta.info').forEach(btn => {
+  btn.addEventListener('click', e => {
+    const href = e.currentTarget.getAttribute('data-href');
+    if (href) window.open(href, '_blank');
+  });
+});
+container.querySelectorAll('.partner-cta.apply').forEach(btn => {
+  btn.addEventListener('click', e => {
+    window.top.location.href = 'https://www.globaleducarealliance.com/home?promptLogin=1';
+  });
+});
+document.getElementById('infoPanelOverlay').style.display = 'flex';
+console.log('✅ Info panel displayed with both university and application links');
+*/
 function hideInfoPanel() {
   document.getElementById('infoPanelOverlay').style.display = 'none';
 }
@@ -439,7 +495,7 @@ window.addEventListener('message', (event) => {
 // =======
 async function fetchCarouselData() {
   try {
-   const response = await fetch(`${API_BASE}/api/carousel/data`);
+    const response = await fetch('/api/carousel/data');
     if (response.ok) {
       carouselData = await response.json();
       console.log('📊 Carousel data loaded:', carouselData);
@@ -461,7 +517,7 @@ async function fetchCarouselData() {
 async function fetchDataFromBackend() {
   try {
     console.log('🔄 Fetching data from server...');
-   const response = await fetch(`${API_BASE}/api/globe-data`);
+    const response = await fetch('/api/globe-data');
     if (response.ok) {
       const data = await response.json();
       console.log('✅ Server data received:', data);
@@ -613,7 +669,12 @@ function scrollCarousel(direction) {
   container.scrollBy({ left: direction * cardWidth, behavior: 'smooth' });
 }
 
+// =======
+// ===
+// CONTROL TOGGLES (Corrected and Final Version)
+// ===
 
+// This single function controls whether the user is in "rotate" or "pan" mode.
 // It does NOT affect the automatic rotation.
 function setInteractionMode(mode) {
   if (!controls) return;
@@ -694,7 +755,7 @@ function updateCanvasSize() {
   camera.updateProjectionMatrix();
 }
 
-
+// UTILITIES
 // UTILITIES
 // =======
 function getColorByData(data) {
@@ -836,6 +897,8 @@ function addSimpleApplicationPlaque(mesh, text="APPLICATION RECEIVED") {
   mesh.add(cardSprite);
   mesh.userData.messageCard = cardSprite;
 }
+
+
 
 
 // =======
