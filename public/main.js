@@ -1,5 +1,5 @@
 // Backend base URL: Firebase HTTPS function "globeApi"
-const API_BASE = 'https://us-central1-interactive-globe-widget.cloudfunctions.net/globeApi';
+
 
 function redirectToWix() { /* no-op on external globe */ }
 async function requireLoginAndGo() { return; }
@@ -38,6 +38,7 @@ function activateAllCubes() {
   showNotification('Success! You now have access to all university programs.');
 }
 
+const API_BASE = 'https://us-central1-interactive-globe-widget.cloudfunctions.net/globeApi';
 // ===
 // SAFE FETCH WRAPPER - NEW ADDITION
 async function safeFetch(url, options = {}) {
@@ -78,14 +79,14 @@ let alreadyActivated = false; // <--- ADD THIS LINE HERE
 async function fetchAuthStatus() {
   try {
     console.log('🔍 Fetching auth status...');
-    const res = await fetch('/api/auth/status', { 
-      credentials: 'include', 
-      cache: 'no-store',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(window.ssoToken ? { 'Authorization': 'Bearer ' + window.ssoToken } : {})
-      }
-    });
+   const res = await fetch(`${API_BASE}/api/auth/status`, { 
+  credentials: 'include', 
+  cache: 'no-store',
+  headers: {
+    'Content-Type': 'application/json',
+    ...(window.ssoToken ? { 'Authorization': 'Bearer ' + window.ssoToken } : {})
+  }
+});
 
     if (!res.ok) {
       console.error(`❌ Auth status fetch failed: ${res.status} ${res.statusText}`);
@@ -169,7 +170,7 @@ function startPollingForApplicationUpdates() {
 
         try {
             // Use your existing safeFetch wrapper for authenticated requests
-            const data = await safeFetch('/api/applications/notifications');
+            const data = await safeFetch(`${API_BASE}/api/applications/notifications`);
             
             // If the server sends back new notifications, process them
             if (data && data.notifications && data.notifications.length > 0) {
@@ -449,7 +450,7 @@ window.addEventListener('message', (event) => {
 // =======
 async function fetchCarouselData() {
   try {
-    const response = await fetch('/api/carousel/data');
+   const response = await fetch(`${API_BASE}/api/carousel/data`);
     if (response.ok) {
       carouselData = await response.json();
       console.log('📊 Carousel data loaded:', carouselData);
