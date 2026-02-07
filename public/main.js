@@ -472,7 +472,7 @@ async function fetchCarouselData() {
 async function fetchDataFromBackend() {
   try {
     console.log('🔄 Fetching data from server...');
-    const response = await fetch('/api/globe-data');
+   const response = await fetch(`${API_BASE}/api/globe-data`);
     if (response.ok) {
       const data = await response.json();
       console.log('✅ Server data received:', data);
