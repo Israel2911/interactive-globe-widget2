@@ -1,9 +1,9 @@
-// Backend base URL: Firebase HTTPS function "globeApi"
+
 
 
 function redirectToWix() { /* no-op on external globe */ }
 async function requireLoginAndGo() { return; }
-// No-op placeholders replacing custom SSO usage in front-end
+
 async function isLoggedIn() { return false; }
 async function updateAuthStatus() { /* no-op to keep UI simple */ }
 async function handleCallback() { /* no-op */ }
@@ -104,7 +104,6 @@ async function fetchAuthStatus() {
 }
 
 
-/ --- PLACE THE NEW POSTMESSAGE LISTENER HERE --- //
 // For debugging, accept all origins (remove this for production or list all trusted origins)
 window.addEventListener("message", event => {
   console.log("[GLOBE] Received postMessage:", event.data); // <--- ADD THIS LINE
@@ -125,10 +124,7 @@ window.addEventListener("message", event => {
 
 
 
-// ===
-// ===
-// AUTH STATUS POLLING - IMPROVED WITH SAFER FETCH
-// ===
+
 function startAuthStatusPolling() {
   setInterval(async () => {
     const oldStatus = authStatus.isAuthenticated;
@@ -151,13 +147,6 @@ function startAuthStatusPolling() {
 }
 
 
-// vvvvv  PLACE THE NEW FUNCTION RIGHT HERE  vvvvv
-
-
-/**
- * Periodically polls the server to check for notifications about
- * successful application submissions for the authenticated user.
- */
 function startPollingForApplicationUpdates() {
     // Set an interval to check for updates (e.g., every 15 seconds)
     const pollInterval = 15000; 
@@ -624,12 +613,7 @@ function scrollCarousel(direction) {
   container.scrollBy({ left: direction * cardWidth, behavior: 'smooth' });
 }
 
-// =======
-// ===
-// CONTROL TOGGLES (Corrected and Final Version)
-// ===
 
-// This single function controls whether the user is in "rotate" or "pan" mode.
 // It does NOT affect the automatic rotation.
 function setInteractionMode(mode) {
   if (!controls) return;
@@ -710,7 +694,7 @@ function updateCanvasSize() {
   camera.updateProjectionMatrix();
 }
 
-// UTILITIES
+
 // UTILITIES
 // =======
 function getColorByData(data) {
@@ -852,8 +836,6 @@ function addSimpleApplicationPlaque(mesh, text="APPLICATION RECEIVED") {
   mesh.add(cardSprite);
   mesh.userData.messageCard = cardSprite;
 }
-
-
 
 
 // =======
