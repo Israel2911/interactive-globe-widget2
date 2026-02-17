@@ -47,11 +47,12 @@ async function safeFetch(url, options = {}) {
     if (window.ssoToken) {
       headers['Authorization'] = 'Bearer ' + window.ssoToken;
     }
+   
     const response = await fetch(url, {
-      ...options,
-      credentials: 'include',
-      headers
-    });
+  ...options,
+  headers
+});
+
 
     if (!response.ok) {
       console.error(`❌ HTTP Error ${response.status}: ${response.statusText} for ${url}`);
@@ -74,7 +75,7 @@ let alreadyActivated = false; // <--- ADD THIS LINE HERE
 // IMPROVED FETCH AUTH STATUS WITH ERROR HANDLING
 async function fetchAuthStatus() {
   console.log('🔍 External widget: skipping backend auth');
-  authStatus = { isAuthenticated: false, user: null };
+  authStatus = { isAuthenticated: true, user: null };
 }
 
 
