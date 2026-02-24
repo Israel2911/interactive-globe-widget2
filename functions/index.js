@@ -35,6 +35,24 @@ app.use(
   })
 );
 
+// ADD THIS BLOCK DIRECTLY UNDER THE CORS CALL
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (
+    origin === "https://www.globaleducarealliance.com" ||
+    origin === "https://globaleducarealliance-com.filesusr.com"
+  ) {
+    res.header("Access-Control-Allow-Origin", origin);
+    res.header("Access-Control-Allow-Credentials", "true");
+    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    res.header("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  }
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
+  next();
+});
+
 // === MIDDLEWARE SETUP ===
 app.use(express.json());
 app.use(cookieParser());
